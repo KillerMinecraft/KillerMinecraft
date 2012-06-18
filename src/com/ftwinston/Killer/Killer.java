@@ -1,11 +1,20 @@
 package com.ftwinston.Killer;
 
+/*
+ * Killer Minecraft
+ * a Minecraft Bukkit Mod by 
+ * David "Canazza" McQuillan and
+ * Andrew Winston "FTWinston" Winston Watkins AKA Winston
+ * Created 18/06/2012
+ */
+import java.util.Random;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.event.Event;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -17,7 +26,6 @@ public class Killer extends JavaPlugin
 	{
 		log.info("Killer mode has been enabled");
 		PluginManager pm = getServer().getPluginManager();
-		pm.registerEvent(Event.Type.ENTITY_DEATH, deathListener, Event.Priority.Normal, this);
 		getConfig().getDefaults();
 	}
 
@@ -35,7 +43,7 @@ public class Killer extends JavaPlugin
 			String senderName;
 			if ( sender instanceof Player )
 			{
-				Player player = (Player)player;
+				Player player = (Player)sender;
 				if ( !player.isOp() )
 				{
 					sender.sendMessage("Sorry, you must be an op to use this command.");
@@ -85,7 +93,7 @@ public class Killer extends JavaPlugin
 				}
 				else if ( args[0].equalsIgnoreCase("clear") )
 				{
-					getServer().broadcastMessage(ChatColor.RED + "The killer has been cleared: there is no longer a killer! (cleared by " + senderName + ")"););
+					getServer().broadcastMessage(ChatColor.RED + "The killer has been cleared: there is no longer a killer! (cleared by " + senderName + ")");
 					
 					if ( killerName != null )
 					{
@@ -105,5 +113,4 @@ public class Killer extends JavaPlugin
 	
 	private String killerName = null;
 
-	private final DeathBanListener deathListener = new DeathBanListener(this);
 }
