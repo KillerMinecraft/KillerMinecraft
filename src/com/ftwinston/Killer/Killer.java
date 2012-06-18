@@ -8,7 +8,6 @@ package com.ftwinston.Killer;
  * Created 18/06/2012
  */
 import java.util.Random;
-import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -19,31 +18,35 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class Killer extends JavaPlugin
 {
-	Logger log = Logger.getLogger("Minecraft");
-	
 	public void onEnable()
 	{
-		//log.info("Killer mode has been enabled");
-		getConfig().getDefaults();
+		getConfig().addDefault("autoAssign", false);
+		getConfig().addDefault("restartDay", true);
+		getConfig().options().copyDefaults(true);
+		saveConfig();
+		
+		autoAssignKiller = getConfig().getBoolean("autoAssign");
+		restartDayWhenFirstPlayerJoins = getConfig().getBoolean("restartDay");
+		
+		
 		
         getServer().getPluginManager().registerEvents(deathListener, this);
 	}
 
 	public void onDisable()
 	{
-		//log.info("Killer mode has been disabled");
-		saveConfig();
-		reloadConfig();
+		//saveConfig();
+		//reloadConfig();
 	}
 	
-	private final int minPlayers = 2;
-	private DeathBanListener deathListener = new DeathBanListener(this);
+	private final int absMinPlayers = 2;
+	private EventListener deathListener = new EventListener(this);
+	public boolean autoAssignKiller, restartDayWhenFirstPlayerJoins;
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
 		if (cmd.getName().equalsIgnoreCase("killer"))
 		{
-			String senderName;
 			if ( sender instanceof Player )
 			{
 				Player player = (Player)sender;
@@ -52,65 +55,23 @@ public class Killer extends JavaPlugin
 					sender.sendMessage("Sorry, you must be an op to use this command.");
 					return true;
 				}
-				senderName = player.getName();
 			}
-			else
-				senderName = "the server";
-		
+			
 			if ( args.length > 0 )
 			{
 				if ( args[0].equalsIgnoreCase("assign") )
 				{
-					Player[] players = getServer().getOnlinePlayers();
-					if ( players.length < minPlayers )
-					{
-						sender.sendMessage("This game mode really doesn't work with fewer than " + minPlayers + " players. Seriously.");
+					if  ( !assignKiller(sender) )
 						return true;
-					}
-					
-					Random random = new Random();
-					int randomIndex = random.nextInt(players.length);
-					
-					for ( int i=0; i<players.length; i++ )
-					{
-						Player player = players[i];
-						if ( i == randomIndex )
-						{
-							killerName = player.getName();
-							player.sendMessage(ChatColor.RED + "You are the killer!");
-						}
-						else
-							player.sendMessage(ChatColor.YELLOW + "You are not the killer.");
-					}
-					
-					getServer().broadcastMessage("A killer has been randomly assigned by " + senderName + " - nobody but the killer knows who it is.");
-					return true;
 				}
 				else if ( args[0].equalsIgnoreCase("reveal") )
 				{
-					if ( killerName == null )
-						sender.sendMessage("No killer has been assigned, nothing to reveal!");
-					else
-						getServer().broadcastMessage(ChatColor.RED + "Revealed: " + killerName + " was the killer! " + ChatColor.WHITE + "(revealed by " + senderName + ")");
-						
-					killerName = null;
+					revealKiller(sender);
 					return true;
 				}
 				else if ( args[0].equalsIgnoreCase("clear") )
 				{
-					if ( killerName != null )
-					{
-						getServer().broadcastMessage(ChatColor.RED + "The killer has been cleared: there is no longer a killer! " + ChatColor.WHITE + "(cleared by " + senderName + ")");
-						
-						Player killerPlayer = (Bukkit.getServer().getPlayer(killerName));
-						if ( killerPlayer != null )
-							killerPlayer.sendMessage(ChatColor.YELLOW + "You are no longer the killer.");
-							
-						killerName = null;
-					}
-					else
-						sender.sendMessage("No killer has been assigned, nothing to clear!");
-					
+					clearKiller(sender);					
 					return true;
 				}
 			}
@@ -121,6 +82,71 @@ public class Killer extends JavaPlugin
 		return false;
 	}
 	
+	public boolean assignKiller(CommandSender sender)
+	{
+		Player[] players = getServer().getOnlinePlayers();
+		if ( players.length < absMinPlayers )
+		{
+			if ( sender != null )
+				sender.sendMessage("This game mode really doesn't work with fewer than " + absMinPlayers + " players. Seriously.");
+			return false;
+		}
+		
+		Random random = new Random();
+		int randomIndex = random.nextInt(players.length);
+		
+		for ( int i=0; i<players.length; i++ )
+		{
+			Player player = players[i];
+			if ( i == randomIndex )
+			{
+				killerName = player.getName();
+				player.sendMessage(ChatColor.RED + "You are the killer!");
+			}
+			else
+				player.sendMessage(ChatColor.YELLOW + "You are not the killer.");
+		}
+		
+		String senderName = sender == null ? "" : " by " + sender.getName();
+		getServer().broadcastMessage("A killer has been randomly assigned" + senderName + " - nobody but the killer knows who it is.");
+		return true;
+	}
+	
+	private void revealKiller(CommandSender sender)
+	{
+		if ( hasKillerAssigned() )
+		{
+			String senderName = sender == null ? "automatically" : "by " + sender.getName();
+			getServer().broadcastMessage(ChatColor.RED + "Revealed: " + killerName + " was the killer! " + ChatColor.WHITE + "(revealed " + senderName + ")");
+			
+			killerName = null;
+		}
+		else if ( sender != null )
+			sender.sendMessage("No killer has been assigned, nothing to reveal!");
+	}
+	
+	private void clearKiller(CommandSender sender)
+	{
+		if ( hasKillerAssigned() )
+		{
+			String senderName = sender == null ? "automatically" : "by " + sender.getName();
+			getServer().broadcastMessage(ChatColor.RED + "The killer has been cleared: there is no longer a killer! " + ChatColor.WHITE + "(cleared " + senderName + ")");
+			
+			Player killerPlayer = (Bukkit.getServer().getPlayer(killerName));
+			if ( killerPlayer != null )
+				killerPlayer.sendMessage(ChatColor.YELLOW + "You are no longer the killer.");
+				
+			killerName = null;
+		}
+		else if ( sender != null )
+			sender.sendMessage("No killer has been assigned, nothing to clear!");
+	}
+
 	private String killerName = null;
+
+	public boolean hasKillerAssigned()
+	{
+		return killerName != null;
+	}
 
 }
