@@ -19,7 +19,7 @@ public class DeathBanListener implements Listener
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event)
-	{
+    {
     	if (!(event instanceof PlayerDeathEvent))
     		return;
 		

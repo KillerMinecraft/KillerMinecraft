@@ -23,16 +23,21 @@ public class Killer extends JavaPlugin
 	
 	public void onEnable()
 	{
-		log.info("Killer mode has been enabled");
+		//log.info("Killer mode has been enabled");
 		getConfig().getDefaults();
+		
+        getServer().getPluginManager().registerEvents(deathListener, this);
 	}
 
 	public void onDisable()
 	{
-		log.info("Killer mode has been disabled");
+		//log.info("Killer mode has been disabled");
 		saveConfig();
 		reloadConfig();
 	}
+	
+	private final int minPlayers = 2;
+	private DeathBanListener deathListener = new DeathBanListener(this);
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
@@ -57,9 +62,9 @@ public class Killer extends JavaPlugin
 				if ( args[0].equalsIgnoreCase("assign") )
 				{
 					Player[] players = getServer().getOnlinePlayers();
-					if ( players.length < 3 )
+					if ( players.length < minPlayers )
 					{
-						sender.sendMessage("This game mode really doesn't work with fewer than 3 players. Seriously.");
+						sender.sendMessage("This game mode really doesn't work with fewer than " + minPlayers + " players. Seriously.");
 						return true;
 					}
 					
@@ -79,6 +84,7 @@ public class Killer extends JavaPlugin
 					}
 					
 					getServer().broadcastMessage("A killer has been randomly assigned by " + senderName + " - nobody but the killer knows who it is.");
+					return true;
 				}
 				else if ( args[0].equalsIgnoreCase("reveal") )
 				{
@@ -88,22 +94,28 @@ public class Killer extends JavaPlugin
 						getServer().broadcastMessage(ChatColor.RED + "Revealed: " + killerName + " was the killer! (revealed by " + senderName + ")");
 						
 					killerName = null;
+					return true;
 				}
 				else if ( args[0].equalsIgnoreCase("clear") )
 				{
-					getServer().broadcastMessage(ChatColor.RED + "The killer has been cleared: there is no longer a killer! (cleared by " + senderName + ")");
-					
 					if ( killerName != null )
 					{
+						getServer().broadcastMessage(ChatColor.RED + "The killer has been cleared: there is no longer a killer! (cleared by " + senderName + ")");
+						
 						Player killerPlayer = (Bukkit.getServer().getPlayer(killerName));
 						if ( killerPlayer != null )
 							killerPlayer.sendMessage("You are no longer the killer.");
 							
 						killerName = null;
 					}
+					else
+						sender.sendMessage("No killer has been assigned, nothing to clear!");
+					
+					return true;
 				}
 			}
-			
+
+			sender.sendMessage("Invalid command, available parameters are: assign, reveal, clear");
 			return true;
 		}
 		return false;
