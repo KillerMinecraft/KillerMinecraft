@@ -29,8 +29,7 @@ public class Killer extends JavaPlugin
 		restartDayWhenFirstPlayerJoins = getConfig().getBoolean("restartDay");
 		
 		
-		
-        getServer().getPluginManager().registerEvents(deathListener, this);
+        getServer().getPluginManager().registerEvents(eventListener, this);
 	}
 
 	public void onDisable()
@@ -40,8 +39,8 @@ public class Killer extends JavaPlugin
 	}
 	
 	private final int absMinPlayers = 2;
-	private EventListener deathListener = new EventListener(this);
 	public boolean autoAssignKiller, restartDayWhenFirstPlayerJoins;
+	private EventListener eventListener = new EventListener(this);
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
@@ -132,7 +131,7 @@ public class Killer extends JavaPlugin
 			String senderName = sender == null ? "automatically" : "by " + sender.getName();
 			getServer().broadcastMessage(ChatColor.RED + "The killer has been cleared: there is no longer a killer! " + ChatColor.WHITE + "(cleared " + senderName + ")");
 			
-			Player killerPlayer = (Bukkit.getServer().getPlayer(killerName));
+			Player killerPlayer = Bukkit.getServer().getPlayerExact(killerName);
 			if ( killerPlayer != null )
 				killerPlayer.sendMessage(ChatColor.YELLOW + "You are no longer the killer.");
 				

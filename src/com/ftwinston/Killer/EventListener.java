@@ -98,20 +98,24 @@ public class EventListener implements Listener
 		if ( player == null )
 			return;
 		
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedBan(player), 30);		
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedBan(player.getName()), 30);		
 	}
     
     class DelayedBan implements Runnable
     {
-    	Player player;
-    	public DelayedBan(Player p) { player = p; }
+    	String name;
+    	public DelayedBan(String playerName) { name = playerName; }
     	
     	public void run()
     	{
-    		String playerName = player.getName();
-			plugin.getServer().broadcastMessage(ChatColor.RED + playerName + " has now been banned.");
-			player.setBanned(true);
-			player.kickPlayer(playerName);
+			plugin.getServer().broadcastMessage(ChatColor.RED + name + " has now been banned.");
+			
+			Player player = Bukkit.getServer().getPlayerExact(name);
+			if (player != null)
+			{
+				player.setBanned(true);
+				player.kickPlayer(name);
+			}
     	}
     }
 }
