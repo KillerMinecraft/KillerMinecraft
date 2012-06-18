@@ -15,7 +15,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Killer extends JavaPlugin
@@ -25,7 +24,6 @@ public class Killer extends JavaPlugin
 	public void onEnable()
 	{
 		log.info("Killer mode has been enabled");
-		PluginManager pm = getServer().getPluginManager();
 		getConfig().getDefaults();
 	}
 
