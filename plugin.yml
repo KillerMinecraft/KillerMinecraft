@@ -1,8 +1,8 @@
 name: Killer
 main: com.ftwinston.Killer.Killer
 version: 0.1
-description: Allows ops to randomly & secretly assign one player as the "killer" ... also bans players on death
+description: Allows ops to randomly assign one player as a killer, who must try to kill the rest, without being found out
 authors: [FTWinston, Canazza]
 commands:
   killer:
-    usage: Available commands are: assign, reveal, clear ... none of these use any extra parameters
+    usage: Available commands are assign, reveal, clear ... none of these use any extra parameters
