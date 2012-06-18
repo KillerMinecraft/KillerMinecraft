@@ -80,7 +80,7 @@ public class Killer extends JavaPlugin
 							player.sendMessage(ChatColor.RED + "You are the killer!");
 						}
 						else
-							player.sendMessage("You are not the killer.");
+							player.sendMessage(ChatColor.YELLOW + "You are not the killer.");
 					}
 					
 					getServer().broadcastMessage("A killer has been randomly assigned by " + senderName + " - nobody but the killer knows who it is.");
@@ -91,7 +91,7 @@ public class Killer extends JavaPlugin
 					if ( killerName == null )
 						sender.sendMessage("No killer has been assigned, nothing to reveal!");
 					else
-						getServer().broadcastMessage(ChatColor.RED + "Revealed: " + killerName + " was the killer! (revealed by " + senderName + ")");
+						getServer().broadcastMessage(ChatColor.RED + "Revealed: " + killerName + " was the killer! " + ChatColor.WHITE + "(revealed by " + senderName + ")");
 						
 					killerName = null;
 					return true;
@@ -100,11 +100,11 @@ public class Killer extends JavaPlugin
 				{
 					if ( killerName != null )
 					{
-						getServer().broadcastMessage(ChatColor.RED + "The killer has been cleared: there is no longer a killer! (cleared by " + senderName + ")");
+						getServer().broadcastMessage(ChatColor.RED + "The killer has been cleared: there is no longer a killer! " + ChatColor.WHITE + "(cleared by " + senderName + ")");
 						
 						Player killerPlayer = (Bukkit.getServer().getPlayer(killerName));
 						if ( killerPlayer != null )
-							killerPlayer.sendMessage("You are no longer the killer.");
+							killerPlayer.sendMessage(ChatColor.YELLOW + "You are no longer the killer.");
 							
 						killerName = null;
 					}
