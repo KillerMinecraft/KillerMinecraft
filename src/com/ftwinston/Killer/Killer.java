@@ -78,6 +78,9 @@ public class Killer extends JavaPlugin
 					clearKiller(sender);					
 					return true;
 				}
+				else if ( args[0].equalsIgnoreCase("restart") )
+					restartServer();
+					return true;
 			}
 
 			sender.sendMessage("Invalid command, available parameters are: assign, reveal, clear");
@@ -187,7 +190,7 @@ public class Killer extends JavaPlugin
 			if (player != null)
 			{
 				player.setBanned(true);
-				player.kickPlayer(name);
+				player.kickPlayer("You were killed, and are banned until the end of the game");
 			}
 		}
 		
@@ -196,6 +199,12 @@ public class Killer extends JavaPlugin
 		
 		int numSurvivors = 0;
 		Player[] players = getServer().getOnlinePlayers();
+		if ( players.length == 0 )
+		{
+			restartServer();
+			return;
+		}
+		
 		for ( int i=0; i<players.length; i++ )
 		{
 			boolean isDead = false;
@@ -212,5 +221,66 @@ public class Killer extends JavaPlugin
 		
 		if ( numSurvivors < 2 )
 			revealKiller(null);
+	}
+	
+	public void restartServer()
+	{
+		// unban everyone
+		for ( OfflinePlayer player : getServer().getBannedPlayers() )
+			player.setBanned(false);
+		
+		// kick everyone, just in case
+		Player[] players = getServer().getOnlinePlayers();
+		for ( int i=0; i<players.length; i++ )
+			players[i].kickPlayer("Game is restarting");
+		
+		// unload all worlds and delete all worlds
+		List<World> worlds = getServer().getWorlds();
+		String[] worldNames = new String[worlds.size()];
+		World.Environment[] worldTypes = new World.Environment[worlds.size()];
+		File serverFolder = getDataFolder().getAbsoluteFile().getParentFile().getParentFile();
+		
+		for ( int i=0; i<worldNames.length; i++ )
+		{
+			worldNames[i] = worlds[i].getName();
+			worldTypes[i] = worlds[i].getEnvironment();
+			
+			try
+			{
+				getServer().unloadWorld(worldNames[i], false);
+			}
+			catch ( Exception e )
+			{
+				log.info("An error occurred when unloading the " + worldNames[i] + " world: " + e.getMessage());
+			}
+			
+			try
+			{
+				delete(new File(serverFolder + File.separator + worldNames[i]);
+			}
+			catch ( Exception e )
+			{
+				log.info("An error occurred when deleting the " + worldNames[i] + " world: " + e.getMessage());
+			}
+		}
+		
+		// now want to create new worlds, with the same names and types as we had before
+		// ... hopefully this will keep the default settings (generate structures, etc)
+		for ( int i=0; i<worldNames.length; i++ )
+		{
+			WorldCreator wc = new WorldCreator(worldNames[i]);
+			wc.environment(worldTypes[i]);
+			getServer().createWorld(wc);
+		}
+		
+		getServer().reload(); // stops and starts *PLUGINS* ... can't hurt
+	}
+	
+	private static boolean delete(File folder)
+	{
+		if (folder.isDirectory())
+			for (File f : folder.listFiles())
+				if (!delete(f)) return false;
+		return folder.delete();
 	}
 }
