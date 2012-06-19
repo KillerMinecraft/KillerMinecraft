@@ -1,7 +1,6 @@
 package com.ftwinston.Killer;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -75,7 +74,7 @@ public class EventListener implements Listener
 		if ( plugin.hasKillerAssigned() )
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new ForgetDisconnectedPlayer(p.getPlayer().getName()), 600);
 		else
-			plugin.playerKilled(p.getPlayer());
+			plugin.playerKilled(p.getPlayer().getName());
     }
     
     class ForgetDisconnectedPlayer implements Runnable
