@@ -9,6 +9,7 @@ package com.ftwinston.Killer;
  */
 import java.util.Random;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -46,6 +47,8 @@ public class Killer extends JavaPlugin
 	private EventListener eventListener = new EventListener(this);
 	public boolean autoAssignKiller, autoReveal, restartDayWhenFirstPlayerJoins;
 	public Vector<String> deadPlayers;
+	
+	Logger log = Logger.getLogger("Minecraft");
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
@@ -263,6 +266,8 @@ public class Killer extends JavaPlugin
 				log.info("An error occurred when deleting the " + worldNames[i] + " world: " + e.getMessage());
 			}
 		}
+		
+		log.info("Generating new world(s)...");
 		
 		// now want to create new worlds, with the same names and types as we had before
 		// ... hopefully this will keep the default settings (generate structures, etc)
