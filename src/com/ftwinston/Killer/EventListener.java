@@ -1,5 +1,6 @@
 package com.ftwinston.Killer;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -7,7 +8,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public class EventListener implements Listener
@@ -42,7 +42,7 @@ public class EventListener implements Listener
     		if ( players.length != 1 )
     			return; // only do this when the first player joins
     		
-    		autoStartProcessID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+    		plugin.autoStartProcessID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
     			long lastRun = 0;
     			public void run()
     			{
@@ -54,7 +54,7 @@ public class EventListener implements Listener
     					if ( plugin.hasKillerAssigned() || plugin.assignKiller(null) )
     					{
     						plugin.getServer().getScheduler().cancelTask(autoStartProcessID);
-        					autoStartProcessID = -1;
+        					plugin.autoStartProcessID = -1;
     					}
     					else
     						lastRun = time;
@@ -69,21 +69,23 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent p)
     {
-    	if ( plugin.autoAssignKiller && autoStartProcessID != -1 )
-    	{
-    		Player[] players = plugin.getServer().getOnlinePlayers();
-    		if ( players.length > 1 )
-    			return; // only do this when the server is empty
-    		
-    		plugin.getServer().getScheduler().cancelTask(autoStartProcessID);
-			autoStartProcessID = -1;
-    	}
+		plugin.cancelAutoStart();
+    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new ForgetDisconnectedPlayer(p.getPlayer().getName()), 600);
     }
     
-    @EventHandler
-    public void onPlayerKick(PlayerKickEvent p)
+    class ForgetDisconnectedPlayer implements Runnable
     {
-    	onPlayerQuit(null);
+    	String name;
+    	public ForgetDisconnectedPlayer(String playerName) { name = playerName; }
+    	
+    	public void run()
+    	{
+			Player player = Bukkit.getServer().getPlayerExact(name);
+			if ( player == null || !player.isOnline() )
+			{
+				plugin.playerKilled(name);
+			}
+    	}
     }
     
     
@@ -98,24 +100,21 @@ public class EventListener implements Listener
 		if ( player == null )
 			return;
 		
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedBan(player.getName()), 30);		
+		// the only reason this is delayed is to avoid banning the player before they properly die.
+		// once observer mode is in place instead of banning, this can be a direct function call! 
+		
+		// plugin.playerKilled(player.getName());
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName()), 30);		
 	}
     
-    class DelayedBan implements Runnable
+    class DelayedDeathEffect implements Runnable
     {
     	String name;
-    	public DelayedBan(String playerName) { name = playerName; }
+    	public DelayedDeathEffect(String playerName) { name = playerName; }
     	
     	public void run()
     	{
-			plugin.getServer().broadcastMessage(ChatColor.RED + name + " has now been banned.");
-			
-			Player player = Bukkit.getServer().getPlayerExact(name);
-			if (player != null)
-			{
-				player.setBanned(true);
-				player.kickPlayer(name);
-			}
+    		plugin.playerKilled(name);
     	}
     }
 }

@@ -8,6 +8,7 @@ package com.ftwinston.Killer;
  * Created 18/06/2012
  */
 import java.util.Random;
+import java.util.Vector;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -21,13 +22,16 @@ public class Killer extends JavaPlugin
 	public void onEnable()
 	{
 		getConfig().addDefault("autoAssign", false);
+		getConfig().addDefault("autoReveal", true);
 		getConfig().addDefault("restartDay", true);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		
 		autoAssignKiller = getConfig().getBoolean("autoAssign");
+		autoReveal = getConfig().getBoolean("autoReveal");
 		restartDayWhenFirstPlayerJoins = getConfig().getBoolean("restartDay");
 		
+		deadPlayers = new Vector<String>();
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
 	}
@@ -39,8 +43,9 @@ public class Killer extends JavaPlugin
 	}
 	
 	private final int absMinPlayers = 2;
-	public boolean autoAssignKiller, restartDayWhenFirstPlayerJoins;
 	private EventListener eventListener = new EventListener(this);
+	public boolean autoAssignKiller, autoReveal, restartDayWhenFirstPlayerJoins;
+	public Vector<String> deadPlayers;
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
@@ -111,7 +116,7 @@ public class Killer extends JavaPlugin
 		return true;
 	}
 	
-	private void revealKiller(CommandSender sender)
+	public void revealKiller(CommandSender sender)
 	{
 		if ( hasKillerAssigned() )
 		{
@@ -142,10 +147,70 @@ public class Killer extends JavaPlugin
 	}
 
 	private String killerName = null;
+	protected int autoStartProcessID;
 
 	public boolean hasKillerAssigned()
 	{
 		return killerName != null;
 	}
 
+	public void cancelAutoStart()
+	{
+		if ( autoAssignKiller && autoStartProcessID != -1 )
+    	{
+    		Player[] players = getServer().getOnlinePlayers();
+    		if ( players.length > 1 )
+    			return; // only do this when the server is empty
+    		
+    		getServer().getScheduler().cancelTask(autoStartProcessID);
+			autoStartProcessID = -1;
+    	}
+		
+	}
+
+	public void playerKilled(String name)
+	{
+		boolean alreadyDead = false;
+		for ( int i=0; i<deadPlayers.size(); i++ )
+			if ( name.equals(deadPlayers.get(i)))
+			{
+				alreadyDead = true;
+				break;
+			}
+		
+		if ( !alreadyDead )
+		{
+			deadPlayers.add(name);
+			
+			// currently, we're banning players instead of setting them into some "observer" mode
+			Player player = Bukkit.getServer().getPlayerExact(name);
+			if (player != null)
+			{
+				player.setBanned(true);
+				player.kickPlayer(name);
+			}
+		}
+		
+		if ( !autoReveal )
+			return;
+		
+		int numSurvivors = 0;
+		Player[] players = getServer().getOnlinePlayers();
+		for ( int i=0; i<players.length; i++ )
+		{
+			boolean isDead = false;
+			for ( int j=0; j<deadPlayers.size(); j++ )
+				if ( players[i].getName().equals(deadPlayers.get(j)) )
+				{
+					isDead = true;
+					break;
+				}
+		
+			if ( !isDead )
+				numSurvivors ++;
+		}		
+		
+		if ( numSurvivors < 2 )
+			revealKiller(null);
+	}
 }
