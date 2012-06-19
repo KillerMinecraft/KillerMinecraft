@@ -70,7 +70,12 @@ public class EventListener implements Listener
     public void onPlayerQuit(PlayerQuitEvent p)
     {
 		plugin.cancelAutoStart();
-    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new ForgetDisconnectedPlayer(p.getPlayer().getName()), 600);
+		
+		// if the game is "active" then give them 30s to rejoin, otherwise consider them to be "killed" right away.
+		if ( plugin.hasKillerAssigned() )
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new ForgetDisconnectedPlayer(p.getPlayer().getName()), 600);
+		else
+			plugin.playerKilled(p.getPlayer());
     }
     
     class ForgetDisconnectedPlayer implements Runnable
