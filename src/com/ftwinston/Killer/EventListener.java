@@ -7,12 +7,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockCanBuildEvent;
 import org.bukkit.event.block.BlockFromToEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public class EventListener implements Listener
@@ -22,6 +23,16 @@ public class EventListener implements Listener
     public EventListener(Killer instance)
 	{
 		plugin = instance;
+    }
+    
+    // prevent spectators picking up anything
+    @EventHandler
+    public void onPlayerPickupItem(PlayerPickupItemEvent event)
+    {
+    	if(SpectatorManager.get().isSpectator(event.getPlayer()))
+    	{
+    		event.setCancelled(true);
+    	}
     }
     
     // prevent spectators breaking anything, prevent anyone breaking the plinth
@@ -47,16 +58,23 @@ public class EventListener implements Listener
     
     // prevent anyone placing blocks over the plinth
     @EventHandler
-    public void onBlockCanBuild(BlockCanBuildEvent event)
+    public void onBlockPlace(BlockPlaceEvent event)
     {
-    	Location loc = event.getBlock().getLocation();
-        if ( loc.getWorld() == plugin.plinthPressurePlateLocation.getWorld()
-            && loc.getX() >= plugin.plinthPressurePlateLocation.getBlockX() - 1
-            && loc.getX() <= plugin.plinthPressurePlateLocation.getBlockX() + 1
-            && loc.getZ() >= plugin.plinthPressurePlateLocation.getBlockZ() - 1
-            && loc.getZ() <= plugin.plinthPressurePlateLocation.getBlockZ() + 1
-        )
-            event.setBuildable(false);
+    	if(SpectatorManager.get().isSpectator(event.getPlayer()))
+    	{
+    		event.setCancelled(true);
+    	}
+    	else	
+    	{
+	    	Location loc = event.getBlock().getLocation();
+	        if ( loc.getWorld() == plugin.plinthPressurePlateLocation.getWorld()
+	            && loc.getX() >= plugin.plinthPressurePlateLocation.getBlockX() - 1
+	            && loc.getX() <= plugin.plinthPressurePlateLocation.getBlockX() + 1
+	            && loc.getZ() >= plugin.plinthPressurePlateLocation.getBlockZ() - 1
+	            && loc.getZ() <= plugin.plinthPressurePlateLocation.getBlockZ() + 1
+	        )
+	        	event.setCancelled(true);
+    	}
     }
     
     // prevent lava/water from flowing onto the plinth
