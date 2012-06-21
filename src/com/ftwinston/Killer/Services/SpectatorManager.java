@@ -3,7 +3,6 @@ package com.ftwinston.Killer.Services;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -56,29 +55,32 @@ public class SpectatorManager {
 	}
 	public String handleSpectatorCommand(String command, String param) {
 		// TODO Auto-generated method stub
-		switch(command) {
-			case "add":
+		if ( command == "add" )
+		{
 				Player addPlayer = currentPlugin.getServer().getPlayer(param);
-				if(addPlayer == null) {
+				if(addPlayer == null)
 					return String.format("Player '%s' not found",param);
-				}
+				
 				addSpectator(addPlayer);
 				return "Player Added to Spectators";
-			case "remove":
+		}
+		else if ( command == "remove" )
+		{
 				Player removePlayer = currentPlugin.getServer().getPlayer(param);
-				if(removePlayer == null) {
+				if(removePlayer == null)
 					return String.format("Player '%s' not found",param);
-				}
+				
 				removeSpectator(removePlayer);
 				return "Player removed from Spectators";
-			case "list":
+		}
+		else if ( command == "list" )
+		{
 				StringBuilder list = new StringBuilder();
 				list.append(this.Spectators.size() +" spectator(s): ");
-				if(this.Spectators.size() > 0) {
-					for(Player p: this.Spectators) {
+				if(this.Spectators.size() > 0)
+					for(Player p: this.Spectators)
 						list.append(p.getName()+", ");
-					}
-				}
+							
 				return list.toString().substring(0,list.length()-2);
 		}
 		return "No command " + command + " found. Valid commands are add {player} and remove {player}";
