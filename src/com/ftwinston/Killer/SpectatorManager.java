@@ -53,9 +53,9 @@ public class SpectatorManager {
 			player.showPlayer(p);
 		}
 	}
-	public String handleSpectatorCommand(String command, String param) {
-		// TODO Auto-generated method stub
-		if ( command == "add" )
+	public String handleSpectatorCommand(String command, String param)
+	{
+		if ( command.equals("add") )
 		{
 				Player addPlayer = currentPlugin.getServer().getPlayer(param);
 				if(addPlayer == null)
@@ -64,7 +64,7 @@ public class SpectatorManager {
 				addSpectator(addPlayer);
 				return "Player Added to Spectators";
 		}
-		else if ( command == "remove" )
+		else if ( command.equals("remove") )
 		{
 				Player removePlayer = currentPlugin.getServer().getPlayer(param);
 				if(removePlayer == null)
@@ -73,7 +73,7 @@ public class SpectatorManager {
 				removeSpectator(removePlayer);
 				return "Player removed from Spectators";
 		}
-		else if ( command == "list" )
+		else if ( command.equals("list") )
 		{
 				StringBuilder list = new StringBuilder();
 				list.append(this.Spectators.size() +" spectator(s): ");

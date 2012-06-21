@@ -64,7 +64,6 @@ public class Killer extends JavaPlugin
 	public boolean autoAssignKiller, autoReveal, restartDayWhenFirstPlayerJoins;
 	public Vector<String> deadPlayers;
 	
-	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
 		if (cmd.getName().equalsIgnoreCase("killer"))
@@ -176,8 +175,8 @@ public class Killer extends JavaPlugin
 	{
 		if ( hasKillerAssigned() )
 		{
-			String senderName = sender == null ? "automatically" : "by " + sender.getName();
-			getServer().broadcastMessage(ChatColor.RED + "The killer has been cleared: there is no longer a killer! " + ChatColor.WHITE + "(cleared " + senderName + ")");
+			if ( sender != null )
+				getServer().broadcastMessage(ChatColor.RED + "The killer has been cleared: there is no longer a killer! " + ChatColor.WHITE + "(cleared by " + sender.getName() + ")");
 			
 			Player killerPlayer = Bukkit.getServer().getPlayerExact(killerName);
 			if ( killerPlayer != null )
@@ -265,6 +264,7 @@ public class Killer extends JavaPlugin
 	
 	public void restartGame()
 	{	
+		clearKiller(null);
 		getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
 		
 		worldManager.deleteWorlds(new Runnable() {
