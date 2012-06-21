@@ -343,19 +343,19 @@ public class Killer extends JavaPlugin
 				}
 				catch ( NoSuchMethodException ex)
 				{
-					log.info(ex.getMessage());
+					log.warning("No such method: " + ex.getMessage());
 				}
 				catch ( IllegalAccessException ex )
 				{
-					log.info(ex.getMessage());
+					log.warning("Illegal access: " + ex.getMessage());
 				}
 				catch ( IllegalArgumentException ex )
 				{
-					log.info(ex.getMessage());
+					log.warning("Illegal argument: " + ex.getMessage());
 				}
 				catch ( InvocationTargetException ex )
 				{
-					log.info(ex.getMessage());
+					log.warning("Invocation target exception: " + ex.getMessage());
 				}
 			}
 		}, 60);
