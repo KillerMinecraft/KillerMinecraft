@@ -3,13 +3,17 @@ package com.ftwinston.Killer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -125,6 +129,53 @@ public class EventListener implements Listener
 	  	}
     }
     
+    @EventHandler
+    public void onEntityDamage(EntityDamageEvent event)
+    {
+        if( event.getEntity() instanceof Player )
+        {
+        	Player player = (Player)event.getEntity();
+        	if(SpectatorManager.get().isSpectator(player))
+        		event.setCancelled(true);
+        }
+        else if (event instanceof EntityDamageByEntityEvent )
+        {
+        	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
+        	if ( damager != null && damager instanceof Player )
+        	{
+        		if(SpectatorManager.get().isSpectator((Player)damager))
+        			event.setCancelled(true);
+        	}
+        }
+	}
+    
+    @EventHandler
+    public void onPlayerDamage(EntityDamageEvent event)
+    {
+        if( event.getEntity() instanceof Player )
+        {
+        	Player player = (Player)event.getEntity();
+        	if(SpectatorManager.get().isSpectator(player))
+        		event.setCancelled(true);
+        }
+        else if (event instanceof EntityDamageByEntityEvent )
+        {
+        	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
+        	if ( damager != null && damager instanceof Player )
+        	{
+        		if(SpectatorManager.get().isSpectator((Player)damager))
+        			event.setCancelled(true);
+        	}
+        }
+	}
+    
+    @EventHandler
+    public void onEntityTarget(EntityTargetEvent event)
+    {
+    	if( event.getTarget() != null && event.getTarget() instanceof Player && SpectatorManager.get().isSpectator((Player)event.getTarget()))
+    		event.setCancelled(true);
+    }
+   
     private int autoStartProcessID = -1;
     
     @EventHandler
