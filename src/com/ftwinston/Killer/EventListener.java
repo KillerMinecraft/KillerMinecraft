@@ -1,10 +1,12 @@
 package com.ftwinston.Killer;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -19,13 +21,42 @@ public class EventListener implements Listener
 		plugin = instance;
     }
     
-    private int autoStartProcessID = -1;
     @EventHandler
-    public void onBlockBreak(BlockBreakEvent ev) {
-    	if(SpectatorManager.get().isSpectator(ev.getPlayer())) {
-    		ev.setCancelled(true);
+    public void onBlockBreak(BlockBreakEvent event)
+    {
+    	if(SpectatorManager.get().isSpectator(event.getPlayer()))
+    	{
+    		event.setCancelled(true);
+    	}
+    	else
+    	{
+    		Location loc = event.getBlock().getLocation();
+    		if ( loc.getWorld() == plugin.plinthPressurePlateLocation.getWorld()
+    	            && loc.getX() >= plugin.plinthPressurePlateLocation.getBlockX() - 1
+    	            && loc.getX() <= plugin.plinthPressurePlateLocation.getBlockX() + 1
+    	            && loc.getZ() >= plugin.plinthPressurePlateLocation.getBlockZ() - 1
+    	            && loc.getZ() <= plugin.plinthPressurePlateLocation.getBlockZ() + 1
+    	        )
+    	            event.setCancelled(true);
     	}
     }
+    
+    // prevent lava/water from flowing onto the plinth
+    @EventHandler
+    public void BlockFromTo(BlockFromToEvent event)
+    {
+        Location loc = event.getToBlock().getLocation();
+        if ( loc.getWorld() == plugin.plinthPressurePlateLocation.getWorld()
+            && loc.getX() >= plugin.plinthPressurePlateLocation.getBlockX() - 1
+            && loc.getX() <= plugin.plinthPressurePlateLocation.getBlockX() + 1
+            && loc.getZ() >= plugin.plinthPressurePlateLocation.getBlockZ() - 1
+            && loc.getZ() <= plugin.plinthPressurePlateLocation.getBlockZ() + 1
+        )
+            event.setCancelled(true);
+    }
+
+    private int autoStartProcessID = -1;
+    
     @EventHandler
 	public void onPlayerJoin(PlayerJoinEvent p)
     {

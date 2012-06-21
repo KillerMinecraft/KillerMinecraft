@@ -53,16 +53,17 @@ public class Killer extends JavaPlugin
 	}
 	
 	public static Killer instance;
-	private Location plinthPressurePlateLocation;
-	
+	Logger log = Logger.getLogger("Minecraft");
+	Location plinthPressurePlateLocation;
+
+	private EventListener eventListener = new EventListener(this);
 	private WorldManager worldManager;
 	private SpectatorManager spectatorManager;
+	
 	private final int absMinPlayers = 2;
-	private EventListener eventListener = new EventListener(this);
 	public boolean autoAssignKiller, autoReveal, restartDayWhenFirstPlayerJoins;
 	public Vector<String> deadPlayers;
 	
-	Logger log = Logger.getLogger("Minecraft");
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
