@@ -98,46 +98,16 @@ public class WorldManager
 	        return world;
 		}
 		
-		static final int plinthHeightAboveSurroundings = 6, spaceBetweenPlinthAndGlowstone = 4;
+		static final int plinthPeakHeight = 76, spaceBetweenPlinthAndGlowstone = 4;
 		static final int plinthSpawnOffsetX = 20, plinthSpawnOffsetZ = 0;
 		public Location createPlinth(World world)
 		{
 			Location spawnPoint = world.getSpawnLocation();
 			int x = spawnPoint.getBlockX() + plinthSpawnOffsetX;
 			int z = spawnPoint.getBlockZ() + plinthSpawnOffsetZ;
-		
-			int yPeak = world.getHighestBlockYAt(x, z);
-			
-			// check for an existing plinth first, in case we're reloading an existing world
-			if ( world.getBlockAt(x, yPeak, z).getType() == Material.GLOWSTONE )
-			{
-				int y = yPeak;
-				Material check;
-				do
-				{
-					y--;
-					check = world.getBlockAt(x, y, z).getType();
-				}
-				while ( y > 0 && (check == Material.GLOWSTONE || check == Material.AIR) );
-				
-				if ( check == Material.STONE_PLATE )
-				{// this is an existing plinth! don't mess with it!
-					return new Location(world, x, y, z);
-				}
-			}
-			
-			yPeak = Math.max(yPeak, world.getHighestBlockYAt(x, z+1));
-			yPeak = Math.max(yPeak, world.getHighestBlockYAt(x, z-1));
-			yPeak = Math.max(yPeak, world.getHighestBlockYAt(x+1, z));
-			yPeak = Math.max(yPeak, world.getHighestBlockYAt(x+1, z+1));
-			yPeak = Math.max(yPeak, world.getHighestBlockYAt(x+1, z-1));
-			yPeak = Math.max(yPeak, world.getHighestBlockYAt(x-1, z));
-			yPeak = Math.max(yPeak, world.getHighestBlockYAt(x-1, z+1));
-			yPeak = Math.max(yPeak, world.getHighestBlockYAt(x-1, z-1));
-			yPeak += plinthHeightAboveSurroundings;
 			
 			// a 3x3 column from bedrock to the plinth height
-			for ( int y = 0; y < yPeak; y++ )
+			for ( int y = 0; y < plinthPeakHeight; y++ )
 				for ( int ix = x - 1; ix < x + 2; ix++ )
 					for ( int iz = z - 1; iz < z + 2; iz++ )
 					{
@@ -146,7 +116,7 @@ public class WorldManager
 					}
 			
 			// with one block sticking up from it
-			int y = yPeak;
+			int y = plinthPeakHeight;
 			for ( int ix = x - 1; ix < x + 2; ix++ )
 					for ( int iz = z - 1; iz < z + 2; iz++ )
 					{
@@ -155,7 +125,7 @@ public class WorldManager
 					}
 			
 			// that has a pressure plate on it
-			y = yPeak + 1;
+			y = plinthPeakHeight + 1;
 			Location pressurePlateLocation = new Location(world, x, y, z);
 			for ( int ix = x - 1; ix < x + 2; ix++ )
 					for ( int iz = z - 1; iz < z + 2; iz++ )
@@ -165,7 +135,7 @@ public class WorldManager
 					}
 					
 			// then a space
-			for ( y = yPeak + 2; y <= yPeak + spaceBetweenPlinthAndGlowstone; y++ )
+			for ( y = plinthPeakHeight + 2; y <= plinthPeakHeight + spaceBetweenPlinthAndGlowstone; y++ )
 				for ( int ix = x - 1; ix < x + 2; ix++ )
 					for ( int iz = z - 1; iz < z + 2; iz++ )
 					{
@@ -174,7 +144,7 @@ public class WorldManager
 					}
 			
 			// and then a 1x1 pillar of glowstone, up to max height
-			for ( y = yPeak + spaceBetweenPlinthAndGlowstone + 1; y < world.getMaxHeight(); y++ )
+			for ( y = plinthPeakHeight + spaceBetweenPlinthAndGlowstone + 1; y < world.getMaxHeight(); y++ )
 				for ( int ix = x - 1; ix < x + 2; ix++ )
 					for ( int iz = z - 1; iz < z + 2; iz++ )
 					{
