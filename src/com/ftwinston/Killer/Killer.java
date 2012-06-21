@@ -15,7 +15,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import com.ftwinston.Killer.Services.SpectatorManager;
 
 public class Killer extends JavaPlugin
 {
@@ -34,6 +37,7 @@ public class Killer extends JavaPlugin
 		deadPlayers = new Vector<String>();
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
+        spectatorManager = new SpectatorManager(this);
 	}
 
 	public void onDisable()
@@ -41,7 +45,7 @@ public class Killer extends JavaPlugin
 		//saveConfig();
 		//reloadConfig();
 	}
-	
+	private SpectatorManager spectatorManager;
 	private final int absMinPlayers = 2;
 	private EventListener eventListener = new EventListener(this);
 	public boolean autoAssignKiller, autoReveal, restartDayWhenFirstPlayerJoins;
@@ -77,10 +81,17 @@ public class Killer extends JavaPlugin
 				{
 					clearKiller(sender);					
 					return true;
+				} else if( args[0].equalsIgnoreCase("spectator")) {
+					if(args.length > 2) {
+					sender.sendMessage(spectatorManager.handleSpectatorCommand(args[1], args[2]));
+					} else {
+						sender.sendMessage(spectatorManager.handleSpectatorCommand(args[1],""));
+					}
+					return true;
 				}
 			}
 
-			sender.sendMessage("Invalid command, available parameters are: assign, reveal, clear");
+			sender.sendMessage("Invalid command, available parameters are: assign, reveal, clear, spectator");
 			return true;
 		}
 		return false;
@@ -186,8 +197,9 @@ public class Killer extends JavaPlugin
 			Player player = Bukkit.getServer().getPlayerExact(name);
 			if (player != null)
 			{
-				player.setBanned(true);
-				player.kickPlayer(name);
+				//player.setBanned(true);
+				//player.kickPlayer(name);
+				spectatorManager.addSpectator(player);
 			}
 		}
 		
