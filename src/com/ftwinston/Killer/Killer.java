@@ -25,13 +25,19 @@ import net.minecraft.server.Convertable;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.RegionFile;
 import net.minecraft.server.WorldLoaderServer;
+import net.minecraft.server.WorldServer;
 import net.minecraft.server.WorldType;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
+import org.bukkit.WorldCreator;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -43,7 +49,7 @@ import org.bukkit.craftbukkit.CraftWorld;
 public class Killer extends JavaPlugin
 {
 	public void onEnable()
-	{
+	{	
         instance = this;
         
 		getConfig().addDefault("autoAssign", false);
@@ -66,20 +72,21 @@ public class Killer extends JavaPlugin
 		
 		//defaultWorldName = getServer().getWorlds().get(0).getName();
         
-        /*holdingWorld = getServer().getWorld(holdingWorldName);
+        holdingWorld = getServer().getWorld(holdingWorldName);
         if ( holdingWorld == null )
         {
 	        WorldCreator wc = new WorldCreator(holdingWorldName);
 	        wc.generateStructures(false);
 	        wc.generator(new HoldingWorldGenerator());
 			wc.environment(Environment.THE_END);
-			holdingWorld = CreateWorld(wc, true);
-        }*/
+			holdingWorld = CreateWorld(wc, true, true, 8, 1, 8);
+        }
         
         seedGen = new Random();
         serverFolder = getServer().getWorldContainer();
         
-        try {
+        try
+        {
         	Field a = net.minecraft.server.RegionFileCache.class.getDeclaredField("a");
         	a.setAccessible(true);
 			regionfiles = (HashMap) a.get(null);
@@ -87,7 +94,9 @@ public class Killer extends JavaPlugin
 			rafField.setAccessible(true);
         	log.info("Successfully bound variable to region file cache.");
         	log.info("File references to unloaded worlds will be cleared!");
-		} catch (Throwable t) {
+		}
+        catch (Throwable t)
+        {
 			log.warning("Failed to bind to region file cache.");
 			log.warning("Files will stay referenced after being unloaded!");
 			t.printStackTrace();
@@ -103,7 +112,9 @@ public class Killer extends JavaPlugin
 	private Location plinthPressurePlateLocation;
 	
 	//World holdingWorld;
-	//String defaultWorldName, holdingWorldName = "holding";
+	final String holdingWorldName = "holding";
+	
+	World holdingWorld;
 	
 	public void onDisable()
 	{
@@ -155,11 +166,24 @@ public class Killer extends JavaPlugin
 					restartGame();
 					return true;
 				}
+				else if ( args[0].equalsIgnoreCase("holding") )
+				{
+					if ( sender instanceof Player )
+					{
+						Player player = (Player)sender;
+						Location loc = new Location(holdingWorld, 0, 1, 0);
+						player.teleport(loc);
+	
+						player.sendMessage("Teleporting to holding world");
+					}
+					return true;
+				}
 			}
-
+			
 			sender.sendMessage("Invalid command, available parameters are: assign, reveal, clear");
 			return true;
 		}
+		
 		return false;
 	}
 	
@@ -298,37 +322,22 @@ public class Killer extends JavaPlugin
 	
 	public void restartGame()
 	{	
-		// unban and kick everyone
-		for ( OfflinePlayer player : getServer().getBannedPlayers() )
-			player.setBanned(false);
-	
-		for ( Player player : getServer().getOnlinePlayers() )
-			player.kickPlayer("Server is regenerating the world. Rejoin for another game!");
-				
-		// first of all, ensure the spawn point is loaded
-		//World mainWorld = getServer().getWorlds().get(0);
+		getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
 		
-		log.info("Clearing out old worlds...");
-		
-		List<World> worlds = getServer().getWorlds();
-				
-		//String[] worldNames = new String[worlds.size()-1];
-		//World.Environment[] worldTypes = new World.Environment[worlds.size()-1];
-
-		//for ( int i=0; i<worldNames.length; i++ )
-		for ( World world : worlds )
+		log.info("Clearing out old worlds...");		
+		for ( World world : getServer().getWorlds() )
 		{
-			//worldNames[i] = worlds.get(i).getName();
-			//worldTypes[i] = worlds.get(i).getEnvironment();
+			if ( world.getName() == holdingWorldName )
+				continue;
 			
-			//World world = worlds.get(i);
-			forceUnloadWorld(world);
+			forceUnloadWorld(world, holdingWorld);
 			log.info("Unloaded " + world.getName());
 			
 			// now we want to try to delete the world folder
-			getServer().getScheduler().scheduleAsyncDelayedTask(this, new WorldDeleter(world.getName().toLowerCase()), 20);
+			getServer().getScheduler().scheduleAsyncDelayedTask(this, new WorldDeleter(world.getName().toLowerCase()), 30);
 		}
 		
+		// once the world folders have had time to delete, re-run minecraft's default world creation, with a new seed
 		getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			public void run()
 			{
@@ -342,48 +351,92 @@ public class Killer extends JavaPlugin
 				if (worldtype == null)
 					worldtype = WorldType.NORMAL;
 				
+				Method a;
 				try
 				{
-					Method a = ms.getClass().getMethod("a", new Class[] { Convertable.class, String.class, long.class, WorldType.class });
-					a.invoke(ms, new WorldLoaderServer(ms.server.getWorldContainer()), s, seedGen.nextLong(), worldtype);
+					a = ms.getClass().getDeclaredMethod("a", Convertable.class, String.class, long.class, WorldType.class);
 				}
-				catch ( NoSuchMethodException ex)
+				catch ( NoSuchMethodException ex )
 				{
 					log.warning("No such method: " + ex.getMessage());
+					getServer().shutdown();
+					return;
+				}
+				
+				try
+				{
+					a.setAccessible(true);
+					a.invoke(ms, new WorldLoaderServer(ms.server.getWorldContainer()), s, seedGen.nextLong(), worldtype);
+					a.setAccessible(false);
 				}
 				catch ( IllegalAccessException ex )
 				{
 					log.warning("Illegal access: " + ex.getMessage());
 				}
-				catch ( IllegalArgumentException ex )
-				{
-					log.warning("Illegal argument: " + ex.getMessage());
-				}
 				catch ( InvocationTargetException ex )
 				{
 					log.warning("Invocation target exception: " + ex.getMessage());
 				}
+
+				// now we want to ensure that the holding world gets put on the end of the worlds list, instead of staying at the beginning
+				// also ensure that the other worlds on the list are in the right order
+				sortWorldOrder();
+								
+				// create a plinth in the new default world
+				World defaultWorld = getServer().getWorlds().get(0);
+				plinthPressurePlateLocation = createPlinth(defaultWorld);
+				
+				// move ALL players back into the main world
+				for ( Player player : getServer().getOnlinePlayers() )
+					player.teleport(defaultWorld.getSpawnLocation());
 			}
+
 		}, 60);
-		
-		// rearrange the world list so that they're in the right order!
-		
-		// create a plinth in the new default world
-		plinthPressurePlateLocation = createPlinth(getServer().getWorlds().get(0));
-		
-		
-		/*
-		// now want to create new worlds, with the same names and types as we had before
-		// ... hopefully this will keep the default settings (generate structures, etc)
-		for ( int i=0; i<worldNames.length; i++ )
+	}
+
+	private void sortWorldOrder()
+	{
+		try
 		{
-			WorldCreator wc = new WorldCreator(worldNames[i]);
-			wc.environment(worldTypes[i]);
-			wc.seed(seedGen.nextLong());
-			//if ( i == 0 )
-				//wc.generator(new HoldingWorldGenerator());
-			CreateWorld(wc, i == 0);
-		}*/
+			Field f = getServer().getClass().getDeclaredField("worlds");
+			f.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			Map<String, World> worlds = (Map<String, World>)f.get(getServer());
+			f.setAccessible(false);
+			
+			// remove the holding world from the front of the list, and re-add it back on the end
+			worlds.remove(holdingWorldName);
+			worlds.put(holdingWorldName, holdingWorld);
+
+			log.info("CraftServer worlds:");
+			for ( Map.Entry<String, World> map : worlds.entrySet() )
+				log.info(" " + map.getKey() + " : " + map.getValue().getName());
+			
+			log.info("");
+			log.info("accessible format:");
+			for ( World world : getServer().getWorlds() )
+				log.info(" " + world.getName());
+		}
+		catch ( IllegalAccessException ex )
+		{
+			log.warning("Error removing world from bukkit master list: " + ex.getMessage());
+		}
+		catch  ( NoSuchFieldException ex )
+		{
+			log.warning("Error removing world from bukkit master list: " + ex.getMessage());
+		}
+		
+		log.info("");
+		
+		WorldServer holdingWorldServer = ((CraftWorld)holdingWorld).getHandle();
+		
+		MinecraftServer ms = getMinecraftServer();
+		ms.worlds.remove(ms.worlds.indexOf(holdingWorldServer));
+		ms.worlds.add(holdingWorldServer);
+		
+		log.info("MinecraftServer worlds:");
+		for ( WorldServer world : ms.worlds )
+			log.info(" " + world.dimension);
 	}
 	
 	class WorldDeleter implements Runnable
@@ -404,32 +457,48 @@ public class Killer extends JavaPlugin
 			}
     	}
     }
-	/*
-	private World CreateWorld(WorldCreator wc, boolean keepSpawnInMemory)
+		
+	private World CreateWorld(WorldCreator wc, boolean loadChunks, boolean setSpawnLocation, int spawnX, int spawnY, int spawnZ)
 	{
 		World world = getServer().createWorld(wc);
-		//getServer().getWorlds().add(world);
 		
 		if (world != null)
 		{
-			final int keepdimension = 7;
-			int spawnx = world.getSpawnLocation().getBlockX() >> 4;
-		    int spawnz = world.getSpawnLocation().getBlockZ() >> 4;
-			for (int x = -keepdimension; x < keepdimension; x++)
+			if ( setSpawnLocation )
+				world.setSpawnLocation(spawnX, spawnY, spawnZ);
+			
+			if ( loadChunks )
 			{
-				for (int z = -keepdimension; z < keepdimension; z++) {
-					world.loadChunk(spawnx + x, spawnz + z);
+				final int keepdimension = 7;
+				final int total = 4 * keepdimension * keepdimension;
+				int current = 0;
+				int spawnx = world.getSpawnLocation().getBlockX() >> 4;
+			    int spawnz = world.getSpawnLocation().getBlockZ() >> 4;
+				for (int x = -keepdimension; x < keepdimension; x++)
+				{
+					boolean first = true;
+					for (int z = -keepdimension; z < keepdimension; z++) {
+						world.loadChunk(spawnx + x, spawnz + z);
+						
+						if (first || (current + 2) == total)
+						{
+							int per = 100;
+							if (first) per = 100 * current / total;
+							log.info( "Preparing spawn area (" + per + "%)...");
+							first = false;
+						}
+						current++;
+					}
 				}
 			}
-			
-			world.setKeepSpawnInMemory(keepSpawnInMemory);
+			world.setKeepSpawnInMemory(loadChunks);
 			log.info("World '" + world.getName() + "' has been created successfully!");
 		}
 		else
 			log.info("World creation failed!");
 		
 		return world;
-	}*/
+	}
 
 	private static boolean delete(File folder)
 	{
@@ -441,57 +510,52 @@ public class Killer extends JavaPlugin
 				if (!delete(f))
 				{
 					retVal = false;
-					instance.log.info("Failed to delete file: " + f.getName());
+					instance.log.warning("Failed to delete file: " + f.getName());
 				}
 		return folder.delete() && retVal;
 	}
-/*
-	public void moveToHoldingWorld(Player player)
-	{
-		Location loc = new Location(holdingWorld, 8, 2, 8);
-		player.teleport(loc);		
-	}
-	*/
-	public void moveToMainWorld(Player player)
-	{
-		World world = getServer().getWorlds().get(0);
-		Location spawnPoint = world.getSpawnLocation();
-		Chunk spawnChunk = world.getChunkAt(spawnPoint);
-		if ( !world.isChunkLoaded(spawnChunk) )
-			world.loadChunk(spawnChunk);
-		player.teleport(spawnPoint);
-	}
 	
-	public static boolean clearWorldReference(World world) {
-		String worldname = world.getName();
+	public static boolean clearWorldReference(World world)
+	{
 		if (regionfiles == null) return false;
 		if (rafField == null) return false;
+		String worldname = world.getName();
+		
 		ArrayList<Object> removedKeys = new ArrayList<Object>();
-		try {
-			for (Object o : regionfiles.entrySet()) {
+		try
+		{
+			for (Object o : regionfiles.entrySet())
+			{
 				Map.Entry e = (Map.Entry) o;
 				File f = (File) e.getKey();
-				if (f.toString().startsWith("." + File.separator + worldname)) {
+				if (f.toString().startsWith("." + File.separator + worldname))
+				{
 					SoftReference ref = (SoftReference) e.getValue();
-					try {
+					try
+					{
 						RegionFile file = (RegionFile) ref.get();
-						if (file != null) {
+						if (file != null)
+						{
 							RandomAccessFile raf = (RandomAccessFile) rafField.get(file);
 							raf.close();
 							removedKeys.add(f);
 						}
-					} catch (Exception ex) {
+					}
+					catch (Exception ex)
+					{
 						ex.printStackTrace();
 					}
 				}
 			}
-		} catch (Exception ex) {
+		}
+		catch (Exception ex)
+		{
 			instance.log.warning("Exception while removing world reference for '" + worldname + "'!");
 			ex.printStackTrace();
 		}
-		for (Object key : removedKeys) {
+		for (Object key : removedKeys)
 			regionfiles.remove(key);
-		}
+		
 		return true;
 	}
 	
@@ -515,10 +579,14 @@ public class Killer extends JavaPlugin
 		return null;
 	}
 	
-	public void forceUnloadWorld(World world)
+	public void forceUnloadWorld(World world, World movePlayersTo)
 	{
-		for ( Player player : world.getPlayers() )
-			player.kickPlayer("World is being regenerated... and you were in it!");
+		if ( movePlayersTo == null )
+			for ( Player player : world.getPlayers() )
+				player.kickPlayer("World is being regenerated... and you were in it!");
+		else
+			for ( Player player : world.getPlayers() )
+				player.teleport(movePlayersTo.getSpawnLocation());	
 		
 		CraftServer server = (CraftServer)getServer();
 		CraftWorld craftWorld = (CraftWorld)world;
@@ -547,18 +615,26 @@ public class Killer extends JavaPlugin
         clearWorldReference(world);
 	}
 	
-	final int plinthHeightAboveSurroundings = 6, spaceBetweenPlinthAndGlowstone = 4;
-	final int plinthSpawnOffsetX = 20, plinthSpawnOffsetZ = 0;
+	static final int plinthHeightAboveSurroundings = 6, spaceBetweenPlinthAndGlowstone = 4;
+	static final int plinthSpawnOffsetX = 20, plinthSpawnOffsetZ = 0;
 	public static Location createPlinth(World world)
 	{
+		return null;
+		/*
 		Location spawnPoint = world.getSpawnLocation();
 		int x = spawnPoint.getBlockX() + plinthSpawnOffsetX;
 		int z = spawnPoint.getBlockZ() + plinthSpawnOffsetZ;
 	
-		int yPeak = Math.max(world.getHighestBlockYAt(x, z), world.getHighestBlockYAt(x, z+1), world.getHighestBlockYAt(x, z-1),
-		world.getHighestBlockYAt(x+1, z), world.getHighestBlockYAt(x+1, z+1), world.getHighestBlockYAt(x+1, z-1),
-		world.getHighestBlockYAt(x-1, z), world.getHighestBlockYAt(x-1, z+1), world.getHighestBlockYAt(x-1, z-1))
-		+ plinthHeightAboveSurroundings;
+		int yPeak = world.getHighestBlockYAt(x, z);
+		yPeak = Math.max(yPeak, world.getHighestBlockYAt(x, z+1));
+		yPeak = Math.max(yPeak, world.getHighestBlockYAt(x, z-1));
+		yPeak = Math.max(yPeak, world.getHighestBlockYAt(x+1, z));
+		yPeak = Math.max(yPeak, world.getHighestBlockYAt(x+1, z+1));
+		yPeak = Math.max(yPeak, world.getHighestBlockYAt(x+1, z-1));
+		yPeak = Math.max(yPeak, world.getHighestBlockYAt(x-1, z));
+		yPeak = Math.max(yPeak, world.getHighestBlockYAt(x-1, z+1));
+		yPeak = Math.max(yPeak, world.getHighestBlockYAt(x-1, z-1));
+		yPeak += plinthHeightAboveSurroundings;
 		
 		// a 3x3 column from bedrock to the plinth height
 		for ( int y = 0; y < yPeak; y++ )
@@ -579,7 +655,7 @@ public class Killer extends JavaPlugin
 				}
 		
 		// that has a pressure plate on it
-		int y = yPeak + 1;
+		y = yPeak + 1;
 		Location pressurePlateLocation = new Location(world, x, y, z);
 		for ( int ix = x - 1; ix < x + 2; ix++ )
 				for ( int iz = z - 1; iz < z + 2; iz++ )
@@ -589,7 +665,7 @@ public class Killer extends JavaPlugin
 				}
 				
 		// then a space
-		for ( int y=yPeak + 2; y <= yPeak + spaceBetweenPlinthAndGlowstone; y++ )
+		for ( y = yPeak + 2; y <= yPeak + spaceBetweenPlinthAndGlowstone; y++ )
 			for ( int ix = x - 1; ix < x + 2; ix++ )
 				for ( int iz = z - 1; iz < z + 2; iz++ )
 				{
@@ -598,7 +674,7 @@ public class Killer extends JavaPlugin
 				}
 		
 		// and then a 1x1 pillar of glowstone, up to max height
-		for ( int y=yPeak + spaceBetweenPlinthAndGlowstone + 1; y < world.getMaxHeight(); y++ )
+		for ( y = yPeak + spaceBetweenPlinthAndGlowstone + 1; y < world.getMaxHeight(); y++ )
 			for ( int ix = x - 1; ix < x + 2; ix++ )
 				for ( int iz = z - 1; iz < z + 2; iz++ )
 				{
@@ -606,6 +682,6 @@ public class Killer extends JavaPlugin
 					b.setType(ix == x && iz == z ? Material.GLOWSTONE : Material.AIR);
 				}
 		
-		return pressurePlateLocation;
+		return pressurePlateLocation;*/
 	}
 }
