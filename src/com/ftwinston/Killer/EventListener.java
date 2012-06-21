@@ -15,6 +15,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 public class EventListener implements Listener
 {
@@ -23,6 +24,16 @@ public class EventListener implements Listener
     public EventListener(Killer instance)
 	{
 		plugin = instance;
+    }
+    
+    // when you die a spectator, be made able to fly again when you respawn
+    @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent event)
+    {
+    	if(SpectatorManager.get().isSpectator(event.getPlayer()))
+    	{
+    		SpectatorManager.get().addSpectator(event.getPlayer());
+    	}
     }
     
     // prevent spectators picking up anything
