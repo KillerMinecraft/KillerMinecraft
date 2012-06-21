@@ -41,11 +41,15 @@ import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 
+import com.ftwinston.Killer.Services.SpectatorManager;
+
 @SuppressWarnings("rawtypes")
+
 public class Killer extends JavaPlugin
 {
 	public void onEnable()
@@ -65,12 +69,10 @@ public class Killer extends JavaPlugin
 		deadPlayers = new Vector<String>();
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
+        spectatorManager = new SpectatorManager(this);
         
-		// create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
-		plinthPressurePlateLocation = createPlinth(getServer().getWorlds().get(0));
-		
-		
-		//defaultWorldName = getServer().getWorlds().get(0).getName();
+        // create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
+        plinthPressurePlateLocation = createPlinth(getServer().getWorlds().get(0));
         
         holdingWorld = getServer().getWorld(holdingWorldName);
         if ( holdingWorld == null )
@@ -122,7 +124,7 @@ public class Killer extends JavaPlugin
 		rafField = null;
 		serverFolder = null;
 	}
-	
+	private SpectatorManager spectatorManager;
 	private final int absMinPlayers = 2;
 	private EventListener eventListener = new EventListener(this);
 	public boolean autoAssignKiller, autoReveal, restartDayWhenFirstPlayerJoins;
@@ -160,6 +162,13 @@ public class Killer extends JavaPlugin
 				{
 					clearKiller(sender);					
 					return true;
+				} else if( args[0].equalsIgnoreCase("spectator")) {
+					if(args.length > 2) {
+					sender.sendMessage(spectatorManager.handleSpectatorCommand(args[1], args[2]));
+					} else {
+						sender.sendMessage(spectatorManager.handleSpectatorCommand(args[1],""));
+					}
+					return true;
 				}
 				else if ( args[0].equalsIgnoreCase("restart") )
 				{
@@ -180,7 +189,7 @@ public class Killer extends JavaPlugin
 				}
 			}
 			
-			sender.sendMessage("Invalid command, available parameters are: assign, reveal, clear");
+			sender.sendMessage("Invalid command, available parameters are: assign, reveal, clear, spectator");
 			return true;
 		}
 		
@@ -286,8 +295,9 @@ public class Killer extends JavaPlugin
 			Player player = Bukkit.getServer().getPlayerExact(name);
 			if (player != null)
 			{
-				player.setBanned(true);
-				player.kickPlayer("You were killed, and are banned until the end of the game");
+				//player.setBanned(true);
+				//player.kickPlayer("You were killed, and are banned until the end of the game");
+				spectatorManager.addSpectator(player);
 			}
 		}
 		

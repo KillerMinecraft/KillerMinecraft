@@ -4,10 +4,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+
+import com.ftwinston.Killer.Services.SpectatorManager;
 
 public class EventListener implements Listener
 {
@@ -19,7 +22,12 @@ public class EventListener implements Listener
     }
     
     private int autoStartProcessID = -1;
-    
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent ev) {
+    	if(SpectatorManager.get().isSpectator(ev.getPlayer())) {
+    		ev.setCancelled(true);
+    	}
+    }
     @EventHandler
 	public void onPlayerJoin(PlayerJoinEvent p)
     {
