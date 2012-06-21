@@ -455,10 +455,11 @@ public class Killer extends JavaPlugin
 	public void moveToMainWorld(Player player)
 	{
 		World world = getServer().getWorlds().get(0);
-		if ( !world.isChunkLoaded(0, 0) )
-			world.loadChunk(0,0);
-		Location loc = new Location(world, 8, world.getHighestBlockYAt(8, 8), 8);
-		player.teleport(loc);
+		Location spawnPoint = world.getSpawnLocation();
+		Chunk spawnChunk = world.getChunkAt(spawnPoint);
+		if ( !world.isChunkLoaded(spawnChunk) )
+			world.loadChunk(spawnChunk);
+		player.teleport(spawnPoint);
 	}
 	
 	public static boolean clearWorldReference(World world) {
