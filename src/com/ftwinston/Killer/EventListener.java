@@ -181,15 +181,9 @@ public class EventListener implements Listener
     @EventHandler
 	public void onPlayerJoin(PlayerJoinEvent p)
     {
-    	/*final Player player = p.getPlayer();
-		if ( true ) // this should actually decide if the player is already part of the current game or not (e.g. were they just disconnected)
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-	            public void run() {
-	                plugin.moveToMainWorld(player);
-	                player.getInventory().clear();
-	                player.setTotalExperience(0);
-	            }
-	        }, 1);*/
+    	Player player = p.getPlayer();
+    	SpectatorManager.get().playerJoined(player);
+    	
 
 		Player[] players = null;
     	if ( plugin.restartDayWhenFirstPlayerJoins )

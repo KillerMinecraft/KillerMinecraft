@@ -17,7 +17,8 @@ public class SpectatorManager {
 		instance = this;
 	}
 	private List<Player> Spectators = new ArrayList<Player>();
-	public void PlayerJoined(Player player) {
+	
+	public void playerJoined(Player player) {
 		for(Player p:Spectators) {
 			if(p == player) continue;
 			player.hidePlayer(p);
@@ -30,6 +31,7 @@ public class SpectatorManager {
 		player.setAllowFlight(true);
 		player.getInventory().clear();
 		makePlayerInvisibleToAll(player);
+		
 		if(Spectators.contains(player)) return;
 		Spectators.add(player);
 	}
