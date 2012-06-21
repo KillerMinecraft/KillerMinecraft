@@ -275,4 +275,17 @@ public class Killer extends JavaPlugin
 			}
 		});
 	}
+
+	public void doItemVictory(Player player)
+	{
+		getServer().broadcastMessage(player.getDisplayName() + " brought a blaze rod to the plinth - the friendlies win!");
+		revealKiller(player);
+		
+		getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+			public void run()
+			{
+				restartGame();
+			}
+		}, 100);
+	}
 }

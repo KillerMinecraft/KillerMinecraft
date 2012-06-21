@@ -2,6 +2,7 @@ package com.ftwinston.Killer;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -10,6 +11,7 @@ import org.bukkit.event.block.BlockCanBuildEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -44,6 +46,7 @@ public class EventListener implements Listener
     }
     
     // prevent anyone placing blocks over the plinth
+    @EventHandler
     public void onBlockCanBuild(BlockCanBuildEvent event)
     {
     	Location loc = event.getBlock().getLocation();
@@ -70,6 +73,29 @@ public class EventListener implements Listener
             event.setCancelled(true);
     }
 
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event)
+    {
+    	if(event.isCancelled())
+    		return;
+   
+	  	if(event.getClickedBlock().getType() == Material.STONE_PLATE)
+	  	{
+	  		Location loc = event.getClickedBlock().getLocation();
+	        if ( loc.getWorld() == plugin.plinthPressurePlateLocation.getWorld()
+	            && loc.getX() >= plugin.plinthPressurePlateLocation.getBlockX() - 1
+	            && loc.getX() <= plugin.plinthPressurePlateLocation.getBlockX() + 1
+	            && loc.getZ() >= plugin.plinthPressurePlateLocation.getBlockZ() - 1
+	            && loc.getZ() <= plugin.plinthPressurePlateLocation.getBlockZ() + 1
+	        )	
+	        {
+	        	// does the player have a blaze rod in their inventory?
+	        	if ( event.getPlayer().getInventory().contains(Material.BLAZE_ROD) )
+	        		plugin.doItemVictory(event.getPlayer());
+	        }
+	  	}
+    }
+    
     private int autoStartProcessID = -1;
     
     @EventHandler
