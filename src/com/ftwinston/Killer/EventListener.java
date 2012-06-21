@@ -18,21 +18,29 @@ public class EventListener implements Listener
 		plugin = instance;
     }
     
-    
     private int autoStartProcessID = -1;
     
     @EventHandler
 	public void onPlayerJoin(PlayerJoinEvent p)
     {
-    	Player[] players = null;
-    	
+		final Player player = p.getPlayer();
+		if ( true ) // this should actually decide if the player is already part of the current game or not (e.g. were they just disconnected)
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+	            public void run() {
+	                plugin.moveToMainWorld(player);
+	                player.getInventory().clear();
+	                player.setTotalExperience(0);
+	            }
+	        }, 1);
+
+		Player[] players = null;
     	if ( plugin.restartDayWhenFirstPlayerJoins )
     	{
     		players = plugin.getServer().getOnlinePlayers();
     		if ( players.length == 1 )
     			plugin.getServer().getWorlds().get(0).setTime(0);
     	}
-
+    	
     	if ( plugin.autoAssignKiller )
     	{
     		if ( players == null )
@@ -70,11 +78,8 @@ public class EventListener implements Listener
     {
 		plugin.cancelAutoStart();
 		
-		// if the game is "active" then give them 30s to rejoin, otherwise consider them to be "killed" right away.
-		if ( plugin.hasKillerAssigned() )
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new ForgetDisconnectedPlayer(p.getPlayer().getName()), 600);
-		else
-			plugin.playerKilled(p.getPlayer().getName());
+		// if the game is "active" then give them 30s to rejoin, otherwise consider them to be "killed" almost right away.
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new ForgetDisconnectedPlayer(p.getPlayer().getName()), plugin.hasKillerAssigned() ? 600 : 60);
     }
     
     class ForgetDisconnectedPlayer implements Runnable
