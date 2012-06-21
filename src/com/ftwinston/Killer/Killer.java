@@ -60,7 +60,11 @@ public class Killer extends JavaPlugin
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
         
-        //defaultWorldName = getServer().getWorlds().get(0).getName();
+		// create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
+		plinthPressurePlateLocation = createPlinth(getServer().getWorlds().get(0));
+		
+		
+		//defaultWorldName = getServer().getWorlds().get(0).getName();
         
         /*holdingWorld = getServer().getWorld(holdingWorldName);
         if ( holdingWorld == null )
@@ -96,6 +100,8 @@ public class Killer extends JavaPlugin
 	public static Killer instance;
 	static File serverFolder;
 	Random seedGen;
+	private Location plinthPressurePlateLocation;
+	
 	//World holdingWorld;
 	//String defaultWorldName, holdingWorldName = "holding";
 	
@@ -360,6 +366,11 @@ public class Killer extends JavaPlugin
 			}
 		}, 60);
 		
+		// rearrange the world list so that they're in the right order!
+		
+		// create a plinth in the new default world
+		plinthPressurePlateLocation = createPlinth(getServer().getWorlds().get(0));
+		
 		
 		/*
 		// now want to create new worlds, with the same names and types as we had before
@@ -533,5 +544,67 @@ public class Killer extends JavaPlugin
 		ms.worlds.remove(ms.worlds.indexOf(craftWorld.getHandle()));
 		
         clearWorldReference(world);
+	}
+	
+	final int plinthHeightAboveSurroundings = 6, spaceBetweenPlinthAndGlowstone = 4;
+	final int plinthSpawnOffsetX = 20, plinthSpawnOffsetZ = 0;
+	public static Location createPlinth(World world)
+	{
+		Location spawnPoint = world.getSpawnLocation();
+		int x = spawnPoint.getBlockX() + plinthSpawnOffsetX;
+		int z = spawnPoint.getBlockZ() + plinthSpawnOffsetZ;
+	
+		int yPeak = Math.max(world.getHighestBlockYAt(x, z), world.getHighestBlockYAt(x, z+1), world.getHighestBlockYAt(x, z-1),
+		world.getHighestBlockYAt(x+1, z), world.getHighestBlockYAt(x+1, z+1), world.getHighestBlockYAt(x+1, z-1),
+		world.getHighestBlockYAt(x-1, z), world.getHighestBlockYAt(x-1, z+1), world.getHighestBlockYAt(x-1, z-1))
+		+ plinthHeightAboveSurroundings;
+		
+		// a 3x3 column from bedrock to the plinth height
+		for ( int y = 0; y < yPeak; y++ )
+			for ( int ix = x - 1; ix < x + 2; ix++ )
+				for ( int iz = z - 1; iz < z + 2; iz++ )
+				{
+					Block b = world.getBlockAt(ix, y, iz);
+					b.setType(Material.BEDROCK);
+				}
+		
+		// with one block sticking up from it
+		int y = yPeak;
+		for ( int ix = x - 1; ix < x + 2; ix++ )
+				for ( int iz = z - 1; iz < z + 2; iz++ )
+				{
+					Block b = world.getBlockAt(ix, y, iz);
+					b.setType(ix == x && iz == z ? Material.BEDROCK : Material.AIR);
+				}
+		
+		// that has a pressure plate on it
+		int y = yPeak + 1;
+		Location pressurePlateLocation = new Location(world, x, y, z);
+		for ( int ix = x - 1; ix < x + 2; ix++ )
+				for ( int iz = z - 1; iz < z + 2; iz++ )
+				{
+					Block b = world.getBlockAt(ix, y, iz);
+					b.setType(ix == x && iz == z ? Material.STONE_PLATE : Material.AIR);
+				}
+				
+		// then a space
+		for ( int y=yPeak + 2; y <= yPeak + spaceBetweenPlinthAndGlowstone; y++ )
+			for ( int ix = x - 1; ix < x + 2; ix++ )
+				for ( int iz = z - 1; iz < z + 2; iz++ )
+				{
+					Block b = world.getBlockAt(ix, y, iz);
+					b.setType(Material.AIR);
+				}
+		
+		// and then a 1x1 pillar of glowstone, up to max height
+		for ( int y=yPeak + spaceBetweenPlinthAndGlowstone + 1; y < world.getMaxHeight(); y++ )
+			for ( int ix = x - 1; ix < x + 2; ix++ )
+				for ( int iz = z - 1; iz < z + 2; iz++ )
+				{
+					Block b = world.getBlockAt(ix, y, iz);
+					b.setType(ix == x && iz == z ? Material.GLOWSTONE : Material.AIR);
+				}
+		
+		return pressurePlateLocation;
 	}
 }
