@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockCanBuildEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -21,6 +22,7 @@ public class EventListener implements Listener
 		plugin = instance;
     }
     
+    // prevent spectators breaking anything, prevent anyone breaking the plinth
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event)
     {
@@ -39,6 +41,19 @@ public class EventListener implements Listener
     	        )
     	            event.setCancelled(true);
     	}
+    }
+    
+    // prevent anyone placing blocks over the plinth
+    public void onBlockCanBuild(BlockCanBuildEvent event)
+    {
+    	Location loc = event.getBlock().getLocation();
+        if ( loc.getWorld() == plugin.plinthPressurePlateLocation.getWorld()
+            && loc.getX() >= plugin.plinthPressurePlateLocation.getBlockX() - 1
+            && loc.getX() <= plugin.plinthPressurePlateLocation.getBlockX() + 1
+            && loc.getZ() >= plugin.plinthPressurePlateLocation.getBlockZ() - 1
+            && loc.getZ() <= plugin.plinthPressurePlateLocation.getBlockZ() + 1
+        )
+            event.setBuildable(false);
     }
     
     // prevent lava/water from flowing onto the plinth
