@@ -44,13 +44,13 @@ public class SpectatorManager {
 	private void makePlayerInvisibleToAll(Player player) {
 		Player[] players = currentPlugin.getServer().getOnlinePlayers();
 		for(Player p : players) {
-			player.hidePlayer(p);
+			p.hidePlayer(player);
 		}
 	}
 	private void makePlayerVisibleToAll(Player player) {
 		Player[] players = currentPlugin.getServer().getOnlinePlayers();
 		for(Player p : players) {
-			player.showPlayer(p);
+			p.showPlayer(player);
 		}
 	}
 	public String handleSpectatorCommand(String command, String param)
