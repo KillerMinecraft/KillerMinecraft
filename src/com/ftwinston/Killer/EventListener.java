@@ -10,8 +10,6 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import com.ftwinston.Killer.Services.SpectatorManager;
-
 public class EventListener implements Listener
 {
     public static Killer plugin;

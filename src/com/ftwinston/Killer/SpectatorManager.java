@@ -1,4 +1,4 @@
-package com.ftwinston.Killer.Services;
+package com.ftwinston.Killer;
 
 import java.util.ArrayList;
 import java.util.List;
