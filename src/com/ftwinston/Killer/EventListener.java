@@ -135,8 +135,6 @@ public class EventListener implements Listener
     	if( event.getTarget() != null && event.getTarget() instanceof Player && PlayerManager.instance.isSpectator(((Player)event.getTarget()).getName()))
     		event.setCancelled(true);
     }
-   
-    private int autoStartProcessID = -1;
     
     @EventHandler
 	public void onPlayerJoin(PlayerJoinEvent p)

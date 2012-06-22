@@ -16,6 +16,22 @@ public class PlayerManager
 		this.plugin = plugin;
 		instance = this;
 		random = new Random();
+		
+    	if ( plugin.autoAssignKiller )
+    	{
+			plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+    			long lastRun = 0;
+    			public void run()
+    			{
+    				long time = plugin.getServer().getWorlds().get(0).getTime();
+    				
+    				if ( time < lastRun && !hasEnoughKillers() ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
+						assignKiller(null, killers.size() == 0);
+
+					lastRun = time;
+    			}
+    		}, 600L, 100L); // initial wait: 30s, then check every 5s (still won't try to assign unless it detects a new day starting)
+    	}
 	}
 	
 	private List<String> alive = new ArrayList<String>();
@@ -23,7 +39,24 @@ public class PlayerManager
 	private List<String> spectators = new ArrayList<String>();
 	
 	public boolean hasKillerAssigned() { return killers.size() > 0; }
-	public boolean hasEnoughKillers() { return killers.size() > 0; } // at the moment, one is always enough
+	public boolean hasEnoughKillers()
+	{
+		// if we don't have enough players for a game, we don't want to assign a killer
+		if ( alive.size() < plugin.absMinPlayers )
+			return true;
+		
+		// if we're not set to auto-reassign the killer once one has been assigned at all, even if they're no longer alive / connected, don't do so
+		if ( !plugin.autoReassignKiller && killers.size() > 0 )
+			return true;
+		
+		int numAliveKillers = 0;
+		for ( String name : alive )
+			if ( isKiller(name) )
+				numAliveKillers ++;
+		
+		// for now, one living killer at a time is plenty. But this should be easy to extend later.
+		return numAliveKillers > 0;
+	}
 	
 	public void reset()
 	{
@@ -44,30 +77,37 @@ public class PlayerManager
 		killers.clear();
 	}
 	
-	public void assignKiller(CommandSender sender)
+	public void assignKiller(CommandSender sender, boolean informNonKillers)
 	{
 		Player[] players = getServer().getOnlinePlayers();
-		if ( players.length < absMinPlayers )
+		if ( players.length < plugin.absMinPlayers )
 		{
 			if ( sender != null )
-				sender.sendMessage("This game mode really doesn't work with fewer than " + absMinPlayers + " players. Seriously.");
+				sender.sendMessage("This game mode really doesn't work with fewer than " + plugin.absMinPlayers + " players. Seriously.");
 			return;
 		}
 		
 		String senderName = sender == null ? "" : " by " + sender.getName();
 		getServer().broadcastMessage("A killer has been randomly assigned" + senderName + " - nobody but the killer knows who it is.");
 		
+		int availablePlayers = 0;
+		
+		
 		int randomIndex = random.nextInt(players.length);
+		
+		int num = 0;
 		for ( int i=0; i<players.length; i++ )
 		{
 			Player player = players[i];
 			if ( i == randomIndex )
 			{
 				addKiller(player);
-				player.sendMessage(ChatColor.RED + "You are the killer!");
+				player.sendMessage(ChatColor.RED + "You are " + (killers.size() > 1 ? "now a" : "the" ) + " killer!");
 			}
-			else
+			else if ( informNonKillers )
 				player.sendMessage(ChatColor.YELLOW + "You are not the killer.");
+				
+			num++;
 		}
 		
 		return true;
@@ -86,51 +126,18 @@ public class PlayerManager
 		
 		if ( isSpectator(player.getName()) )
 			addSpectator(player);
+		
+		else if ( isKiller(player.getName()) ) // inform them that they're still a killer
+			player.sendMessage(ChatColor.RED + "You are still " + (killers.size() > 1 ? "a" : "the" ) + " killer!"); 
+		
 		else if ( !isFriendly(player) && !isKiller(player) )
 			if ( hasKillerAssigned() && plugin.lateJoinersStartAsSpectator )
 				addSpectator(player);
 			else
 				addFriendly(player);
 		
-		Player[] players = null;
-    	if ( plugin.restartDayWhenFirstPlayerJoins )
-    	{
-    		players = plugin.getServer().getOnlinePlayers();
-    		if ( players.length == 1 )
-    			plugin.getServer().getWorlds().get(0).setTime(0);
-    	}
-    	
-    	if ( plugin.autoAssignKiller )
-    	{
-    		if ( players == null )
-    			players = plugin.getServer().getOnlinePlayers();
-    		
-    		if ( players.length != 1 )
-    			return; // only do this when the first player joins
-    		
-    		plugin.autoStartProcessID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-    			long lastRun = 0;
-    			public void run()
-    			{
-    				long time = plugin.getServer().getWorlds().get(0).getTime();    				
-    				
-    				if ( time < lastRun ) // time of day has gone backwards! Must be a new day!
-    				{	
-    					// if we already have enough killers, cancel this task
-						// if we don't have enough, assign one. If we then have enough, cancel this task.
-    					if ( hasEnoughKillers() || (plugin.assignKiller(null) && hasEnoughKillers()) )
-    					{
-    						plugin.getServer().getScheduler().cancelTask(autoStartProcessID);
-        					plugin.autoStartProcessID = -1;
-    					}
-    					else
-    						lastRun = time;
-    				}
-    				else
-    					lastRun = time;
-    			}
-    		}, 600L, 100L); // initial wait: 30s, then check every 5s
-    	}
+    	if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getServer().getOnlinePlayers().length == 1 )
+			plugin.getServer().getWorlds().get(0).setTime(0);
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time
@@ -180,7 +187,7 @@ public class PlayerManager
 		plugin.getServer().broadcastMessage(ChatColor.YELLOW + message);
 		if ( plugin.autoReveal )
 			revealKillers(null);
-	
+
 		// schedule a game restart in 10 secs
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
     			plugin.restartGame();

@@ -28,6 +28,7 @@ public class Killer extends JavaPlugin
         instance = this;
         
 		getConfig().addDefault("autoAssign", false);
+		getConfig().addDefault("autoReassign", false);
 		getConfig().addDefault("autoReveal", true);
 		getConfig().addDefault("restartDay", true);
 		getConfig().addDefault("lateJoinersStartAsSpectator", false);
@@ -35,6 +36,7 @@ public class Killer extends JavaPlugin
 		saveConfig();
 		
 		autoAssignKiller = getConfig().getBoolean("autoAssign");
+		autoReassignKiller = getConfig().getBoolean("autoReassign");
 		autoReveal = getConfig().getBoolean("autoReveal");
 		restartDayWhenFirstPlayerJoins = getConfig().getBoolean("restartDay");
 		lateJoinersStartAsSpectator = getConfig().getBoolean("lateJoinersStartAsSpectator");
@@ -61,7 +63,7 @@ public class Killer extends JavaPlugin
 	private PlayerManager playerManager;
 	
 	private final int absMinPlayers = 2;
-	public boolean autoAssignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator;
+	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator;
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
@@ -81,7 +83,7 @@ public class Killer extends JavaPlugin
 			{
 				if ( args[0].equalsIgnoreCase("assign") )
 				{
-					playerManager.assignKiller(sender);
+					playerManager.assignKiller(sender, true);
 					return true;
 				}
 				else if ( args[0].equalsIgnoreCase("reveal") )
@@ -122,22 +124,7 @@ public class Killer extends JavaPlugin
 		
 		return false;
 	}
-	
-	protected int autoStartProcessID;
 
-	public void cancelAutoAssign()
-	{
-		if ( autoAssignKiller && autoStartProcessID != -1 )
-    	{
-    		Player[] players = getServer().getOnlinePlayers();
-    		if ( players.length > 1 )
-    			return; // only do this when the server is empty
-    		
-    		getServer().getScheduler().cancelTask(autoStartProcessID);
-			autoStartProcessID = -1;
-    	}
-	}
-	
 	public void restartGame()
 	{
 		getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
