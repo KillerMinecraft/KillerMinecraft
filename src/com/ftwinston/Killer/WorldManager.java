@@ -38,12 +38,16 @@ public class WorldManager
 		{
 			plugin = killer;
 			instance = this;
-			seedGen = new Random();
 			
-			bindRegionFiles();
-			
-			serverFolder = plugin.getServer().getWorldContainer();
-			holdingWorld = getOrCreateHoldingWorld();
+			if ( plugin.recreateWorld )
+			{
+				seedGen = new Random();
+				bindRegionFiles();
+				serverFolder = plugin.getServer().getWorldContainer();
+				holdingWorld = getOrCreateHoldingWorld();
+			}
+			else
+				holdingWorld = null;
 		}
 		
 		public void onDisable()
@@ -300,7 +304,7 @@ public class WorldManager
 					player.kickPlayer("World is being regenerated... and you were in it!");
 			else
 				for ( Player player : world.getPlayers() )
-					player.teleport(movePlayersTo.getSpawnLocation());	
+					player.teleport(movePlayersTo.getSpawnLocation());
 			
 			CraftServer server = (CraftServer)plugin.getServer();
 			CraftWorld craftWorld = (CraftWorld)world;

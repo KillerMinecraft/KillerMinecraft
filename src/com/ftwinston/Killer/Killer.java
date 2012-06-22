@@ -32,6 +32,8 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("autoReveal", true);
 		getConfig().addDefault("restartDay", true);
 		getConfig().addDefault("lateJoinersStartAsSpectator", false);
+		getConfig().addDefault("banOnDeath", false);
+		getConfig().addDefault("recreateWorld", false);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		
@@ -40,6 +42,8 @@ public class Killer extends JavaPlugin
 		autoReveal = getConfig().getBoolean("autoReveal");
 		restartDayWhenFirstPlayerJoins = getConfig().getBoolean("restartDay");
 		lateJoinersStartAsSpectator = getConfig().getBoolean("lateJoinersStartAsSpectator");
+		banOnDeath = getConfig().getBoolean("banOnDeath");
+		recreateWorld = getConfig().getBoolean("recreateWorld");
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
         playerManager = new PlayerManager(this);
@@ -63,7 +67,7 @@ public class Killer extends JavaPlugin
 	private PlayerManager playerManager;
 	
 	private final int absMinPlayers = 2;
-	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator;
+	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, recreateWorld;
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
@@ -127,15 +131,33 @@ public class Killer extends JavaPlugin
 
 	public void restartGame()
 	{
-		getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
-		
-		worldManager.deleteWorlds(new Runnable() {
-			public void run()
+		if ( recreateWorld )
+		{
+			getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
+			worldManager.deleteWorlds(new Runnable() {
+				public void run()
+				{
+					World defaultWorld = getServer().getWorlds().get(0);
+					plinthPressurePlateLocation = worldManager.createPlinth(defaultWorld);
+					playerManager.reset();
+				}
+			});
+		}
+		else
+		{
+			// what should we do to the world on restart if we're not deleting it?
+			// remove all user-placed portal, obsidian, chests, dispensers and furances? We'd have to track them being placed.
+			getServer().broadcastMessage("Game is restarting, but Killer has been set not to automatically delete the world when restarting.");
+			
+			World defaultWorld = getServer().getWorlds().get(0);
+			for ( Player player : getServer().getOnlinePlayers() )
 			{
-				World defaultWorld = getServer().getWorlds().get(0);
-				plinthPressurePlateLocation = worldManager.createPlinth(defaultWorld);
-				playerManager.reset();
+				player.getInventory().clear();
+				player.setTotalExperience(0);
+				player.teleport(defaultWorld.getSpawnLocation());
 			}
-		});
+			
+			playerManager.reset();
+		}
 	}
 }

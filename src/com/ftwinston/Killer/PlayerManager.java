@@ -75,6 +75,10 @@ public class PlayerManager
 				killerPlayer.sendMessage(ChatColor.YELLOW + "You are no longer " + (killers.size() == 1 ? "the" : "a") + " killer.");
 		}
 		killers.clear();
+		
+		if ( plugin.banOnDeath )
+			for ( OfflinePlayer player : plugin.getServer().getBannedPlayers() )
+				player.setBanned(false);
 	}
 	
 	public boolean assignKiller(CommandSender sender, boolean informNonKillers)
@@ -178,12 +182,17 @@ public class PlayerManager
 				spectators.add(playerName);
 		}
 		
+		if ( plugin.banOnDeath )
+		{
+			player.setBanned(true);
+			player.kickPlayer("You died, and are now banned until the end of the game");
+		}
+		
 		// if there's no one alive at all, game was drawn
 		if (alive.size() == 0 )
 			gameFinished(false, false, null);
 		else
-		{
-			// check for victory ... if there's no one alive that isn't a killer, the killer(s) won
+		{// check for victory ... if there's no one alive that isn't a killer, the killer(s) won
 			for ( String survivor : alive )
 				if ( !isKiller(survivor) )
 					return;
