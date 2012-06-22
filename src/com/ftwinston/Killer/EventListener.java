@@ -52,17 +52,8 @@ public class EventListener implements Listener
     {
     	if(PlayerManager.get().isSpectator(event.getPlayer()))
     		event.setCancelled(true);
-    	else
-    	{
-    		Location loc = event.getBlock().getLocation();
-    		if ( loc.getWorld() == plugin.plinthPressurePlateLocation.getWorld()
-    	            && loc.getX() >= plugin.plinthPressurePlateLocation.getBlockX() - 1
-    	            && loc.getX() <= plugin.plinthPressurePlateLocation.getBlockX() + 1
-    	            && loc.getZ() >= plugin.plinthPressurePlateLocation.getBlockZ() - 1
-    	            && loc.getZ() <= plugin.plinthPressurePlateLocation.getBlockZ() + 1
-    	        )
-    	            event.setCancelled(true);
-    	}
+    	else if ( isOnPlinth(event.getBlock().getLocation()) )
+			event.setCancelled(true);
     }
     
     // prevent anyone placing blocks over the plinth
@@ -71,30 +62,15 @@ public class EventListener implements Listener
     {
     	if(PlayerManager.get().isSpectator(event.getPlayer()))
     		event.setCancelled(true);
-    	else	
-    	{
-	    	Location loc = event.getBlock().getLocation();
-	        if ( loc.getWorld() == plugin.plinthPressurePlateLocation.getWorld()
-	            && loc.getX() >= plugin.plinthPressurePlateLocation.getBlockX() - 1
-	            && loc.getX() <= plugin.plinthPressurePlateLocation.getBlockX() + 1
-	            && loc.getZ() >= plugin.plinthPressurePlateLocation.getBlockZ() - 1
-	            && loc.getZ() <= plugin.plinthPressurePlateLocation.getBlockZ() + 1
-	        )
-	        	event.setCancelled(true);
-    	}
+    	else if ( isOnPlinth(event.getBlock().getLocation()) )
+			event.setCancelled(true);
     }
     
     // prevent lava/water from flowing onto the plinth
     @EventHandler
     public void BlockFromTo(BlockFromToEvent event)
     {
-        Location loc = event.getToBlock().getLocation();
-        if ( loc.getWorld() == plugin.plinthPressurePlateLocation.getWorld()
-            && loc.getX() >= plugin.plinthPressurePlateLocation.getBlockX() - 1
-            && loc.getX() <= plugin.plinthPressurePlateLocation.getBlockX() + 1
-            && loc.getZ() >= plugin.plinthPressurePlateLocation.getBlockZ() - 1
-            && loc.getZ() <= plugin.plinthPressurePlateLocation.getBlockZ() + 1
-        )
+        if ( isOnPlinth(event.getToBlock().getLocation()) )
             event.setCancelled(true);
     }
 
@@ -106,13 +82,7 @@ public class EventListener implements Listener
    
 	  	if(event.getClickedBlock().getType() == Material.STONE_PLATE)
 	  	{
-	  		Location loc = event.getClickedBlock().getLocation();
-	        if ( loc.getWorld() == plugin.plinthPressurePlateLocation.getWorld()
-	            && loc.getX() >= plugin.plinthPressurePlateLocation.getBlockX() - 1
-	            && loc.getX() <= plugin.plinthPressurePlateLocation.getBlockX() + 1
-	            && loc.getZ() >= plugin.plinthPressurePlateLocation.getBlockZ() - 1
-	            && loc.getZ() <= plugin.plinthPressurePlateLocation.getBlockZ() + 1
-	        )	
+	        if ( isOnPlinth(event.getClickedBlock().getLocation()) )
 	        {
 	        	// does the player have a blaze rod in their inventory?
 	        	if ( event.getPlayer().getInventory().contains(Material.BLAZE_ROD) )
@@ -133,11 +103,8 @@ public class EventListener implements Listener
         else if (event instanceof EntityDamageByEntityEvent )
         {
         	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
-        	if ( damager != null && damager instanceof Player )
-        	{
-        		if(PlayerManager.get().isSpectator((Player)damager))
-        			event.setCancelled(true);
-        	}
+        	if ( damager != null && damager instanceof Player && PlayerManager.get().isSpectator((Player)damager))
+				event.setCancelled(true);
         }
 	}
     
@@ -153,11 +120,8 @@ public class EventListener implements Listener
         else if (event instanceof EntityDamageByEntityEvent )
         {
         	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
-        	if ( damager != null && damager instanceof Player )
-        	{
-        		if(PlayerManager.get().isSpectator((Player)damager))
-        			event.setCancelled(true);
-        	}
+        	if ( damager != null && damager instanceof Player && PlayerManager.get().isSpectator((Player)damager))
+				event.setCancelled(true);
         }
 	}
     
@@ -182,20 +146,7 @@ public class EventListener implements Listener
 		plugin.cancelAutoStart();
 		
 		// if the game is "active" then give them 30s to rejoin, otherwise consider them to be "killed" almost right away.
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new ForgetDisconnectedPlayer(p.getPlayer().getName()), plugin.hasKillerAssigned() ? 600 : 20);
-    }
-    
-    class ForgetDisconnectedPlayer implements Runnable
-    {
-    	String name;
-    	public ForgetDisconnectedPlayer(String playerName) { name = playerName; }
-    	
-    	public void run()
-    	{
-			Player player = Bukkit.getServer().getPlayerExact(name);
-			if ( player == null || !player.isOnline() )
-				PlayerManager.playerKilled(name);
-    	}
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(p.getPlayer().getName(), true), plugin.hasKillerAssigned() ? 600 : 20);
     }
     
     @EventHandler
@@ -209,18 +160,34 @@ public class EventListener implements Listener
 			return;
 		
 		// the only reason this is delayed is to avoid banning the player before they properly die, if we're banning players on death
-		
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName()), 30);		
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName(), false), 10);
 	}
     
     class DelayedDeathEffect implements Runnable
     {
     	String name;
-    	public DelayedDeathEffect(String playerName) { name = playerName; }
+		boolean checkDisconnected;
+    	public DelayedDeathEffect(String playerName, bool disconnect) { name = playerName; }
     	
     	public void run()
     	{
+			if ( checkDisconnected )
+			{
+				Player player = Bukkit.getServer().getPlayerExact(name);
+				if ( player != null && player.isOnline() )
+					return; // player has reconnected, so don't kill them
+			}
     		plugin.playerKilled(name);
     	}
     }
+	
+	private boolean isOnPlinth(Location loc)
+	{
+		Location plinthLoc = plugin.plinthPressurePlateLocation;
+		return  plinthLoc != null && loc.getWorld() == plinthLoc.getWorld()
+	            && loc.getX() >= plinthLoc.getBlockX() - 1
+	            && loc.getX() <= plinthLoc.getBlockX() + 1
+	            && loc.getZ() >= plinthLoc.getBlockZ() - 1
+	            && loc.getZ() <= plinthLoc.getBlockZ() + 1
+	}
 }
