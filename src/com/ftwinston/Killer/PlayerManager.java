@@ -6,15 +6,15 @@ import java.util.List;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class SpectatorManager
+public class PlayerManager
 {
-	private static SpectatorManager instance;
-	public static SpectatorManager get()
+	private static PlayerManager instance;
+	public static PlayerManager get()
 	{
 		return instance;
 	}
 	private JavaPlugin plugin;
-	public SpectatorManager(JavaPlugin plugin)
+	public PlayerManager(JavaPlugin plugin)
 	{
 		this.plugin = plugin;
 		instance = this;
@@ -30,7 +30,53 @@ public class SpectatorManager
 				if ( other != null )
 					player.hidePlayer(other);
 			}
+		
+		Player[] players = null;
+    	if ( plugin.restartDayWhenFirstPlayerJoins )
+    	{
+    		players = plugin.getServer().getOnlinePlayers();
+    		if ( players.length == 1 )
+    			plugin.getServer().getWorlds().get(0).setTime(0);
+    	}
+    	
+    	if ( plugin.autoAssignKiller )
+    	{
+    		if ( players == null )
+    			players = plugin.getServer().getOnlinePlayers();
+    		
+    		if ( players.length != 1 )
+    			return; // only do this when the first player joins
+    		
+    		plugin.autoStartProcessID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+    			long lastRun = 0;
+    			public void run()
+    			{
+    				long time = plugin.getServer().getWorlds().get(0).getTime();    				
+    				
+    				if ( time < lastRun ) // time of day has gone backwards! Must be a new day!
+    				{	
+    					// only if we have enough players to assign a killer should we cancel this loop process. Otherwise, try again tomorrow.
+    					if ( plugin.hasKillerAssigned() || plugin.assignKiller(null) )
+    					{
+    						plugin.getServer().getScheduler().cancelTask(autoStartProcessID);
+        					plugin.autoStartProcessID = -1;
+    					}
+    					else
+    						lastRun = time;
+    				}
+    				else
+    					lastRun = time;
+    			}
+    		}, 600L, 100L); // initial wait: 30s, then check every 5s
+    	}
 	}
+	
+	// player either died, or disconnected and didn't rejoin in the required time
+	public void playerKilled(String playerName)
+	{
+		
+	}
+	
 	public boolean isSpectator(Player player)
 	{
 		return Spectators.contains(player.getName());

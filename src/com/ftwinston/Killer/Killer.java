@@ -40,7 +40,7 @@ public class Killer extends JavaPlugin
 		deadPlayers = new Vector<String>();
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
-        spectatorManager = new SpectatorManager(this);
+        playerManager = new PlayerManager(this);
         worldManager = new WorldManager(this);
         
         // create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
@@ -58,7 +58,7 @@ public class Killer extends JavaPlugin
 
 	private EventListener eventListener = new EventListener(this);
 	private WorldManager worldManager;
-	private SpectatorManager spectatorManager;
+	private PlayerManager playerManager;
 	
 	private final int absMinPlayers = 2;
 	public boolean autoAssignKiller, autoReveal, restartDayWhenFirstPlayerJoins;
@@ -94,12 +94,13 @@ public class Killer extends JavaPlugin
 				{
 					clearKiller(sender);					
 					return true;
-				} else if( args[0].equalsIgnoreCase("spectator")) {
-					if(args.length > 2) {
-					sender.sendMessage(spectatorManager.handleSpectatorCommand(args[1], args[2]));
-					} else {
-						sender.sendMessage(spectatorManager.handleSpectatorCommand(args[1],""));
-					}
+				}
+				else if( args[0].equalsIgnoreCase("spectator"))
+				{
+					if(args.length > 2)
+						sender.sendMessage(playerManager.handleSpectatorCommand(args[1], args[2]));
+					else
+						sender.sendMessage(playerManager.handleSpectatorCommand(args[1],""));
 					return true;
 				}
 				else if ( args[0].equalsIgnoreCase("restart") )
@@ -107,21 +108,9 @@ public class Killer extends JavaPlugin
 					restartGame();
 					return true;
 				}
-				else if ( args[0].equalsIgnoreCase("holding") )
-				{
-					if ( sender instanceof Player )
-					{
-						Player player = (Player)sender;
-						Location loc = new Location(worldManager.holdingWorld, 0, 1, 0);
-						player.teleport(loc);
-	
-						player.sendMessage("Teleporting to holding world");
-					}
-					return true;
-				}
 			}
 			
-			sender.sendMessage("Invalid command, available parameters are: assign, reveal, clear, spectator");
+			sender.sendMessage("Invalid command, available parameters are: assign, reveal, clear, spectator, restart");
 			return true;
 		}
 		
@@ -229,7 +218,7 @@ public class Killer extends JavaPlugin
 			{
 				//player.setBanned(true);
 				//player.kickPlayer("You were killed, and are banned until the end of the game");
-				spectatorManager.addSpectator(player);
+				playerManager.addSpectator(player);
 			}
 		}
 		

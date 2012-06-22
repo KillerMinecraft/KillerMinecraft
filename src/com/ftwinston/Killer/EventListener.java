@@ -34,30 +34,24 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event)
     {
-    	if(SpectatorManager.get().isSpectator(event.getPlayer()))
-    	{
-    		SpectatorManager.get().addSpectator(event.getPlayer());
-    	}
+    	if(PlayerManager.get().isSpectator(event.getPlayer()))
+    		PlayerManager.get().addSpectator(event.getPlayer());
     }
     
     // prevent spectators picking up anything
     @EventHandler
     public void onPlayerPickupItem(PlayerPickupItemEvent event)
     {
-    	if(SpectatorManager.get().isSpectator(event.getPlayer()))
-    	{
+    	if(PlayerManager.get().isSpectator(event.getPlayer()))
     		event.setCancelled(true);
-    	}
     }
     
     // prevent spectators breaking anything, prevent anyone breaking the plinth
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event)
     {
-    	if(SpectatorManager.get().isSpectator(event.getPlayer()))
-    	{
+    	if(PlayerManager.get().isSpectator(event.getPlayer()))
     		event.setCancelled(true);
-    	}
     	else
     	{
     		Location loc = event.getBlock().getLocation();
@@ -75,10 +69,8 @@ public class EventListener implements Listener
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event)
     {
-    	if(SpectatorManager.get().isSpectator(event.getPlayer()))
-    	{
+    	if(PlayerManager.get().isSpectator(event.getPlayer()))
     		event.setCancelled(true);
-    	}
     	else	
     	{
 	    	Location loc = event.getBlock().getLocation();
@@ -135,7 +127,7 @@ public class EventListener implements Listener
         if( event.getEntity() instanceof Player )
         {
         	Player player = (Player)event.getEntity();
-        	if(SpectatorManager.get().isSpectator(player))
+        	if(PlayerManager.get().isSpectator(player))
         		event.setCancelled(true);
         }
         else if (event instanceof EntityDamageByEntityEvent )
@@ -143,7 +135,7 @@ public class EventListener implements Listener
         	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
         	if ( damager != null && damager instanceof Player )
         	{
-        		if(SpectatorManager.get().isSpectator((Player)damager))
+        		if(PlayerManager.get().isSpectator((Player)damager))
         			event.setCancelled(true);
         	}
         }
@@ -155,7 +147,7 @@ public class EventListener implements Listener
         if( event.getEntity() instanceof Player )
         {
         	Player player = (Player)event.getEntity();
-        	if(SpectatorManager.get().isSpectator(player))
+        	if(PlayerManager.get().isSpectator(player))
         		event.setCancelled(true);
         }
         else if (event instanceof EntityDamageByEntityEvent )
@@ -163,7 +155,7 @@ public class EventListener implements Listener
         	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
         	if ( damager != null && damager instanceof Player )
         	{
-        		if(SpectatorManager.get().isSpectator((Player)damager))
+        		if(PlayerManager.get().isSpectator((Player)damager))
         			event.setCancelled(true);
         	}
         }
@@ -172,7 +164,7 @@ public class EventListener implements Listener
     @EventHandler
     public void onEntityTarget(EntityTargetEvent event)
     {
-    	if( event.getTarget() != null && event.getTarget() instanceof Player && SpectatorManager.get().isSpectator((Player)event.getTarget()))
+    	if( event.getTarget() != null && event.getTarget() instanceof Player && PlayerManager.get().isSpectator((Player)event.getTarget()))
     		event.setCancelled(true);
     }
    
@@ -181,48 +173,7 @@ public class EventListener implements Listener
     @EventHandler
 	public void onPlayerJoin(PlayerJoinEvent p)
     {
-    	Player player = p.getPlayer();
-    	SpectatorManager.get().playerJoined(player);
-    	
-
-		Player[] players = null;
-    	if ( plugin.restartDayWhenFirstPlayerJoins )
-    	{
-    		players = plugin.getServer().getOnlinePlayers();
-    		if ( players.length == 1 )
-    			plugin.getServer().getWorlds().get(0).setTime(0);
-    	}
-    	
-    	if ( plugin.autoAssignKiller )
-    	{
-    		if ( players == null )
-    			players = plugin.getServer().getOnlinePlayers();
-    		
-    		if ( players.length != 1 )
-    			return; // only do this when the first player joins
-    		
-    		plugin.autoStartProcessID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-    			long lastRun = 0;
-    			public void run()
-    			{
-    				long time = plugin.getServer().getWorlds().get(0).getTime();    				
-    				
-    				if ( time < lastRun ) // time of day has gone backwards! Must be a new day!
-    				{	
-    					// only if we have enough players to assign a killer should we cancel this loop process. Otherwise, try again tomorrow.
-    					if ( plugin.hasKillerAssigned() || plugin.assignKiller(null) )
-    					{
-    						plugin.getServer().getScheduler().cancelTask(autoStartProcessID);
-        					plugin.autoStartProcessID = -1;
-    					}
-    					else
-    						lastRun = time;
-    				}
-    				else
-    					lastRun = time;
-    			}
-    		}, 600L, 100L); // initial wait: 30s, then check every 5s
-    	}
+    	PlayerManager.get().playerJoined(p.getPlayer());
     }
     
     @EventHandler
@@ -231,7 +182,7 @@ public class EventListener implements Listener
 		plugin.cancelAutoStart();
 		
 		// if the game is "active" then give them 30s to rejoin, otherwise consider them to be "killed" almost right away.
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new ForgetDisconnectedPlayer(p.getPlayer().getName()), plugin.hasKillerAssigned() ? 600 : 60);
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new ForgetDisconnectedPlayer(p.getPlayer().getName()), plugin.hasKillerAssigned() ? 600 : 20);
     }
     
     class ForgetDisconnectedPlayer implements Runnable
@@ -243,13 +194,9 @@ public class EventListener implements Listener
     	{
 			Player player = Bukkit.getServer().getPlayerExact(name);
 			if ( player == null || !player.isOnline() )
-			{
-				plugin.playerKilled(name);
-			}
+				PlayerManager.playerKilled(name);
     	}
     }
-    
-    
     
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event)
@@ -261,10 +208,8 @@ public class EventListener implements Listener
 		if ( player == null )
 			return;
 		
-		// the only reason this is delayed is to avoid banning the player before they properly die.
-		// once observer mode is in place instead of banning, this can be a direct function call! 
+		// the only reason this is delayed is to avoid banning the player before they properly die, if we're banning players on death
 		
-		// plugin.playerKilled(player.getName());
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName()), 30);		
 	}
     
