@@ -77,32 +77,55 @@ public class PlayerManager
 		killers.clear();
 	}
 	
-	public void assignKiller(CommandSender sender, boolean informNonKillers)
+	public boolean assignKiller(CommandSender sender, boolean informNonKillers)
 	{
 		Player[] players = getServer().getOnlinePlayers();
 		if ( players.length < plugin.absMinPlayers )
 		{
 			if ( sender != null )
 				sender.sendMessage("This game mode really doesn't work with fewer than " + plugin.absMinPlayers + " players. Seriously.");
-			return;
+			return false;
 		}
 		
-		String senderName = sender == null ? "" : " by " + sender.getName();
-		getServer().broadcastMessage("A killer has been randomly assigned" + senderName + " - nobody but the killer knows who it is.");
+		if ( informNonKillers )
+		{
+			String senderName = sender == null ? "" : " by " + sender.getName();
+			getServer().broadcastMessage("A killer has been randomly assigned" + senderName + " - nobody but the killer knows who it is.");
+		}
 		
 		int availablePlayers = 0;
-		
-		
-		int randomIndex = random.nextInt(players.length);
-		
-		int num = 0;
-		for ( int i=0; i<players.length; i++ )
+		for ( String name : alive )
 		{
-			Player player = players[i];
-			if ( i == randomIndex )
+			if ( isKiller(name) )
+				continue;
+			
+			Player player = plugin.getServer().getPlayerExact(name);
+			if ( player != null && player.isOnline() )
+				availablePlayers ++;
+		}
+		
+		if ( availablePlayers == 0 )
+			return false;
+		
+		int randomIndex = random.nextInt(availablePlayers);
+
+		int num = 0;
+		for ( Player player : players )
+		{
+			if ( isKiller(player.getName()) || isSpectator(player.getName()) )
+				continue;
+		
+			if ( num == randomIndex )
 			{
 				addKiller(player);
-				player.sendMessage(ChatColor.RED + "You are " + (killers.size() > 1 ? "now a" : "the" ) + " killer!");
+				String message = ChatColor.RED + "You are ";
+				message += killers.size() > 1 ? "now a" : "the";
+				message += " killer!";
+				
+				if ( !informNonKillers )
+					message += ChatColor.WHITE + " No one else has been told a new killer was assigned.";
+					
+				player.sendMessage(message);
 			}
 			else if ( informNonKillers )
 				player.sendMessage(ChatColor.YELLOW + "You are not the killer.");
@@ -113,7 +136,6 @@ public class PlayerManager
 		return true;
 	}
 
-	
 	public void playerJoined(Player player)
 	{
 		for(String spec:spectators)
@@ -208,7 +230,7 @@ public class PlayerManager
 				
 				for ( int i=1; i<killers.size(); i++ )
 				{
-					message += (i == killers.size()-1 ? " and " : ", ");
+					message += i == killers.size()-1 ? " and " : ", ";
 					message += killers.get(i);
 				}
 				
@@ -263,6 +285,8 @@ public class PlayerManager
 				alive.remove(player.getName());
 			if(!spectators.contains(player.getName()))
 				spectators.add(player.getName());
+				
+			player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact.");
 		}
 	}
 	
