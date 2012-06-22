@@ -26,7 +26,7 @@ public class PlayerManager
     				long time = plugin.getServer().getWorlds().get(0).getTime();
     				
     				if ( time < lastRun && !hasEnoughKillers() ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
-						assignKiller(null, killers.size() == 0);
+						assignKiller(null, plugin.informEveryoneOfReassignedKillers || killers.size() == 0); // don't inform people of any killer being added apart from the first one, unless the config is set
 
 					lastRun = time;
     			}

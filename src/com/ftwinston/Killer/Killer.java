@@ -34,6 +34,7 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("lateJoinersStartAsSpectator", false);
 		getConfig().addDefault("banOnDeath", false);
 		getConfig().addDefault("recreateWorld", false);
+		getConfig().addDefault("informEveryoneOfReassignedKillers", false);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		
@@ -44,6 +45,7 @@ public class Killer extends JavaPlugin
 		lateJoinersStartAsSpectator = getConfig().getBoolean("lateJoinersStartAsSpectator");
 		banOnDeath = getConfig().getBoolean("banOnDeath");
 		recreateWorld = getConfig().getBoolean("recreateWorld");
+		informEveryoneOfReassignedKillers = getConfig().getBoolean("informEveryoneOfReassignedKillers");
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
         playerManager = new PlayerManager(this);
@@ -67,7 +69,7 @@ public class Killer extends JavaPlugin
 	private PlayerManager playerManager;
 	
 	private final int absMinPlayers = 2;
-	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, recreateWorld;
+	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, recreateWorld, informEveryoneOfReassignedKillers;
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
