@@ -35,7 +35,7 @@ public class EventListener implements Listener
     public void onPlayerRespawn(PlayerRespawnEvent event)
     {
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
-    		PlayerManager.instance.addSpectator(event.getPlayer());
+    		PlayerManager.instance.setAlive(event.getPlayer(),false);
     }
     
     // prevent spectators picking up anything
@@ -145,7 +145,7 @@ public class EventListener implements Listener
 			Player player = p.getPlayer();
 			player.getInventory().clear();
 			player.setTotalExperience(0);
-			player.teleport(plugin.getServer.getWorlds().get(0).getSpawnLocation());
+			player.teleport(plugin.getServer().getWorlds().get(0).getSpawnLocation());
 		}
 		
     	PlayerManager.instance.playerJoined(p.getPlayer());
@@ -154,10 +154,10 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent p)
     {
-		plugin.cancelAutoAssign();
+		//plugin.cancelAutoAssign();
 		
 		// if the game is "active" then give them 30s to rejoin, otherwise consider them to be "killed" almost right away.
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(p.getPlayer().getName(), true), plugin.hasKillerAssigned() ? 600 : 20);
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(p.getPlayer().getName(), true), plugin.playerManager.hasKillerAssigned() ? 600 : 20);
     }
     
     @EventHandler
@@ -178,7 +178,7 @@ public class EventListener implements Listener
     {
     	String name;
 		boolean checkDisconnected;
-    	public DelayedDeathEffect(String playerName, bool disconnect)
+    	public DelayedDeathEffect(String playerName, boolean disconnect)
 		{
 			name = playerName;
 			checkDisconnected = disconnect;
@@ -192,7 +192,7 @@ public class EventListener implements Listener
 				if ( player != null && player.isOnline() )
 					return; // player has reconnected, so don't kill them
 			}
-    		plugin.playerKilled(name);
+    		plugin.playerManager.playerKilled(name);
     	}
     }
 	
@@ -203,6 +203,6 @@ public class EventListener implements Listener
 	            && loc.getX() >= plinthLoc.getBlockX() - 1
 	            && loc.getX() <= plinthLoc.getBlockX() + 1
 	            && loc.getZ() >= plinthLoc.getBlockZ() - 1
-	            && loc.getZ() <= plinthLoc.getBlockZ() + 1
+	            && loc.getZ() <= plinthLoc.getBlockZ() + 1;
 	}
 }

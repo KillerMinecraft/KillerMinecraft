@@ -66,9 +66,9 @@ public class Killer extends JavaPlugin
 
 	private EventListener eventListener = new EventListener(this);
 	private WorldManager worldManager;
-	private PlayerManager playerManager;
+	public PlayerManager playerManager;
 	
-	private final int absMinPlayers = 2;
+	public final int absMinPlayers = 2;
 	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, recreateWorld, informEveryoneOfReassignedKillers;
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
@@ -94,7 +94,7 @@ public class Killer extends JavaPlugin
 				}
 				else if ( args[0].equalsIgnoreCase("reveal") )
 				{
-					playerManager.revealKillers(sender.getName());
+					playerManager.revealKillers(sender);
 					return true;
 				}
 				else if ( args[0].equalsIgnoreCase("clear") )
@@ -105,7 +105,7 @@ public class Killer extends JavaPlugin
 						return true;
 					}
 
-					getServer().broadcastMessage(ChatColor.RED + sender.getName() " cleared the killer - there is no longer a killer!");
+					getServer().broadcastMessage(ChatColor.RED + sender.getName() +" cleared the killer - there is no longer a killer!");
 					playerManager.reset();
 					return true;
 				}

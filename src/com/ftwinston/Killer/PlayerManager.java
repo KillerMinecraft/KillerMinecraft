@@ -2,7 +2,12 @@ package com.ftwinston.Killer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -11,9 +16,9 @@ public class PlayerManager
 	public static PlayerManager instance;
 	private Killer plugin;
 	private Random random;
-	public PlayerManager(Killer plugin)
+	public PlayerManager(Killer _plugin)
 	{
-		this.plugin = plugin;
+		this.plugin = _plugin;
 		instance = this;
 		random = new Random();
 		
@@ -62,7 +67,7 @@ public class PlayerManager
 	{
 		alive.clear();
 		for ( Player player : plugin.getServer().getOnlinePlayers() )
-			addAlive(player);
+			this.setAlive(player,true);
 		
 		// don't do this til after, so addAlive can remove spectator effects if needed
 		spectators.clear();
@@ -83,7 +88,7 @@ public class PlayerManager
 	
 	public boolean assignKiller(CommandSender sender, boolean informNonKillers)
 	{
-		Player[] players = getServer().getOnlinePlayers();
+		Player[] players = plugin.getServer().getOnlinePlayers();
 		if ( players.length < plugin.absMinPlayers )
 		{
 			if ( sender != null )
@@ -94,7 +99,7 @@ public class PlayerManager
 		if ( informNonKillers )
 		{
 			String senderName = sender == null ? "" : " by " + sender.getName();
-			getServer().broadcastMessage("A killer has been randomly assigned" + senderName + " - nobody but the killer knows who it is.");
+			plugin.getServer().broadcastMessage("A killer has been randomly assigned" + senderName + " - nobody but the killer knows who it is.");
 		}
 		
 		int availablePlayers = 0;
@@ -151,16 +156,16 @@ public class PlayerManager
 			}
 		
 		if ( isSpectator(player.getName()) )
-			addSpectator(player);
+			setAlive(player,false);
 		
 		else if ( isKiller(player.getName()) ) // inform them that they're still a killer
 			player.sendMessage(ChatColor.RED + "You are still " + (killers.size() > 1 ? "a" : "the" ) + " killer!"); 
 		
-		else if ( !isFriendly(player) && !isKiller(player) )
+		else if ( !isAlive(player.getName()))
 			if ( hasKillerAssigned() && plugin.lateJoinersStartAsSpectator )
-				addSpectator(player);
+				setAlive(player,false);
 			else
-				addFriendly(player);
+				setAlive(player,true);
 		
     	if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getServer().getOnlinePlayers().length == 1 )
 			plugin.getServer().getWorlds().get(0).setTime(0);
@@ -201,7 +206,7 @@ public class PlayerManager
 		}
 	}
 	
-	public boolean gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName)
+	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName)
 	{
 		String message;
 		if ( killerWon )
@@ -221,11 +226,17 @@ public class PlayerManager
 
 		// schedule a game restart in 10 secs
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
     			plugin.restartGame();
+				
+			}
     		}, 200L);
 	}
 	
-	public void revealKillers(String revealedByPlayer)
+	public void revealKillers(CommandSender sender)
 	{
 		if ( hasKillerAssigned() )
 		{
@@ -247,7 +258,7 @@ public class PlayerManager
 			}
 			
 			if ( sender != null )
-				message += ChatColor.WHITE + " (revealed by " + senderName + ")"
+				message += ChatColor.WHITE + " (revealed by " + sender.getName() + ")";
 			
 			plugin.getServer().broadcastMessage(message);
 		}
@@ -270,9 +281,9 @@ public class PlayerManager
 		return killers.contains(player);
 	}
 	
-	public void setAlive(Player player, boolean alive)
+	public void setAlive(Player player, boolean bAlive)
 	{
-		if ( alive )
+		if ( bAlive )
 		{
 			player.setFlying(false);
 			player.setAllowFlight(false);
