@@ -139,6 +139,15 @@ public class EventListener implements Listener
     @EventHandler
 	public void onPlayerJoin(PlayerJoinEvent p)
     {
+		// if I log into the holding world (cos I logged out there), move me back to the main world's spawn and clear me out
+		if ( p.getPlayer().getLocation().getWorld() == WorldManager.instance.holdingWorld )
+		{
+			Player player = p.getPlayer();
+			player.getInventory().clear();
+			player.setTotalExperience(0);
+			player.teleport(plugin.getServer.getWorlds().get(0).getSpawnLocation());
+		}
+		
     	PlayerManager.instance.playerJoined(p.getPlayer());
     }
     
