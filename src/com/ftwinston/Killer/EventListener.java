@@ -34,15 +34,15 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event)
     {
-    	if(PlayerManager.get().isSpectator(event.getPlayer()))
-    		PlayerManager.get().addSpectator(event.getPlayer());
+    	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+    		PlayerManager.instance.addSpectator(event.getPlayer());
     }
     
     // prevent spectators picking up anything
     @EventHandler
     public void onPlayerPickupItem(PlayerPickupItemEvent event)
     {
-    	if(PlayerManager.get().isSpectator(event.getPlayer()))
+    	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     		event.setCancelled(true);
     }
     
@@ -50,7 +50,7 @@ public class EventListener implements Listener
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event)
     {
-    	if(PlayerManager.get().isSpectator(event.getPlayer()))
+    	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     		event.setCancelled(true);
     	else if ( isOnPlinth(event.getBlock().getLocation()) )
 			event.setCancelled(true);
@@ -60,7 +60,7 @@ public class EventListener implements Listener
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event)
     {
-    	if(PlayerManager.get().isSpectator(event.getPlayer()))
+    	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     		event.setCancelled(true);
     	else if ( isOnPlinth(event.getBlock().getLocation()) )
 			event.setCancelled(true);
@@ -84,9 +84,13 @@ public class EventListener implements Listener
 	  	{
 	        if ( isOnPlinth(event.getClickedBlock().getLocation()) )
 	        {
+				// spectators can no longer win the game
+				if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+					return;
+			
 	        	// does the player have a blaze rod in their inventory?
 	        	if ( event.getPlayer().getInventory().contains(Material.BLAZE_ROD) )
-	        		plugin.doItemVictory(event.getPlayer());
+	        		PlayerManager.instance.gameFinished(false, true, event.getPlayer().getName());
 	        }
 	  	}
     }
@@ -97,13 +101,13 @@ public class EventListener implements Listener
         if( event.getEntity() instanceof Player )
         {
         	Player player = (Player)event.getEntity();
-        	if(PlayerManager.get().isSpectator(player))
+        	if(PlayerManager.instance.isSpectator(player.getName()))
         		event.setCancelled(true);
         }
         else if (event instanceof EntityDamageByEntityEvent )
         {
         	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
-        	if ( damager != null && damager instanceof Player && PlayerManager.get().isSpectator((Player)damager))
+        	if ( damager != null && damager instanceof Player && PlayerManager.instance.isSpectator(((Player)damager).getName()))
 				event.setCancelled(true);
         }
 	}
@@ -114,13 +118,13 @@ public class EventListener implements Listener
         if( event.getEntity() instanceof Player )
         {
         	Player player = (Player)event.getEntity();
-        	if(PlayerManager.get().isSpectator(player))
+        	if(PlayerManager.instance.isSpectator(player.getName()))
         		event.setCancelled(true);
         }
         else if (event instanceof EntityDamageByEntityEvent )
         {
         	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
-        	if ( damager != null && damager instanceof Player && PlayerManager.get().isSpectator((Player)damager))
+        	if ( damager != null && damager instanceof Player && PlayerManager.instance.isSpectator(((Player)damager).getName()))
 				event.setCancelled(true);
         }
 	}
@@ -128,7 +132,7 @@ public class EventListener implements Listener
     @EventHandler
     public void onEntityTarget(EntityTargetEvent event)
     {
-    	if( event.getTarget() != null && event.getTarget() instanceof Player && PlayerManager.get().isSpectator((Player)event.getTarget()))
+    	if( event.getTarget() != null && event.getTarget() instanceof Player && PlayerManager.instance.isSpectator(((Player)event.getTarget()).getName()))
     		event.setCancelled(true);
     }
    
@@ -137,13 +141,13 @@ public class EventListener implements Listener
     @EventHandler
 	public void onPlayerJoin(PlayerJoinEvent p)
     {
-    	PlayerManager.get().playerJoined(p.getPlayer());
+    	PlayerManager.instance.playerJoined(p.getPlayer());
     }
     
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent p)
     {
-		plugin.cancelAutoStart();
+		plugin.cancelAutoAssign();
 		
 		// if the game is "active" then give them 30s to rejoin, otherwise consider them to be "killed" almost right away.
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(p.getPlayer().getName(), true), plugin.hasKillerAssigned() ? 600 : 20);
@@ -167,7 +171,11 @@ public class EventListener implements Listener
     {
     	String name;
 		boolean checkDisconnected;
-    	public DelayedDeathEffect(String playerName, bool disconnect) { name = playerName; }
+    	public DelayedDeathEffect(String playerName, bool disconnect)
+		{
+			name = playerName;
+			checkDisconnected = disconnect;
+		}
     	
     	public void run()
     	{
