@@ -1,8 +1,11 @@
 package com.ftwinston.Killer;
 
+import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,6 +16,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -74,6 +78,18 @@ public class EventListener implements Listener
             event.setCancelled(true);
     }
 
+    @EventHandler
+    public void onEntityExplode(EntityExplodeEvent event)
+    {
+    	List<Block> blocks = event.blockList();
+    	for ( Block block : blocks )
+    		if ( isOnPlinth(block.getLocation()) )
+    		{
+    			event.setCancelled(true);
+    			return;
+    		}
+    }
+    
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event)
     {
