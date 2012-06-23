@@ -6,6 +6,7 @@ import java.util.Random;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -269,23 +270,28 @@ public class PlayerManager
 	{
 		return spectators.contains(player);
 	}
-		
+
 	public boolean isAlive(String player)
 	{
 		return alive.contains(player);
 	}
-	
+
 	public boolean isKiller(String player)
 	{
 		return killers.contains(player);
 	}
-	
+
 	public void setAlive(Player player, boolean bAlive)
 	{
 		if ( bAlive )
 		{
-			player.setFlying(false);
-			player.setAllowFlight(false);
+			// you shouldn't stop being able to fly in creative mode, cos you're (hopefully) only there for testing
+			if ( player.getGameMode() != GameMode.CREATIVE )
+			{
+				player.setFlying(false);
+				player.setAllowFlight(false);
+			}
+			
 			player.getInventory().clear();
 			makePlayerVisibleToAll(player);
 			
