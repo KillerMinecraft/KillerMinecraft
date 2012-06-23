@@ -3,6 +3,7 @@ package com.ftwinston.Killer;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -19,6 +20,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
@@ -82,8 +84,9 @@ public class EventListener implements Listener
     public void onEntityExplode(EntityExplodeEvent event)
     {
     	List<Block> blocks = event.blockList();
+
+		// remove any plinth blocks from the list, stop them being destroyed
     	for ( int i=0; i<blocks.size(); i++ )
-    		// remove any plinth blocks from the list being destroyed
     		if ( isOnPlinth(blocks.get(i).getLocation()) )
     			blocks.remove(i);
     }
@@ -148,6 +151,23 @@ public class EventListener implements Listener
     {
     	if( event.getTarget() != null && event.getTarget() instanceof Player && PlayerManager.instance.isSpectator(((Player)event.getTarget()).getName()))
     		event.setCancelled(true);
+    }
+    
+    @EventHandler
+    public void onPlayerChat(PlayerChatEvent event)
+    {
+    	if ( !PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+    		return;
+
+    	// mark spectator chat, and hide it from non-spectators
+    	event.setMessage(ChatColor.YELLOW + "[Spec] " + ChatColor.RESET + event.getMessage());
+
+    	Player[] recipients = (Player[])event.getRecipients().toArray();
+    	
+    	// hide this chat from all non-spectators
+    	for ( Player recipient : recipients )
+    		if ( !PlayerManager.instance.isSpectator(recipient.getName()))
+    			event.getRecipients().remove(recipient);
     }
     
     @EventHandler
