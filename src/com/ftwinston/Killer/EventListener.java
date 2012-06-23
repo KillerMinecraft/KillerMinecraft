@@ -82,12 +82,10 @@ public class EventListener implements Listener
     public void onEntityExplode(EntityExplodeEvent event)
     {
     	List<Block> blocks = event.blockList();
-    	for ( Block block : blocks )
-    		if ( isOnPlinth(block.getLocation()) )
-    		{
-    			event.setCancelled(true);
-    			return;
-    		}
+    	for ( int i=0; i<blocks.size(); i++ )
+    		// remove any plinth blocks from the list being destroyed
+    		if ( isOnPlinth(blocks.get(i).getLocation()) )
+    			blocks.remove(i);
     }
     
     @EventHandler
