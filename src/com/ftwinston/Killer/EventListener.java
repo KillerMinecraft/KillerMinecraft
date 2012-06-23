@@ -88,7 +88,10 @@ public class EventListener implements Listener
 		// remove any plinth blocks from the list, stop them being destroyed
     	for ( int i=0; i<blocks.size(); i++ )
     		if ( isOnPlinth(blocks.get(i).getLocation()) )
+    		{
     			blocks.remove(i);
+    			i--;
+    		}
     }
     
     @EventHandler
