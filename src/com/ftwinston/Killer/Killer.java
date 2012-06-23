@@ -8,11 +8,8 @@ package com.ftwinston.Killer;
  * Created 18/06/2012
  */
 
-import java.util.Random;
-import java.util.Vector;
 import java.util.logging.Logger;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
