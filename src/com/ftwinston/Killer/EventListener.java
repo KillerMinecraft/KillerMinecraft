@@ -99,14 +99,18 @@ public class EventListener implements Listener
     {
     	if(event.isCancelled())
     		return;
-   
+
+    	// spectators can't interact with anything
+    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+    	{
+    		event.setCancelled(true);
+    		return;
+    	}
+    	
 	  	if(event.getClickedBlock().getType() == Material.STONE_PLATE)
 	  	{
 	        if ( isOnPlinth(event.getClickedBlock().getLocation()) )
 	        {
-				// spectators can no longer win the game
-				if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
-					return;
 			
 	        	// does the player have a blaze rod in their inventory?
 	        	if ( event.getPlayer().getInventory().contains(Material.BLAZE_ROD) )
