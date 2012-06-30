@@ -202,10 +202,15 @@ public class EventListener implements Listener
     {
     	if (!(event instanceof PlayerDeathEvent))
     		return;
+    	
+    	PlayerDeathEvent pEvent = (PlayerDeathEvent)event;
 		
-		Player player = (Player) event.getEntity();
+    	Player player = pEvent.getEntity();
 		if ( player == null )
 			return;
+		
+		if ( plugin.tweakDeathMessages )
+			pEvent.setDeathMessage(ChatColor.RED + player.getName() + " died");	
 		
 		// the only reason this is delayed is to avoid banning the player before they properly die, if we're banning players on death
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName(), false), 10);

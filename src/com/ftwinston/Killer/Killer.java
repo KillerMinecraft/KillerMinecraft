@@ -29,6 +29,7 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("autoReveal", true);
 		getConfig().addDefault("restartDay", true);
 		getConfig().addDefault("lateJoinersStartAsSpectator", false);
+		getConfig().addDefault("tweakDeathMessages", true);
 		getConfig().addDefault("banOnDeath", false);
 		getConfig().addDefault("recreateWorld", false);
 		getConfig().addDefault("stopServer", false);
@@ -41,6 +42,7 @@ public class Killer extends JavaPlugin
 		autoReveal = getConfig().getBoolean("autoReveal");
 		restartDayWhenFirstPlayerJoins = getConfig().getBoolean("restartDay");
 		lateJoinersStartAsSpectator = getConfig().getBoolean("lateJoinersStartAsSpectator");
+		tweakDeathMessages = getConfig().getBoolean("tweakDeathMessages");
 		banOnDeath = getConfig().getBoolean("banOnDeath");
 		recreateWorld = getConfig().getBoolean("recreateWorld");
 		stopServer = getConfig().getBoolean("stopServer");
@@ -68,7 +70,7 @@ public class Killer extends JavaPlugin
 	public PlayerManager playerManager;
 	
 	public final int absMinPlayers = 2;
-	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, recreateWorld, stopServer, informEveryoneOfReassignedKillers;
+	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, recreateWorld, stopServer, informEveryoneOfReassignedKillers;
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
