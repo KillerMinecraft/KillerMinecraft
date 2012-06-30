@@ -112,8 +112,8 @@ public class EventListener implements Listener
 	        if ( isOnPlinth(event.getClickedBlock().getLocation()) )
 	        {
 			
-	        	// does the player have a blaze rod in their inventory?
-	        	if ( event.getPlayer().getInventory().contains(Material.BLAZE_ROD) )
+	        	// does the player have a blaze rod or ghast tear in their inventory?
+	        	if ( event.getPlayer().getInventory().contains(Material.BLAZE_ROD) || event.getPlayer().getInventory().contains(Material.GHAST_TEAR) )
 	        		PlayerManager.instance.gameFinished(false, true, event.getPlayer().getName());
 	        }
 	  	}
