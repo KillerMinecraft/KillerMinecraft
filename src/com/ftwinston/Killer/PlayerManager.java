@@ -165,11 +165,18 @@ public class PlayerManager
 		else if ( isKiller(player.getName()) ) // inform them that they're still a killer
 			player.sendMessage(ChatColor.RED + "You are still " + (killers.size() > 1 ? "a" : "the" ) + " killer!"); 
 		
-		else if ( !isAlive(player.getName()))
+		else if ( !isAlive(player.getName())) // this is a new player, tell them the rules & state of the game
+		{
+			String message = "Welcome to Killer Minecraft! One player ";
+			message += hasKillerAssigned() ? "has been" : "will soon be";
+			message += " assigned as the killer, and must kill the rest. To win, the other players must bring a blaze rod or ghast tear to a plinth near the spawn.";
+			player.sendMessage(message);
+			
 			if ( hasKillerAssigned() && plugin.lateJoinersStartAsSpectator )
 				setAlive(player,false);
 			else
 				setAlive(player,true);
+		}
 		
     	if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getServer().getOnlinePlayers().length == 1 )
 			plugin.getServer().getWorlds().get(0).setTime(0);
