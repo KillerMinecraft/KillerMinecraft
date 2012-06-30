@@ -303,8 +303,14 @@ public class WorldManager
 				for ( Player player : world.getPlayers() )
 					player.kickPlayer("World is being regenerated... and you were in it!");
 			else
+			{
+				boolean first = true;
 				for ( Player player : world.getPlayers() )
-					player.teleport(movePlayersTo.getSpawnLocation());
+				{
+					plugin.playerManager.putPlayerInWorld(player,  movePlayersTo, first);
+					first = false;
+				}
+			}
 			
 			CraftServer server = (CraftServer)plugin.getServer();
 			CraftWorld craftWorld = (CraftWorld)world;
@@ -403,11 +409,12 @@ public class WorldManager
 					
 					// move ALL players back into the main world
 					World defaultWorld = plugin.getServer().getWorlds().get(0);
+					boolean first = true;
 					for ( Player player : plugin.getServer().getOnlinePlayers() )
 					{
-						player.getInventory().clear();
-						player.setTotalExperience(0);
-						player.teleport(defaultWorld.getSpawnLocation());
+						plugin.playerManager.resetPlayer(player);
+						plugin.playerManager.putPlayerInWorld(player,  defaultWorld, first);
+						first = false;
 					}
 				}
 

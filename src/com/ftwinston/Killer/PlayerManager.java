@@ -7,9 +7,13 @@ import java.util.Random;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.PlayerInventory;
 
 public class PlayerManager
 {
@@ -372,5 +376,61 @@ public class PlayerManager
 				return list.toString().substring(0,list.length()-2);
 		}
 		return "No command " + command + " found. Valid commands are add {player} and remove {player}";
+	}
+	
+	public void resetPlayer(Player player) 
+	{
+		player.setTotalExperience(0);
+		player.setHealth(player.getMaxHealth());
+		player.setFoodLevel(20);
+		player.setSaturation(20);
+		player.setExhaustion(0);
+		player.setFireTicks(0);
+		
+		PlayerInventory inv = player.getInventory();
+		inv.clear();
+		inv.setHelmet(null);
+		inv.setChestplate(null);
+		inv.setLeggings(null);
+		inv.setBoots(null);		
+	}
+	
+	public void putPlayerInWorld(Player player, World world, boolean checkSpawn)
+	{		
+		// check spawn location is clear and is on the ground!
+		// update it if its not!
+		Location spawn = world.getSpawnLocation();
+		
+		if ( checkSpawn )
+		{
+			if ( spawn.getBlock().isEmpty() )
+			{	// while the block below spawn is empty, move down one
+				Block b = world.getBlockAt(spawn.getBlockX(), spawn.getBlockY() - 1, spawn.getBlockZ()); 
+				while ( b.isEmpty() && !b.isLiquid() )
+				{
+					spawn.setY(spawn.getY()-1);
+					b = world.getBlockAt(spawn.getBlockX(), spawn.getBlockY() - 1, spawn.getBlockZ());
+				}
+			}
+			else
+			{	// keep moving up til we have two empty blocks
+				do
+				{
+					do
+					{
+						spawn.setY(spawn.getY()+1);
+					}
+					while ( !spawn.getBlock().isEmpty() );
+				
+					// that's one empty, see if there's another (or if we're at the tom of the world)
+					if ( spawn.getBlockY() >= world.getMaxHeight() || world.getBlockAt(spawn.getBlockX(), spawn.getBlockY() + 1, spawn.getBlockZ()).isEmpty() )
+						break;
+				} while (true);
+				
+				world.setSpawnLocation(spawn.getBlockX(), spawn.getBlockY(), spawn.getBlockZ());
+			}
+		}
+		
+		player.teleport(spawn);
 	}
 }

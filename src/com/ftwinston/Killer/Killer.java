@@ -155,13 +155,14 @@ public class Killer extends JavaPlugin
 			// what should we do to the world on restart if we're not deleting it?
 			// remove all user-placed portal, obsidian, chests, dispensers and furances? We'd have to track them being placed.
 			getServer().broadcastMessage("Game is restarting, but Killer has been set not to automatically delete the world when restarting.");
-			
+
+			boolean first = true; // only check the spawn point is valid the first time 
 			World defaultWorld = getServer().getWorlds().get(0);
 			for ( Player player : getServer().getOnlinePlayers() )
 			{
-				player.getInventory().clear();
-				player.setTotalExperience(0);
-				player.teleport(defaultWorld.getSpawnLocation());
+				playerManager.resetPlayer(player);
+				playerManager.putPlayerInWorld(player, defaultWorld, first);
+				first = false;
 			}
 			
 			playerManager.reset();
