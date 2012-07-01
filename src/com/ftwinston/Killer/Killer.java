@@ -137,6 +137,7 @@ public class Killer extends JavaPlugin
 		if ( recreateWorld )
 		{
 			getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
+			playerManager.reset();
 			worldManager.deleteWorlds(new Runnable() {
 				public void run()
 				{
@@ -153,7 +154,7 @@ public class Killer extends JavaPlugin
 		else
 		{
 			// what should we do to the world on restart if we're not deleting it?
-			// remove all user-placed portal, obsidian, chests, dispensers and furances? We'd have to track them being placed.
+			// remove all user-placed portal, obsidian, chests, dispensers and furnaces? We'd have to track them being placed.
 			getServer().broadcastMessage("Game is restarting, but Killer has been set not to automatically delete the world when restarting.");
 
 			boolean first = true; // only check the spawn point is valid the first time 

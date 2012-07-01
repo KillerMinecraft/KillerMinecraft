@@ -20,6 +20,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -39,6 +40,24 @@ public class EventListener implements Listener
     // when you die a spectator, be made able to fly again when you respawn
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event)
+    {
+    	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+    	{
+    		final String playerName = event.getPlayer().getName();
+    		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+    			public void run()
+    			{
+    				Player player = plugin.getServer().getPlayerExact(playerName);
+    				if ( player != null )
+    					PlayerManager.instance.setAlive(player,false);
+    			}
+    		});
+    	}
+    }
+    
+    // spectators moving between worlds
+    @EventHandler
+    public void OnPlayerChangedWorld(PlayerChangedWorldEvent event)
     {
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     		PlayerManager.instance.setAlive(event.getPlayer(),false);

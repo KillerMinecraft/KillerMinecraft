@@ -71,7 +71,10 @@ public class PlayerManager
 	{
 		alive.clear();
 		for ( Player player : plugin.getServer().getOnlinePlayers() )
-			this.setAlive(player,true);
+		{
+			resetPlayer(player);
+			setAlive(player,true);
+		}
 		
 		// don't do this til after, so addAlive can remove spectator effects if needed
 		spectators.clear();
