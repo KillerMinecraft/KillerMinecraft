@@ -129,11 +129,12 @@ public class EventListener implements Listener
 	  	if(event.getClickedBlock().getType() == Material.STONE_PLATE)
 	  	{
 	        if ( isOnPlinth(event.getClickedBlock().getLocation()) )
-	        {
-			
-	        	// does the player have a blaze rod or ghast tear in their inventory?
-	        	if ( event.getPlayer().getInventory().contains(Material.BLAZE_ROD) || event.getPlayer().getInventory().contains(Material.GHAST_TEAR) )
-	        		PlayerManager.instance.gameFinished(false, true, event.getPlayer().getName());
+	        {// does the player have one of the winning items in their inventory?	        	
+	        	Material[] winningMaterials = new Material[] { Material.BLAZE_ROD, Material.GHAST_TEAR }; 
+	        	
+	        	for ( Material material : winningMaterials )
+		        	if ( event.getPlayer().getInventory().contains(material) )
+		        		PlayerManager.instance.gameFinished(false, true, event.getPlayer().getName(), material.name());
 	        }
 	  	}
     }

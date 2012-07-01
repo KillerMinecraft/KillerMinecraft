@@ -209,28 +209,36 @@ public class PlayerManager
 		
 		// if there's no one alive at all, game was drawn
 		if (alive.size() == 0 )
-			gameFinished(false, false, null);
+			gameFinished(false, false, null, null);
 		else
 		{// check for victory ... if there's no one alive that isn't a killer, the killer(s) won
 			for ( String survivor : alive )
 				if ( !isKiller(survivor) )
 					return;
-					
-			gameFinished(true, false, null);
+			
+			gameFinished(true, false, null, null);
 		}
 	}
 	
-	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName)
+	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, String winningItem)
 	{
 		String message;
 		if ( killerWon )
 		{
-			message = "All friendly players have been killed, the killers win!";
-			if ( winningPlayerName != null )
-				message += " Winning kill by " + winningPlayerName + ".";
+			message = "All friendly players have been killed, the killer";
+			
+			if ( killers.size() > 1 )
+			{
+				message += "s win!";
+
+				if ( winningPlayerName != null )
+					message += "\nWinning kill by " + winningPlayerName + ".";
+			}
+			else
+				message += " wins!";
 		}
 		else if ( friendliesWon )
-			message = (winningPlayerName == null ? "The players" : winningPlayerName) + " brought a blaze rod to the plinth - the friendlies win!";
+			message = (winningPlayerName == null ? "The players" : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + winningItem) + " to the plinth - the friendlies win!";
 		else
 			message = "No players survived, game drawn!";
 		
@@ -238,7 +246,7 @@ public class PlayerManager
 		if ( plugin.autoReveal )
 			revealKillers(null);
 
-		if ( plugin.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getServer().getOnlinePlayers().length == 0 )
+		if ( friendliesWon || plugin.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getServer().getOnlinePlayers().length == 0 )
 		{	// schedule a game restart in 10 secs
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 	
