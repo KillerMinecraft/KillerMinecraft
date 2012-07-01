@@ -323,9 +323,10 @@ public class PlayerManager
 			if(alive.contains(player.getName()))
 				alive.remove(player.getName());
 			if(!spectators.contains(player.getName()))
+			{
 				spectators.add(player.getName());
-				
-			player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact.");
+				player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
+			}
 		}
 	}
 	

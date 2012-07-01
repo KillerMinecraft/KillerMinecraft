@@ -128,7 +128,49 @@ public class Killer extends JavaPlugin
 			sender.sendMessage("Invalid command, available parameters are: assign, reveal, clear, spectator, restart");
 			return true;
 		}
-		
+		else if (cmd.getName().equalsIgnoreCase("spec"))
+		{
+			if ( !(sender instanceof Player) )
+				return false;
+			
+			if ( args.length == 0 )
+			{
+				sender.sendMessage("Usage: /spec main, /spec nether, or /spec <player name>");
+				return true;
+			}
+			
+			if ( !playerManager.isSpectator(sender.getName()) )
+			{
+				sender.sendMessage("Only spectators can use this command");
+				return true;
+			}
+			
+			Player player = (Player)sender;
+			if ( args[0].equalsIgnoreCase("main") )
+			{
+				playerManager.putPlayerInWorld(player, getServer().getWorlds().get(0), true);
+			}
+			else if ( args[0].equalsIgnoreCase("nether") )
+			{
+				if ( getServer().getWorlds().size() > 1 )
+					playerManager.putPlayerInWorld(player, getServer().getWorlds().get(1), true);
+				else
+					sender.sendMessage("Nether world not found, please try again");
+			}
+			else
+			{
+				Player other = getServer().getPlayer(args[0]);
+				if ( other == null || !other.isOnline() )
+				{
+					sender.sendMessage("Player not found: " + args[0]);
+					return true;
+				}
+				
+				player.teleport(other.getLocation());
+			}
+			
+			return true;
+		}
 		return false;
 	}
 

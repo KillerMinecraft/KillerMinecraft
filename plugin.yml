@@ -5,4 +5,6 @@ description: Allows ops to randomly assign one player as a killer, who must try 
 authors: [FTWinston, Canazza]
 commands:
   killer:
-    usage: Available commands are assign, reveal, clear ... none of these use any extra parameters
+    usage: Available commands are  assign, reveal, clear, spectator, restart
+  spec:
+    usage: As a spectator, use to teleport to other players, or between worlds; /spec <player>, /spec nether or /spec main
