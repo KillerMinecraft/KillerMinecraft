@@ -172,7 +172,19 @@ public class PlayerManager
 		{
 			String message = "Welcome to Killer Minecraft! One player ";
 			message += hasKillerAssigned() ? "has been" : "will soon be";
-			message += " assigned as the killer, and must kill the rest. To win, the other players must bring a blaze rod or ghast tear to a plinth near the spawn.";
+			message += " assigned as the killer, and must kill the rest. To win, the other players must bring a ";
+			
+			message += plugin.tidyItemName(plugin.winningItems[0]);
+			
+			if ( plugin.winningItems.length > 1 )
+			{
+				for ( int i=1; i<plugin.winningItems.length-1; i++)
+					message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
+				
+				message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+			}
+			
+			message += " to the plinth near the spawn.";
 			player.sendMessage(message);
 			
 			if ( hasKillerAssigned() && plugin.lateJoinersStartAsSpectator )

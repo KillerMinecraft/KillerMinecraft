@@ -130,11 +130,9 @@ public class EventListener implements Listener
 	  	{
 	        if ( isOnPlinth(event.getClickedBlock().getLocation()) )
 	        {// does the player have one of the winning items in their inventory?	        	
-	        	Material[] winningMaterials = new Material[] { Material.BLAZE_ROD, Material.GHAST_TEAR }; 
-	        	
-	        	for ( Material material : winningMaterials )
+	        	for ( Material material : plugin.winningItems )
 		        	if ( event.getPlayer().getInventory().contains(material) )
-		        		PlayerManager.instance.gameFinished(false, true, event.getPlayer().getName(), material.name());
+		        		PlayerManager.instance.gameFinished(false, true, event.getPlayer().getName(), plugin.tidyItemName(material));
 	        }
 	  	}
     }

@@ -8,10 +8,13 @@ package com.ftwinston.Killer;
  * Created 18/06/2012
  */
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -32,6 +35,7 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("tweakDeathMessages", true);
 		getConfig().addDefault("banOnDeath", false);
 		getConfig().addDefault("informEveryoneOfReassignedKillers", false);
+		getConfig().addDefault("winningItems", Arrays.asList(Material.BLAZE_ROD.getId(), Material.GHAST_TEAR.getId()));		
 		
 		getConfig().addDefault("autoRecreateWorld", false);
 		getConfig().addDefault("recreateWorldWithoutStoppingServer", true);
@@ -48,6 +52,19 @@ public class Killer extends JavaPlugin
 		informEveryoneOfReassignedKillers = getConfig().getBoolean("informEveryoneOfReassignedKillers");
 		autoRecreateWorld = getConfig().getBoolean("autoRecreateWorld");
 		recreateWorldWithoutStoppingServer = getConfig().getBoolean("recreateWorldWithoutStoppingServer");
+
+		List<Integer> winningItemIDs = getConfig().getIntegerList("winningItems"); 
+		winningItems = new Material[winningItemIDs.size()];
+		for ( int i=0; i<winningItems.length; i++ )
+		{
+			Material mat = Material.getMaterial(winningItemIDs.get(i));
+			if ( mat == null )
+			{
+				mat = Material.BLAZE_ROD;
+				log.warning("Material ID " + winningItemIDs.get(i) + " not recognized.");
+			} 
+			winningItems[i] = mat;
+		}
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
         playerManager = new PlayerManager(this);
@@ -74,6 +91,7 @@ public class Killer extends JavaPlugin
 	
 	public final int absMinPlayers = 2;
 	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, recreateWorldWithoutStoppingServer;
+	public Material[] winningItems;	
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
@@ -217,5 +235,10 @@ public class Killer extends JavaPlugin
 		{
 			getServer().shutdown();
 		}
+	}
+
+	public String tidyItemName(Material m)
+	{
+		return m.name().toLowerCase().replace('_', ' ');
 	}
 }
