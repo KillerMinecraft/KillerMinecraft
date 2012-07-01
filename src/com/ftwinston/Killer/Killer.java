@@ -31,9 +31,10 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("lateJoinersStartAsSpectator", false);
 		getConfig().addDefault("tweakDeathMessages", true);
 		getConfig().addDefault("banOnDeath", false);
-		getConfig().addDefault("recreateWorld", false);
-		getConfig().addDefault("stopServer", false);
 		getConfig().addDefault("informEveryoneOfReassignedKillers", false);
+		
+		getConfig().addDefault("autoRecreateWorld", false);
+		getConfig().addDefault("recreateWorldWithoutStoppingServer", true);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		
@@ -44,9 +45,9 @@ public class Killer extends JavaPlugin
 		lateJoinersStartAsSpectator = getConfig().getBoolean("lateJoinersStartAsSpectator");
 		tweakDeathMessages = getConfig().getBoolean("tweakDeathMessages");
 		banOnDeath = getConfig().getBoolean("banOnDeath");
-		recreateWorld = getConfig().getBoolean("recreateWorld");
-		stopServer = getConfig().getBoolean("stopServer");
 		informEveryoneOfReassignedKillers = getConfig().getBoolean("informEveryoneOfReassignedKillers");
+		autoRecreateWorld = getConfig().getBoolean("autoRecreateWorld");
+		recreateWorldWithoutStoppingServer = getConfig().getBoolean("recreateWorldWithoutStoppingServer");
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
         playerManager = new PlayerManager(this);
@@ -72,7 +73,7 @@ public class Killer extends JavaPlugin
 	public VoteManager voteManager;
 	
 	public final int absMinPlayers = 2;
-	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, recreateWorld, stopServer, informEveryoneOfReassignedKillers;
+	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, recreateWorldWithoutStoppingServer;
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
@@ -109,7 +110,7 @@ public class Killer extends JavaPlugin
 					}
 
 					getServer().broadcastMessage(ChatColor.RED + sender.getName() +" cleared the killer - there is no longer a killer!");
-					playerManager.reset();
+					playerManager.reset(false);
 					return true;
 				}
 				else if( args[0].equalsIgnoreCase("spectator"))
@@ -122,7 +123,11 @@ public class Killer extends JavaPlugin
 				}
 				else if ( args[0].equalsIgnoreCase("restart") )
 				{
-					restartGame();
+					boolean useSameWorld = true;
+					if ( args.length > 1 )
+						useSameWorld =  args[1].equalsIgnoreCase("true");
+					
+					restartGame(useSameWorld);
 					return true;
 				}
 			}
@@ -176,41 +181,41 @@ public class Killer extends JavaPlugin
 		return false;
 	}
 
-	public void restartGame()
+	public void restartGame(boolean useSameWorld)
 	{
-		if ( recreateWorld )
-		{
-			getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
-			playerManager.reset();
-			worldManager.deleteWorlds(new Runnable() {
-				public void run()
-				{
-					World defaultWorld = getServer().getWorlds().get(0);
-					plinthPressurePlateLocation = worldManager.createPlinth(defaultWorld);
-					playerManager.reset();
-				}
-			});
-		}
-		else if ( stopServer )
-		{
-			getServer().shutdown();
-		}
-		else
+		if ( useSameWorld )
 		{
 			// what should we do to the world on restart if we're not deleting it?
 			// remove all user-placed portal, obsidian, chests, dispensers and furnaces? We'd have to track them being placed.
-			getServer().broadcastMessage("Game is restarting, but Killer has been set not to automatically delete the world when restarting.");
+			
+			getServer().broadcastMessage("Game is restarting, using the same world...");
 
 			boolean first = true; // only check the spawn point is valid the first time 
 			World defaultWorld = getServer().getWorlds().get(0);
 			for ( Player player : getServer().getOnlinePlayers() )
 			{
-				playerManager.resetPlayer(player);
 				playerManager.putPlayerInWorld(player, defaultWorld, first);
 				first = false;
 			}
 			
-			playerManager.reset();
+			playerManager.reset(false);
+		}
+		else if ( recreateWorldWithoutStoppingServer )
+		{
+			getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
+			playerManager.reset(true);
+			worldManager.deleteWorlds(new Runnable() {
+				public void run()
+				{
+					World defaultWorld = getServer().getWorlds().get(0);
+					plinthPressurePlateLocation = worldManager.createPlinth(defaultWorld);
+					playerManager.reset(true);
+				}
+			});
+		}
+		else
+		{
+			getServer().shutdown();
 		}
 	}
 }

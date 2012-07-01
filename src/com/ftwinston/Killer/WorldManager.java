@@ -39,7 +39,7 @@ public class WorldManager
 			plugin = killer;
 			instance = this;
 			
-			if ( plugin.recreateWorld )
+			if ( plugin.recreateWorldWithoutStoppingServer )
 			{
 				seedGen = new Random();
 				bindRegionFiles();
@@ -412,7 +412,7 @@ public class WorldManager
 					boolean first = true;
 					for ( Player player : plugin.getServer().getOnlinePlayers() )
 					{
-						plugin.playerManager.resetPlayer(player);
+						plugin.playerManager.resetPlayer(player, true);
 						plugin.playerManager.putPlayerInWorld(player,  defaultWorld, first);
 						first = false;
 					}

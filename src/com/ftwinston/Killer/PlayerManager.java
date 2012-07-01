@@ -67,12 +67,12 @@ public class PlayerManager
 		return numAliveKillers > 0;
 	}
 	
-	public void reset()
+	public void reset(boolean resetInventories)
 	{
 		alive.clear();
 		for ( Player player : plugin.getServer().getOnlinePlayers() )
 		{
-			resetPlayer(player);
+			resetPlayer(player, resetInventories);
 			setAlive(player,true);
 		}
 		
@@ -238,16 +238,35 @@ public class PlayerManager
 		if ( plugin.autoReveal )
 			revealKillers(null);
 
-		// schedule a game restart in 10 secs
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-    			plugin.restartGame();
-				
-			}
-    		}, 200L);
+		if ( plugin.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getServer().getOnlinePlayers().length == 0 )
+		{	// schedule a game restart in 10 secs
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+	
+				@Override
+				public void run()
+				{
+	    			plugin.restartGame(false);					
+				}
+	    	}, 200L);
+		}
+		else
+		{// start a vote that's been set up to call restartGame with true / false parameter 
+			Runnable yesResult = new Runnable() {
+				public void run()
+				{
+					plugin.restartGame(true);
+				}
+			};
+			
+			Runnable noResult = new Runnable() {
+				public void run()
+				{
+					plugin.restartGame(false);
+				}
+			};
+			
+			plugin.voteManager.startVote("Start next round with the same world & items?", yesResult, noResult, noResult);
+		}
 	}
 	
 	public void revealKillers(CommandSender sender)
@@ -389,7 +408,7 @@ public class PlayerManager
 		return "No command " + command + " found. Valid commands are add {player} and remove {player}";
 	}
 	
-	public void resetPlayer(Player player) 
+	public void resetPlayer(Player player, boolean resetInventory)
 	{
 		player.setTotalExperience(0);
 		player.setHealth(player.getMaxHealth());
@@ -398,12 +417,15 @@ public class PlayerManager
 		player.setExhaustion(0);
 		player.setFireTicks(0);
 		
-		PlayerInventory inv = player.getInventory();
-		inv.clear();
-		inv.setHelmet(null);
-		inv.setChestplate(null);
-		inv.setLeggings(null);
-		inv.setBoots(null);		
+		if ( resetInventory )
+		{
+			PlayerInventory inv = player.getInventory();
+			inv.clear();
+			inv.setHelmet(null);
+			inv.setChestplate(null);
+			inv.setLeggings(null);
+			inv.setBoots(null);		
+		}
 	}
 	
 	public void putPlayerInWorld(Player player, World world, boolean checkSpawn)
