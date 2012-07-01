@@ -51,6 +51,7 @@ public class Killer extends JavaPlugin
         getServer().getPluginManager().registerEvents(eventListener, this);
         playerManager = new PlayerManager(this);
         worldManager = new WorldManager(this);
+        voteManager = new VoteManager(this);
         
         // create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
         plinthPressurePlateLocation = worldManager.createPlinth(getServer().getWorlds().get(0));
@@ -68,6 +69,7 @@ public class Killer extends JavaPlugin
 	private EventListener eventListener = new EventListener(this);
 	private WorldManager worldManager;
 	public PlayerManager playerManager;
+	public VoteManager voteManager;
 	
 	public final int absMinPlayers = 2;
 	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, recreateWorld, stopServer, informEveryoneOfReassignedKillers;

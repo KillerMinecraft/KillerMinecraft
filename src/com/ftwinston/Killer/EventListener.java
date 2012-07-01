@@ -182,6 +182,21 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerChat(PlayerChatEvent event)
     {
+    	if ( plugin.voteManager.isInVote() )
+    	{
+    		if ( event.getMessage().equalsIgnoreCase("Y") && plugin.voteManager.doVote(event.getPlayer(), true) )
+    		{
+    			event.setMessage(ChatColor.GREEN + "Y");
+    			return;
+    		}
+    		else if ( event.getMessage().equalsIgnoreCase("N") && plugin.voteManager.doVote(event.getPlayer(), false) )
+    		{
+    			event.setMessage(ChatColor.RED + "N");
+    			return;
+    		}
+    	}
+    	
+    	
     	if ( !PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     		return;
 
