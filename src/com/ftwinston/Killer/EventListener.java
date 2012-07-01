@@ -163,7 +163,7 @@ public class EventListener implements Listener
         	if(PlayerManager.instance.isSpectator(player.getName()))
         		event.setCancelled(true);
         }
-        else if (event instanceof EntityDamageByEntityEvent )
+        if (!event.isCancelled() && event instanceof EntityDamageByEntityEvent )
         {
         	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
         	if ( damager != null && damager instanceof Player && PlayerManager.instance.isSpectator(((Player)damager).getName()))
