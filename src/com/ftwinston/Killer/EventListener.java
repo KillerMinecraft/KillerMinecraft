@@ -13,6 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockFromToEvent;
+import org.bukkit.event.block.BlockPistonEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -98,7 +99,14 @@ public class EventListener implements Listener
         if ( isOnPlinth(event.getToBlock().getLocation()) )
             event.setCancelled(true);
     }
-
+    
+    @EventHandler
+    public void onBlockPiston(BlockPistonEvent event)
+    {
+    	if ( isOnPlinth(event.getBlock().getLocation()) )
+    		event.setCancelled(true);
+    }
+    
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event)
     {
@@ -228,8 +236,6 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent p)
     {
-		//plugin.cancelAutoAssign();
-		
 		// if the game is "active" then give them 30s to rejoin, otherwise consider them to be "killed" almost right away.
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(p.getPlayer().getName(), true), plugin.playerManager.hasKillerAssigned() ? 600 : 20);
     }
