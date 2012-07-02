@@ -58,17 +58,19 @@ public class VoteManager
 		{
 			if ( numYesVotes > numNoVotes )
 			{
-				plugin.getServer().broadcastMessage(ChatColor.YELLOW +"Vote succeeded (" + ChatColor.GREEN + numYesVotes + ChatColor.RESET + " for, " + ChatColor.RED + numNoVotes + ChatColor.RESET + " against)");
-				runOnYes.run();
+				plugin.getServer().broadcastMessage(ChatColor.YELLOW +"Vote succeeded (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
+				if ( runOnYes != null )
+					runOnYes.run();
 			}
 			else if ( numNoVotes > numYesVotes )
 			{
-				plugin.getServer().broadcastMessage(ChatColor.YELLOW + "Vote failed (" + ChatColor.GREEN + numYesVotes + ChatColor.RESET + " for, " + ChatColor.RED + numNoVotes + ChatColor.RESET + " against)");
-				runOnNo.run();
+				plugin.getServer().broadcastMessage(ChatColor.YELLOW + "Vote failed (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
+				if ( runOnNo != null )
+					runOnNo.run();
 			}
 			else
 			{
-				plugin.getServer().broadcastMessage(ChatColor.YELLOW + "Vote drawn (" + ChatColor.GREEN + numYesVotes + ChatColor.RESET + " for, " + ChatColor.RED + numNoVotes + ChatColor.RESET + " against)");
+				plugin.getServer().broadcastMessage(ChatColor.YELLOW + "Vote drawn (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
 				if ( runOnDraw != null )
 					runOnDraw.run();
 			}
