@@ -64,7 +64,7 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("lateJoinersStartAsSpectator", false);
 		getConfig().addDefault("tweakDeathMessages", true);
 		getConfig().addDefault("banOnDeath", false);
-		getConfig().addDefault("informEveryoneOfReassignedKillers", false);
+		getConfig().addDefault("informEveryoneOfReassignedKillers", true);
 		getConfig().addDefault("winningItems", Arrays.asList(Material.BLAZE_ROD.getId(), Material.GHAST_TEAR.getId()));		
 		
 		getConfig().addDefault("autoRecreateWorld", false);
