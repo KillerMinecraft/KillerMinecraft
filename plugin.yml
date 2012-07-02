@@ -4,7 +4,7 @@ version: 0.1
 description: Allows ops to randomly assign one player as a killer, who must try to kill the rest, without being found out
 authors: [FTWinston, Canazza]
 commands:
-  killer:
-    usage: Available commands are  assign, reveal, clear, spectator, restart
   spec:
     usage: As a spectator, use to teleport to other players, or between worlds; /spec <player>, /spec nether or /spec main
+  vote:
+    usage: Shows a menu that allows you to set up a vote among all players

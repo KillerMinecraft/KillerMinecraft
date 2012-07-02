@@ -11,7 +11,6 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -35,7 +34,7 @@ public class PlayerManager
     				long time = plugin.getServer().getWorlds().get(0).getTime();
     				
     				if ( time < lastRun && !hasEnoughKillers() ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
-						assignKiller(null, plugin.informEveryoneOfReassignedKillers || killers.size() == 0); // don't inform people of any killer being added apart from the first one, unless the config is set
+						assignKiller(plugin.informEveryoneOfReassignedKillers || killers.size() == 0); // don't inform people of any killer being added apart from the first one, unless the config is set
 
 					lastRun = time;
     			}
@@ -93,21 +92,17 @@ public class PlayerManager
 				player.setBanned(false);
 	}
 	
-	public boolean assignKiller(CommandSender sender, boolean informNonKillers)
+	public boolean assignKiller(boolean informNonKillers)
 	{
 		Player[] players = plugin.getServer().getOnlinePlayers();
 		if ( players.length < plugin.absMinPlayers )
 		{
-			if ( sender != null )
-				sender.sendMessage("This game mode really doesn't work with fewer than " + plugin.absMinPlayers + " players. Seriously.");
+			plugin.getServer().broadcastMessage("Insufficient players to assign a killer. A minimum of 3 players are required.");
 			return false;
 		}
 		
 		if ( informNonKillers )
-		{
-			String senderName = sender == null ? "" : " by " + sender.getName();
-			plugin.getServer().broadcastMessage("A killer has been randomly assigned" + senderName + " - nobody but the killer knows who it is.");
-		}
+			plugin.getServer().broadcastMessage("A killer has been randomly assigned - nobody but the killer knows who it is.");
 		
 		int availablePlayers = 0;
 		for ( String name : alive )
@@ -262,16 +257,16 @@ public class PlayerManager
 		
 		plugin.getServer().broadcastMessage(ChatColor.YELLOW + message);
 		if ( plugin.autoReveal )
-			revealKillers(null);
+			clearKillers();
 
 		if ( friendliesWon || plugin.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getServer().getOnlinePlayers().length == 0 )
-		{	// schedule a game restart in 10 secs
+		{	// schedule a game restart in 10 secs, with a new world
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 	
 				@Override
 				public void run()
 				{
-	    			plugin.restartGame(false);					
+	    			plugin.restartGame(false, true);					
 				}
 	    	}, 200L);
 		}
@@ -280,14 +275,14 @@ public class PlayerManager
 			Runnable yesResult = new Runnable() {
 				public void run()
 				{
-					plugin.restartGame(true);
+					plugin.restartGame(true, false);
 				}
 			};
 			
 			Runnable noResult = new Runnable() {
 				public void run()
 				{
-					plugin.restartGame(false);
+					plugin.restartGame(false, true);
 				}
 			};
 			
@@ -295,11 +290,13 @@ public class PlayerManager
 		}
 	}
 	
-	public void revealKillers(CommandSender sender)
+	public void clearKillers()
 	{
+		String message;
+		
 		if ( hasKillerAssigned() )
 		{
-			String message = ChatColor.RED + "Revealed: ";
+			message = ChatColor.RED + "Revealed: ";
 			if ( killers.size() == 1 )
 				message += killers.get(0) + " was the killer!";
 			else
@@ -316,13 +313,12 @@ public class PlayerManager
 				message += "!";
 			}
 			
-			if ( sender != null )
-				message += ChatColor.WHITE + " (revealed by " + sender.getName() + ")";
-			
-			plugin.getServer().broadcastMessage(message);
+			killers.clear();
 		}
-		else if ( sender != null )
-			sender.sendMessage("No killers have been assigned, nothing to reveal!");
+		else
+			message = "No killers are currently assigned!";
+		
+		plugin.getServer().broadcastMessage(message);
 	}
 	
 	public boolean isSpectator(String player)
@@ -351,7 +347,6 @@ public class PlayerManager
 				player.setAllowFlight(false);
 			}
 			
-			player.getInventory().clear();
 			makePlayerVisibleToAll(player);
 			
 			if(!alive.contains(player.getName()))
@@ -375,16 +370,10 @@ public class PlayerManager
 		}
 	}
 	
-	public void addKiller(Player player)
+	private void addKiller(Player player)
 	{
 		if(!killers.contains(player.getName()))
 			killers.add(player.getName());
-	}
-	
-	public void removeKiller(Player player)
-	{
-		if(killers.contains(player.getName()))
-			killers.remove(player.getName());
 	}
 	
 	private void makePlayerInvisibleToAll(Player player)

@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -23,10 +22,41 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class Killer extends JavaPlugin
 {
+	public static Killer instance;
+	Logger log = Logger.getLogger("Minecraft");
+	Location plinthPressurePlateLocation;
+
+	private EventListener eventListener = new EventListener(this);
+	private WorldManager worldManager;
+	public PlayerManager playerManager;
+	public VoteManager voteManager;
+	
+	public final int absMinPlayers = 2;
+	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, recreateWorldWithoutStoppingServer;
+	public Material[] winningItems;
+	
 	public void onEnable()
 	{	
         instance = this;
         
+        setupConfiguration();
+		
+        getServer().getPluginManager().registerEvents(eventListener, this);
+        playerManager = new PlayerManager(this);
+        worldManager = new WorldManager(this);
+        voteManager = new VoteManager(this);
+        
+        // create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
+        plinthPressurePlateLocation = worldManager.createPlinth(getServer().getWorlds().get(0));
+	}
+	
+	public void onDisable()
+	{
+		worldManager.onDisable();
+	}
+	
+	private void setupConfiguration()
+	{
 		getConfig().addDefault("autoAssign", false);
 		getConfig().addDefault("autoReassign", false);
 		getConfig().addDefault("autoReveal", true);
@@ -64,96 +94,12 @@ public class Killer extends JavaPlugin
 				log.warning("Material ID " + winningItemIDs.get(i) + " not recognized.");
 			} 
 			winningItems[i] = mat;
-		}
-		
-        getServer().getPluginManager().registerEvents(eventListener, this);
-        playerManager = new PlayerManager(this);
-        worldManager = new WorldManager(this);
-        voteManager = new VoteManager(this);
-        
-        // create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
-        plinthPressurePlateLocation = worldManager.createPlinth(getServer().getWorlds().get(0));
+		}	
 	}
-	
-	public void onDisable()
-	{
-		worldManager.onDisable();
-	}
-	
-	public static Killer instance;
-	Logger log = Logger.getLogger("Minecraft");
-	Location plinthPressurePlateLocation;
-
-	private EventListener eventListener = new EventListener(this);
-	private WorldManager worldManager;
-	public PlayerManager playerManager;
-	public VoteManager voteManager;
-	
-	public final int absMinPlayers = 2;
-	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, recreateWorldWithoutStoppingServer;
-	public Material[] winningItems;	
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
-		if (cmd.getName().equalsIgnoreCase("killer"))
-		{
-			if ( sender instanceof Player )
-			{
-				Player player = (Player)sender;
-				if ( !player.isOp() )
-				{
-					sender.sendMessage("Sorry, you must be an op to use this command.");
-					return true;
-				}
-			}
-			
-			if ( args.length > 0 )
-			{
-				if ( args[0].equalsIgnoreCase("assign") )
-				{
-					playerManager.assignKiller(sender, true);
-					return true;
-				}
-				else if ( args[0].equalsIgnoreCase("reveal") )
-				{
-					playerManager.revealKillers(sender);
-					return true;
-				}
-				else if ( args[0].equalsIgnoreCase("clear") )
-				{
-					if ( !playerManager.hasKillerAssigned() )
-					{
-						sender.sendMessage("No killer has been assigned, nothing to clear!");
-						return true;
-					}
-
-					getServer().broadcastMessage(ChatColor.RED + sender.getName() +" cleared the killer - there is no longer a killer!");
-					playerManager.reset(false);
-					return true;
-				}
-				else if( args[0].equalsIgnoreCase("spectator"))
-				{
-					if(args.length > 2)
-						sender.sendMessage(playerManager.handleSpectatorCommand(args[1], args[2]));
-					else
-						sender.sendMessage(playerManager.handleSpectatorCommand(args[1],""));
-					return true;
-				}
-				else if ( args[0].equalsIgnoreCase("restart") )
-				{
-					boolean useSameWorld = true;
-					if ( args.length > 1 )
-						useSameWorld =  args[1].equalsIgnoreCase("true");
-					
-					restartGame(useSameWorld);
-					return true;
-				}
-			}
-			
-			sender.sendMessage("Invalid command, available parameters are: assign, reveal, clear, spectator, restart");
-			return true;
-		}
-		else if (cmd.getName().equalsIgnoreCase("spec"))
+		if (cmd.getName().equalsIgnoreCase("spec"))
 		{
 			if ( !(sender instanceof Player) )
 				return false;
@@ -196,10 +142,17 @@ public class Killer extends JavaPlugin
 			
 			return true;
 		}
+		else if (cmd.getName().equalsIgnoreCase("vote"))
+		{
+			if ( sender instanceof Player )
+				voteManager.showVoteMenu((Player)sender);
+			return true;
+		}
+		
 		return false;
 	}
 
-	public void restartGame(boolean useSameWorld)
+	public void restartGame(boolean useSameWorld, boolean resetItems)
 	{
 		if ( useSameWorld )
 		{
@@ -216,18 +169,18 @@ public class Killer extends JavaPlugin
 				first = false;
 			}
 			
-			playerManager.reset(false);
+			playerManager.reset(resetItems);
 		}
 		else if ( recreateWorldWithoutStoppingServer )
 		{
 			getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
-			playerManager.reset(true);
+			playerManager.reset(resetItems);
 			worldManager.deleteWorlds(new Runnable() {
 				public void run()
 				{
 					World defaultWorld = getServer().getWorlds().get(0);
 					plinthPressurePlateLocation = worldManager.createPlinth(defaultWorld);
-					playerManager.reset(true);
+					playerManager.reset(false);
 				}
 			});
 		}
