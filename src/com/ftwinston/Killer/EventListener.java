@@ -13,7 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.block.BlockPistonEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -101,7 +101,7 @@ public class EventListener implements Listener
     }
     
     @EventHandler
-    public void onBlockPiston(BlockPistonEvent event)
+    public void onBlockPistonExtend(BlockPistonExtendEvent event)
     {
     	if ( isOnPlinth(event.getBlock().getLocation()) )
     		event.setCancelled(true);
