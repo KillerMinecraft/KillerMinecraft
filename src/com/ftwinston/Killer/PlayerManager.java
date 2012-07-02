@@ -163,10 +163,13 @@ public class PlayerManager
 			}
 		
 		if ( isSpectator(player.getName()) )
+		{
+			player.sendMessage("Welcome back. You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
 			setAlive(player,false);
+		}
 		
 		else if ( isKiller(player.getName()) ) // inform them that they're still a killer
-			player.sendMessage(ChatColor.RED + "You are still " + (killers.size() > 1 ? "a" : "the" ) + " killer!"); 
+			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (killers.size() > 1 ? "a" : "the" ) + " killer!"); 
 		
 		else if ( !isAlive(player.getName())) // this is a new player, tell them the rules & state of the game
 		{
@@ -192,6 +195,9 @@ public class PlayerManager
 			else
 				setAlive(player,true);
 		}
+		
+		else
+			player.sendMessage("Welcome back. You are not the killer, and you're still alive.");
 		
     	if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getServer().getOnlinePlayers().length == 1 )
 			plugin.getServer().getWorlds().get(0).setTime(0);
