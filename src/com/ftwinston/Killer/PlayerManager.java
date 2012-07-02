@@ -291,7 +291,7 @@ public class PlayerManager
 				}
 			};
 			
-			plugin.voteManager.startVote("Start next round with the same world & items?", yesResult, noResult, noResult);
+			plugin.voteManager.startVote("Start next round with the same world & items?", null, yesResult, noResult, noResult);
 		}
 	}
 	

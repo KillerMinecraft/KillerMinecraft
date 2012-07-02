@@ -29,7 +29,7 @@ public class VoteManager
 	
 	public boolean isInVote() { return inVote; }
 	
-	public void startVote(String question, Runnable runOnYes, Runnable runOnNo, Runnable runOnDraw)
+	public void startVote(String question, Player initiatedBy, Runnable runOnYes, Runnable runOnNo, Runnable runOnDraw)
 	{
 		playersWhoCanVote.clear();
 		for ( Player player : plugin.getServer().getOnlinePlayers())
@@ -37,7 +37,7 @@ public class VoteManager
 		numYesVotes = numNoVotes = 0;
 		inVote = true;
 		
-		plugin.getServer().broadcastMessage(ChatColor.YELLOW + "Vote started: " + ChatColor.RESET + question + ChatColor.YELLOW + "\nSay " + ChatColor.GREEN + "Y" + ChatColor.YELLOW + " to vote yes, or " + ChatColor.RED + "N" + ChatColor.YELLOW + " to vote no.");
+		plugin.getServer().broadcastMessage(ChatColor.YELLOW + (initiatedBy == null ? "Vote started: " : initiatedBy.getName() + " started a vote: ") + ChatColor.RESET + question + ChatColor.YELLOW + "\nSay " + ChatColor.GREEN + "Y" + ChatColor.YELLOW + " to vote yes, or " + ChatColor.RED + "N" + ChatColor.YELLOW + " to vote no.");
 		
 		voteResult = new VoteResult(runOnYes, runOnNo, runOnDraw);
 		voteResultProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, voteResult, voteDuration);
