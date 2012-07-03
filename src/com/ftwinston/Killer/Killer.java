@@ -94,7 +94,7 @@ public class Killer extends JavaPlugin
 				log.warning("Material ID " + winningItemIDs.get(i) + " not recognized.");
 			} 
 			winningItems[i] = mat;
-		}	
+		}
 	}
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
