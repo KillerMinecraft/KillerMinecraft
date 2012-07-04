@@ -527,42 +527,7 @@ public class PlayerManager
 		for(Player p :  plugin.getServer().getOnlinePlayers())
 			p.showPlayer(player);
 	}
-	
-	public String handleSpectatorCommand(String command, String param)
-	{
-		if ( command.equals("add") )
-		{
-				Player player = plugin.getServer().getPlayer(param);
-				if(player == null)
-					return String.format("Player not found: " + param);
-				
-				setAlive(player, false);
-				return "Player Added to spectators";
-		}
-		else if ( command.equals("remove") )
-		{
-				Player player = plugin.getServer().getPlayer(param);
-				if(player == null)
-					return String.format("Player not found: " + param);
-				
-				setAlive(player, true);
-				return "Player removed from spectators";
-		}
-		else if ( command.equals("list") )
-		{
-				StringBuilder list = new StringBuilder();
-				list.append(spectators.size() +" spectator(s)");
-				if(spectators.size() > 0)
-				{
-					list.append(": ");
-					for(String spec:spectators)
-						list.append(spec + ", ");
-				}
-				return list.toString().substring(0,list.length()-2);
-		}
-		return "No command " + command + " found. Valid commands are add {player} and remove {player}";
-	}
-	
+
 	public void resetPlayer(Player player, boolean resetInventory)
 	{
 		player.setTotalExperience(0);
