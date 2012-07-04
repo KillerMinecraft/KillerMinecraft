@@ -291,9 +291,7 @@ public class PlayerManager
 	}
 	
 	public void playerJoined(Player player)
-	{
-		giveKillerItems(player, 25);
-		
+	{		
 		for(String spec:spectators.keySet())
 			if(spec != player.getName())
 			{
