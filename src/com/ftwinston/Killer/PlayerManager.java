@@ -616,4 +616,35 @@ public class PlayerManager
 		}
 		return nearest;
 	}
+	
+	public String getFollowTarget(Player player)
+	{
+		if ( spectators.containsKey(player.getName()) )
+			return spectators.get(player.getName());
+		return null;
+	}
+	
+	public void setFollowTarget(Player player, String target)
+	{
+		spectators.put(player.getName(), target);
+		if ( target != null )
+			moveToSeeFollowTarget(player);
+	}
+	
+	public boolean canSeeFollowTarget(Player player)
+	{
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	public void moveToSeeFollowTarget(Player player)
+	{
+		// TODO Auto-generated method stub
+	}
+	
+	public String getDefaultFollowTarget()
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

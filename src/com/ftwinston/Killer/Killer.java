@@ -35,6 +35,8 @@ public class Killer extends JavaPlugin
 	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, recreateWorldWithoutStoppingServer;
 	public Material[] winningItems;
 	
+	private int compassProcessID, spectatorFollowProcessID;
+	
 	public void onEnable()
 	{	
         instance = this;
@@ -50,7 +52,7 @@ public class Killer extends JavaPlugin
         plinthPressurePlateLocation = worldManager.createPlinth(getServer().getWorlds().get(0));
         
         // set up a task to mess with killers' compasses
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+        compassProcessID = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
         	public void run()
         	{
 	        	for ( Player player : instance.getServer().getOnlinePlayers() )
@@ -58,11 +60,34 @@ public class Killer extends JavaPlugin
 	        			player.setCompassTarget(playerManager.getNearestPlayerTo(player));
         	}
         }, 20, 10);
+	        			
+		spectatorFollowProcessID = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+        	public void run()
+        	{
+	        	for ( Player player : instance.getServer().getOnlinePlayers() )
+	        	{
+	        		String target = playerManager.getFollowTarget(player);
+	        		if ( target == null )
+	        			continue;
+	        		
+	        		if ( !playerManager.isAlive(target) || instance.getServer().getPlayerExact(target) == null )
+        			{
+        				playerManager.setFollowTarget(player, null);
+        				continue;
+        			}
+	        		
+        			if ( !playerManager.canSeeFollowTarget(player) )
+        				playerManager.moveToSeeFollowTarget(player);
+	        	}
+        	}
+        }, 20, 20);
 	}
 	
 	public void onDisable()
 	{
 		worldManager.onDisable();
+		getServer().getScheduler().cancelTask(compassProcessID);
+		getServer().getScheduler().cancelTask(spectatorFollowProcessID);
 	}
 	
 	private void setupConfiguration()
@@ -116,7 +141,7 @@ public class Killer extends JavaPlugin
 			
 			if ( args.length == 0 )
 			{
-				sender.sendMessage("Usage: /spec main, /spec nether, or /spec <player name>");
+				sender.sendMessage("Usage: /spec main, /spec nether, /spec <player name>, or /spec follow");
 				return true;
 			}
 			
@@ -138,16 +163,22 @@ public class Killer extends JavaPlugin
 				else
 					sender.sendMessage("Nether world not found, please try again");
 			}
+			else if ( args[0].equalsIgnoreCase("follow") )
+			{
+				if ( playerManager.getFollowTarget(player) == null )
+					playerManager.setFollowTarget(player, playerManager.getDefaultFollowTarget());
+				else
+					playerManager.setFollowTarget(player, null);
+			}
 			else
 			{
 				Player other = getServer().getPlayer(args[0]);
 				if ( other == null || !other.isOnline() )
-				{
 					sender.sendMessage("Player not found: " + args[0]);
-					return true;
-				}
-				
-				player.teleport(other.getLocation());
+				else if ( playerManager.getFollowTarget(player) != null )
+					playerManager.setFollowTarget(player, other.getName());
+				else
+					player.teleport(other.getLocation());
 			}
 			
 			return true;
