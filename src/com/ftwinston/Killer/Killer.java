@@ -70,7 +70,8 @@ public class Killer extends JavaPlugin
 	        		if ( target == null )
 	        			continue;
 	        		
-	        		if ( !playerManager.isAlive(target) || instance.getServer().getPlayerExact(target) == null )
+	        		Player targetPlayer = instance.getServer().getPlayerExact(target);
+	        		if ( targetPlayer == null || !targetPlayer.isOnline() || !playerManager.isAlive(target) )
         			{
         				playerManager.setFollowTarget(player, null);
         				continue;
@@ -80,7 +81,7 @@ public class Killer extends JavaPlugin
         				playerManager.moveToSeeFollowTarget(player);
 	        	}
         	}
-        }, 20, 20);
+        }, 20, 25);
 	}
 	
 	public void onDisable()

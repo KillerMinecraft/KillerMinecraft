@@ -1,6 +1,7 @@
 package com.ftwinston.Killer;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,8 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.util.BlockIterator;
+import org.bukkit.util.Vector;
 
 public class PlayerManager
 {
@@ -295,7 +298,7 @@ public class PlayerManager
 			if(spec != player.getName())
 			{
 				Player other = plugin.getServer().getPlayerExact(spec);
-				if ( other != null )
+				if ( other != null && other.isOnline() )
 					player.hidePlayer(other);
 			}
 		
@@ -631,20 +634,171 @@ public class PlayerManager
 			moveToSeeFollowTarget(player);
 	}
 	
+	private final double maxFollowSpectateRangeSq = 48 * 48, maxAcceptableOffsetDot = 0.5;
+	private final int maxSpectatePositionAttempts = 4, idealFollowSpectateRange = 24;
+	
 	public boolean canSeeFollowTarget(Player player)
 	{
-		// TODO Auto-generated method stub
+		String targetName = spectators.get(player.getName()); 
+		if ( targetName == null )
+			return true; // don't have a target, don't want to get moved to it
+		
+		Player target = plugin.getServer().getPlayerExact(targetName);
+		if ( !isAlive(targetName) || target == null || !target.isOnline() )
+		{
+			targetName = getDefaultFollowTarget();
+			setFollowTarget(player, targetName);
+			if ( targetName == null )
+				return true; // if there isn't a valid follow target, don't let it try to move them to it
+
+			target = plugin.getServer().getPlayerExact(targetName);
+			if ( !isAlive(targetName) || target == null || !target.isOnline() )
+			{// something went wrong with the default follow target, so just clear it
+				setFollowTarget(player, null);
+				return true;
+			}
+		}
+		
+		Location specLoc = player.getEyeLocation();
+		Location targetLoc = target.getEyeLocation();
+		
+		// check they're in the same world
+		if ( specLoc.getWorld() != targetLoc.getWorld() )
+			return false;
+		
+		// then check the distance is appropriate
+		double targetDistSqr = specLoc.distanceSquared(targetLoc); 
+		if ( targetDistSqr > maxFollowSpectateRangeSq )
+			return false;
+		
+		// check if they're facing the right way
+		Vector specDir = specLoc.getDirection().normalize();
+		Vector dirToTarget = targetLoc.subtract(specLoc).toVector().normalize();
+		if ( specDir.dot(dirToTarget) < maxAcceptableOffsetDot )
+			return false;
+		
+		// then do a ray trace to see if there's anything in the way
+        Iterator<Block> itr = new BlockIterator(specLoc.getWorld(), specLoc.toVector(), dirToTarget, 0, (int)Math.sqrt(targetDistSqr));
+        while (itr.hasNext())
+        {
+            Block block = itr.next();
+            if ( !block.isEmpty() )
+            	return false;            
+        }
+		
 		return false;
 	}
 	
 	public void moveToSeeFollowTarget(Player player)
 	{
-		// TODO Auto-generated method stub
+		String targetName = spectators.get(player.getName()); 
+		if ( targetName == null )
+			return;
+		
+		Player target = plugin.getServer().getPlayerExact(targetName);
+		if ( target == null || !target.isOnline() )
+			return;
+
+		Location targetLoc = target.getEyeLocation();
+		
+		Location bestLoc = targetLoc;
+		double bestDistSq = 0;
+		
+		// try a few times to move away in a random direction, see if we can make it up to idealFollowSpectateRange
+		for ( int i=0; i<maxSpectatePositionAttempts; i++ )
+		{
+			// get a mostly-horizontal direction
+			Vector dir = new Vector(random.nextDouble()-0.5, random.nextDouble() * 0.1 - 0.05, random.nextDouble()-0.5).normalize();
+			if ( dir.getY() > 0.2 )
+			{
+				dir.setY(0.2);
+				dir = dir.normalize();
+			}
+			else if ( dir.getY() < -0.2 )
+			{
+				dir.setY(-0.2);
+				dir = dir.normalize();
+			}
+			
+			Location pos = targetLoc;
+			// keep going until we reach the ideal distance or hit a non-empty block
+			Iterator<Block> itr = new BlockIterator(targetLoc.getWorld(), targetLoc.toVector(), dir, 0, idealFollowSpectateRange);
+	        while (itr.hasNext())
+	        {
+	            Block block = itr.next();
+	            if ( !block.isEmpty() )
+	            	break;
+	            
+	            if ( targetLoc.getWorld().getBlockAt(block.getLocation().getBlockX(), block.getLocation().getBlockY()-1, block.getLocation().getBlockZ()).isEmpty() )
+	            	pos = block.getLocation().add(0.5, player.getEyeHeight()-1, 0.5);
+	        }
+	        
+	        if ( !itr.hasNext() ) // we made it the max distance! use this!
+	        {
+	        	bestLoc = pos;
+	        	break;
+	        }
+	        else
+	        {
+	        	double distSq = pos.distanceSquared(targetLoc); 
+	        	if ( distSq > bestDistSq )
+		        {
+		        	bestLoc = pos;
+		        	bestDistSq = distSq; 
+		        }
+	        }
+		}
+		
+		
+		// as we're dealing in eye position thus far, reduce the Y to get the "feet position"
+		bestLoc.setY(bestLoc.getY() - player.getEyeHeight());
+		
+		// work out the yaw
+		double xDif = targetLoc.getX() - bestLoc.getX();
+		double zDif = targetLoc.getZ() - bestLoc.getZ();
+		
+		if ( xDif == 0 )
+		{
+			if ( zDif >= 0 )
+				bestLoc.setYaw(0);
+			bestLoc.setYaw((float)Math.PI);
+		}
+		else if ( xDif > 0 )
+		{
+			if ( zDif >= 0)
+				bestLoc.setYaw((float)Math.atan(zDif / xDif));
+			else
+				bestLoc.setYaw((float)(Math.PI * 2.0 - Math.atan(-zDif / xDif)));
+		}
+		else
+		{
+			if ( zDif >= 0)
+				bestLoc.setYaw((float)(Math.PI / 2.0 + Math.atan(-xDif / zDif)));
+			else
+				bestLoc.setYaw((float)(Math.PI + Math.atan(-zDif / -xDif)));
+		}
+		
+		// work out the pitch
+		double horizDist = Math.sqrt(xDif * xDif + zDif * zDif);
+		double yDif = targetLoc.getY() - bestLoc.getY();
+		if ( horizDist == 0 )
+			bestLoc.setPitch(0);
+		else
+			bestLoc.setPitch((float)Math.atan(yDif / horizDist));
+		
+		// set them as flying so they don't fall from this position, then do the teleport
+		player.setFlying(true);
+		player.teleport(bestLoc);
 	}
 	
 	public String getDefaultFollowTarget()
 	{
-		// TODO Auto-generated method stub
+		for ( String name : spectators.keySet() )
+		{
+			Player player = plugin.getServer().getPlayerExact(name);
+			if ( player != null && player.isOnline() )
+				return name;
+		}
 		return null;
 	}
 }
