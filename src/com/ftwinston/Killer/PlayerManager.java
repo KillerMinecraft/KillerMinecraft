@@ -586,4 +586,32 @@ public class PlayerManager
 		
 		player.teleport(spawn);
 	}
+
+	public Location getNearestPlayerTo(Player player)
+	{
+		Location nearest = null;
+		double nearestDistSq = Double.MAX_VALUE;
+		World playerWorld = player.getWorld();
+		for ( Player other : plugin.getServer().getOnlinePlayers() )
+		{
+			if ( other == player || other.getWorld() != playerWorld || !isAlive(other.getName()) )
+				continue;
+			
+			double distSq = other.getLocation().distanceSquared(nearest);
+			if ( nearest == null || distSq < nearestDistSq )
+			{
+				nearestDistSq = distSq;
+				nearest = other.getLocation();
+			}
+		}
+		
+		// if there's no player to point at, point in a random direction
+		if ( nearest == null )
+		{
+			nearest = player.getLocation();
+			nearest.setX(nearest.getX() + random.nextDouble() * 32 - 16);
+			nearest.setZ(nearest.getZ() + random.nextDouble() * 32 - 16);
+		}
+		return nearest;
+	}
 }
