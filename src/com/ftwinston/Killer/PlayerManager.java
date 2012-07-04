@@ -1,7 +1,9 @@
 package com.ftwinston.Killer;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.bukkit.Bukkit;
@@ -47,7 +49,7 @@ public class PlayerManager
 	
 	private List<String> alive = new ArrayList<String>();
 	private List<String> killers = new ArrayList<String>();
-	private List<String> spectators = new ArrayList<String>();
+	private Map<String, String> spectators = new LinkedHashMap<String, String>();
 	
 	public boolean hasKillerAssigned() { return killers.size() > 0; }
 	public boolean hasEnoughKillers()
@@ -289,7 +291,7 @@ public class PlayerManager
 	{
 		giveKillerItems(player, 25);
 		
-		for(String spec:spectators)
+		for(String spec:spectators.keySet())
 			if(spec != player.getName())
 			{
 				Player other = plugin.getServer().getPlayerExact(spec);
@@ -350,8 +352,8 @@ public class PlayerManager
 		{
 			if(alive.contains(playerName) )
 				alive.remove(playerName);
-			if(!spectators.contains(playerName))
-				spectators.add(playerName);
+			if(!spectators.containsKey(playerName))
+				spectators.put(playerName, null);
 		}
 		
 		if ( plugin.banOnDeath )
@@ -463,7 +465,7 @@ public class PlayerManager
 	
 	public boolean isSpectator(String player)
 	{
-		return spectators.contains(player);
+		return spectators.containsKey(player);
 	}
 
 	public boolean isAlive(String player)
@@ -491,7 +493,7 @@ public class PlayerManager
 			
 			if(!alive.contains(player.getName()))
 				alive.add(player.getName());
-			if(spectators.contains(player.getName()))
+			if(spectators.containsKey(player.getName()))
 				spectators.remove(player.getName());
 		}
 		else
@@ -502,9 +504,9 @@ public class PlayerManager
 			
 			if(alive.contains(player.getName()))
 				alive.remove(player.getName());
-			if(!spectators.contains(player.getName()))
+			if(!spectators.containsKey(player.getName()))
 			{
-				spectators.add(player.getName());
+				spectators.put(player.getName(), null);
 				player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
 			}
 		}
