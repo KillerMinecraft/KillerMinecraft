@@ -794,9 +794,9 @@ public class PlayerManager
 		if ( horizDist == 0 )
 			bestLoc.setPitch(0);
 		else if ( yDif >= 0 )
-			bestLoc.setPitch((float)Math.toDegrees(Math.atan(yDif / horizDist)));
+			bestLoc.setPitch(-(float)Math.toDegrees(Math.atan(yDif / horizDist)));
 		else
-			bestLoc.setPitch(-(float)Math.toDegrees(Math.atan(-yDif / horizDist)));
+			bestLoc.setPitch((float)Math.toDegrees(Math.atan(-yDif / horizDist)));
 		
 		// set them as flying so they don't fall from this position, then do the teleport
 		player.setFlying(true);
