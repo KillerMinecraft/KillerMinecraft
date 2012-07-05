@@ -704,15 +704,15 @@ public class PlayerManager
 		for ( int i=0; i<maxSpectatePositionAttempts; i++ )
 		{
 			// get a mostly-horizontal direction
-			Vector dir = new Vector(random.nextDouble()-0.5, random.nextDouble() * 0.1 - 0.05, random.nextDouble()-0.5).normalize();
-			if ( dir.getY() > 0.2 )
+			Vector dir = new Vector(random.nextDouble()-0.5, random.nextDouble() * 0.35 - 0.1, random.nextDouble()-0.5).normalize();
+			if ( dir.getY() > 0.25 )
 			{
-				dir.setY(0.2);
+				dir.setY(0.25);
 				dir = dir.normalize();
 			}
-			else if ( dir.getY() < -0.2 )
+			else if ( dir.getY() < -0.1 )
 			{
-				dir.setY(-0.2);
+				dir.setY(-0.1);
 				dir = dir.normalize();
 			}
 			
