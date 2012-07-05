@@ -633,11 +633,11 @@ public class PlayerManager
 	private final double maxFollowSpectateRangeSq = 40 * 40, maxAcceptableOffsetDot = 0.65;
 	private final int maxSpectatePositionAttempts = 5, idealFollowSpectateRange = 20;
 	
-	public boolean canSeeFollowTarget(Player player)
+	public void checkFollowTarget(Player player)
 	{
 		String targetName = spectators.get(player.getName()); 
 		if ( targetName == null )
-			return true; // don't have a target, don't want to get moved to it
+			return; // don't have a target, don't want to get moved to it
 		
 		Player target = plugin.getServer().getPlayerExact(targetName);
 		if ( !isAlive(targetName) || target == null || !target.isOnline() )
@@ -645,13 +645,13 @@ public class PlayerManager
 			targetName = getDefaultFollowTarget();
 			setFollowTarget(player, targetName);
 			if ( targetName == null )
-				return true; // if there isn't a valid follow target, don't let it try to move them to it
+				return; // if there isn't a valid follow target, don't let it try to move them to it
 
 			target = plugin.getServer().getPlayerExact(targetName);
 			if ( !isAlive(targetName) || target == null || !target.isOnline() )
 			{// something went wrong with the default follow target, so just clear it
 				setFollowTarget(player, null);
-				return true;
+				return;
 			}
 		}
 		
@@ -660,18 +660,27 @@ public class PlayerManager
 		
 		// check they're in the same world
 		if ( specLoc.getWorld() != targetLoc.getWorld() )
-			return false;
+		{
+			moveToSee(player, target);
+			return;
+		}
 		
 		// then check the distance is appropriate
 		double targetDistSqr = specLoc.distanceSquared(targetLoc); 
 		if ( targetDistSqr > maxFollowSpectateRangeSq )
-			return false;
+		{
+			moveToSee(player, target);
+			return;
+		}
 		
 		// check if they're facing the right way
 		Vector specDir = specLoc.getDirection().normalize();
 		Vector dirToTarget = targetLoc.subtract(specLoc).toVector().normalize();
 		if ( specDir.dot(dirToTarget) < maxAcceptableOffsetDot )
-			return false;
+		{
+			moveToSee(player, target);
+			return;
+		}
 		
 		// then do a ray trace to see if there's anything in the way
         Iterator<Block> itr = new BlockIterator(specLoc.getWorld(), specLoc.toVector(), dirToTarget, 0, (int)Math.sqrt(targetDistSqr));
@@ -679,19 +688,15 @@ public class PlayerManager
         {
             Block block = itr.next();
             if ( !block.isEmpty() )
-    			return false;
+			{
+				moveToSee(player, target);
+				return;
+			}
         }
-		
-		return true;
 	}
 	
-	public void moveToSeeFollowTarget(Player player)
+	public void moveToSee(Player player, Player target)
 	{
-		String targetName = spectators.get(player.getName()); 
-		if ( targetName == null )
-			return;
-		
-		Player target = plugin.getServer().getPlayerExact(targetName);
 		if ( target == null || !target.isOnline() )
 			return;
 
@@ -744,8 +749,7 @@ public class PlayerManager
 		        }
 	        }
 		}
-		
-		
+
 		// as we're dealing in eye position thus far, reduce the Y to get the "feet position"
 		bestLoc.setY(bestLoc.getY() - player.getEyeHeight());
 		

@@ -164,9 +164,13 @@ public class Killer extends JavaPlugin
 					playerManager.setFollowTarget(player, playerManager.getDefaultFollowTarget());
 					if ( !playerManager.canSeeFollowTarget(player) )
 						playerManager.moveToSeeFollowTarget(player);
+					sender.sendMessage("Follow mode enabled. Type " + ChatColor.YELLOW + "/spec follow" + ChatColor.RESET + " again to exist follow mode, or /spec <player name> to follow another player.");
 				}
 				else
+				{
 					playerManager.setFollowTarget(player, null);
+					sender.sendMessage("Follow mode disabled.");
+				}
 			}
 			else
 			{
@@ -175,8 +179,8 @@ public class Killer extends JavaPlugin
 					sender.sendMessage("Player not found: " + args[0]);
 				else if ( playerManager.getFollowTarget(player) != null )
 					playerManager.setFollowTarget(player, other.getName());
-				else
-					player.teleport(other.getLocation());
+				
+				playerManager.moveToSee(player, other);
 			}
 			
 			return true;
