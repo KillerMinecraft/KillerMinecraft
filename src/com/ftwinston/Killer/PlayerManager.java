@@ -366,8 +366,17 @@ public class PlayerManager
 		// if there's no one alive at all, game was drawn
 		if (alive.size() == 0 )
 			gameFinished(false, false, null, null);
+			
+		// if only one person left, and they're not the killer, tell people they can /vote if they want to start a new game
+		if ( alive.size() == 1 && !isKiller(alive.get(0)) )
+		{
+			plugin.getServer().broadcastMessage("There's only one player left, and they can't be the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
+			return;
+		}
+		
+		// if there's no one alive that isn't a killer, the killer(s) won
 		else
-		{// check for victory ... if there's no one alive that isn't a killer, the killer(s) won
+		{
 			for ( String survivor : alive )
 				if ( !isKiller(survivor) )
 					return;
