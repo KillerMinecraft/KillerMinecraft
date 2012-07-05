@@ -609,8 +609,8 @@ public class PlayerManager
 			if ( other == player || other.getWorld() != playerWorld || !isAlive(other.getName()) )
 				continue;
 			
-			double distSq = other.getLocation().distanceSquared(nearest);
-			if ( nearest == null || distSq < nearestDistSq )
+			double distSq = other.getLocation().distanceSquared(player.getLocation());
+			if ( distSq < nearestDistSq )
 			{
 				nearestDistSq = distSq;
 				nearest = other.getLocation();
