@@ -31,7 +31,7 @@ public class Killer extends JavaPlugin
 	public PlayerManager playerManager;
 	public VoteManager voteManager;
 	
-	public final int absMinPlayers = 2;
+	public final int absMinPlayers = 3;
 	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, recreateWorldWithoutStoppingServer;
 	public Material[] winningItems;
 	
