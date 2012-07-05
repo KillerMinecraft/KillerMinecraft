@@ -67,11 +67,8 @@ public class Killer extends JavaPlugin
 	        	for ( Player player : instance.getServer().getOnlinePlayers() )
 	        	{
 	        		String target = playerManager.getFollowTarget(player);
-	        		if ( target == null )	        			
-	        			continue;
-	        		
-        			if ( !playerManager.canSeeFollowTarget(player) )
-        				playerManager.moveToSeeFollowTarget(player);
+	        		if ( target != null )
+	        			playerManager.checkFollowTarget(player);
 	        	}
         	}
         }, 40, 40);
@@ -162,8 +159,7 @@ public class Killer extends JavaPlugin
 				if ( playerManager.getFollowTarget(player) == null )
 				{
 					playerManager.setFollowTarget(player, playerManager.getDefaultFollowTarget());
-					if ( !playerManager.canSeeFollowTarget(player) )
-						playerManager.moveToSeeFollowTarget(player);
+					playerManager.checkFollowTarget(player);
 					sender.sendMessage("Follow mode enabled. Type " + ChatColor.YELLOW + "/spec follow" + ChatColor.RESET + " again to exist follow mode, or /spec <player name> to follow another player.");
 				}
 				else
