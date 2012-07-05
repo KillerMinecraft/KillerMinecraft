@@ -628,12 +628,10 @@ public class PlayerManager
 	public void setFollowTarget(Player player, String target)
 	{
 		spectators.put(player.getName(), target);
-		if ( target != null )
-			moveToSeeFollowTarget(player);
 	}
 	
-	private final double maxFollowSpectateRangeSq = 48 * 48, maxAcceptableOffsetDot = 0.5;
-	private final int maxSpectatePositionAttempts = 4, idealFollowSpectateRange = 24;
+	private final double maxFollowSpectateRangeSq = 40 * 40, maxAcceptableOffsetDot = 0.65;
+	private final int maxSpectatePositionAttempts = 5, idealFollowSpectateRange = 20;
 	
 	public boolean canSeeFollowTarget(Player player)
 	{
@@ -681,10 +679,10 @@ public class PlayerManager
         {
             Block block = itr.next();
             if ( !block.isEmpty() )
-            	return false;            
+    			return false;
         }
 		
-		return false;
+		return true;
 	}
 	
 	public void moveToSeeFollowTarget(Player player)
@@ -758,22 +756,23 @@ public class PlayerManager
 		if ( xDif == 0 )
 		{
 			if ( zDif >= 0 )
-				bestLoc.setYaw(0);
-			bestLoc.setYaw((float)Math.PI);
+				bestLoc.setYaw(270);
+			else
+				bestLoc.setYaw(90);
 		}
 		else if ( xDif > 0 )
 		{
 			if ( zDif >= 0)
-				bestLoc.setYaw((float)Math.atan(zDif / xDif));
+				bestLoc.setYaw(270f + (float)Math.toDegrees(Math.atan(zDif / xDif)));
 			else
-				bestLoc.setYaw((float)(Math.PI * 2.0 - Math.atan(-zDif / xDif)));
+				bestLoc.setYaw(180f + (float)Math.toDegrees(Math.atan(xDif / -zDif)));
 		}
 		else
 		{
 			if ( zDif >= 0)
-				bestLoc.setYaw((float)(Math.PI / 2.0 + Math.atan(-xDif / zDif)));
+				bestLoc.setYaw((float)(Math.toDegrees(Math.atan(-xDif / zDif))));
 			else
-				bestLoc.setYaw((float)(Math.PI + Math.atan(-zDif / -xDif)));
+				bestLoc.setYaw(90f + (float)Math.toDegrees(Math.atan(zDif / xDif)));
 		}
 		
 		// work out the pitch
@@ -782,7 +781,7 @@ public class PlayerManager
 		if ( horizDist == 0 )
 			bestLoc.setPitch(0);
 		else
-			bestLoc.setPitch((float)Math.atan(yDif / horizDist));
+			bestLoc.setPitch((yDif >= 0 ? 1 : -1 ) * (float)Math.toDegrees(Math.atan(yDif / horizDist)));
 		
 		// set them as flying so they don't fall from this position, then do the teleport
 		player.setFlying(true);
@@ -791,7 +790,7 @@ public class PlayerManager
 	
 	public String getDefaultFollowTarget()
 	{
-		for ( String name : spectators.keySet() )
+		for ( String name : alive )
 		{
 			Player player = plugin.getServer().getPlayerExact(name);
 			if ( player != null && player.isOnline() )

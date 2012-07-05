@@ -67,21 +67,14 @@ public class Killer extends JavaPlugin
 	        	for ( Player player : instance.getServer().getOnlinePlayers() )
 	        	{
 	        		String target = playerManager.getFollowTarget(player);
-	        		if ( target == null )
+	        		if ( target == null )	        			
 	        			continue;
-	        		
-	        		Player targetPlayer = instance.getServer().getPlayerExact(target);
-	        		if ( targetPlayer == null || !targetPlayer.isOnline() || !playerManager.isAlive(target) )
-        			{
-        				playerManager.setFollowTarget(player, null);
-        				continue;
-        			}
 	        		
         			if ( !playerManager.canSeeFollowTarget(player) )
         				playerManager.moveToSeeFollowTarget(player);
 	        	}
         	}
-        }, 20, 25);
+        }, 40, 40);
 	}
 	
 	public void onDisable()
@@ -167,7 +160,11 @@ public class Killer extends JavaPlugin
 			else if ( args[0].equalsIgnoreCase("follow") )
 			{
 				if ( playerManager.getFollowTarget(player) == null )
+				{
 					playerManager.setFollowTarget(player, playerManager.getDefaultFollowTarget());
+					if ( !playerManager.canSeeFollowTarget(player) )
+						playerManager.moveToSeeFollowTarget(player);
+				}
 				else
 					playerManager.setFollowTarget(player, null);
 			}
