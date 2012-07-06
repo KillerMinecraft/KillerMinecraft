@@ -290,7 +290,7 @@ public class EventListener implements Listener
 	
 	private boolean isOnPlinth(Location loc)
 	{
-		Location plinthLoc = plugin.plinthPressurePlateLocation;
+		Location plinthLoc = plugin.getPlinthLocation();
 		return  plinthLoc != null && loc.getWorld() == plinthLoc.getWorld()
 	            && loc.getX() >= plinthLoc.getBlockX() - 1
 	            && loc.getX() <= plinthLoc.getBlockX() + 1
