@@ -1,7 +1,7 @@
 Killer Minecraft
 ======
 
-This is a Bukkit server plugin that offers a new game mode based around suspicion and paranoia, to be played on a brand new map.
+This is a Bukkit server plugin that offers a new game mode based around suspicion and paranoia, to be played on a brand new world.
 
 The game is best played on Hard difficulty (3), and in a manner similar to Hardcore mode, when you die, you're out until the end of the round.
 
