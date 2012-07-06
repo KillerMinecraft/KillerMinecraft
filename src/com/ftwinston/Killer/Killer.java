@@ -25,7 +25,7 @@ public class Killer extends JavaPlugin
 {
 	public static Killer instance;
 	Logger log = Logger.getLogger("Minecraft");
-	Location plinthPressurePlateLocation;
+	private Location plinthPressurePlateLocation;
 
 	private EventListener eventListener = new EventListener(this);
 	private WorldManager worldManager;
@@ -192,6 +192,11 @@ public class Killer extends JavaPlugin
 		return false;
 	}
 
+	public Location getPlinthLocation()
+	{
+		return plinthPressurePlateLocation;
+	}
+	
 	public void restartGame(boolean useSameWorld, boolean resetItems)
 	{
 		if ( useSameWorld )

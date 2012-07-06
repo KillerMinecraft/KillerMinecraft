@@ -339,6 +339,9 @@ public class PlayerManager
 		
     	if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getServer().getOnlinePlayers().length == 1 )
 			plugin.getServer().getWorlds().get(0).setTime(0);
+		
+		if ( player.getWorld() == plugin.getPlinthLocation().getWorld() && !isKiller(player.getName()) )
+			player.setCompassTarget(plugin.getPlinthLocation());
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time

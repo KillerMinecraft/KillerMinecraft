@@ -50,7 +50,11 @@ public class EventListener implements Listener
     			{
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
+					{
     					PlayerManager.instance.setAlive(player,false);
+						if ( player.getWorld() == plugin.getPlinthLocation().getWorld() && !plugin.playerManager.isKiller(playerName) )
+							player.setCompassTarget(plugin.getPlinthLocation());
+					}
     			}
     		});
     	}
@@ -60,8 +64,11 @@ public class EventListener implements Listener
     @EventHandler
     public void OnPlayerChangedWorld(PlayerChangedWorldEvent event)
     {
-    	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
-    		PlayerManager.instance.setAlive(event.getPlayer(),false);
+		Player player = event.getPlayer();
+    	if(PlayerManager.instance.isSpectator(player.getName()))
+    		PlayerManager.instance.setAlive(player,false);
+		else if ( player.getWorld() == plugin.getPlinthLocation().getWorld() && !plugin.playerManager.isKiller(player.getName()) )
+			player.setCompassTarget(plugin.getPlinthLocation());
     }
     
     // prevent spectators picking up anything
