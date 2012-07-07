@@ -40,10 +40,12 @@ public class Killer extends JavaPlugin
 	public Material[] winningItems;
 	
 	private int compassProcessID, spectatorFollowProcessID;
+	private boolean restarting;
 	
 	public void onEnable()
 	{	
         instance = this;
+        restarting = false;
         
         setupConfiguration();
 		
@@ -226,8 +228,11 @@ public class Killer extends JavaPlugin
 			}
 			else if ( args[0].equalsIgnoreCase("restart") )
 			{
-				getServer().broadcastMessage(sender.getName() + " is restarting the game");
-				restartGame(false, true);
+				if ( !restarting )
+				{
+					getServer().broadcastMessage(sender.getName() + " is restarting the game");
+					restartGame(false, true);
+				}
 			}
 			else
 				sender.sendMessage("Invalid parameter: " + args[0] + " - type /killer to list allowed parameters");
@@ -245,6 +250,9 @@ public class Killer extends JavaPlugin
 	
 	public void restartGame(boolean useSameWorld, boolean resetItems)
 	{
+		if ( restarting )
+			return;
+		
 		if ( useSameWorld )
 		{
 			// what should we do to the world on restart if we're not deleting it?
@@ -264,6 +272,7 @@ public class Killer extends JavaPlugin
 		}
 		else if ( recreateWorldWithoutStoppingServer )
 		{
+			restarting = true;
 			getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
 			playerManager.reset(resetItems);
 			worldManager.deleteWorlds(new Runnable() {
@@ -272,6 +281,7 @@ public class Killer extends JavaPlugin
 					World defaultWorld = getServer().getWorlds().get(0);
 					plinthPressurePlateLocation = worldManager.createPlinth(defaultWorld);
 					playerManager.reset(false);
+					restarting = false;
 				}
 			});
 		}
