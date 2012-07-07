@@ -221,7 +221,7 @@ public class Killer extends JavaPlugin
 				restartGame(false, true);
 			}
 			else
-				sender.sendMessage("Invalid parameter: " + args[1] + " - type /killer to list allowed parameters");
+				sender.sendMessage("Invalid parameter: " + args[0] + " - type /killer to list allowed parameters");
 			
 			return true;
 		}
