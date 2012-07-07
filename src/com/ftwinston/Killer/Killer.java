@@ -202,20 +202,20 @@ public class Killer extends JavaPlugin
 				return true;
 			}
 			
-			if ( args[1] == "add" )
+			if ( args[0].equalsIgnoreCase("add") )
 			{
 				playerManager.assignKiller(true, sender);				
 			}
-			else if ( args[1] == "clear" )
+			else if ( args[0].equalsIgnoreCase("clear") )
 			{
 				playerManager.clearKillers(sender);
 			}
-			else if ( args[1] == "reallocate" )
+			else if ( args[0].equalsIgnoreCase("reallocate") )
 			{
 				playerManager.clearKillers(sender);
 				playerManager.assignKiller(true, sender);
 			}
-			else if ( args[1] == "restart" )
+			else if ( args[0].equalsIgnoreCase("restart") )
 			{
 				getServer().broadcastMessage(sender.getName() + " is restarting the game");
 				restartGame(false, true);
