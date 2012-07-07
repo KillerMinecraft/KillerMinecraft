@@ -8,3 +8,5 @@ commands:
     usage: As a spectator, use to teleport to other players, or between worlds; /spec <player>, /spec nether or /spec main
   vote:
     usage: Shows a menu that allows you to set up a vote among all players
+  killer:
+    usage: Admin commands to change the killer & restart the game. Only usable by op / console.

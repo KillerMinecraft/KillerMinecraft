@@ -203,7 +203,7 @@ public class VoteManager
 					startVote("Clear the killer, so that there isn't one assigned?", player, new Runnable() {
 						public void run()
 						{
-							plugin.playerManager.clearKillers();
+							plugin.playerManager.clearKillers(null);
 						}
 					}, null, null);
 					
@@ -211,8 +211,8 @@ public class VoteManager
 					startVote("Clear the killer, and assign a new one?", player, new Runnable() {
 						public void run()
 						{
-							plugin.playerManager.clearKillers();
-							plugin.playerManager.assignKiller(true);
+							plugin.playerManager.clearKillers(null);
+							plugin.playerManager.assignKiller(true, null);
 						}
 					}, null, null);
 				

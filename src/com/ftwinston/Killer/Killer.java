@@ -188,6 +188,43 @@ public class Killer extends JavaPlugin
 				voteManager.showVoteMenu((Player)sender);
 			return true;
 		}
+		else if (cmd.getName().equalsIgnoreCase("killer"))
+		{
+			if ( sender instanceof Player && !((Player)sender).isOp() )
+			{
+				sender.sendMessage("You must be a server op to run this command");
+				return true;
+			}
+			
+			if ( args.length == 0 )
+			{
+				sender.sendMessage("Usage: /killer add, /killer clear, /killer reallocate, /killer restart");
+				return true;
+			}
+			
+			if ( args[1] == "add" )
+			{
+				playerManager.assignKiller(true, sender);				
+			}
+			else if ( args[1] == "clear" )
+			{
+				playerManager.clearKillers(sender);
+			}
+			else if ( args[1] == "reallocate" )
+			{
+				playerManager.clearKillers(sender);
+				playerManager.assignKiller(true, sender);
+			}
+			else if ( args[1] == "restart" )
+			{
+				getServer().broadcastMessage(sender.getName() + " is restarting the game");
+				restartGame(false, true);
+			}
+			else
+				sender.sendMessage("Invalid parameter: " + args[1] + " - type /killer to list allowed parameters");
+			
+			return true;
+		}
 		
 		return false;
 	}

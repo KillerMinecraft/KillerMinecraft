@@ -15,6 +15,7 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -42,7 +43,7 @@ public class PlayerManager
     				long time = plugin.getServer().getWorlds().get(0).getTime();
     				
     				if ( time < lastRun && !hasEnoughKillers() ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
-						assignKiller(plugin.informEveryoneOfReassignedKillers || killers.size() == 0); // don't inform people of any killer being added apart from the first one, unless the config is set
+						assignKiller(plugin.informEveryoneOfReassignedKillers || killers.size() == 0, null); // don't inform people of any killer being added apart from the first one, unless the config is set
 
 					lastRun = time;
     			}
@@ -100,17 +101,24 @@ public class PlayerManager
 				player.setBanned(false);
 	}
 	
-	public boolean assignKiller(boolean informNonKillers)
+	public boolean assignKiller(boolean informNonKillers, CommandSender sender)
 	{
 		Player[] players = plugin.getServer().getOnlinePlayers();
 		if ( players.length < plugin.absMinPlayers )
 		{
-			plugin.getServer().broadcastMessage("Insufficient players to assign a killer. A minimum of 3 players are required.");
+			String message = "Insufficient players to assign a killer. A minimum of 3 players are required.";
+			if ( sender == null )
+				plugin.getServer().broadcastMessage(message);
+			else
+				sender.sendMessage(message);
 			return false;
 		}
 		
 		if ( informNonKillers )
-			plugin.getServer().broadcastMessage("A killer has been randomly assigned - nobody but the killer knows who it is.");
+			if ( sender == null )
+				plugin.getServer().broadcastMessage("A killer has been randomly assigned - nobody but the killer knows who it is.");
+			else
+				plugin.getServer().broadcastMessage("A killer has been randomly assigned by " + sender.getName() + " - nobody but the killer knows who it is.");
 		
 		int availablePlayers = 0;
 		for ( String name : alive )
@@ -127,7 +135,6 @@ public class PlayerManager
 			return false;
 		
 		int randomIndex = random.nextInt(availablePlayers);
-		Player killer = null;
 		
 		int num = 0;
 		for ( Player player : players )
@@ -138,7 +145,6 @@ public class PlayerManager
 			if ( num == randomIndex )
 			{
 				addKiller(player);
-				killer = player;
 				String message = ChatColor.RED + "You are ";
 				message += killers.size() > 1 ? "now a" : "the";
 				message += " killer!";
@@ -147,6 +153,7 @@ public class PlayerManager
 					message += ChatColor.WHITE + " No one else has been told a new killer was assigned.";
 					
 				player.sendMessage(message);
+				giveKillerItems(player, availablePlayers - 1);
 			}
 			else if ( informNonKillers )
 				player.sendMessage(ChatColor.YELLOW + "You are not the killer.");
@@ -154,7 +161,6 @@ public class PlayerManager
 			num++;
 		}
 		
-		giveKillerItems(killer, availablePlayers - 1);
 		return true;
 	}
 
@@ -412,7 +418,7 @@ public class PlayerManager
 		
 		plugin.getServer().broadcastMessage(ChatColor.YELLOW + message);
 		if ( plugin.autoReveal )
-			clearKillers();
+			clearKillers(null);
 
 		if ( friendliesWon || plugin.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getServer().getOnlinePlayers().length == 0 )
 		{	// schedule a game restart in 10 secs, with a new world
@@ -445,13 +451,13 @@ public class PlayerManager
 		}
 	}
 	
-	public void clearKillers()
+	public void clearKillers(CommandSender sender)
 	{
 		String message;
 		
 		if ( hasKillerAssigned() )
 		{
-			message = ChatColor.RED + "Revealed: ";
+			message = ChatColor.RED + (sender == null ? "Revealed: " : "Revealed by " + sender.getName() + ": ");
 			if ( killers.size() == 1 )
 				message += killers.get(0) + " was the killer!";
 			else
@@ -469,11 +475,16 @@ public class PlayerManager
 			}
 			
 			killers.clear();
+			plugin.getServer().broadcastMessage(message);
 		}
 		else
+		{
 			message = "No killers are currently assigned!";
-		
-		plugin.getServer().broadcastMessage(message);
+			if ( sender == null )
+				plugin.getServer().broadcastMessage(message);
+			else
+				sender.sendMessage(message);
+		}	
 	}
 	
 	public boolean isSpectator(String player)
