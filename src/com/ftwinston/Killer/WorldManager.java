@@ -252,11 +252,10 @@ public class WorldManager
 		}
 		
 		@SuppressWarnings("rawtypes")
-		private boolean clearWorldReference(World world)
+		private boolean clearWorldReference(String worldName)
 		{
 			if (regionfiles == null) return false;
 			if (rafField == null) return false;
-			String worldname = world.getName();
 			
 			ArrayList<Object> removedKeys = new ArrayList<Object>();
 			try
@@ -265,7 +264,10 @@ public class WorldManager
 				{
 					Map.Entry e = (Map.Entry) o;
 					File f = (File) e.getKey();
-					if (f.toString().startsWith("." + File.separator + worldname))
+					if ( Killer.DEBUG )
+						plugin.log.info(f.toString());
+					
+					if (f.toString().startsWith("." + File.separator + worldName))
 					{
 						SoftReference ref = (SoftReference) e.getValue();
 						try
@@ -287,7 +289,7 @@ public class WorldManager
 			}
 			catch (Exception ex)
 			{
-				plugin.log.warning("Exception while removing world reference for '" + worldname + "'!");
+				plugin.log.warning("Exception while removing world reference for '" + worldName + "'!");
 				ex.printStackTrace();
 			}
 			for (Object key : removedKeys)
@@ -335,8 +337,6 @@ public class WorldManager
 			
 			MinecraftServer ms = getMinecraftServer();
 			ms.worlds.remove(ms.worlds.indexOf(craftWorld.getHandle()));
-			
-	        clearWorldReference(world);
 		}
 
 		public void deleteWorlds(final Runnable runWhenDone)
@@ -442,10 +442,21 @@ public class WorldManager
 	    		boolean allGood = true;
     			for ( String worldName : worlds )
     			{
+    				clearWorldReference(worldName);
+    				
 		    		try
 					{
 		    			if ( !delete(new File(serverFolder + File.separator + worldName)) )
+		    			{
 		    				allGood = false;
+		    				
+		    				if ( Killer.DEBUG )
+		    				{
+			    				File sessionLock = new File(serverFolder + File.separator + worldName + File.separator + "session.lock"); 
+			    				if ( sessionLock.exists() )
+			    					plugin.log.warning("Unable to delete " + sessionLock.getAbsolutePath());
+		    				}
+		    			}
 					}
 					catch ( Exception e )
 					{

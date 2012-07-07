@@ -23,6 +23,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class Killer extends JavaPlugin
 {
+	// enable this to add extra info messages and debug commands 
+	public static final boolean DEBUG = false;
+	
 	public static Killer instance;
 	Logger log = Logger.getLogger("Minecraft");
 	private Location plinthPressurePlateLocation;
@@ -139,6 +142,12 @@ public class Killer extends JavaPlugin
 			
 			if ( !playerManager.isSpectator(sender.getName()) )
 			{
+				if ( DEBUG && args[0].equals("addme") )
+				{
+					playerManager.setAlive((Player)sender, false);
+					return true;
+				}
+					
 				sender.sendMessage("Only spectators can use this command");
 				return true;
 			}
