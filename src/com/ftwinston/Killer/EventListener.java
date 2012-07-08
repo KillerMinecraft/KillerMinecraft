@@ -147,7 +147,7 @@ public class EventListener implements Listener
 	        {// does the player have one of the winning items in their inventory?	        	
 	        	for ( Material material : plugin.winningItems )
 		        	if ( event.getPlayer().getInventory().contains(material) )
-		        		PlayerManager.instance.gameFinished(false, true, event.getPlayer().getName(), plugin.tidyItemName(material));
+		        		PlayerManager.instance.gameFinished(false, true, event.getPlayer().getName(), material);
 	        }
 	  	}
     }
@@ -283,6 +283,8 @@ public class EventListener implements Listener
 				Player player = Bukkit.getServer().getPlayerExact(name);
 				if ( player != null && player.isOnline() )
 					return; // player has reconnected, so don't kill them
+				
+				plugin.statsManager.playerQuit();
 			}
     		plugin.playerManager.playerKilled(name);
     	}

@@ -55,6 +55,8 @@ public class PlayerManager
 	private List<String> killers = new ArrayList<String>();
 	private Map<String, String> spectators = new LinkedHashMap<String, String>();
 	
+	public int numSurvivors() { return alive.size(); }
+	
 	public boolean hasKillerAssigned() { return killers.size() > 0; }
 	public boolean hasEnoughKillers()
 	{
@@ -144,7 +146,8 @@ public class PlayerManager
 		
 			if ( num == randomIndex )
 			{
-				addKiller(player);
+				if(!killers.contains(player.getName()))
+					killers.add(player.getName());
 				String message = ChatColor.RED + "You are ";
 				message += killers.size() > 1 ? "now a" : "the";
 				message += " killer!";
@@ -160,6 +163,13 @@ public class PlayerManager
 				
 			num++;
 		}
+		
+		if ( !plugin.statsManager.isTracking )
+			plugin.statsManager.gameStarted(numSurvivors());
+		
+		plugin.statsManager.killerAdded();
+		if ( sender != null )
+			plugin.statsManager.killerAddedByAdmin();
 		
 		return true;
 	}
@@ -338,6 +348,9 @@ public class PlayerManager
 				setAlive(player,false);
 			else
 				setAlive(player,true);
+			
+			if ( plugin.statsManager.isTracking )
+				plugin.statsManager.playerJoinedLate();
 		}
 		
 		else
@@ -394,7 +407,7 @@ public class PlayerManager
 		}
 	}
 	
-	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, String winningItem)
+	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)
 	{
 		String message;
 		if ( killerWon )
@@ -412,9 +425,11 @@ public class PlayerManager
 				message += " wins!";
 		}
 		else if ( friendliesWon )
-			message = (winningPlayerName == null ? "The players" : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + winningItem) + " to the plinth - the friendlies win!";
+			message = (winningPlayerName == null ? "The players" : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the friendlies win!";
 		else
 			message = "No players survived, game drawn!";
+		
+		plugin.statsManager.gameFinished(numSurvivors(), killerWon ? 1 : (friendliesWon ? 2 : 0), winningItem == null ? 0 : winningItem.getId());
 		
 		plugin.getServer().broadcastMessage(ChatColor.YELLOW + message);
 		if ( plugin.autoReveal )
@@ -476,6 +491,10 @@ public class PlayerManager
 			
 			killers.clear();
 			plugin.getServer().broadcastMessage(message);
+			
+			// this game was "aborted"
+			if ( plugin.statsManager.isTracking )
+				plugin.statsManager.gameFinished(numSurvivors(), 3, 0);
 		}
 		else
 		{
@@ -534,12 +553,6 @@ public class PlayerManager
 				player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
 			}
 		}
-	}
-	
-	private void addKiller(Player player)
-	{
-		if(!killers.contains(player.getName()))
-			killers.add(player.getName());
 	}
 	
 	private void makePlayerInvisibleToAll(Player player)

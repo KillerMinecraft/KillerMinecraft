@@ -34,6 +34,7 @@ public class Killer extends JavaPlugin
 	private WorldManager worldManager;
 	public PlayerManager playerManager;
 	public VoteManager voteManager;
+	public StatsManager statsManager;
 	
 	public final int absMinPlayers = 3;
 	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, recreateWorldWithoutStoppingServer;
@@ -53,6 +54,7 @@ public class Killer extends JavaPlugin
         playerManager = new PlayerManager(this);
         worldManager = new WorldManager(this);
         voteManager = new VoteManager(this);
+        statsManager = new StatsManager(this);
         
         // create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
         plinthPressurePlateLocation = worldManager.createPlinth(getServer().getWorlds().get(0));
@@ -215,7 +217,7 @@ public class Killer extends JavaPlugin
 			
 			if ( args[0].equalsIgnoreCase("add") )
 			{
-				playerManager.assignKiller(true, sender);				
+				playerManager.assignKiller(true, sender);
 			}
 			else if ( args[0].equalsIgnoreCase("clear") )
 			{
@@ -253,6 +255,10 @@ public class Killer extends JavaPlugin
 		if ( restarting )
 			return;
 		
+		// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
+		if ( statsManager.isTracking )
+			statsManager.gameFinished(playerManager.numSurvivors(), 3, 0);
+			
 		if ( useSameWorld )
 		{
 			// what should we do to the world on restart if we're not deleting it?
