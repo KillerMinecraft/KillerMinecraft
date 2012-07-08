@@ -28,27 +28,34 @@ public class PlayerManager
 	public static PlayerManager instance;
 	private Killer plugin;
 	private Random random;
+	private int killerAssignProcess;
+	
 	public PlayerManager(Killer _plugin)
 	{
 		this.plugin = _plugin;
 		instance = this;
 		random = new Random();
 		
-    	if ( plugin.autoAssignKiller )
-    	{
-			plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-    			long lastRun = 0;
-    			public void run()
-    			{
-    				long time = plugin.getServer().getWorlds().get(0).getTime();
-    				
-    				if ( time < lastRun && !hasEnoughKillers() ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
-						assignKiller(plugin.informEveryoneOfReassignedKillers || killers.size() == 0, null); // don't inform people of any killer being added apart from the first one, unless the config is set
-
+    	startCheckAutoAssignKiller();
+	}
+	
+	private void startCheckAutoAssignKiller()
+	{
+		if ( !plugin.autoAssignKiller )
+			return;
+		
+		killerAssignProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+			long lastRun = 0;
+			public void run()
+			{
+				long time = plugin.getServer().getWorlds().get(0).getTime();
+			
+				if ( time < lastRun && !hasEnoughKillers() ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
+					assignKiller(plugin.informEveryoneOfReassignedKillers || killers.size() == 0, null); // don't inform people of any killer being added apart from the first one, unless the config is set
+	
 					lastRun = time;
-    			}
-    		}, 600L, 100L); // initial wait: 30s, then check every 5s (still won't try to assign unless it detects a new day starting)
-    	}
+				}
+			}, 600L, 100L); // initial wait: 30s, then check every 5s (still won't try to assign unless it detects a new day starting)
 	}
 	
 	private List<String> alive = new ArrayList<String>();
@@ -101,6 +108,13 @@ public class PlayerManager
 		if ( plugin.banOnDeath )
 			for ( OfflinePlayer player : plugin.getServer().getBannedPlayers() )
 				player.setBanned(false);
+		
+		if ( killerAssignProcess != -1 )
+		{
+			plugin.getServer().getScheduler().cancelTask(killerAssignProcess);
+			killerAssignProcess = -1;
+		}
+		startCheckAutoAssignKiller();
 	}
 	
 	public boolean assignKiller(boolean informNonKillers, CommandSender sender)
