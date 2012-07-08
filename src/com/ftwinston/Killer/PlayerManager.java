@@ -52,10 +52,10 @@ public class PlayerManager
 			
 				if ( time < lastRun && !hasEnoughKillers() ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
 					assignKiller(plugin.informEveryoneOfReassignedKillers || killers.size() == 0, null); // don't inform people of any killer being added apart from the first one, unless the config is set
-	
-					lastRun = time;
-				}
-			}, 600L, 100L); // initial wait: 30s, then check every 5s (still won't try to assign unless it detects a new day starting)
+				
+				lastRun = time;
+			}
+		}, 600L, 100L); // initial wait: 30s, then check every 5s (still won't try to assign unless it detects a new day starting)
 	}
 	
 	private List<String> alive = new ArrayList<String>();
@@ -406,8 +406,12 @@ public class PlayerManager
 		// if only one person left, and they're not the killer, tell people they can /vote if they want to start a new game
 		if ( alive.size() == 1 && !isKiller(alive.get(0)) )
 		{
-			plugin.getServer().broadcastMessage("There's only one player left, and they can't be the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
-			return;
+			Player last = plugin.getServer().getPlayerExact(alive.get(0));
+			if ( last != null && last.isOnline() )
+			{
+				plugin.getServer().broadcastMessage("There's only one player left, and they can't be the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
+				return;
+			}
 		}
 		
 		// if there's no one alive that isn't a killer, the killer(s) won
