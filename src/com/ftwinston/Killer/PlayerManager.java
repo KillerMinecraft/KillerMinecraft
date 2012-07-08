@@ -602,7 +602,7 @@ public class PlayerManager
 	}
 	
 	public void putPlayerInWorld(Player player, World world, boolean checkSpawn)
-	{		
+	{	
 		// check spawn location is clear and is on the ground!
 		// update it if its not!
 		Location spawn = world.getSpawnLocation();
@@ -637,7 +637,8 @@ public class PlayerManager
 			}
 		}
 		
-		player.teleport(spawn);
+		if ( !player.isDead() || player.getWorld() != world )
+			player.teleport(spawn);
 	}
 
 	public Location getNearestPlayerTo(Player player)
