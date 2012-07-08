@@ -59,6 +59,9 @@ public class Killer extends JavaPlugin
         // create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
         plinthPressurePlateLocation = worldManager.createPlinth(getServer().getWorlds().get(0));
         
+        // disable spawn protection
+        getServer().setSpawnRadius(0);
+        
         // set up a task to mess with killers' compasses
         compassProcessID = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
         	public void run()
