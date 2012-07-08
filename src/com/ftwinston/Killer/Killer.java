@@ -37,7 +37,7 @@ public class Killer extends JavaPlugin
 	public StatsManager statsManager;
 	
 	public final int absMinPlayers = 3;
-	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, recreateWorldWithoutStoppingServer;
+	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, recreateWorldWithoutStoppingServer, reportStats;
 	public Material[] winningItems;
 	
 	private int compassProcessID, spectatorFollowProcessID;
@@ -99,6 +99,7 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("tweakDeathMessages", true);
 		getConfig().addDefault("banOnDeath", false);
 		getConfig().addDefault("informEveryoneOfReassignedKillers", true);
+		getConfig().addDefault("reportStats", true);
 		getConfig().addDefault("winningItems", Arrays.asList(Material.BLAZE_ROD.getId(), Material.GHAST_TEAR.getId()));		
 		
 		getConfig().addDefault("autoRecreateWorld", false);
@@ -116,6 +117,7 @@ public class Killer extends JavaPlugin
 		informEveryoneOfReassignedKillers = getConfig().getBoolean("informEveryoneOfReassignedKillers");
 		autoRecreateWorld = getConfig().getBoolean("autoRecreateWorld");
 		recreateWorldWithoutStoppingServer = getConfig().getBoolean("recreateWorldWithoutStoppingServer");
+		reportStats = getConfig().getBoolean("reportStats");
 
 		List<Integer> winningItemIDs = getConfig().getIntegerList("winningItems"); 
 		winningItems = new Material[winningItemIDs.size()];

@@ -30,7 +30,7 @@ public class StatsManager
 	
 	public void gameFinished(int numPlayers, int outcome, int winningItemID)
 	{
-		if ( !isTracking || Killer.DEBUG) // debug games shouldn't send stats
+		if ( !isTracking || !plugin.reportStats)
 			return;
 	
 		isTracking = false;
