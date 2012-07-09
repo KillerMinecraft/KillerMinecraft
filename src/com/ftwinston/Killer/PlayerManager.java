@@ -358,13 +358,17 @@ public class PlayerManager
 			message += " to the plinth near the spawn.";
 			player.sendMessage(message);
 			
-			if ( hasKillerAssigned() && plugin.lateJoinersStartAsSpectator )
-				setAlive(player,false);
+			if ( hasKillerAssigned() )
+			{
+				if ( plugin.lateJoinersStartAsSpectator )
+					setAlive(player,false);
+				else
+				{
+					setAlive(player,true);
+					plugin.statsManager.playerJoinedLate();
+				}
 			else
 				setAlive(player,true);
-			
-			if ( plugin.statsManager.isTracking )
-				plugin.statsManager.playerJoinedLate();
 		}
 		
 		else
