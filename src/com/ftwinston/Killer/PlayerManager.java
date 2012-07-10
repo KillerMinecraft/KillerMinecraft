@@ -367,6 +367,7 @@ public class PlayerManager
 					setAlive(player,true);
 					plugin.statsManager.playerJoinedLate();
 				}
+			}
 			else
 				setAlive(player,true);
 		}
