@@ -24,7 +24,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class Killer extends JavaPlugin
 {
 	// enable this to add extra info messages and debug commands 
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	
 	public static Killer instance;
 	Logger log = Logger.getLogger("Minecraft");
@@ -250,7 +250,7 @@ public class Killer extends JavaPlugin
 			
 			if ( args[0].equalsIgnoreCase("add") )
 			{
-				playerManager.assignKiller(true, sender);
+				playerManager.assignKillers(sender);
 			}
 			else if ( args[0].equalsIgnoreCase("clear") )
 			{
@@ -259,7 +259,7 @@ public class Killer extends JavaPlugin
 			else if ( args[0].equalsIgnoreCase("reallocate") )
 			{
 				playerManager.clearKillers(sender);
-				playerManager.assignKiller(true, sender);
+				playerManager.assignKillers(sender);
 			}
 			else if ( args[0].equalsIgnoreCase("restart") )
 			{

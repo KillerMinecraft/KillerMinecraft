@@ -271,7 +271,7 @@ public class VoteManager
 						public void run()
 						{
 							plugin.playerManager.clearKillers(null);
-							plugin.playerManager.assignKiller(true, null);
+							plugin.playerManager.assignKillers(null);
 						}
 					}, null, null);
 				

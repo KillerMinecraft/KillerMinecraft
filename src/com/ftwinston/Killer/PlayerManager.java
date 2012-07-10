@@ -1,6 +1,7 @@
 package com.ftwinston.Killer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -52,11 +53,7 @@ public class PlayerManager
 				long time = plugin.getServer().getWorlds().get(0).getTime();
 			
 				if ( time < lastRun ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
-				{
-					int numToAdd = determineNumberOfKillersToAdd();
-					for ( int i=0; i<numToAdd; i++ )
-						assignKiller(plugin.informEveryoneOfReassignedKillers || killers.size() == 0, null); // don't inform people of any killer being added apart from the first one, unless the config is set
-				}
+					assignKillers(null);
 				
 				lastRun = time;
 			}
@@ -117,7 +114,15 @@ public class PlayerManager
 		startCheckAutoAssignKiller();
 	}
 	
-	public boolean assignKiller(boolean informNonKillers, CommandSender sender)
+	public boolean assignKillers(CommandSender sender)
+	{
+		int numToAdd = determineNumberOfKillersToAdd();
+		if ( numToAdd > 0 )  // don't inform people of any killer being added apart from the first one, unless the config is set
+			return assignKillers(numToAdd, plugin.informEveryoneOfReassignedKillers || killers.size() == 0, sender);
+		return false;
+	}
+	
+	public boolean assignKillers(int numKillers, boolean informNonKillers, CommandSender sender)
 	{
 		Player[] players = plugin.getServer().getOnlinePlayers();
 		if ( players.length < plugin.getGameMode().absMinPlayers() )
@@ -131,6 +136,7 @@ public class PlayerManager
 		}
 		
 		if ( informNonKillers )
+			
 			if ( sender == null )
 				plugin.getServer().broadcastMessage("A killer has been randomly assigned - nobody but the killer knows who it is.");
 			else
@@ -150,20 +156,50 @@ public class PlayerManager
 		if ( availablePlayers == 0 )
 			return false;
 		
-		int randomIndex = random.nextInt(availablePlayers);
+		int[] killerIndices;
+		if ( numKillers >= availablePlayers )
+		{// should this ever happen? seriously? everyone's a killer. that's screwed.
+			 killerIndices = new int[availablePlayers];
+			 for ( int i=0; i<availablePlayers; i++ )
+				 killerIndices[i] = i;
+		}
+		else
+		{
+			killerIndices = new int[numKillers];
+			for ( int i=0; i<killerIndices.length; i++ )
+			{
+				int rand;
+				boolean ok;
+				do
+				{
+					rand = random.nextInt(availablePlayers);
+					ok = true;
+					for ( int j=0; j<i; j++ )
+						if ( rand == killerIndices[j] ) // already used this one, it's not good to use again
+						{
+							ok = false;
+							break;
+						}
+
+				} while ( !ok );
+				killerIndices[i] = rand;
+			}
+		}
 		
-		int num = 0;
+		Arrays.sort(killerIndices);
+		
+		int num = 0, nextIndex = 0;
 		for ( Player player : players )
 		{
 			if ( isKiller(player.getName()) || isSpectator(player.getName()) )
 				continue;
 		
-			if ( num == randomIndex )
+			if ( num == killerIndices[nextIndex] )
 			{
 				if(!killers.contains(player.getName()))
 					killers.add(player.getName());
 				String message = ChatColor.RED + "You are ";
-				message += killers.size() > 1 ? "now a" : "the";
+				message += numKillers > 1 || killers.size() > 1 ? "now a" : "the";
 				message += " killer!";
 				
 				if ( !informNonKillers )
@@ -171,9 +207,11 @@ public class PlayerManager
 					
 				player.sendMessage(message);
 				giveKillerItems(player, availablePlayers - 1);
+				
+				nextIndex ++;
 			}
 			else if ( informNonKillers )
-				player.sendMessage(ChatColor.YELLOW + "You are not the killer.");
+				player.sendMessage(ChatColor.YELLOW + "You are not " + (numKillers == 1 ? "the" : "a") + " killer.");
 				
 			num++;
 		}
