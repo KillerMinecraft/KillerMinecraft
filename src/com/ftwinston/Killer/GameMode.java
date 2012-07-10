@@ -22,4 +22,6 @@ public abstract class GameMode
 	public abstract int absMinPlayers();
 	public abstract boolean killersCompassPointsAtFriendlies();
 	public abstract boolean friendliesCompassPointsAtKiller();
+	public abstract boolean discreteDeathMessages();
+	public abstract boolean usesPlinth();
 }

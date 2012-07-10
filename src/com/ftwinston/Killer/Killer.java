@@ -36,7 +36,7 @@ public class Killer extends JavaPlugin
 	public VoteManager voteManager;
 	public StatsManager statsManager;
 	
-	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, stopServerToRecreateWorld, reportStats;
+	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, stopServerToRecreateWorld, reportStats;
 	public Material[] winningItems;
 	
 	private int compassProcessID, spectatorFollowProcessID;
@@ -68,8 +68,8 @@ public class Killer extends JavaPlugin
         voteManager = new VoteManager(this);
         statsManager = new StatsManager(this);
         
-        // create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
-        plinthPressurePlateLocation = worldManager.createPlinth(getServer().getWorlds().get(0));
+        if ( getGameMode().usesPlinth() ) // create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
+        	plinthPressurePlateLocation = worldManager.createPlinth(getServer().getWorlds().get(0));
         
         // disable spawn protection
         getServer().setSpawnRadius(0);
@@ -119,7 +119,6 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("autoReveal", true);
 		getConfig().addDefault("restartDay", true);
 		getConfig().addDefault("lateJoinersStartAsSpectator", false);
-		getConfig().addDefault("tweakDeathMessages", true);
 		getConfig().addDefault("banOnDeath", false);
 		getConfig().addDefault("informEveryoneOfReassignedKillers", true);
 		getConfig().addDefault("reportStats", true);
@@ -145,7 +144,6 @@ public class Killer extends JavaPlugin
 		autoReveal = getConfig().getBoolean("autoReveal");
 		restartDayWhenFirstPlayerJoins = getConfig().getBoolean("restartDay");
 		lateJoinersStartAsSpectator = getConfig().getBoolean("lateJoinersStartAsSpectator");
-		tweakDeathMessages = getConfig().getBoolean("tweakDeathMessages");
 		banOnDeath = getConfig().getBoolean("banOnDeath");
 		informEveryoneOfReassignedKillers = getConfig().getBoolean("informEveryoneOfReassignedKillers");
 		autoRecreateWorld = getConfig().getBoolean("autoRecreateWorld");
@@ -323,8 +321,9 @@ public class Killer extends JavaPlugin
 			worldManager.deleteWorlds(new Runnable() {
 				public void run()
 				{
-					World defaultWorld = getServer().getWorlds().get(0);
-					plinthPressurePlateLocation = worldManager.createPlinth(defaultWorld);
+					if ( getGameMode().usesPlinth() )
+						plinthPressurePlateLocation = worldManager.createPlinth(getServer().getWorlds().get(0));
+					
 					playerManager.reset(false);
 					restarting = false;
 				}

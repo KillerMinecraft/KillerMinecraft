@@ -14,6 +14,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
@@ -378,8 +379,7 @@ public class PlayerManager
     	if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getServer().getOnlinePlayers().length == 1 )
 			plugin.getServer().getWorlds().get(0).setTime(0);
 		
-		if ( player.getWorld() == plugin.getPlinthLocation().getWorld() && !isKiller(player.getName()) )
-			player.setCompassTarget(plugin.getPlinthLocation());
+		checkPlayerCompassTarget(player);
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time
@@ -649,6 +649,20 @@ public class PlayerManager
 		if ( !player.isDead() || player.getWorld() != world )
 			player.teleport(spawn);
 	}
+	
+    public void checkPlayerCompassTarget(Player player)
+    {
+    	if ( plugin.getGameMode().usesPlinth() && player.getWorld().getEnvironment() == Environment.NORMAL )
+		{
+			if ( isKiller(player.getName()) )
+			{
+				if ( !plugin.getGameMode().killersCompassPointsAtFriendlies() )
+					player.setCompassTarget(plugin.getPlinthLocation());
+			}
+			else if ( !plugin.getGameMode().friendliesCompassPointsAtKiller() )
+				player.setCompassTarget(plugin.getPlinthLocation());
+		}
+    }
 
 	public Location getNearestPlayerTo(Player player, boolean findFriendlies)
 	{

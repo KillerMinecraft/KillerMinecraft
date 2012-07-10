@@ -15,4 +15,10 @@ public class MysteryKiller extends GameMode
 
 	@Override
 	public boolean friendliesCompassPointsAtKiller() { return false; }
+
+	@Override
+	public boolean discreteDeathMessages() { return true; }
+
+	@Override
+	public boolean usesPlinth() { return true; }
 }

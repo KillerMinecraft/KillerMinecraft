@@ -50,11 +50,10 @@ public class EventListener implements Listener
     			{
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
-					{
+    				{
     					PlayerManager.instance.setAlive(player,false);
-						if ( player.getWorld() == plugin.getPlinthLocation().getWorld() && !plugin.playerManager.isKiller(playerName) )
-							player.setCompassTarget(plugin.getPlinthLocation());
-					}
+    					plugin.playerManager.checkPlayerCompassTarget(player);
+    				}
     			}
     		});
     	}
@@ -67,8 +66,8 @@ public class EventListener implements Listener
 		Player player = event.getPlayer();
     	if(PlayerManager.instance.isSpectator(player.getName()))
     		PlayerManager.instance.setAlive(player,false);
-		else if ( player.getWorld() == plugin.getPlinthLocation().getWorld() && !plugin.playerManager.isKiller(player.getName()) )
-			player.setCompassTarget(plugin.getPlinthLocation());
+		else
+			plugin.playerManager.checkPlayerCompassTarget(player);
     }
     
     // prevent spectators picking up anything
@@ -259,7 +258,7 @@ public class EventListener implements Listener
 		if ( player == null )
 			return;
 		
-		if ( plugin.tweakDeathMessages )
+		if ( plugin.getGameMode().discreteDeathMessages() )
 			pEvent.setDeathMessage(ChatColor.RED + player.getName() + " died");	
 		
 		// the only reason this is delayed is to avoid banning the player before they properly die, if we're banning players on death
