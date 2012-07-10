@@ -37,11 +37,28 @@ public class Killer extends JavaPlugin
 	public StatsManager statsManager;
 	
 	public final int absMinPlayers = 3;
-	public boolean autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, recreateWorldWithoutStoppingServer, reportStats;
+	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, stopServerToRecreateWorld, reportStats;
 	public Material[] winningItems;
 	
 	private int compassProcessID, spectatorFollowProcessID;
 	private boolean restarting;
+	
+	public enum GameMode
+	{
+		MysteryKiller
+	}
+	
+	private GameMode gameMode = GameMode.MysteryKiller, nextGameMode = GameMode.MysteryKiller;
+	public GameMode getGameMode() { return gameMode; }
+	public GameMode getNextGameMode() { return nextGameMode; }
+	public void setNextGameMode(GameMode g, CommandSender changedBy)
+	{
+		nextGameMode = g;
+		if ( changedBy == null )
+			getServer().broadcastMessage("The next game mode will be " + g.toString());
+		else
+			getServer().broadcastMessage(changedBy.getName() + " set the next game mode to " + g.toString());
+	}
 	
 	public void onEnable()
 	{	
@@ -94,6 +111,8 @@ public class Killer extends JavaPlugin
 	
 	private void setupConfiguration()
 	{
+		getConfig().addDefault("defaultGameMode", "MysteryKiller");
+		getConfig().addDefault("canChangeGameMode", true);
 		getConfig().addDefault("autoAssign", false);
 		getConfig().addDefault("autoReassign", false);
 		getConfig().addDefault("autoReveal", true);
@@ -105,11 +124,23 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("reportStats", true);
 		getConfig().addDefault("winningItems", Arrays.asList(Material.BLAZE_ROD.getId(), Material.GHAST_TEAR.getId()));		
 		
+		
 		getConfig().addDefault("autoRecreateWorld", false);
-		getConfig().addDefault("recreateWorldWithoutStoppingServer", true);
+		getConfig().addDefault("stopServerToRecreateWorld", false);
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		
+		try
+		{
+			gameMode = nextGameMode = (GameMode)Enum.Parse(typeof(GameMode), getConfig().getString("defaultGameMode"));
+		}
+		catch ( Exception ex )
+		{
+			log.warning("Invalid value for defaultGameMode: " + getConfig().getString("defaultGameMode"));
+			gameMode = nextGameMode = GameMode.MysteryKiller;
+		}
+		
+		canChangeGameMode = getConfig().getBoolean("canChangeGameMode");
 		autoAssignKiller = getConfig().getBoolean("autoAssign");
 		autoReassignKiller = getConfig().getBoolean("autoReassign");
 		autoReveal = getConfig().getBoolean("autoReveal");
@@ -119,7 +150,7 @@ public class Killer extends JavaPlugin
 		banOnDeath = getConfig().getBoolean("banOnDeath");
 		informEveryoneOfReassignedKillers = getConfig().getBoolean("informEveryoneOfReassignedKillers");
 		autoRecreateWorld = getConfig().getBoolean("autoRecreateWorld");
-		recreateWorldWithoutStoppingServer = getConfig().getBoolean("recreateWorldWithoutStoppingServer");
+		stopServerToRecreateWorld = getConfig().getBoolean("stopServerToRecreateWorld");
 		reportStats = getConfig().getBoolean("reportStats");
 
 		List<Integer> winningItemIDs = getConfig().getIntegerList("winningItems"); 
@@ -281,7 +312,11 @@ public class Killer extends JavaPlugin
 			
 			playerManager.reset(resetItems);
 		}
-		else if ( recreateWorldWithoutStoppingServer )
+		else if ( stopServerToRecreateWorld )
+		{
+			getServer().shutdown();
+		}
+		else
 		{
 			restarting = true;
 			getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
@@ -295,10 +330,6 @@ public class Killer extends JavaPlugin
 					restarting = false;
 				}
 			});
-		}
-		else
-		{
-			getServer().shutdown();
 		}
 	}
 

@@ -39,15 +39,15 @@ public class WorldManager
 			plugin = killer;
 			instance = this;
 			
-			if ( plugin.recreateWorldWithoutStoppingServer )
+			if ( plugin.stopServerToRecreateWorld )
+				holdingWorld = null;
+			else
 			{
 				seedGen = new Random();
 				bindRegionFiles();
 				serverFolder = plugin.getServer().getWorldContainer();
 				holdingWorld = getOrCreateHoldingWorld();
 			}
-			else
-				holdingWorld = null;
 		}
 		
 		public void onDisable()

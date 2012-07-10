@@ -143,7 +143,56 @@ public class VoteManager
 			}
 		};
 		
-        // prepare the vote creation conversation
+		final NumericPrompt gameModePrompt = new NumericPrompt() {
+        	public String getPromptText(ConversationContext context)
+			{
+				String message = "The current game mode is " + ChatColor.YELLOW + plugin.getGameMode().toString() + ChatColor.RESET + ", and the next game mode will be " + ChatColor.YELLOW + plugin.getNextGameMode().toString() + ChatColor.RESET + ".\nWhat do you want to set the next game mode to?" +
+				
+				int i = 1;
+				for (Killer.GameMode mode : Killer.GameMode.values())
+				{
+					if ( plugin.getNextGameMode() == mode )
+						continue;
+					
+					message += "\n" + ChatColor.GOLD + i + "." + ChatColor.RESET + mode.toString();
+					i++;
+				}
+				
+				message += "\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
+				return message;
+			}
+			
+			protected Prompt acceptValidatedInput(ConversationContext context, Number val)
+			{
+				Player player = context.getForWhom() instanceof Player ? (Player)context.getForWhom() : null;
+			
+				if ( isInVote() )
+					return cantVotePrompt;
+				
+				int choice = val.intValue();
+				
+				int i = 1;
+				for (Killer.GameMode mode : Killer.GameMode.values())
+				{
+					if ( i != choice )
+					{
+						i++;
+						continue;
+					}
+				
+					startVote("Set the next game mode to " + mode.toString() + "?", player, new Runnable() {
+						public void run()
+						{
+							plugin.setNextGameMode(mode, null);
+						}
+					}, null, null);
+					break;
+				}
+
+				return Prompt.END_OF_CONVERSATION;
+			}
+        };
+		
         final NumericPrompt restartPrompt = new NumericPrompt() {
         	public String getPromptText(ConversationContext context)
 			{
@@ -189,6 +238,9 @@ public class VoteManager
         	
 			public String getPromptText(ConversationContext context)
 			{
+				if ( plugin.canChangeGameMode )
+					return "What do you want to start a vote on? Say the number to choose:\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " Change next game mode\n" + ChatColor.GOLD + "2." + ChatColor.RESET + " Restart game\n" + ChatColor.GOLD + "3." + ChatColor.RESET + " Clear killer\n" + ChatColor.GOLD + "4." + ChatColor.RESET + " Reallocate killer\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
+				
 				return "What do you want to start a vote on? Say the number to choose:\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " Restart game\n" + ChatColor.GOLD + "2." + ChatColor.RESET + " Clear killer\n" + ChatColor.GOLD + "3." + ChatColor.RESET + " Reallocate killer\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
 			}
 			
@@ -196,10 +248,17 @@ public class VoteManager
 			{
 				Player player = context.getForWhom() instanceof Player ? (Player)context.getForWhom() : null;
 				
-				if ( val.intValue() == 1 )
+				int choice = val.IntValue();
+				if ( !plugin.canChangeGameMode )
+					choice++; // "first choice" isn't available
+				
+				if ( choice == 1 )
+					return gameModePrompt;
+					
+				if ( choice == 2 )
 					return restartPrompt;
 				
-				else if ( val.intValue() == 2 )
+				else if ( choice == 3 )
 					startVote("Clear the killer, so that there isn't one assigned?", player, new Runnable() {
 						public void run()
 						{
@@ -207,7 +266,7 @@ public class VoteManager
 						}
 					}, null, null);
 					
-				else if ( val.intValue() == 3 )
+				else if ( choice == 4 )
 					startVote("Clear the killer, and assign a new one?", player, new Runnable() {
 						public void run()
 						{
