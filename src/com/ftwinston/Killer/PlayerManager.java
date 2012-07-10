@@ -68,7 +68,7 @@ public class PlayerManager
 	public boolean hasEnoughKillers()
 	{
 		// if we don't have enough players for a game, we don't want to assign a killer
-		if ( alive.size() < plugin.absMinPlayers )
+		if ( alive.size() < plugin.getGameMode().absMinPlayers() )
 			return true;
 		
 		// if we're not set to auto-reassign the killer once one has been assigned at all, even if they're no longer alive / connected, don't do so
@@ -120,7 +120,7 @@ public class PlayerManager
 	public boolean assignKiller(boolean informNonKillers, CommandSender sender)
 	{
 		Player[] players = plugin.getServer().getOnlinePlayers();
-		if ( players.length < plugin.absMinPlayers )
+		if ( players.length < plugin.getGameMode().absMinPlayers() )
 		{
 			String message = "Insufficient players to assign a killer. A minimum of 3 players are required.";
 			if ( sender == null )
@@ -650,16 +650,19 @@ public class PlayerManager
 			player.teleport(spawn);
 	}
 
-	public Location getNearestPlayerTo(Player player)
+	public Location getNearestPlayerTo(Player player, boolean findFriendlies)
 	{
 		Location nearest = null;
 		double nearestDistSq = Double.MAX_VALUE;
 		World playerWorld = player.getWorld();
 		for ( Player other : plugin.getServer().getOnlinePlayers() )
 		{
-			if ( other == player || other.getWorld() != playerWorld || !isAlive(other.getName()) )
+			if ( other == player || other.getWorld() != playerWorld || !isAlive(other.getName()))
 				continue;
 			
+			if ( findFriendlies == isKiller(other.getName()) )
+				continue;
+				
 			double distSq = other.getLocation().distanceSquared(player.getLocation());
 			if ( distSq < nearestDistSq )
 			{

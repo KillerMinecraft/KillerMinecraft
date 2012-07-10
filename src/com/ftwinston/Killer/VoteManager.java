@@ -149,12 +149,12 @@ public class VoteManager
 				String message = "The current game mode is " + ChatColor.YELLOW + plugin.getGameMode().toString() + ChatColor.RESET + ", and the next game mode will be " + ChatColor.YELLOW + plugin.getNextGameMode().toString() + ChatColor.RESET + ".\nWhat do you want to set the next game mode to?";
 				
 				int i = 1;
-				for (Killer.GameMode mode : Killer.GameMode.values())
+				for (GameMode mode : GameMode.gameModes.values())
 				{
 					if ( plugin.getNextGameMode() == mode )
 						continue;
 					
-					message += "\n" + ChatColor.GOLD + i + "." + ChatColor.RESET + mode.toString();
+					message += "\n" + ChatColor.GOLD + i + "." + ChatColor.RESET + mode.getName();
 					i++;
 				}
 				
@@ -172,7 +172,7 @@ public class VoteManager
 				int choice = val.intValue();
 				
 				int i = 1;
-				for (final Killer.GameMode mode : Killer.GameMode.values())
+				for (final GameMode mode : GameMode.gameModes.values())
 				{
 					if ( i != choice )
 					{
@@ -180,7 +180,7 @@ public class VoteManager
 						continue;
 					}
 				
-					startVote("Set the next game mode to " + mode.toString() + "?", player, new Runnable() {
+					startVote("Set the next game mode to " + mode.getName() + "?", player, new Runnable() {
 						public void run()
 						{
 							plugin.setNextGameMode(mode, null);

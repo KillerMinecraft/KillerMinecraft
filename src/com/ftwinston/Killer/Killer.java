@@ -36,19 +36,13 @@ public class Killer extends JavaPlugin
 	public VoteManager voteManager;
 	public StatsManager statsManager;
 	
-	public final int absMinPlayers = 3;
 	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, tweakDeathMessages, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, stopServerToRecreateWorld, reportStats;
 	public Material[] winningItems;
 	
 	private int compassProcessID, spectatorFollowProcessID;
 	private boolean restarting;
 	
-	public enum GameMode
-	{
-		MysteryKiller
-	}
-	
-	private GameMode gameMode = GameMode.MysteryKiller, nextGameMode = GameMode.MysteryKiller;
+	private GameMode gameMode, nextGameMode;
 	public GameMode getGameMode() { return gameMode; }
 	public GameMode getNextGameMode() { return nextGameMode; }
 	public void setNextGameMode(GameMode g, CommandSender changedBy)
@@ -61,10 +55,11 @@ public class Killer extends JavaPlugin
 	}
 	
 	public void onEnable()
-	{	
+	{
         instance = this;
         restarting = false;
         
+        GameMode.setupGameModes();
         setupConfiguration();
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
@@ -79,13 +74,19 @@ public class Killer extends JavaPlugin
         // disable spawn protection
         getServer().setSpawnRadius(0);
         
-        // set up a task to mess with killers' compasses
+        // set up a task to mess with compasses, to point at other players as appropriate
         compassProcessID = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
         	public void run()
         	{
 	        	for ( Player player : instance.getServer().getOnlinePlayers() )
-	        		if ( playerManager.isKiller(player.getName()) && playerManager.isAlive(player.getName()) && player.getInventory().contains(Material.COMPASS) )
-	        			player.setCompassTarget(playerManager.getNearestPlayerTo(player));
+	        		if ( playerManager.isAlive(player.getName()) && player.getInventory().contains(Material.COMPASS) )
+	        			if ( playerManager.isKiller(player.getName()) )
+	        			{
+	        				if ( getGameMode().killersCompassPointsAtFriendlies() )
+			        			player.setCompassTarget(playerManager.getNearestPlayerTo(player, true));	
+	        			}
+	        			else if ( getGameMode().friendliesCompassPointsAtKiller() )
+		        			player.setCompassTarget(playerManager.getNearestPlayerTo(player, false));
         	}
         }, 20, 10);
 	        			
@@ -130,14 +131,12 @@ public class Killer extends JavaPlugin
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		
-		try
-		{
-			gameMode = nextGameMode = GameMode.valueOf(getConfig().getString("defaultGameMode"));
-		}
-		catch ( Exception ex )
+		gameMode = nextGameMode = GameMode.getByName(getConfig().getString("defaultGameMode"));
+		
+		if ( gameMode == null )
 		{
 			log.warning("Invalid value for defaultGameMode: " + getConfig().getString("defaultGameMode"));
-			gameMode = nextGameMode = GameMode.MysteryKiller;
+			gameMode = nextGameMode = GameMode.getDefault();
 		}
 		
 		canChangeGameMode = getConfig().getBoolean("canChangeGameMode");
