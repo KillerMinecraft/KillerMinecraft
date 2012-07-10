@@ -78,7 +78,7 @@ public class StatsManager
 	
 	public void playerQuit()
 	{
-		numPlayersLateJoin++;
+		numPlayersQuit++;
 	}
 	
 	public void killerAdded()

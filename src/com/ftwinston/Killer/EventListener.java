@@ -284,7 +284,7 @@ public class EventListener implements Listener
 				if ( player != null && player.isOnline() )
 					return; // player has reconnected, so don't kill them
 				
-				if ( plugin.playerManager.isAlive(player.getName()) )
+				if ( plugin.playerManager.hasKillerAssigned() && plugin.playerManager.isAlive(player.getName()) )
 					plugin.statsManager.playerQuit();
 			}
     		plugin.playerManager.playerKilled(name);
