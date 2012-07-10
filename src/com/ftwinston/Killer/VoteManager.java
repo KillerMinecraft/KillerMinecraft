@@ -146,7 +146,7 @@ public class VoteManager
 		final NumericPrompt gameModePrompt = new NumericPrompt() {
         	public String getPromptText(ConversationContext context)
 			{
-				String message = "The current game mode is " + ChatColor.YELLOW + plugin.getGameMode().toString() + ChatColor.RESET + ", and the next game mode will be " + ChatColor.YELLOW + plugin.getNextGameMode().toString() + ChatColor.RESET + ".\nWhat do you want to set the next game mode to?" +
+				String message = "The current game mode is " + ChatColor.YELLOW + plugin.getGameMode().toString() + ChatColor.RESET + ", and the next game mode will be " + ChatColor.YELLOW + plugin.getNextGameMode().toString() + ChatColor.RESET + ".\nWhat do you want to set the next game mode to?";
 				
 				int i = 1;
 				for (Killer.GameMode mode : Killer.GameMode.values())
@@ -172,7 +172,7 @@ public class VoteManager
 				int choice = val.intValue();
 				
 				int i = 1;
-				for (Killer.GameMode mode : Killer.GameMode.values())
+				for (final Killer.GameMode mode : Killer.GameMode.values())
 				{
 					if ( i != choice )
 					{
@@ -248,7 +248,7 @@ public class VoteManager
 			{
 				Player player = context.getForWhom() instanceof Player ? (Player)context.getForWhom() : null;
 				
-				int choice = val.IntValue();
+				int choice = val.intValue();
 				if ( !plugin.canChangeGameMode )
 					choice++; // "first choice" isn't available
 				

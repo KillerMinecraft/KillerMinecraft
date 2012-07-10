@@ -132,7 +132,7 @@ public class Killer extends JavaPlugin
 		
 		try
 		{
-			gameMode = nextGameMode = (GameMode)Enum.Parse(typeof(GameMode), getConfig().getString("defaultGameMode"));
+			gameMode = nextGameMode = GameMode.valueOf(getConfig().getString("defaultGameMode"));
 		}
 		catch ( Exception ex )
 		{
