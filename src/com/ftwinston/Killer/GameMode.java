@@ -24,4 +24,5 @@ public abstract class GameMode
 	public abstract boolean friendliesCompassPointsAtKiller();
 	public abstract boolean discreteDeathMessages();
 	public abstract boolean usesPlinth();
+	public abstract int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers);
 }

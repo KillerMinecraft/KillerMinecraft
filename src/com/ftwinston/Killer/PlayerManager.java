@@ -51,8 +51,12 @@ public class PlayerManager
 			{
 				long time = plugin.getServer().getWorlds().get(0).getTime();
 			
-				if ( time < lastRun && !hasEnoughKillers() ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
-					assignKiller(plugin.informEveryoneOfReassignedKillers || killers.size() == 0, null); // don't inform people of any killer being added apart from the first one, unless the config is set
+				if ( time < lastRun ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
+				{
+					int numToAdd = determineNumberOfKillersToAdd();
+					for ( int i=0; i<numToAdd; i++ )
+						assignKiller(plugin.informEveryoneOfReassignedKillers || killers.size() == 0, null); // don't inform people of any killer being added apart from the first one, unless the config is set
+				}
 				
 				lastRun = time;
 			}
@@ -66,23 +70,18 @@ public class PlayerManager
 	public int numSurvivors() { return alive.size(); }
 	
 	public boolean hasKillerAssigned() { return killers.size() > 0; }
-	public boolean hasEnoughKillers()
+	public int determineNumberOfKillersToAdd()
 	{
 		// if we don't have enough players for a game, we don't want to assign a killer
 		if ( alive.size() < plugin.getGameMode().absMinPlayers() )
-			return true;
-		
-		// if we're not set to auto-reassign the killer once one has been assigned at all, even if they're no longer alive / connected, don't do so
-		if ( !plugin.autoReassignKiller && killers.size() > 0 )
-			return true;
+			return 0;
 		
 		int numAliveKillers = 0;
 		for ( String name : alive )
 			if ( isKiller(name) )
 				numAliveKillers ++;
 		
-		// for now, one living killer at a time is plenty. But this should be easy to extend later.
-		return numAliveKillers > 0;
+		return plugin.getGameMode().determineNumberOfKillersToAdd(alive.size(), killers.size(), numAliveKillers);
 	}
 	
 	public void reset(boolean resetInventories)
