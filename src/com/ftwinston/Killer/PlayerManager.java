@@ -18,9 +18,7 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
@@ -246,7 +244,7 @@ public class PlayerManager
 			player.sendMessage("Welcome back. You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
 			setAlive(player,false);
 		}
-		else if ( plugin.getGameMode().playerJoined(player, !isAlive(player.getName()), isKiller(player.getName(), killers.size()) )
+		else if ( plugin.getGameMode().playerJoined(player, !isAlive(player.getName()), isKiller(player.getName()), killers.size()) )
 		{
 			if ( lateJoiner )
 				plugin.statsManager.playerJoinedLate();
@@ -283,13 +281,13 @@ public class PlayerManager
 			player.kickPlayer("You died, and are now banned until the end of the game");
 		}
 		
-		plugin.getGameRules().checkForEndOfGame(this, null, null);
+		plugin.getGameMode().checkForEndOfGame(this, null, null);
 	}
 	
 	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)
 	{
 		String message;
-		int numFriendlies = killersnumSurvivors() + spectators.size() - killers.size();
+		int numFriendlies = numSurvivors() + spectators.size() - killers.size();
 		
 		if ( winningItem != null )
 		{
@@ -310,9 +308,9 @@ public class PlayerManager
 		else if ( killerWon )
 		{
 			if ( numFriendlies > 1 )
-				"All of the " + plugin.getGameMode().describePlayer(false) + "s have";
+				message = "All of the " + plugin.getGameMode().describePlayer(false) + "s have";
 			else
-				"The " + plugin.getGameMode().describePlayer(false) + " has";
+				message = "The " + plugin.getGameMode().describePlayer(false) + " has";
 			message += " been killed, the " + plugin.getGameMode().describePlayer(true);
 			
 			if ( killers.size() > 1 )
@@ -334,7 +332,7 @@ public class PlayerManager
 		
 			message += " been killed, the " + plugin.getGameMode().describePlayer(false);
 
-			if ( numFriendlies )
+			if ( numFriendlies > 1 )
 			{
 				message += "s win!";
 

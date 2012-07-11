@@ -134,7 +134,7 @@ public class EventListener implements Listener
     		return;
 
     	// spectators can't interact with anything
-    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+    	if ( plugin.playerManager.isSpectator(event.getPlayer().getName()))
     	{
     		event.setCancelled(true);
     		return;
@@ -146,7 +146,7 @@ public class EventListener implements Listener
 	        {// does the player have one of the winning items in their inventory?	        	
 	        	for ( Material material : plugin.winningItems )
 		        	if ( event.getPlayer().getInventory().contains(material) )
-		        		plugin.getGameRules().checkForEndOfGame(this, event.getPlayer(), material);
+		        		plugin.getGameMode().checkForEndOfGame(plugin.playerManager, event.getPlayer(), material);
 	        }
 	  	}
     }

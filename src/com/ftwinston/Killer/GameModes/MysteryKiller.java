@@ -1,12 +1,11 @@
 package com.ftwinston.Killer.GameModes;
 
-import java.util.List;
-
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.Killer;
 import com.ftwinston.Killer.PlayerManager;
 
 import org.bukkit.ChatColor;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ItemStack;
@@ -44,7 +43,7 @@ public class MysteryKiller extends GameMode
 	}
 	
 	@Override
-	public abstract String describePlayer(boolean killer)
+	public String describePlayer(boolean killer)
 	{
 		if ( killer )
 			return "killer";
@@ -62,7 +61,7 @@ public class MysteryKiller extends GameMode
 		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
 		{
 			String message = "Welcome to Killer Minecraft! One player ";
-			message += hasKillerAssigned() ? "has been" : "will soon be";
+			message += numKillersAssigned > 0 ? "has been" : "will soon be";
 			message += " assigned as the killer, and must kill the rest. To win, the other players must bring a ";
 			
 			message += plugin.tidyItemName(plugin.winningItems[0]);
@@ -239,7 +238,7 @@ public class MysteryKiller extends GameMode
 		// if someone stands on the plinth with a winning item, the friendlies win
 		if ( playerOnPlinth != null && itemOnPlinth != null )
 		{
-			playerManager.gameFinished(false, true, player.getName(), material);
+			playerManager.gameFinished(false, true, playerOnPlinth.getName(), itemOnPlinth);
 			return;
 		}
 		
