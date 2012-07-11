@@ -40,6 +40,41 @@ public class MysteryKiller extends GameMode
 	}
 	
 	@Override
+	public boolean playerJoined(Player player, boolean isNewPlayer, boolean isKiller, int numKillersAssigned)
+	{
+		Killer plugin = Killer.instance;
+	
+		if ( isKiller ) // inform them that they're still a killer
+			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (numKillersAssigned > 1 ? "a" : "the" ) + " killer!"); 
+		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
+		{
+			String message = "Welcome to Killer Minecraft! One player ";
+			message += hasKillerAssigned() ? "has been" : "will soon be";
+			message += " assigned as the killer, and must kill the rest. To win, the other players must bring a ";
+			
+			message += plugin.tidyItemName(plugin.winningItems[0]);
+			
+			if ( plugin.winningItems.length > 1 )
+			{
+				for ( int i=1; i<plugin.winningItems.length-1; i++)
+					message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
+				
+				message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+			}
+			
+			message += " to the plinth near the spawn.";
+			player.sendMessage(message);
+			
+			if ( numKillersAssigned > 0 && plugin.lateJoinersStartAsSpectator )
+				return false; // not alive, should be a spectator
+		}
+		else
+			player.sendMessage("Welcome back. You are not the killer, and you're still alive.");
+			
+		return true; // this player should now be alive
+	}
+	
+	@Override
 	public void giveItemsToKiller(Player player, int numKillers, int numFriendlies)
 	{
 		PlayerInventory inv = player.getInventory();

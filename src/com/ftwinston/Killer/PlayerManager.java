@@ -239,50 +239,20 @@ public class PlayerManager
 					player.hidePlayer(other);
 			}
 		
+		boolean lateJoiner = hasKillerAssigned() && !isAlive(player.getName());
 		if ( isSpectator(player.getName()) )
 		{
 			player.sendMessage("Welcome back. You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
 			setAlive(player,false);
 		}
-		
-		else if ( isKiller(player.getName()) ) // inform them that they're still a killer
-			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (killers.size() > 1 ? "a" : "the" ) + " killer!"); 
-		
-		else if ( !isAlive(player.getName())) // this is a new player, tell them the rules & state of the game
+		else if ( plugin.getGameMode().playerJoined(player, !isAlive(player.getName()), isKiller(player.getName(), killers.size()) )
 		{
-			String message = "Welcome to Killer Minecraft! One player ";
-			message += hasKillerAssigned() ? "has been" : "will soon be";
-			message += " assigned as the killer, and must kill the rest. To win, the other players must bring a ";
-			
-			message += plugin.tidyItemName(plugin.winningItems[0]);
-			
-			if ( plugin.winningItems.length > 1 )
-			{
-				for ( int i=1; i<plugin.winningItems.length-1; i++)
-					message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
-				
-				message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
-			}
-			
-			message += " to the plinth near the spawn.";
-			player.sendMessage(message);
-			
-			if ( hasKillerAssigned() )
-			{
-				if ( plugin.lateJoinersStartAsSpectator )
-					setAlive(player,false);
-				else
-				{
-					setAlive(player,true);
-					plugin.statsManager.playerJoinedLate();
-				}
-			}
-			else
-				setAlive(player,true);
+			if ( lateJoiner )
+				plugin.statsManager.playerJoinedLate();
+			setAlive(player,true); // they're alive
 		}
-		
 		else
-			player.sendMessage("Welcome back. You are not the killer, and you're still alive.");
+			setAlive(player,false); // they're a spectator
 		
     	if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getServer().getOnlinePlayers().length == 1 )
 			plugin.getServer().getWorlds().get(0).setTime(0);
