@@ -289,9 +289,31 @@ public class PlayerManager
 	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)
 	{
 		String message;
-		if ( killerWon )
+		int numFriendlies = killersnumSurvivors() + spectators.size() - killers.size();
+		
+		if ( winningItem != null )
 		{
-			message = "All friendly players have been killed, the killer";
+			if ( friendliesWon )
+				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(false) : winningPlayerName) + (numFriendlies > 1 ? "s brought " : " brought ") + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(false) + (numFriendlies > 1 ? "s win! " : " wins");
+			else
+				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(true) : winningPlayerName) + (killers.size() > 1 ? "s win! " : " wins") + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(true) + (killers.size() > 1 ? "s win! " : " wins");
+		}
+		else if ( killers.size() == 0 ) // some mode (e.g. Contact Killer) might not assign specific killers. In this case, we only care about the winning player
+		{
+			if ( numSurvivors() == 1 )
+				message = "Only one player left standing, " + alive.get(0) + " wins!";
+			else if ( numSurvivors() == 0 )
+				message = "No players survived, game drawn!";
+			else
+				return; // multiple people still alive... ? don't end the game.
+		}
+		else if ( killerWon )
+		{
+			if ( numFriendlies > 1 )
+				"All of the " + plugin.getGameMode().describePlayer(false) + "s have";
+			else
+				"The " + plugin.getGameMode().describePlayer(false) + " has";
+			message += " been killed, the " + plugin.getGameMode().describePlayer(true);
 			
 			if ( killers.size() > 1 )
 			{
@@ -304,7 +326,24 @@ public class PlayerManager
 				message += " wins!";
 		}
 		else if ( friendliesWon )
-			message = (winningPlayerName == null ? "The players" : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the friendlies win!";
+		{
+			if ( killers.size() > 1 )
+				message =  "All of the " + plugin.getGameMode().describePlayer(true) + "s have";
+			else
+				message = "The " + plugin.getGameMode().describePlayer(true) + " has";
+		
+			message += " been killed, the " + plugin.getGameMode().describePlayer(false);
+
+			if ( numFriendlies )
+			{
+				message += "s win!";
+
+				if ( winningPlayerName != null )
+					message += "\nWinning kill by " + winningPlayerName + ".";
+			}
+			else
+				message += " wins!";
+		}
 		else
 			message = "No players survived, game drawn!";
 		

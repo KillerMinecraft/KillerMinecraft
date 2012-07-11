@@ -44,6 +44,15 @@ public class MysteryKiller extends GameMode
 	}
 	
 	@Override
+	public abstract String describePlayer(boolean killer)
+	{
+		if ( killer )
+			return "killer";
+		else
+			return "friendly player";
+	}
+	
+	@Override
 	public boolean playerJoined(Player player, boolean isNewPlayer, boolean isKiller, int numKillersAssigned)
 	{
 		Killer plugin = Killer.instance;
