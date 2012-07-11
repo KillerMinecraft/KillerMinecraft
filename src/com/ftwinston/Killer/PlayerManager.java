@@ -156,6 +156,9 @@ public class PlayerManager
 		if ( availablePlayers == 0 )
 			return false;
 		
+		if ( !plugin.statsManager.isTracking )
+			plugin.statsManager.gameStarted(numSurvivors());
+		
 		int[] killerIndices;
 		if ( numKillers >= availablePlayers )
 		{// should this ever happen? seriously? everyone's a killer. that's screwed.
@@ -206,156 +209,24 @@ public class PlayerManager
 					message += ChatColor.WHITE + " No one else has been told a new killer was assigned.";
 					
 				player.sendMessage(message);
-				giveKillerItems(player, availablePlayers - 1);
+				plugin.getGameMode().giveItemsToKiller(player, numKillers, availablePlayers - numKillers);
 				
 				nextIndex ++;
+				
+				plugin.statsManager.killerAdded();
+				if ( sender != null )
+					plugin.statsManager.killerAddedByAdmin();
 			}
 			else if ( informNonKillers )
+			{
 				player.sendMessage(ChatColor.YELLOW + "You are not " + (numKillers == 1 ? "the" : "a") + " killer.");
+				plugin.getGameMode().giveItemsToFriendly(player, numKillers, availablePlayers - numKillers);
+			}
 				
 			num++;
 		}
 		
-		if ( !plugin.statsManager.isTracking )
-			plugin.statsManager.gameStarted(numSurvivors());
-		
-		plugin.statsManager.killerAdded();
-		if ( sender != null )
-			plugin.statsManager.killerAddedByAdmin();
-		
 		return true;
-	}
-
-	private void giveKillerItems(Player player, int numFriendlies)
-	{
-		PlayerInventory inv = player.getInventory();
-		
-		if ( numFriendlies >= 2 )
-			inv.addItem(new ItemStack(Material.STONE, 6));
-		else
-			return;
-		
-		if ( numFriendlies >= 3 )
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.IRON_INGOT, 1), new ItemStack(Material.REDSTONE, 2));
-		else
-			return;
-		
-		if ( numFriendlies >= 4 )
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.SULPHUR, 1));
-		else
-			return;
-		
-		if ( numFriendlies >= 5 )
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.IRON_INGOT, 1), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.ARROW, 3));
-		else
-			return;
-		
-		if ( numFriendlies >= 6 )
-			inv.addItem(new ItemStack(Material.MONSTER_EGG, 1, (short)50), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.SULPHUR, 1), new ItemStack(Material.ARROW, 2));
-		else
-			return;
-		
-		if ( numFriendlies >= 7 )
-		{
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.SULPHUR, 1), new ItemStack(Material.ARROW, 2));
-			
-			if ( numFriendlies < 11 )
-				inv.addItem(new ItemStack(Material.IRON_PICKAXE, 1)); // at 11 friendlies, they'll get a diamond pick instead
-		}
-		else
-			return;
-		
-		if ( numFriendlies >= 8 )
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.BOW, 1), new ItemStack(Material.ARROW, 3));
-		else
-			return;
-		
-		if ( numFriendlies >= 9 )
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.MONSTER_EGGS, 4, (short)0), new ItemStack(Material.STONE, 2));
-		else
-			return;
-		
-		if ( numFriendlies >= 10 )
-			inv.addItem(new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.MONSTER_EGG, 1, (short)50), new ItemStack(Material.ARROW, 2));
-		else
-			return;
-		
-		if ( numFriendlies >= 11 )
-		{
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.SULPHUR, 1));
-			
-			if ( numFriendlies < 18 )
-				inv.addItem(new ItemStack(Material.DIAMOND_PICKAXE, 1)); // at 18 friendlies, they get an enchanted version
-		}
-		else
-			return;
-		
-		if ( numFriendlies >= 12 )
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.STONE, 2), new ItemStack(Material.SULPHUR, 1));
-		else
-			return;
-		
-		if ( numFriendlies >= 13 )
-			inv.addItem(new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.MONSTER_EGGS, 2, (short)0), new ItemStack(Material.ARROW, 2));
-		else
-			return;
-		
-		if ( numFriendlies >= 14 )
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2), new ItemStack(Material.MONSTER_EGGS, 1, (short)0), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.STONE, 2));
-		else
-			return;
-		
-		if ( numFriendlies >= 15 )
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2), new ItemStack(Material.MONSTER_EGGS, 1, (short)0), new ItemStack(Material.PISTON_STICKY_BASE, 3));
-		else
-			return;
-		
-		if ( numFriendlies >= 16 )
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 1), new ItemStack(Material.SULPHUR, 5));
-		else
-			return;
-		
-		if ( numFriendlies >= 17 )
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 1), new ItemStack(Material.MONSTER_EGG, 1, (short)50), new ItemStack(Material.ARROW, 2));
-		else
-			return;
-		
-		if ( numFriendlies >= 18 )
-		{
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2));
-			if ( numFriendlies == 18 )
-			{
-				ItemStack stack = new ItemStack(Material.DIAMOND_PICKAXE, 1);
-				stack.addEnchantment(Enchantment.DIG_SPEED, 1);
-				inv.addItem(stack);
-			}
-		}
-		else
-			return;
-		
-		if ( numFriendlies >= 19 )
-		{
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2));
-			if ( numFriendlies == 19 )
-			{
-				ItemStack stack = new ItemStack(Material.DIAMOND_PICKAXE, 1);
-				stack.addEnchantment(Enchantment.DIG_SPEED, 2);
-				inv.addItem(stack);
-			}
-		}
-		else
-			return;
-		
-		if ( numFriendlies >= 20 )
-		{
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2));
-		
-			ItemStack stack = new ItemStack(Material.DIAMOND_PICKAXE, 1);
-			stack.addEnchantment(Enchantment.DIG_SPEED, 3);
-			inv.addItem(stack);
-		}
-		else
-			return;	
 	}
 	
 	public void playerJoined(Player player)
