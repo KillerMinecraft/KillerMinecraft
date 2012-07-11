@@ -65,6 +65,7 @@ public class PlayerManager
 	private Map<String, String> spectators = new LinkedHashMap<String, String>();
 	
 	public int numSurvivors() { return alive.size(); }
+	public List<String> getSurvivors() { return alive; }
 	
 	public boolean hasKillerAssigned() { return killers.size() > 0; }
 	public int determineNumberOfKillersToAdd()
@@ -282,30 +283,7 @@ public class PlayerManager
 			player.kickPlayer("You died, and are now banned until the end of the game");
 		}
 		
-		// if there's no one alive at all, game was drawn
-		if (alive.size() == 0 )
-			gameFinished(false, false, null, null);
-			
-		// if only one person left, and they're not the killer, tell people they can /vote if they want to start a new game
-		if ( alive.size() == 1 && !isKiller(alive.get(0)) )
-		{
-			Player last = plugin.getServer().getPlayerExact(alive.get(0));
-			if ( last != null && last.isOnline() )
-			{
-				plugin.getServer().broadcastMessage("There's only one player left, and they can't be the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
-				return;
-			}
-		}
-		
-		// if there's no one alive that isn't a killer, the killer(s) won
-		else
-		{
-			for ( String survivor : alive )
-				if ( !isKiller(survivor) )
-					return;
-			
-			gameFinished(true, false, null, null);
-		}
+		plugin.getGameRules().checkForEndOfGame(this, null, null);
 	}
 	
 	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)

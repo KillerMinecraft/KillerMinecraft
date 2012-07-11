@@ -1,8 +1,12 @@
 package com.ftwinston.Killer.GameModes;
 
+import java.util.List;
+
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.Killer;
+import com.ftwinston.Killer.PlayerManager;
 
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ItemStack;
@@ -211,5 +215,44 @@ public class MysteryKiller extends GameMode
 	public void giveItemsToFriendly(Player player, int numKillers, int numFriendlies)
 	{
 		
+	}
+	
+	@Override
+	public void checkForEndOfGame(PlayerManager playerManager, Player playerOnPlinth, Material itemOnPlinth)
+	{
+		// if there's no one alive at all, game was drawn
+		if (playerManager.numSurvivors() == 0 )
+		{
+			playerManager.gameFinished(false, false, null, null);
+			return;
+		}
+		
+		// if someone stands on the plinth with a winning item, the friendlies win
+		if ( playerOnPlinth != null && itemOnPlinth != null )
+		{
+			playerManager.gameFinished(false, true, player.getName(), material);
+			return;
+		}
+		
+		// if only one person left, and they're not the killer, tell people they can /vote if they want to start a new game
+		if ( playerManager.numSurvivors() == 1 && !playerManager.isKiller(playerManager.getSurvivors().get(0)) )
+		{
+			Player last = Killer.instance.getServer().getPlayerExact(playerManager.getSurvivors().get(0));
+			if ( last != null && last.isOnline() )
+			{
+				Killer.instance.getServer().broadcastMessage("There's only one player left, and they can't be the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
+				return;
+			}
+		}
+		
+		// if there's no one alive that isn't a killer, the killer(s) won
+		else
+		{
+			for ( String survivor : playerManager.getSurvivors() )
+				if ( !playerManager.isKiller(survivor) )
+					return;
+			
+			playerManager.gameFinished(true, false, null, null);
+		}
 	}
 }
