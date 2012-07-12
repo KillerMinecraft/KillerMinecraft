@@ -264,8 +264,6 @@ public class WorldManager
 				{
 					Map.Entry e = (Map.Entry) o;
 					File f = (File) e.getKey();
-					if ( Killer.DEBUG )
-						plugin.log.info(f.toString());
 					
 					if (f.toString().startsWith("." + File.separator + worldName))
 					{
@@ -447,16 +445,7 @@ public class WorldManager
 		    		try
 					{
 		    			if ( !delete(new File(serverFolder + File.separator + worldName)) )
-		    			{
 		    				allGood = false;
-		    				
-		    				if ( Killer.DEBUG )
-		    				{
-			    				File sessionLock = new File(serverFolder + File.separator + worldName + File.separator + "session.lock"); 
-			    				if ( sessionLock.exists() )
-			    					plugin.log.warning("Unable to delete " + sessionLock.getAbsolutePath());
-		    				}
-		    			}
 					}
 					catch ( Exception e )
 					{

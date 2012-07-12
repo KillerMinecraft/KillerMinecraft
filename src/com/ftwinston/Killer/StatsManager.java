@@ -57,10 +57,8 @@ public class StatsManager
 				try
 				{
 					BufferedReader in = new BufferedReader(new InputStreamReader(statsPage.openStream()));
-					String inputLine;
-			        while ((inputLine = in.readLine()) != null)
-			        	if ( Killer.DEBUG )
-			        		plugin.log.info("Stats server says: " + inputLine);
+			        while (in.readLine() != null)
+			        	;
 			        in.close();
 				}
 				catch ( IOException ex )
