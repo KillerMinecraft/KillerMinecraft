@@ -243,7 +243,7 @@ public class EventListener implements Listener
     public void onPlayerQuit(PlayerQuitEvent p)
     {
 		// if the game is "active" then give them 30s to rejoin, otherwise consider them to be "killed" almost right away.
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(p.getPlayer().getName(), true), plugin.playerManager.hasKillerAssigned() ? 600 : 20);
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(p.getPlayer().getName(), true), plugin.playerManager.numKillersAssigned() > 0 ? 600 : 20);
     }
     
     @EventHandler
@@ -283,7 +283,7 @@ public class EventListener implements Listener
 				if ( player != null && player.isOnline() )
 					return; // player has reconnected, so don't kill them
 				
-				if ( plugin.playerManager.hasKillerAssigned() && plugin.playerManager.isAlive(player.getName()) )
+				if ( plugin.playerManager.numKillersAssigned() > 0 && plugin.playerManager.isAlive(player.getName()) )
 					plugin.statsManager.playerQuit();
 			}
     		plugin.playerManager.playerKilled(name);

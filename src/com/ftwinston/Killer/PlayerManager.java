@@ -65,7 +65,7 @@ public class PlayerManager
 	public int numSurvivors() { return alive.size(); }
 	public List<String> getSurvivors() { return alive; }
 	
-	public boolean hasKillerAssigned() { return killers.size() > 0; }
+	public int numKillersAssigned() { return killers.size(); }
 	public int determineNumberOfKillersToAdd()
 	{
 		// if we don't have enough players for a game, we don't want to assign a killer
@@ -238,13 +238,13 @@ public class PlayerManager
 					player.hidePlayer(other);
 			}
 		
-		boolean lateJoiner = hasKillerAssigned() && !isAlive(player.getName());
+		boolean lateJoiner = numKillersAssigned() > 0 && !isAlive(player.getName());
 		if ( isSpectator(player.getName()) )
 		{
 			player.sendMessage("Welcome back. You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
 			setAlive(player,false);
 		}
-		else if ( plugin.getGameMode().playerJoined(player, !isAlive(player.getName()), isKiller(player.getName()), killers.size()) )
+		else if ( plugin.getGameMode().playerJoined(player, this, !isAlive(player.getName()), isKiller(player.getName()), killers.size()) )
 		{
 			if ( lateJoiner )
 				plugin.statsManager.playerJoinedLate();
@@ -386,7 +386,7 @@ public class PlayerManager
 	{
 		String message;
 		
-		if ( hasKillerAssigned() )
+		if ( numKillersAssigned() > 0 )
 		{
 			message = ChatColor.RED + (sender == null ? "Revealed: " : "Revealed by " + sender.getName() + ": ");
 			if ( killers.size() == 1 )
