@@ -32,10 +32,13 @@ public abstract class GameMode
 	public abstract int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers);
 	
 	public abstract String describePlayer(boolean killer);
+	public abstract boolean highlightPlayerNames();
+	public abstract boolean informOfKillerAssignment(PlayerManager pm);
+	public abstract boolean informOfKillerIdentity(PlayerManager pm);
 	
-	public abstract boolean playerJoined(Player player, PlayerManager playerManager, boolean isNewPlayer, boolean isKiller, int numKillersAssigned);
-	public abstract void giveItemsToKiller(Player player, int numKillers, int numFriendlies);
-	public abstract void giveItemsToFriendly(Player player, int numKillers, int numFriendlies);
+	public abstract boolean playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, boolean isKiller, int numKillersAssigned);
+	public abstract void prepareKiller(Player player, PlayerManager pm);
+	public abstract void prepareFriendly(Player player, PlayerManager pm);
 	
-	public abstract void checkForEndOfGame(PlayerManager playerManager, Player playerOnPlinth, Material itemOnPlinth);
+	public abstract void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth);
 }

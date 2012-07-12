@@ -117,11 +117,11 @@ public class PlayerManager
 	{
 		int numToAdd = determineNumberOfKillersToAdd();
 		if ( numToAdd > 0 )  // don't inform people of any killer being added apart from the first one, unless the config is set
-			return assignKillers(numToAdd, plugin.informEveryoneOfReassignedKillers || killers.size() == 0, sender);
+			return assignKillers(numToAdd, sender);
 		return false;
 	}
 	
-	public boolean assignKillers(int numKillers, boolean informNonKillers, CommandSender sender)
+	private boolean assignKillers(int numKillers, CommandSender sender)
 	{
 		Player[] players = plugin.getServer().getOnlinePlayers();
 		if ( players.length < plugin.getGameMode().absMinPlayers() )
@@ -134,12 +134,29 @@ public class PlayerManager
 			return false;
 		}
 		
-		if ( informNonKillers )
-			
-			if ( sender == null )
-				plugin.getServer().broadcastMessage("A killer has been randomly assigned - nobody but the killer knows who it is.");
+		if ( plugin.getGameMode().informOfKillerAssignment(this) && !plugin.getGameMode().informOfKillerIdentity(this) )
+		{
+			String message;
+			if ( numKillers > 1 )
+				message = numKillers + " killers have";
 			else
-				plugin.getServer().broadcastMessage("A killer has been randomly assigned by " + sender.getName() + " - nobody but the killer knows who it is.");
+				message = "A killer has";
+			
+			message += " been randomly assigned";
+			
+			
+			if ( sender != null )
+				message += " by " + sender.getName();
+			message += " - nobody but the";
+			
+			if ( numKillers > 1 || numKillersAssigned() > 0 )
+				message += " killers";
+			else
+				message += " killer";
+			message += " knows who they are.";
+
+			plugin.getServer().broadcastMessage(message);
+		}
 		
 		int availablePlayers = 0;
 		for ( String name : alive )
@@ -204,22 +221,35 @@ public class PlayerManager
 				message += numKillers > 1 || killers.size() > 1 ? "now a" : "the";
 				message += " killer!";
 				
-				if ( !informNonKillers )
+				if ( !plugin.getGameMode().informOfKillerAssignment(this) && !plugin.getGameMode().informOfKillerIdentity(this) )
 					message += ChatColor.WHITE + " No one else has been told a new killer was assigned.";
 					
 				player.sendMessage(message);
-				plugin.getGameMode().giveItemsToKiller(player, numKillers, availablePlayers - numKillers);
+				
+				if ( plugin.getGameMode().informOfKillerIdentity(this) )
+					plugin.getServer().broadcastMessage(player.getName() + " is the killer!");
+				
+				plugin.getGameMode().prepareKiller(player, this);
 				
 				nextIndex ++;
+				
+				if ( plugin.getGameMode().highlightPlayerNames() )
+					colorPlayerName(player, ChatColor.RED);
 				
 				plugin.statsManager.killerAdded();
 				if ( sender != null )
 					plugin.statsManager.killerAddedByAdmin();
 			}
-			else if ( informNonKillers )
+			else
 			{
-				player.sendMessage(ChatColor.YELLOW + "You are not " + (numKillers == 1 ? "the" : "a") + " killer.");
-				plugin.getGameMode().giveItemsToFriendly(player, numKillers, availablePlayers - numKillers);
+				if ( plugin.getGameMode().informOfKillerAssignment(this) && !plugin.getGameMode().informOfKillerIdentity(this) )
+				{
+					player.sendMessage(ChatColor.YELLOW + "You are not " + ( numKillers > 1 || killers.size() > 1 ? "a" : "the") + " killer.");
+					plugin.getGameMode().prepareFriendly(player, this);
+				}
+				
+				if ( plugin.getGameMode().highlightPlayerNames() )
+					colorPlayerName(player, ChatColor.BLUE);
 			}
 				
 			num++;
@@ -228,6 +258,11 @@ public class PlayerManager
 		return true;
 	}
 	
+	private void colorPlayerName(Player player, ChatColor color)
+	{
+		// TODO Auto-generated method stub
+	}
+
 	public void playerJoined(Player player)
 	{		
 		for(String spec:spectators.keySet())
@@ -447,7 +482,8 @@ public class PlayerManager
 				player.setFlying(false);
 				player.setAllowFlight(false);
 			}
-			
+
+			// fixme: reconnecting killer in invisible killer mode will become visible
 			makePlayerVisibleToAll(player);
 			
 			if(!alive.contains(player.getName()))
@@ -471,13 +507,13 @@ public class PlayerManager
 		}
 	}
 	
-	private void makePlayerInvisibleToAll(Player player)
+	public void makePlayerInvisibleToAll(Player player)
 	{
 		for(Player p : plugin.getServer().getOnlinePlayers())
 			p.hidePlayer(player);
 	}
 	
-	private void makePlayerVisibleToAll(Player player)
+	public void makePlayerVisibleToAll(Player player)
 	{
 		for(Player p :  plugin.getServer().getOnlinePlayers())
 			p.showPlayer(player);

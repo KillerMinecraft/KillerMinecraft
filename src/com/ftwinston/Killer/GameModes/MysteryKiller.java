@@ -52,7 +52,16 @@ public class MysteryKiller extends GameMode
 	}
 	
 	@Override
-	public boolean playerJoined(Player player, PlayerManager playerManager, boolean isNewPlayer, boolean isKiller, int numKillersAssigned)
+	public boolean highlightPlayerNames() { return false; }
+	
+	@Override
+	public boolean informOfKillerAssignment(PlayerManager pm) { return pm.numKillersAssigned() == 0; }
+	
+	@Override
+	public boolean informOfKillerIdentity(PlayerManager pm) { return false; }
+	
+	@Override
+	public boolean playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, boolean isKiller, int numKillersAssigned)
 	{
 		Killer plugin = Killer.instance;
 	
@@ -87,9 +96,10 @@ public class MysteryKiller extends GameMode
 	}
 	
 	@Override
-	public void giveItemsToKiller(Player player, int numKillers, int numFriendlies)
+	public void prepareKiller(Player player, PlayerManager pm)
 	{
 		PlayerInventory inv = player.getInventory();
+		int numFriendlies = pm.numSurvivors() - pm.numKillersAssigned();
 		
 		if ( numFriendlies >= 2 )
 			inv.addItem(new ItemStack(Material.STONE, 6));
@@ -220,32 +230,32 @@ public class MysteryKiller extends GameMode
 	}
 	
 	@Override
-	public void giveItemsToFriendly(Player player, int numKillers, int numFriendlies)
+	public void prepareFriendly(Player player, PlayerManager pm)
 	{
 		
 	}
 	
 	@Override
-	public void checkForEndOfGame(PlayerManager playerManager, Player playerOnPlinth, Material itemOnPlinth)
+	public void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth)
 	{
 		// if there's no one alive at all, game was drawn
-		if (playerManager.numSurvivors() == 0 )
+		if (pm.numSurvivors() == 0 )
 		{
-			playerManager.gameFinished(false, false, null, null);
+			pm.gameFinished(false, false, null, null);
 			return;
 		}
 		
 		// if someone stands on the plinth with a winning item, the friendlies win
 		if ( playerOnPlinth != null && itemOnPlinth != null )
 		{
-			playerManager.gameFinished(false, true, playerOnPlinth.getName(), itemOnPlinth);
+			pm.gameFinished(false, true, playerOnPlinth.getName(), itemOnPlinth);
 			return;
 		}
 		
 		// if only one person left, and they're not the killer, tell people they can /vote if they want to start a new game
-		if ( playerManager.numSurvivors() == 1 && !playerManager.isKiller(playerManager.getSurvivors().get(0)) )
+		if ( pm.numSurvivors() == 1 && !pm.isKiller(pm.getSurvivors().get(0)) )
 		{
-			Player last = Killer.instance.getServer().getPlayerExact(playerManager.getSurvivors().get(0));
+			Player last = Killer.instance.getServer().getPlayerExact(pm.getSurvivors().get(0));
 			if ( last != null && last.isOnline() )
 			{
 				Killer.instance.getServer().broadcastMessage("There's only one player left, and they can't be the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
@@ -256,11 +266,11 @@ public class MysteryKiller extends GameMode
 		// if there's no one alive that isn't a killer, the killer(s) won
 		else
 		{
-			for ( String survivor : playerManager.getSurvivors() )
-				if ( !playerManager.isKiller(survivor) )
+			for ( String survivor : pm.getSurvivors() )
+				if ( !pm.isKiller(survivor) )
 					return;
 			
-			playerManager.gameFinished(true, false, null, null);
+			pm.gameFinished(true, false, null, null);
 		}
 	}
 }
