@@ -66,7 +66,7 @@ public class InvisibleKiller extends GameMode
 		Killer plugin = Killer.instance;
 	
 		if ( isKiller ) // inform them that they're still a killer
-			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (numKillersAssigned > 1 ? "a" : "the" ) + " killer!"); 
+			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (numKillersAssigned > 1 ? "a" : "the" ) + " killer, and you are invisible!"); 
 		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
 		{
 			String message = "Welcome to Killer Minecraft! One player ";
@@ -99,6 +99,7 @@ public class InvisibleKiller extends GameMode
 	public void prepareKiller(Player player, PlayerManager pm)
 	{
 		pm.makePlayerInvisibleToAll(player);
+		player.sendMessage("You are invisible");
 		
 		PlayerInventory inv = player.getInventory();
 		inv.addItem(new ItemStack(Material.COMPASS, 1));
@@ -130,6 +131,7 @@ public class InvisibleKiller extends GameMode
 		ItemStack stack = new ItemStack(Material.BOW, 1);
 		stack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
 		inv.addItem(stack);
+		inv.addItem(new ItemStack(Material.ARROW, 1)); // you need 1 arrow for the infinity bow, iirc
 		
 		// give some splash potions of damage
 		Potion pot = new Potion(PotionType.INSTANT_DAMAGE);
