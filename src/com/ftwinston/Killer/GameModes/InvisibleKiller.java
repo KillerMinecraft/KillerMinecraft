@@ -100,9 +100,25 @@ public class InvisibleKiller extends GameMode
 		pm.makePlayerInvisibleToAll(player);
 		
 		PlayerInventory inv = player.getInventory();
-		
 		inv.addItem(new ItemStack(Material.COMPASS, 1));
 		inv.addItem(new ItemStack(Material.COOKED_BEEF, 10));
+		
+		// teleport the killer a little bit away from the other players, to stop them being potion-stomped
+		Random r = new Random();
+		Location loc = player.getLocation();
+		
+		if ( r.nextBoolean() )
+			loc.setX(loc.getX() + 16 + r.nextDouble() * 10);
+		else
+			loc.setX(loc.getX() - 16 - r.nextDouble() * 10);
+			
+		if ( r.nextBoolean() )
+			loc.setZ(loc.getZ() + 16 + r.nextDouble() * 10);
+		else
+			loc.setZ(loc.getZ() - 16 - r.nextDouble() * 10);
+		
+		loc.setY(loc.getWorld.getHighestBlockYAt(loc) + 1);
+		player.teleport(loc);
 	}
 	
 	@Override
@@ -120,7 +136,6 @@ public class InvisibleKiller extends GameMode
 		pot.splash();
 		stack = pot.toItemStack(Math.min(2, 64 / (pm.numSurvivors() - 1)));
 		inv.addItem(stack);
-		
 		
 		// give them the items needed to make a compass
 		inv.addItem(new ItemStack(Material.IRON_INGOT, 4));
@@ -162,15 +177,9 @@ public class InvisibleKiller extends GameMode
 	/*
 	 * Still to implement
 	 * 
-make killer invisible to everyone
-
 disable buckets for killer (within 5 blocks of other players)
 
-assign killer immediately
-
-reveal killer on assigning
-
-MOVE killer on assigning
+assign killer immediately, not at start of second day
 
 when killer takes damage, reveal for 5 seconds
 	 */
