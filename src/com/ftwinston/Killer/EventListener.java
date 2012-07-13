@@ -159,6 +159,8 @@ public class EventListener implements Listener
         	Player player = (Player)event.getEntity();
         	if(PlayerManager.instance.isSpectator(player.getName()))
         		event.setCancelled(true);
+			else
+				plugin.getGameRules().playerDamaged(event);
         }
         else if (event instanceof EntityDamageByEntityEvent )
         {
@@ -176,6 +178,8 @@ public class EventListener implements Listener
         	Player player = (Player)event.getEntity();
         	if(PlayerManager.instance.isSpectator(player.getName()))
         		event.setCancelled(true);
+			else
+				plugin.getGameRules().playerDamaged(event);
         }
         if (!event.isCancelled() && event instanceof EntityDamageByEntityEvent )
         {

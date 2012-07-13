@@ -7,11 +7,12 @@ import com.ftwinston.Killer.PlayerManager;
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.Material;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
-import org.bukkit.Material;
 
 public class InvisibleKiller extends GameMode
 {
@@ -174,13 +175,43 @@ public class InvisibleKiller extends GameMode
 			pm.gameFinished(false, true, null, null);
 	}
 	
-	/*
-	 * Still to implement
-	 * 
-disable buckets for killer (within 5 blocks of other players)
+	@Override
+	public void playerDamaged(EntityDamageEvent event)
+	{
+		Player player = (Player)event.getEntity();
+		if ( !plugin.playerManager.isKiller(player.getName()) )
+			return;
+			
+		// make them visible for a period of time
+		plugin.playerManager.makePlayerVisibleToAll(player);
+		player.sendMessage(ChatColor.RED + "You can be seen!");
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new RestoreInvisibility(player.getName()), 100L); // 5 seconds
+	}
+	
+    class RestoreInvisibility implements Runnable
+    {
+    	String name;
+    	public RestoreInvisibility(String playerName)
+		{
+			name = playerName;
+		}
+    	
+    	public void run()
+    	{
+			Player player = Killer.instance.getServer().getPlayerExact(name);
+			if ( player == null || !player.isOnline() )
+				return; // player has reconnected, so don't kill them
+			
+    		plugin.playerManager.makePlayerInvisibleToAll(player);
+			player.sendMessage("You are now invisible again");
+    	}
+    }
+	
+/*
+Still to implement:
 
-assign killer immediately, not at start of second day
-
-when killer takes damage, reveal for 5 seconds
-	 */
+	disable buckets for killer (within 5 blocks of other players)
+	
+	assign killer immediately, not at start of second day
+ */
 }
