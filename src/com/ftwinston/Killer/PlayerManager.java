@@ -227,29 +227,28 @@ public class PlayerManager
 				player.sendMessage(message);
 				
 				if ( plugin.getGameMode().informOfKillerIdentity(this) )
-					plugin.getServer().broadcastMessage(player.getName() + " is the killer!");
+				{
+					if ( plugin.getGameMode().informOfKillerAssignment(this) )
+						plugin.getServer().broadcastMessage(player.getName() + " is the killer!");
+					colorPlayerName(player, ChatColor.RED);
+				}
 				
 				plugin.getGameMode().prepareKiller(player, this);
 				
 				nextIndex ++;
 				
-				if ( plugin.getGameMode().highlightPlayerNames() )
-					colorPlayerName(player, ChatColor.RED);
-				
 				plugin.statsManager.killerAdded();
 				if ( sender != null )
 					plugin.statsManager.killerAddedByAdmin();
 			}
-			else
+			else if ( !isKiller(player.getName()) )
 			{
-				if ( plugin.getGameMode().informOfKillerAssignment(this) && !plugin.getGameMode().informOfKillerIdentity(this) )
-				{
-					player.sendMessage(ChatColor.YELLOW + "You are not " + ( numKillers > 1 || killers.size() > 1 ? "a" : "the") + " killer.");
-					plugin.getGameMode().prepareFriendly(player, this);
-				}
+				plugin.getGameMode().prepareFriendly(player, this);
 				
-				if ( plugin.getGameMode().highlightPlayerNames() )
+				if ( plugin.getGameMode().informOfKillerIdentity(this) )
 					colorPlayerName(player, ChatColor.BLUE);
+				else if ( plugin.getGameMode().informOfKillerAssignment(this) )
+					player.sendMessage(ChatColor.YELLOW + "You are not " + ( numKillers > 1 || killers.size() > 1 ? "a" : "the") + " killer.");
 			}
 				
 			num++;
@@ -259,8 +258,9 @@ public class PlayerManager
 	}
 	
 	private void colorPlayerName(Player player, ChatColor color)
-	{
-		// TODO Auto-generated method stub
+	{		
+		player.setDisplayName(color + ChatColor.stripColor(player.getDisplayName()));
+		player.setPlayerListName(color + ChatColor.stripColor(player.getPlayerListName()));
 	}
 
 	public void playerJoined(Player player)

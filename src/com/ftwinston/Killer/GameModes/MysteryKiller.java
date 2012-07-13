@@ -52,9 +52,6 @@ public class MysteryKiller extends GameMode
 	}
 	
 	@Override
-	public boolean highlightPlayerNames() { return false; }
-	
-	@Override
 	public boolean informOfKillerAssignment(PlayerManager pm) { return pm.numKillersAssigned() == 0; }
 	
 	@Override
