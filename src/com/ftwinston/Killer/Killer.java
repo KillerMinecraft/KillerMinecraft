@@ -282,7 +282,13 @@ public class Killer extends JavaPlugin
 		// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 		if ( statsManager.isTracking )
 			statsManager.gameFinished(playerManager.numSurvivors(), 3, 0);
-			
+		
+		if ( gameMode != nextGameMode )
+		{
+			gameMode = nextGameMode;
+			getServer().broadcastMessage("Changing to " + gameMode.getName() + " mode");
+		}
+		
 		if ( useSameWorld )
 		{
 			// what should we do to the world on restart if we're not deleting it?
