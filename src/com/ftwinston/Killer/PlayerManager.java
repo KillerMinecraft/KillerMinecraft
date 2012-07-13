@@ -281,9 +281,14 @@ public class PlayerManager
 		}
 		else if ( plugin.getGameMode().playerJoined(player, this, !isAlive(player.getName()), isKiller(player.getName()), killers.size()) )
 		{
-			if ( lateJoiner )
-				plugin.statsManager.playerJoinedLate();
 			setAlive(player,true); // they're alive
+			if ( lateJoiner )
+			{
+				plugin.statsManager.playerJoinedLate();
+				
+				if ( plugin.getGameMode().informOfKillerIdentity(this) )
+					colorPlayerName(player, ChatColor.BLUE);
+			}
 		}
 		else
 			setAlive(player,false); // they're a spectator
@@ -537,6 +542,9 @@ public class PlayerManager
 			inv.setLeggings(null);
 			inv.setBoots(null);		
 		}
+		
+		player.setDisplayName(ChatColor.stripColor(player.getDisplayName()));
+		player.setPlayerListName(ChatColor.stripColor(player.getPlayerListName()));
 	}
 	
 	public void putPlayerInWorld(Player player, World world, boolean checkSpawn)
