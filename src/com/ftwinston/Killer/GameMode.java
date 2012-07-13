@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 
 import com.ftwinston.Killer.PlayerManager;
 
+import com.ftwinston.Killer.GameModes.InvisibleKiller;
 import com.ftwinston.Killer.GameModes.MysteryKiller;
 
 public abstract class GameMode
@@ -17,6 +18,9 @@ public abstract class GameMode
 	public static void setupGameModes()
 	{
 		GameMode g = new MysteryKiller();
+		gameModes.put(g.getName(), g);
+		
+		g = new InvisibleKiller();
 		gameModes.put(g.getName(), g);
 	}
 	
