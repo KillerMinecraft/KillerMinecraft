@@ -61,6 +61,9 @@ public class InvisibleKiller extends GameMode
 	public boolean informOfKillerIdentity(PlayerManager pm) { return true; }
 	
 	@Override
+	public boolean immediateKillerAssignment() { return true; }
+	
+	@Override
 	public boolean playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, boolean isKiller, int numKillersAssigned)
 	{
 		Killer plugin = Killer.instance;
@@ -213,7 +216,5 @@ public class InvisibleKiller extends GameMode
 Still to implement:
 
 	disable buckets for killer (within 5 blocks of other players)
-	
-	assign killer immediately, not at start of second day
  */
 }

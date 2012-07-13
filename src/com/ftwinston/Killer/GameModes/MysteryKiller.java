@@ -58,6 +58,9 @@ public class MysteryKiller extends GameMode
 	public boolean informOfKillerIdentity(PlayerManager pm) { return false; }
 	
 	@Override
+	public boolean immediateKillerAssignment() { return false; }
+	
+	@Override
 	public boolean playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, boolean isKiller, int numKillersAssigned)
 	{
 		Killer plugin = Killer.instance;

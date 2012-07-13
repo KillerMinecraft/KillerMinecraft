@@ -37,6 +37,7 @@ public abstract class GameMode
 	public abstract int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers);
 	
 	public abstract String describePlayer(boolean killer);
+	public abstract boolean immediateKillerAssignment();
 	public abstract boolean informOfKillerAssignment(PlayerManager pm);
 	public abstract boolean informOfKillerIdentity(PlayerManager pm);
 	

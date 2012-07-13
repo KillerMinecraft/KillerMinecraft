@@ -82,6 +82,8 @@ public class PlayerManager
 	
 	public void reset(boolean resetInventories)
 	{
+		countdownStarted = false;
+		
 		alive.clear();
 		for ( Player player : plugin.getServer().getOnlinePlayers() )
 		{
@@ -123,6 +125,8 @@ public class PlayerManager
 	
 	private boolean assignKillers(int numKillers, CommandSender sender)
 	{
+		countdownStarted = false;
+		
 		Player[] players = plugin.getServer().getOnlinePlayers();
 		if ( players.length < plugin.getGameMode().absMinPlayers() )
 		{
@@ -273,7 +277,6 @@ public class PlayerManager
 					player.hidePlayer(other);
 			}
 		
-		boolean lateJoiner = numKillersAssigned() > 0 && !isAlive(player.getName());
 		if ( isSpectator(player.getName()) )
 		{
 			player.sendMessage("Welcome back. You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
@@ -282,7 +285,7 @@ public class PlayerManager
 		else if ( plugin.getGameMode().playerJoined(player, this, !isAlive(player.getName()), isKiller(player.getName()), killers.size()) )
 		{
 			setAlive(player,true); // they're alive
-			if ( lateJoiner )
+			if ( numKillersAssigned() > 0 && !isAlive(player.getName()) ) // they're late-joining an in-progress game
 			{
 				plugin.statsManager.playerJoinedLate();
 				
@@ -293,11 +296,28 @@ public class PlayerManager
 		else
 			setAlive(player,false); // they're a spectator
 		
-    	if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getServer().getOnlinePlayers().length == 1 )
-			plugin.getServer().getWorlds().get(0).setTime(0);
-		
-		checkPlayerCompassTarget(player);
+		if ( numKillersAssigned() == 0 )
+		{
+			if ( !countdownStarted && plugin.getGameMode().immediateKillerAssignment() && plugin.getServer().getOnlinePlayers().length >= plugin.getGameMode().absMinPlayers() )
+			{
+				plugin.getServer().broadcastMessage("Game starting in 10 seconds...");
+				countdownStarted = true;
+				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+					@Override
+					public void run()
+					{
+						assignKillers(null);
+					}
+				}, 200L);
+			}
+			
+			if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getServer().getOnlinePlayers().length == 1 )
+				plugin.getServer().getWorlds().get(0).setTime(0);
+		}
+		else
+			checkPlayerCompassTarget(player);
 	}
+	boolean countdownStarted = false;
 	
 	// player either died, or disconnected and didn't rejoin in the required time
 	public void playerKilled(String playerName)
