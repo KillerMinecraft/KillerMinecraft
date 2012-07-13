@@ -144,26 +144,19 @@ public class InvisibleKiller extends GameMode
 			return;
 		}
 		
-		// if only one person left, and they're not the killer, tell people they can /vote if they want to start a new game
-		if ( pm.numSurvivors() == 1 && !pm.isKiller(pm.getSurvivors().get(0)) )
-		{
-			Player last = Killer.instance.getServer().getPlayerExact(pm.getSurvivors().get(0));
-			if ( last != null && last.isOnline() )
-			{
-				Killer.instance.getServer().broadcastMessage("There's only one player left, and they can't be the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
-				return;
-			}
-		}
+		boolean killersAlive = false, friendliesAlive = false;
+		for ( String survivor : pm.getSurvivors() )
+			if ( pm.isKiller(survivor) )
+				killersAlive = true;
+			else
+				friendliesAlive = true;
 		
-		// if there's no one alive that isn't a killer, the killer(s) won
-		else
-		{
-			for ( String survivor : pm.getSurvivors() )
-				if ( !pm.isKiller(survivor) )
-					return;
-			
+		// if only killers are left alive, the killer won
+		if ( killersAlive && !friendliesAlive )
 			pm.gameFinished(true, false, null, null);
-		}
+		// if only friendlies are left alive, the friendlies won
+		else if ( !killersAlive && friendliesAlive )
+			pm.gameFinished(false, true, null, null);
 	}
 	
 	/*
