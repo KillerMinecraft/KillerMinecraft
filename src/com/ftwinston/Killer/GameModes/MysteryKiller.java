@@ -1,7 +1,6 @@
 package com.ftwinston.Killer.GameModes;
 
 import com.ftwinston.Killer.GameMode;
-import com.ftwinston.Killer.Killer;
 import com.ftwinston.Killer.PlayerManager;
 
 import org.bukkit.ChatColor;
@@ -35,7 +34,7 @@ public class MysteryKiller extends GameMode
 	public int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers)
 	{
 		// if we're not set to auto-reassign the killer once one has been assigned at all, even if they're no longer alive / connected, don't do so
-		if ( !Killer.instance.autoReassignKiller && numKillers > 0 )
+		if ( !plugin.autoReassignKiller && numKillers > 0 )
 			return 0;
 		
 		// for now, one living killer at a time is plenty
@@ -63,8 +62,6 @@ public class MysteryKiller extends GameMode
 	@Override
 	public boolean playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, boolean isKiller, int numKillersAssigned)
 	{
-		Killer plugin = Killer.instance;
-	
 		if ( isKiller ) // inform them that they're still a killer
 			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (numKillersAssigned > 1 ? "a" : "the" ) + " killer!"); 
 		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
@@ -255,10 +252,10 @@ public class MysteryKiller extends GameMode
 		// if only one person left, and they're not the killer, tell people they can /vote if they want to start a new game
 		if ( pm.numSurvivors() == 1 && !pm.isKiller(pm.getSurvivors().get(0)) )
 		{
-			Player last = Killer.instance.getServer().getPlayerExact(pm.getSurvivors().get(0));
+			Player last = plugin.getServer().getPlayerExact(pm.getSurvivors().get(0));
 			if ( last != null && last.isOnline() )
 			{
-				Killer.instance.getServer().broadcastMessage("There's only one player left, and they can't be the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
+				plugin.getServer().broadcastMessage("There's only one player left, and they can't be the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
 				return;
 			}
 		}

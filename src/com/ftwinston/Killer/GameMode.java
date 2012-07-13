@@ -16,17 +16,21 @@ public abstract class GameMode
 {
 	public static Map<String, GameMode> gameModes = new LinkedHashMap<String, GameMode>();
 
-	public static void setupGameModes()
+	public static void setupGameModes(Killer killer)
 	{
 		GameMode g = new MysteryKiller();
+		g.plugin = killer;
 		gameModes.put(g.getName(), g);
 		
 		g = new InvisibleKiller();
+		g.plugin = killer;
 		gameModes.put(g.getName(), g);
 	}
 	
 	public static GameMode getByName(String name) { return gameModes.get(name); }
 	public static GameMode getDefault() { return gameModes.get("Mystery Killer"); }
+	
+	protected Killer plugin;
 	
 	public abstract String getName();
 	public abstract int absMinPlayers();

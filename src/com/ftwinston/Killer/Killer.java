@@ -56,7 +56,7 @@ public class Killer extends JavaPlugin
         instance = this;
         restarting = false;
         
-        GameMode.setupGameModes();
+        GameMode.setupGameModes(this);
         setupConfiguration();
 		
         getServer().getPluginManager().registerEvents(eventListener, this);

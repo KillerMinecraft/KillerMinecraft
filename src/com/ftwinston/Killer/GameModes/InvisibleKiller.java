@@ -1,10 +1,12 @@
 package com.ftwinston.Killer.GameModes;
 
+import java.util.Random;
+
 import com.ftwinston.Killer.GameMode;
-import com.ftwinston.Killer.Killer;
 import com.ftwinston.Killer.PlayerManager;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -38,7 +40,7 @@ public class InvisibleKiller extends GameMode
 	public int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers)
 	{
 		// if we're not set to auto-reassign the killer once one has been assigned at all, even if they're no longer alive / connected, don't do so
-		if ( !Killer.instance.autoReassignKiller && numKillers > 0 )
+		if ( !plugin.autoReassignKiller && numKillers > 0 )
 			return 0;
 		
 		// for now, one living killer at a time is plenty
@@ -66,8 +68,6 @@ public class InvisibleKiller extends GameMode
 	@Override
 	public boolean playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, boolean isKiller, int numKillersAssigned)
 	{
-		Killer plugin = Killer.instance;
-	
 		if ( isKiller ) // inform them that they're still a killer
 			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (numKillersAssigned > 1 ? "a" : "the" ) + " killer, and you are invisible!"); 
 		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
@@ -122,7 +122,7 @@ public class InvisibleKiller extends GameMode
 		else
 			loc.setZ(loc.getZ() - 16 - r.nextDouble() * 10);
 		
-		loc.setY(loc.getWorld.getHighestBlockYAt(loc) + 1);
+		loc.setY(loc.getWorld().getHighestBlockYAt(loc) + 1);
 		player.teleport(loc);
 	}
 	
@@ -203,7 +203,7 @@ public class InvisibleKiller extends GameMode
     	
     	public void run()
     	{
-			Player player = Killer.instance.getServer().getPlayerExact(name);
+			Player player = plugin.getServer().getPlayerExact(name);
 			if ( player == null || !player.isOnline() )
 				return; // player has reconnected, so don't kill them
 			
