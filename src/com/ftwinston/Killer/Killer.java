@@ -254,11 +254,27 @@ public class Killer extends JavaPlugin
 			}
 			else if ( args[0].equalsIgnoreCase("restart") )
 			{
-				if ( !restarting )
+				if ( restarting )
+					return true;
+				
+				if ( args.length == 1 )
 				{
-					getServer().broadcastMessage(sender.getName() + " is restarting the game");
-					restartGame(false, true);
+					sender.sendMessage("Usage: /killer restart new (for new world), or /killer restart same (for same world)");
+					return true;
 				}
+				
+				if ( args[1].equalsIgnoreCase("same") )
+				{
+					getServer().broadcastMessage(sender.getName() + " is restarting the game in the same world");
+					restartGame(true,  true);
+				}
+				else if ( args[1].equalsIgnoreCase("new") )
+				{
+					getServer().broadcastMessage(sender.getName() + " is restarting the game in a new world");
+					restartGame(false,  true);
+				}
+				else
+					sender.sendMessage("Usage: /killer restart new (for new world), or /killer restart same (for same world)");
 			}
 			else if ( args[0].equalsIgnoreCase("mode") )
 			{
