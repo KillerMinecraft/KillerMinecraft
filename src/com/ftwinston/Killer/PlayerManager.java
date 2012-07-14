@@ -285,13 +285,12 @@ public class PlayerManager
 		else if ( plugin.getGameMode().playerJoined(player, this, !isAlive(player.getName()), isKiller(player.getName()), killers.size()) )
 		{
 			setAlive(player,true); // they're alive
+			
+			if ( plugin.getGameMode().informOfKillerIdentity() )
+				colorPlayerName(player, isKiller(player.getName()) ? ChatColor.RED : ChatColor.BLUE);
+			
 			if ( numKillersAssigned() > 0 && !isAlive(player.getName()) ) // they're late-joining an in-progress game
-			{
 				plugin.statsManager.playerJoinedLate();
-				
-				if ( plugin.getGameMode().informOfKillerIdentity() )
-					colorPlayerName(player, ChatColor.BLUE);
-			}
 		}
 		else
 			setAlive(player,false); // they're a spectator
