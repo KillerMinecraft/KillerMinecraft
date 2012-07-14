@@ -46,7 +46,7 @@ public class Killer extends JavaPlugin
 	{
 		nextGameMode = g;
 		if ( changedBy == null )
-			getServer().broadcastMessage("The next game mode will be " + g.toString());
+			getServer().broadcastMessage("The next game mode will be " + g.getName());
 		else
 			getServer().broadcastMessage(changedBy.getName() + " set the next game mode to " + g.getName());
 	}
@@ -292,7 +292,7 @@ public class Killer extends JavaPlugin
 				{
 					String message = "Invalid game mode: " + mode + "! Valid modes are:";
 					for (GameMode possibility : GameMode.gameModes.values())
-						message += "\n " + possibility;
+						message += "\n " + possibility.getName();
 					sender.sendMessage(message);	
 				}
 				else

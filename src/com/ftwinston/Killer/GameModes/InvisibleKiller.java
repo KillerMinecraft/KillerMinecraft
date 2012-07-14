@@ -61,7 +61,7 @@ public class InvisibleKiller extends GameMode
 	public boolean informOfKillerAssignment(PlayerManager pm) { return true; }
 	
 	@Override
-	public boolean informOfKillerIdentity(PlayerManager pm) { return true; }
+	public boolean informOfKillerIdentity() { return true; }
 	
 	@Override
 	public boolean immediateKillerAssignment() { return true; }
@@ -141,7 +141,7 @@ public class InvisibleKiller extends GameMode
 		Potion pot = new Potion(PotionType.INSTANT_DAMAGE);
 		pot.setLevel(1);
 		pot.splash();
-		stack = pot.toItemStack(Math.min(2, 64 / (pm.numSurvivors() - 1)));
+		stack = pot.toItemStack(Math.max(2, 64 / (pm.numSurvivors() - 1)));
 		inv.addItem(stack);
 		
 		// give them the items needed to make a compass

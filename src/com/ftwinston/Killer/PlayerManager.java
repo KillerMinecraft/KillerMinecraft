@@ -138,7 +138,7 @@ public class PlayerManager
 			return false;
 		}
 		
-		if ( plugin.getGameMode().informOfKillerAssignment(this) && !plugin.getGameMode().informOfKillerIdentity(this) )
+		if ( plugin.getGameMode().informOfKillerAssignment(this) && !plugin.getGameMode().informOfKillerIdentity() )
 		{
 			String message;
 			if ( numKillers > 1 )
@@ -225,12 +225,12 @@ public class PlayerManager
 				message += numKillers > 1 || killers.size() > 1 ? "now a" : "the";
 				message += " killer!";
 				
-				if ( !plugin.getGameMode().informOfKillerAssignment(this) && !plugin.getGameMode().informOfKillerIdentity(this) )
+				if ( !plugin.getGameMode().informOfKillerAssignment(this) && !plugin.getGameMode().informOfKillerIdentity() )
 					message += ChatColor.WHITE + " No one else has been told a new killer was assigned.";
 					
 				player.sendMessage(message);
 				
-				if ( plugin.getGameMode().informOfKillerIdentity(this) )
+				if ( plugin.getGameMode().informOfKillerIdentity() )
 				{
 					if ( plugin.getGameMode().informOfKillerAssignment(this) )
 						plugin.getServer().broadcastMessage(player.getName() + " is the killer!");
@@ -249,7 +249,7 @@ public class PlayerManager
 			{
 				plugin.getGameMode().prepareFriendly(player, this);
 				
-				if ( plugin.getGameMode().informOfKillerIdentity(this) )
+				if ( plugin.getGameMode().informOfKillerIdentity() )
 					colorPlayerName(player, ChatColor.BLUE);
 				else if ( plugin.getGameMode().informOfKillerAssignment(this) )
 					player.sendMessage(ChatColor.YELLOW + "You are not " + ( numKillers > 1 || killers.size() > 1 ? "a" : "the") + " killer.");
@@ -289,7 +289,7 @@ public class PlayerManager
 			{
 				plugin.statsManager.playerJoinedLate();
 				
-				if ( plugin.getGameMode().informOfKillerIdentity(this) )
+				if ( plugin.getGameMode().informOfKillerIdentity() )
 					colorPlayerName(player, ChatColor.BLUE);
 			}
 		}
@@ -453,25 +453,28 @@ public class PlayerManager
 		
 		if ( numKillersAssigned() > 0 )
 		{
-			message = ChatColor.RED + (sender == null ? "Revealed: " : "Revealed by " + sender.getName() + ": ");
-			if ( killers.size() == 1 )
-				message += killers.get(0) + " was the killer!";
-			else
+			if ( !plugin.getGameMode().informOfKillerIdentity() )
 			{
-				message += "The killers were ";
-				message += killers.get(0);
-				
-				for ( int i=1; i<killers.size(); i++ )
+				message = ChatColor.RED + (sender == null ? "Revealed: " : "Revealed by " + sender.getName() + ": ");
+				if ( killers.size() == 1 )
+					message += killers.get(0) + " was the killer!";
+				else
 				{
-					message += i == killers.size()-1 ? " and " : ", ";
-					message += killers.get(i);
+					message += "The killers were ";
+					message += killers.get(0);
+					
+					for ( int i=1; i<killers.size(); i++ )
+					{
+						message += i == killers.size()-1 ? " and " : ", ";
+						message += killers.get(i);
+					}
+					
+					message += "!";
 				}
-				
-				message += "!";
+				plugin.getServer().broadcastMessage(message);
 			}
-			
 			killers.clear();
-			plugin.getServer().broadcastMessage(message);
+			
 			
 			// this game was "aborted"
 			if ( plugin.statsManager.isTracking )

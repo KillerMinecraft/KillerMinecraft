@@ -44,7 +44,7 @@ public abstract class GameMode
 	public abstract String describePlayer(boolean killer);
 	public abstract boolean immediateKillerAssignment();
 	public abstract boolean informOfKillerAssignment(PlayerManager pm);
-	public abstract boolean informOfKillerIdentity(PlayerManager pm);
+	public abstract boolean informOfKillerIdentity();
 	
 	public abstract boolean playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, boolean isKiller, int numKillersAssigned);
 	public abstract void prepareKiller(Player player, PlayerManager pm);
