@@ -260,6 +260,28 @@ public class Killer extends JavaPlugin
 					restartGame(false, true);
 				}
 			}
+			else if ( args[0].equalsIgnoreCase("mode") )
+			{
+				if ( args.length < 2 )
+				{
+					sender.sendMessage("Usage: /killer mode <game mode>");
+					return true;
+				}
+				String mode = args[1];
+				for ( int i=2; i<args.length; i++ )
+					mode += " " + args[i];
+				
+				GameMode check = GameMode.getByName(mode);
+				if ( check == null )
+				{
+					String message = "Invalid game mode: " + mode + "! Valid modes are:";
+					for (GameMode possibility : GameMode.gameModes.values())
+						message += "\n " + possibility;
+					sender.sendMessage(message);	
+				}
+				else
+					setNextGameMode(check, sender);
+			}
 			else
 				sender.sendMessage("Invalid parameter: " + args[0] + " - type /killer to list allowed parameters");
 			
