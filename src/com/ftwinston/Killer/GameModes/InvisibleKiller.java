@@ -10,6 +10,7 @@ import org.bukkit.Location;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
@@ -181,6 +182,37 @@ public class InvisibleKiller extends GameMode
 	}
 	
 	@Override
+	public void playerEmptiedBucket(PlayerBucketEmptyEvent event)
+	{
+		// disable buckets for killer (within 5 blocks of other players)
+		String killerName = event.getPlayer().getName();
+		if ( !plugin.playerManager.isKiller(killerName) )
+			return;
+		
+		Location target = event.getBlockClicked().getLocation();
+		for  ( String playerName : plugin.playerManager.getSurvivors() )
+		{
+			if ( playerName.equals(killerName) )
+				continue; // doesn't matter if it's near yourself, it obviously will be
+			
+			Player player = plugin.getServer().getPlayerExact(playerName);
+			if ( player == null || !player.isOnline() )
+				continue;
+			
+			if ( target.getWorld() != player.getWorld() )
+				continue;
+			
+			double distSq = player.getLocation().distanceSquared(target);			
+			if ( distSq < 25 )
+			{
+				event.setCancelled(true);
+				player.sendMessage("You can't empty a bucket within 5 blocks of another player. That would be mean!");
+				return;
+			}
+		}
+	}
+	
+	@Override
 	public void playerDamaged(EntityDamageEvent event)
 	{
 		Player player = (Player)event.getEntity();
@@ -211,10 +243,4 @@ public class InvisibleKiller extends GameMode
 			player.sendMessage("You are now invisible again");
     	}
     }
-	
-/*
-Still to implement:
-
-	disable buckets for killer (within 5 blocks of other players)
- */
 }

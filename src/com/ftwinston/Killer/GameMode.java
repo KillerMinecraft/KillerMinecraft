@@ -6,6 +6,7 @@ import java.util.Map;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
 
 import com.ftwinston.Killer.PlayerManager;
 
@@ -52,4 +53,5 @@ public abstract class GameMode
 	public abstract void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth);
 	
 	public void playerDamaged(EntityDamageEvent event) { }
+	public void playerEmptiedBucket(PlayerBucketEmptyEvent event) { }
 }

@@ -21,6 +21,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -188,6 +189,12 @@ public class EventListener implements Listener
 				event.setCancelled(true);
         }
 	}
+    
+    @EventHandler
+    public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
+    {
+    	plugin.getGameMode().playerEmptiedBucket(event);
+    }
     
     @EventHandler
     public void onEntityTarget(EntityTargetEvent event)
