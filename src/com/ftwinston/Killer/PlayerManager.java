@@ -298,18 +298,7 @@ public class PlayerManager
 		
 		if ( numKillersAssigned() == 0 )
 		{
-			if ( !countdownStarted && plugin.getGameMode().immediateKillerAssignment() && plugin.getServer().getOnlinePlayers().length >= plugin.getGameMode().absMinPlayers() )
-			{
-				plugin.getServer().broadcastMessage("Game starting in 10 seconds...");
-				countdownStarted = true;
-				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-					@Override
-					public void run()
-					{
-						assignKillers(null);
-					}
-				}, 200L);
-			}
+			checkImmediateKillerAssignment();
 			
 			if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getServer().getOnlinePlayers().length == 1 )
 				plugin.getServer().getWorlds().get(0).setTime(0);
@@ -317,7 +306,23 @@ public class PlayerManager
 		else
 			checkPlayerCompassTarget(player);
 	}
+	
 	boolean countdownStarted = false;
+	public void checkImmediateKillerAssignment()
+	{
+		if ( !countdownStarted && plugin.getGameMode().immediateKillerAssignment() && plugin.getServer().getOnlinePlayers().length >= plugin.getGameMode().absMinPlayers() )
+		{
+			plugin.getServer().broadcastMessage("Killer assignment in 30 seconds...");
+			countdownStarted = true;
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+				@Override
+				public void run()
+				{
+					assignKillers(null);
+				}
+			}, 600L);
+		}
+	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time
 	public void playerKilled(String playerName)

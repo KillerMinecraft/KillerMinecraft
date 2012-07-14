@@ -48,7 +48,7 @@ public class Killer extends JavaPlugin
 		if ( changedBy == null )
 			getServer().broadcastMessage("The next game mode will be " + g.toString());
 		else
-			getServer().broadcastMessage(changedBy.getName() + " set the next game mode to " + g.toString());
+			getServer().broadcastMessage(changedBy.getName() + " set the next game mode to " + g.getName());
 	}
 	
 	public void onEnable()
@@ -327,6 +327,7 @@ public class Killer extends JavaPlugin
 			}
 			
 			playerManager.reset(resetItems);
+			playerManager.checkImmediateKillerAssignment();
 		}
 		else if ( stopServerToRecreateWorld )
 		{
@@ -345,6 +346,7 @@ public class Killer extends JavaPlugin
 					
 					playerManager.reset(false);
 					restarting = false;
+					playerManager.checkImmediateKillerAssignment();
 				}
 			});
 		}
