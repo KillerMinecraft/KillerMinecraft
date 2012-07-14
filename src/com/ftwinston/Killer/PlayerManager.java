@@ -415,8 +415,8 @@ public class PlayerManager
 		if ( plugin.autoReveal )
 			clearKillers(null);
 
-		if ( friendliesWon || plugin.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getServer().getOnlinePlayers().length == 0 )
-		{	// schedule a game restart in 10 secs, with a new world
+		if ( winningItem != null || plugin.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getServer().getOnlinePlayers().length == 0 )
+		{	// plinth victory or other scenario where we don't want a vote schedule a game restart in 10 secs, with a new world
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 	
 				@Override
