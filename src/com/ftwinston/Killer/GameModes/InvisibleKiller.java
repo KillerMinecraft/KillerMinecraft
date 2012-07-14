@@ -219,11 +219,21 @@ public class InvisibleKiller extends GameMode
 		if ( !plugin.playerManager.isKiller(player.getName()) )
 			return;
 			
-		// make them visible for a period of time
-		plugin.playerManager.makePlayerVisibleToAll(player);
-		player.sendMessage(ChatColor.RED + "You can be seen!");
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new RestoreInvisibility(player.getName()), 100L); // 5 seconds
+		
+		if ( restoreMessageProcessID != -1 )
+		{// the "cooldown" must be reset
+			plugin.getServer().getScheduler().cancelTask(restoreMessageProcessID);
+		}
+		else
+		{// make them visible for a period of time
+			plugin.playerManager.makePlayerVisibleToAll(player);
+			player.sendMessage(ChatColor.RED + "You can be seen!");
+		}
+		
+		restoreMessageProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new RestoreInvisibility(player.getName()), 100L); // 5 seconds
 	}
+	
+	private int restoreMessageProcessID = -1;
 	
     class RestoreInvisibility implements Runnable
     {
@@ -241,6 +251,7 @@ public class InvisibleKiller extends GameMode
 			
     		plugin.playerManager.makePlayerInvisibleToAll(player);
 			player.sendMessage("You are now invisible again");
+			restoreMessageProcessID = -1;
     	}
     }
 }
