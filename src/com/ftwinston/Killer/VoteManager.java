@@ -146,7 +146,7 @@ public class VoteManager
 		final NumericPrompt gameModePrompt = new NumericPrompt() {
         	public String getPromptText(ConversationContext context)
 			{
-				String message = "The current game mode is " + ChatColor.YELLOW + plugin.getGameMode().toString() + ChatColor.RESET + ", and the next game mode will be " + ChatColor.YELLOW + plugin.getNextGameMode().toString() + ChatColor.RESET + ".\nWhat do you want to set the next game mode to?";
+				String message = "The current game mode is " + ChatColor.YELLOW + plugin.getGameMode().getName() + ChatColor.RESET + ", and the next game mode will be " + ChatColor.YELLOW + plugin.getNextGameMode().getName() + ChatColor.RESET + ".\nWhat do you want to set the next game mode to?";
 				
 				int i = 1;
 				for (GameMode mode : GameMode.gameModes.values())
@@ -174,6 +174,9 @@ public class VoteManager
 				int i = 1;
 				for (final GameMode mode : GameMode.gameModes.values())
 				{
+					if ( plugin.getNextGameMode() == mode )
+						continue;
+						
 					if ( i != choice )
 					{
 						i++;

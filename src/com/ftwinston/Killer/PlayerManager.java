@@ -254,7 +254,7 @@ public class PlayerManager
 				else if ( plugin.getGameMode().informOfKillerAssignment(this) )
 					player.sendMessage(ChatColor.YELLOW + "You are not " + ( numKillers > 1 || killers.size() > 1 ? "a" : "the") + " killer.");
 			}
-				
+			
 			num++;
 		}
 		
