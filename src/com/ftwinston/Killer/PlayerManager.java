@@ -586,13 +586,15 @@ public class PlayerManager
 		player.setPlayerListName(ChatColor.stripColor(player.getPlayerListName()));
 	}
 	
-	public void putPlayerInWorld(Player player, World world, boolean checkSpawn)
+	public void putPlayerInWorld(Player player, World world)
 	{	
-		// check spawn location is clear and is on the ground!
-		// update it if its not!
+		if ( player.isDead() || player.getWorld() == world )
+			return;
+		
 		Location spawn = world.getSpawnLocation();
 		
-		if ( checkSpawn )
+		// can't use getHighestBlockYAt in the nether, because of the bedrock ceiling
+		if ( world.getEnvironment() == Environment.NETHER )
 		{
 			if ( spawn.getBlock().isEmpty() )
 			{	// while the block below spawn is empty, move down one
@@ -621,9 +623,14 @@ public class PlayerManager
 				world.setSpawnLocation(spawn.getBlockX(), spawn.getBlockY(), spawn.getBlockZ());
 			}
 		}
+		else
+		{// it's ok to use getHighestBlockYAt, so we can randomize them around a bit also
+			spawn.setX(spawn.getX() + random.nextDouble() * 6 - 3);
+			spawn.setZ(spawn.getZ() + random.nextDouble() * 6 - 3);
+			spawn.setY(world.getHighestBlockYAt(spawn) + 1);
+		}
 		
-		if ( !player.isDead() || player.getWorld() != world )
-			player.teleport(spawn);
+		player.teleport(spawn);
 	}
 	
     public void checkPlayerCompassTarget(Player player)

@@ -183,12 +183,12 @@ public class Killer extends JavaPlugin
 			Player player = (Player)sender;
 			if ( args[0].equalsIgnoreCase("main") )
 			{
-				playerManager.putPlayerInWorld(player, getServer().getWorlds().get(0), true);
+				playerManager.putPlayerInWorld(player, getServer().getWorlds().get(0));
 			}
 			else if ( args[0].equalsIgnoreCase("nether") )
 			{
 				if ( getServer().getWorlds().size() > 1 )
-					playerManager.putPlayerInWorld(player, getServer().getWorlds().get(1), true);
+					playerManager.putPlayerInWorld(player, getServer().getWorlds().get(1));
 				else
 					sender.sendMessage("Nether world not found, please try again");
 			}
@@ -333,14 +333,10 @@ public class Killer extends JavaPlugin
 			// remove all user-placed portal, obsidian, chests, dispensers and furnaces? We'd have to track them being placed.
 			
 			getServer().broadcastMessage("Game is restarting, using the same world...");
-
-			boolean first = true; // only check the spawn point is valid the first time 
+ 
 			World defaultWorld = getServer().getWorlds().get(0);
 			for ( Player player : getServer().getOnlinePlayers() )
-			{
-				playerManager.putPlayerInWorld(player, defaultWorld, first);
-				first = false;
-			}
+				playerManager.putPlayerInWorld(player, defaultWorld);
 			
 			playerManager.reset(resetItems);
 			playerManager.checkImmediateKillerAssignment();
