@@ -142,8 +142,8 @@ public class TeamKiller extends GameMode
 		player.sendMessage("You are on the " + ChatColor.RED + "red" + ChatColor.RESET + " team.");
 		
 		Location moveTo = player.getWorld().getSpawnLocation();
-		moveTo.setZ(moveTo.getZ() + teamSeparationOffset + r.nextDouble() * 5);
-		moveTo.setX(moveTo.getX() + r.nextDouble() * 5);
+		moveTo.setZ(moveTo.getZ() + teamSeparationOffset + r.nextDouble() * 6);
+		moveTo.setX(moveTo.getX() + r.nextDouble() * 6);
 		moveTo.setY(moveTo.getWorld().getHighestBlockYAt(moveTo) + 1);
 		
 		player.teleport(moveTo);
@@ -155,8 +155,8 @@ public class TeamKiller extends GameMode
 		player.sendMessage("You are on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
 		
 		Location moveTo = player.getWorld().getSpawnLocation();
-		moveTo.setZ(moveTo.getZ() - teamSeparationOffset - r.nextDouble() * 5);
-		moveTo.setX(moveTo.getX() + r.nextDouble() * 5);
+		moveTo.setZ(moveTo.getZ() - teamSeparationOffset - r.nextDouble() * 6);
+		moveTo.setX(moveTo.getX() + r.nextDouble() * 6);
 		moveTo.setY(moveTo.getWorld().getHighestBlockYAt(moveTo) + 1);
 		
 		player.teleport(moveTo);
