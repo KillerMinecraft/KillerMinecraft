@@ -7,9 +7,11 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 
 import com.ftwinston.Killer.PlayerManager;
 
+import com.ftwinston.Killer.GameModes.CrazyKiller;
 import com.ftwinston.Killer.GameModes.InvisibleKiller;
 import com.ftwinston.Killer.GameModes.MysteryKiller;
 
@@ -24,6 +26,10 @@ public abstract class GameMode
 		gameModes.put(g.getName(), g);
 		
 		g = new InvisibleKiller();
+		g.plugin = killer;
+		gameModes.put(g.getName(), g);
+		
+		g = new CrazyKiller();
 		g.plugin = killer;
 		gameModes.put(g.getName(), g);
 	}
@@ -54,4 +60,5 @@ public abstract class GameMode
 	
 	public void playerDamaged(EntityDamageEvent event) { }
 	public void playerEmptiedBucket(PlayerBucketEmptyEvent event) { }
+	public void playerPickedUpItem(PlayerPickupItemEvent event) { }
 }

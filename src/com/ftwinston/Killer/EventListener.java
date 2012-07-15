@@ -77,6 +77,8 @@ public class EventListener implements Listener
     {
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     		event.setCancelled(true);
+    	else
+    		plugin.getGameMode().playerPickedUpItem(event);
     }
     
     // prevent spectators breaking anything, prevent anyone breaking the plinth
