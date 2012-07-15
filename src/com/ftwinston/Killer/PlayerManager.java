@@ -219,8 +219,8 @@ public class PlayerManager
 		
 			if ( num == killerIndices[nextIndex] )
 			{
-				if(!killers.contains(player.getName()))
-					killers.add(player.getName());
+				setKiller(player.getName());
+				
 				String message = ChatColor.RED + "You are ";
 				message += numKillers > 1 || killers.size() > 1 ? "now a" : "the";
 				message += " killer!";
@@ -261,7 +261,13 @@ public class PlayerManager
 		return true;
 	}
 	
-	private void colorPlayerName(Player player, ChatColor color)
+	public void setKiller(String player)
+	{
+		if(!killers.contains(player))
+			killers.add(player);
+	}
+
+	public void colorPlayerName(Player player, ChatColor color)
 	{		
 		player.setDisplayName(color + ChatColor.stripColor(player.getDisplayName()));
 		player.setPlayerListName(color + ChatColor.stripColor(player.getPlayerListName()));
@@ -286,8 +292,14 @@ public class PlayerManager
 		{
 			setAlive(player,true); // they're alive
 			
+			boolean isKiller = isKiller(player.getName());
+			if ( isKiller )
+				plugin.getGameMode().prepareKiller(player, this);
+			else
+				plugin.getGameMode().prepareFriendly(player, this);
+			
 			if ( plugin.getGameMode().informOfKillerIdentity() )
-				colorPlayerName(player, isKiller(player.getName()) ? ChatColor.RED : ChatColor.BLUE);
+				colorPlayerName(player, isKiller ? ChatColor.RED : ChatColor.BLUE);
 			
 			if ( numKillersAssigned() > 0 && !isAlive(player.getName()) ) // they're late-joining an in-progress game
 				plugin.statsManager.playerJoinedLate();
@@ -311,7 +323,7 @@ public class PlayerManager
 	{
 		if ( !countdownStarted && plugin.getGameMode().immediateKillerAssignment() && plugin.getServer().getOnlinePlayers().length >= plugin.getGameMode().absMinPlayers() )
 		{
-			plugin.getServer().broadcastMessage("Killer assignment in 30 seconds...");
+			plugin.getServer().broadcastMessage("Allocation in 30 seconds...");
 			countdownStarted = true;
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				@Override
