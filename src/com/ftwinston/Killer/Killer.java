@@ -19,6 +19,7 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Killer extends JavaPlugin
@@ -319,7 +320,7 @@ public class Killer extends JavaPlugin
 		
 		// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 		if ( statsManager.isTracking )
-			statsManager.gameFinished(playerManager.numSurvivors(), 3, 0);
+			statsManager.gameFinished(getGameMode(), playerManager.numSurvivors(), 3, 0);
 		
 		if ( gameMode != nextGameMode )
 		{

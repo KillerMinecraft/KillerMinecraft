@@ -1,9 +1,11 @@
 package com.ftwinston.Killer.GameModes;
 
+import java.util.Map;
 import java.util.Random;
 
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.PlayerManager;
+import com.ftwinston.Killer.PlayerManager.Info;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -70,9 +72,9 @@ public class InvisibleKiller extends GameMode
 	public boolean immediateKillerAssignment() { return true; }
 	
 	@Override
-	public boolean playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, boolean isKiller, int numKillersAssigned)
+	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info, int numKillersAssigned)
 	{
-		if ( isKiller ) // inform them that they're still a killer
+		if ( info.isKiller() ) // inform them that they're still a killer
 			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (numKillersAssigned > 1 ? "a" : "the" ) + " killer, and you are invisible!"); 
 		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
 		{
@@ -92,14 +94,9 @@ public class InvisibleKiller extends GameMode
 			
 			message += " to the plinth near the spawn. To help, they all get infinity bows and splash damage potions, and compasses will point at the killer.";
 			player.sendMessage(message);
-			
-			if ( numKillersAssigned > 0 && plugin.lateJoinersStartAsSpectator )
-				return false; // not alive, should be a spectator
 		}
 		else
 			player.sendMessage("Welcome back. You are not the killer, and you're still alive.");
-			
-		return true; // this player should now be alive
 	}
 	
 	@Override
@@ -170,11 +167,12 @@ public class InvisibleKiller extends GameMode
 		}
 		
 		boolean killersAlive = false, friendliesAlive = false;
-		for ( String survivor : pm.getSurvivors() )
-			if ( pm.isKiller(survivor) )
-				killersAlive = true;
-			else
-				friendliesAlive = true;
+		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
+			if ( entry.getValue().isAlive() )
+				if ( entry.getValue().isKiller() )
+					killersAlive = true;
+				else
+					friendliesAlive = true;
 		
 		// if only killers are left alive, the killer won
 		if ( killersAlive && !friendliesAlive )
@@ -193,12 +191,13 @@ public class InvisibleKiller extends GameMode
 			return;
 		
 		Location target = event.getBlockClicked().getLocation();
-		for  ( String playerName : plugin.playerManager.getSurvivors() )
+		
+		for ( Map.Entry<String, Info> entry : plugin.playerManager.getPlayerInfo() )
 		{
-			if ( playerName.equals(killerName) )
+			if ( entry.getKey().equals(killerName) )
 				continue; // doesn't matter if it's near yourself, it obviously will be
 			
-			Player player = plugin.getServer().getPlayerExact(playerName);
+			Player player = plugin.getServer().getPlayerExact(entry.getKey());
 			if ( player == null || !player.isOnline() )
 				continue;
 			

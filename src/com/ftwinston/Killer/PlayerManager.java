@@ -1,14 +1,12 @@
 package com.ftwinston.Killer;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -58,50 +56,84 @@ public class PlayerManager
 		}, 600L, 100L); // initial wait: 30s, then check every 5s (still won't try to assign unless it detects a new day starting)
 	}
 	
-	private List<String> alive = new ArrayList<String>();
-	private List<String> killers = new ArrayList<String>();
-	private Map<String, String> spectators = new LinkedHashMap<String, String>();
+	public class Info
+	{
+		public Info(boolean alive) { a = alive; k = false; target = null; }
+		
+		private boolean k, a;
+		public boolean isKiller() { return k; }
+		
+		public void setKiller(boolean b)
+		{
+			if ( b )
+			{
+				if ( !k ) // not currently a killer, being assigned
+					numKillers ++;
+			}
+			else if ( k ) // currently a killer, being cleared
+				numKillers --;
+		
+			k = b;
+		}
+		
+		// am I a survivor or a spectator?
+		public boolean isAlive() { return a; }
+		
+		public void setAlive(boolean b)
+		{
+			if ( b )
+			{
+				if ( !a ) // not currently a killer, being assigned
+					numAlive ++;
+			}
+			else if ( a ) // currently a killer, being cleared
+				numAlive --;
+		
+			a = b;
+		}
+		
+		// spectator target, and also kill target in Contract Killer mode
+		String target;
+	}
 	
-	public int numSurvivors() { return alive.size(); }
-	public List<String> getSurvivors() { return alive; }
+	private Map<String, Info> playerInfo = new LinkedHashMap<String, Info>();
+	public Set<Map.Entry<String, Info>> getPlayerInfo() { return playerInfo.entrySet(); }
 	
-	public int numKillersAssigned() { return killers.size(); }
+	// any changes are automatically tracked, so these values should always be right. Includes dead killers!
+	private int numKillers = 0, numAlive = 0;
+	
+	public int numKillersAssigned() { return numKillers; }
+	
+	public int numSurvivors() { return numAlive;}
+	
+	public int numSpectators() { return playerInfo.size() - numAlive; }
+	
 	public int determineNumberOfKillersToAdd()
 	{
 		// if we don't have enough players for a game, we don't want to assign a killer
-		if ( alive.size() < plugin.getGameMode().absMinPlayers() )
+		if ( numSurvivors() < plugin.getGameMode().absMinPlayers() )
 			return 0;
 		
 		int numAliveKillers = 0;
-		for ( String name : alive )
-			if ( isKiller(name) )
+		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+			if ( entry.getValue().isAlive() && entry.getValue().isKiller() )
 				numAliveKillers ++;
 		
-		return plugin.getGameMode().determineNumberOfKillersToAdd(alive.size(), killers.size(), numAliveKillers);
+		return plugin.getGameMode().determineNumberOfKillersToAdd(numSurvivors(), numKillersAssigned(), numAliveKillers);
 	}
 	
 	public void reset(boolean resetInventories)
 	{
 		countdownStarted = false;
+
+		playerInfo.clear();
+		numKillers = numAlive = 0;
 		
-		alive.clear();
 		for ( Player player : plugin.getServer().getOnlinePlayers() )
 		{
 			resetPlayer(player, resetInventories);
 			setAlive(player,true);
 		}
-		
-		// don't do this til after, so addAlive can remove spectator effects if needed
-		spectators.clear();
-		
-		// inform all killers that they're not any more, just to be clear
-		for ( String killerName : killers )
-		{
-			Player killerPlayer = Bukkit.getServer().getPlayerExact(killerName);
-			if ( killerPlayer != null && killerPlayer.isOnline() )
-				killerPlayer.sendMessage(ChatColor.YELLOW + "You are no longer " + (killers.size() == 1 ? "the" : "a") + " killer.");
-		}
-		killers.clear();
 		
 		if ( plugin.banOnDeath )
 			for ( OfflinePlayer player : plugin.getServer().getBannedPlayers() )
@@ -127,14 +159,24 @@ public class PlayerManager
 	{
 		countdownStarted = false;
 		
-		Player[] players = plugin.getServer().getOnlinePlayers();
-		if ( players.length < plugin.getGameMode().absMinPlayers() )
+		int availablePlayers = 0;
+		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+		{
+			if ( !entry.getValue().isAlive() || entry.getValue().isKiller() )
+				continue; // spectators and already-assigned killers don't count towards the minimum
+			
+			Player player = plugin.getServer().getPlayerExact(entry.getKey());
+			if ( player != null && player.isOnline() )
+				availablePlayers ++; // "just disconnected" players don't count towards the minimum
+		}
+		
+		if ( availablePlayers < plugin.getGameMode().absMinPlayers() )
 		{
 			String message = "Insufficient players to assign a killer. A minimum of 3 players are required.";
-			if ( sender == null )
-				plugin.getServer().broadcastMessage(message);
-			else
+			if ( sender != null )
 				sender.sendMessage(message);
+			if ( plugin.getGameMode().informOfKillerAssignment(this) )
+				plugin.getServer().broadcastMessage(message);
 			return false;
 		}
 		
@@ -161,21 +203,7 @@ public class PlayerManager
 
 			plugin.getServer().broadcastMessage(message);
 		}
-		
-		int availablePlayers = 0;
-		for ( String name : alive )
-		{
-			if ( isKiller(name) )
-				continue;
-			
-			Player player = plugin.getServer().getPlayerExact(name);
-			if ( player != null && player.isOnline() )
-				availablePlayers ++;
-		}
-		
-		if ( availablePlayers == 0 )
-			return false;
-		
+	
 		if ( !plugin.statsManager.isTracking )
 			plugin.statsManager.gameStarted(numSurvivors());
 		
@@ -212,17 +240,21 @@ public class PlayerManager
 		Arrays.sort(killerIndices);
 		
 		int num = 0, nextIndex = 0;
-		for ( Player player : players )
+		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
 		{
-			if ( isKiller(player.getName()) || isSpectator(player.getName()) )
+			if ( !entry.getValue().isAlive() || entry.getValue().isKiller() )
 				continue;
-		
+			
+			Player player = plugin.getServer().getPlayerExact(entry.getKey());
+			if ( player == null || !player.isOnline() )
+				continue;
+
 			if ( num == killerIndices[nextIndex] )
 			{
-				setKiller(player.getName());
+				entry.getValue().setKiller(true);
 				
 				String message = ChatColor.RED + "You are ";
-				message += numKillers > 1 || killers.size() > 1 ? "now a" : "the";
+				message += numKillers > 1 || numKillersAssigned() > 1 ? "now a" : "the";
 				message += " killer!";
 				
 				if ( !plugin.getGameMode().informOfKillerAssignment(this) && !plugin.getGameMode().informOfKillerIdentity() )
@@ -252,7 +284,7 @@ public class PlayerManager
 				if ( plugin.getGameMode().informOfKillerIdentity() )
 					colorPlayerName(player, ChatColor.BLUE);
 				else if ( plugin.getGameMode().informOfKillerAssignment(this) )
-					player.sendMessage(ChatColor.YELLOW + "You are not " + ( numKillers > 1 || killers.size() > 1 ? "a" : "the") + " killer.");
+					player.sendMessage(ChatColor.YELLOW + "You are not " + ( numKillers > 1 || numKillersAssigned() > 1 ? "a" : "the") + " killer.");
 			}
 			
 			num++;
@@ -261,12 +293,6 @@ public class PlayerManager
 		return true;
 	}
 	
-	public void setKiller(String player)
-	{
-		if(!killers.contains(player))
-			killers.add(player);
-	}
-
 	public void colorPlayerName(Player player, ChatColor color)
 	{		
 		player.setDisplayName(color + ChatColor.stripColor(player.getDisplayName()));
@@ -274,38 +300,65 @@ public class PlayerManager
 	}
 
 	public void playerJoined(Player player)
-	{		
-		for(String spec:spectators.keySet())
-			if(spec != player.getName())
+	{
+		// hide all spectators from this player
+		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+			if ( !entry.getValue().isAlive() && !entry.getKey().equals(player.getName()) )
 			{
-				Player other = plugin.getServer().getPlayerExact(spec);
+				Player other = plugin.getServer().getPlayerExact(entry.getKey());
 				if ( other != null && other.isOnline() )
 					player.hidePlayer(other);
 			}
-		
-		if ( isSpectator(player.getName()) )
-		{
-			player.sendMessage("Welcome back. You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
-			setAlive(player,false);
-		}
-		else if ( plugin.getGameMode().playerJoined(player, this, !isAlive(player.getName()), isKiller(player.getName()), killers.size()) )
-		{
-			setAlive(player,true); // they're alive
 			
-			boolean isKiller = isKiller(player.getName());
-			if ( isKiller )
-				plugin.getGameMode().prepareKiller(player, this);
+		Info info = playerInfo.get(player.getName());
+		boolean isNewPlayer;
+		if ( info == null )
+		{
+			isNewPlayer = true;
+			if (numKillersAssigned() == 0)
+				info = new Info(true);
+			else if ( plugin.lateJoinersStartAsSpectator )
+				info = new Info(false);
 			else
-				plugin.getGameMode().prepareFriendly(player, this);
-			
-			if ( plugin.getGameMode().informOfKillerIdentity() )
-				colorPlayerName(player, isKiller ? ChatColor.RED : ChatColor.BLUE);
-			
-			if ( numKillersAssigned() > 0 && !isAlive(player.getName()) ) // they're late-joining an in-progress game
+			{
+				info = new Info(true);
 				plugin.statsManager.playerJoinedLate();
+			}
+			playerInfo.put(player.getName(), info);
 		}
 		else
-			setAlive(player,false); // they're a spectator
+			isNewPlayer = false;
+			
+		if ( !info.isAlive() )
+		{
+			String message = isNewPlayer ? "" : "Welcome Back. ";
+			message += "You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.";
+			
+			player.sendMessage(message);
+			setAlive(player, false);
+		}
+		else
+		{
+			plugin.getGameMode().playerJoined(player, this, isNewPlayer, info, numKillersAssigned());
+			
+			if ( info.isAlive() )
+			{
+				setAlive(player, true);
+				
+				if ( info.isKiller() )
+					plugin.getGameMode().prepareKiller(player, this);
+				else
+					plugin.getGameMode().prepareFriendly(player, this);
+				
+				if ( plugin.getGameMode().informOfKillerIdentity() )
+					colorPlayerName(player, info.isKiller() ? ChatColor.RED : ChatColor.BLUE);
+			}
+			else
+			{
+				setAlive(player, false); // game mode made them a spectator for some reason
+				player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
+			}
+		}
 		
 		if ( numKillersAssigned() == 0 )
 		{
@@ -321,7 +374,7 @@ public class PlayerManager
 	boolean countdownStarted = false;
 	public void checkImmediateKillerAssignment()
 	{
-		if ( !countdownStarted && plugin.getGameMode().immediateKillerAssignment() && plugin.getServer().getOnlinePlayers().length >= plugin.getGameMode().absMinPlayers() )
+		if ( !countdownStarted && plugin.getGameMode().immediateKillerAssignment() && numSurvivors() >= plugin.getGameMode().absMinPlayers() )
 		{
 			plugin.getServer().broadcastMessage("Allocation in 30 seconds...");
 			countdownStarted = true;
@@ -340,15 +393,13 @@ public class PlayerManager
 	{
 		Player player = plugin.getServer().getPlayerExact(playerName);
 		if ( player != null && player.isOnline() )
-		{
 			setAlive(player, false);
-		}
-		else // player disconnected ... move them to spectator in our records, in case they reconnect
+
+		else // player disconnected ... still move them to spectator list, but have no player record to adjust
 		{
-			if(alive.contains(playerName) )
-				alive.remove(playerName);
-			if(!spectators.containsKey(playerName))
-				spectators.put(playerName, null);
+			Info info = playerInfo.get(playerName);
+			if ( info != null )
+				info.setAlive(false);
 		}
 		
 		if ( plugin.banOnDeath )
@@ -362,20 +413,25 @@ public class PlayerManager
 	
 	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)
 	{
-		String message;
-		int numFriendlies = numSurvivors() + spectators.size() - killers.size();
+		String message = null;
+		int numFriendlies = playerInfo.size() - numKillersAssigned();
 		
 		if ( winningItem != null )
 		{
 			if ( friendliesWon )
 				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(false) : winningPlayerName) + (numFriendlies > 1 ? "s brought " : " brought ") + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(false) + (numFriendlies > 1 ? "s win! " : " wins");
 			else
-				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(true) : winningPlayerName) + (killers.size() > 1 ? "s win! " : " wins") + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(true) + (killers.size() > 1 ? "s win! " : " wins");
+				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(true) : winningPlayerName) + (numKillersAssigned() > 1 ? "s win! " : " wins") + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(true) + (numKillersAssigned() > 1 ? "s win! " : " wins");
 		}
-		else if ( killers.size() == 0 ) // some mode (e.g. Contact Killer) might not assign specific killers. In this case, we only care about the winning player
+		else if ( numKillersAssigned() == 0 ) // some mode might not assign specific killers. In this case, we only care about the winning player
 		{
 			if ( numSurvivors() == 1 )
-				message = "Only one player left standing, " + alive.get(0) + " wins!";
+				for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+					if ( entry.getValue().isAlive() )
+					{
+						message = "Only one player left standing, " + entry.getKey() + " wins!";
+						break;
+					}
 			else if ( numSurvivors() == 0 )
 				message = "No players survived, game drawn!";
 			else
@@ -389,7 +445,7 @@ public class PlayerManager
 				message = "The " + plugin.getGameMode().describePlayer(false) + " has";
 			message += " been killed, the " + plugin.getGameMode().describePlayer(true);
 			
-			if ( killers.size() > 1 )
+			if ( numKillersAssigned() > 1 )
 			{
 				message += "s win!";
 
@@ -401,7 +457,7 @@ public class PlayerManager
 		}
 		else if ( friendliesWon )
 		{
-			if ( killers.size() > 1 )
+			if ( numKillersAssigned() > 1 )
 				message =  "All of the " + plugin.getGameMode().describePlayer(true) + "s have";
 			else
 				message = "The " + plugin.getGameMode().describePlayer(true) + " has";
@@ -467,25 +523,37 @@ public class PlayerManager
 			if ( !plugin.getGameMode().informOfKillerIdentity() )
 			{
 				message = ChatColor.RED + (sender == null ? "Revealed: " : "Revealed by " + sender.getName() + ": ");
-				if ( killers.size() == 1 )
-					message += killers.get(0) + " was the killer!";
+				if ( numKillersAssigned() == 1 )
+				{
+					for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+						if ( entry.getValue().isKiller() )
+						{
+							entry.getValue().setKiller(false);
+							message += entry.getKey() + " was the killer!";
+							break;
+						}
+				}
 				else
 				{
 					message += "The killers were ";
-					message += killers.get(0);
 					
-					for ( int i=1; i<killers.size(); i++ )
-					{
-						message += i == killers.size()-1 ? " and " : ", ";
-						message += killers.get(i);
-					}
+					int i = 0;
+					for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+						if ( entry.getValue().isKiller() )
+						{
+							if ( i > 0 )
+								message += i == numKillersAssigned()-1 ? " and " : ", ";
+							message += entry.getKey();
+							i++;
+						}
 					
 					message += "!";
 				}
 				plugin.getServer().broadcastMessage(message);
 			}
-			killers.clear();
 			
+			for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+				entry.getValue().setKiller(false);
 			
 			// this game was "aborted"
 			if ( plugin.statsManager.isTracking )
@@ -501,23 +569,42 @@ public class PlayerManager
 		}	
 	}
 	
+	public Info getInfo(String player)
+	{
+		return playerInfo.get(player);
+	}
+	
 	public boolean isSpectator(String player)
 	{
-		return spectators.containsKey(player);
+		Info info = playerInfo.get(player);
+		return info == null || !info.isAlive();
 	}
 
 	public boolean isAlive(String player)
 	{
-		return alive.contains(player);
+		Info info = playerInfo.get(player);
+		return info != null && info.isAlive();
 	}
 
 	public boolean isKiller(String player)
 	{
-		return killers.contains(player);
+		Info info = playerInfo.get(player);
+		return info != null && info.isKiller();
 	}
 
 	public void setAlive(Player player, boolean bAlive)
 	{
+		boolean wasAlive;
+		Info info = playerInfo.get(player.getName());
+		if ( info == null )
+		{
+			info = new Info(bAlive);
+			playerInfo.put(player.getName(), info);
+			wasAlive = true;
+		}
+		else
+			wasAlive = info.isAlive();
+		
 		if ( bAlive )
 		{
 			// you shouldn't stop being able to fly in creative mode, cos you're (hopefully) only there for testing
@@ -529,11 +616,6 @@ public class PlayerManager
 
 			// fixme: reconnecting killer in invisible killer mode will become visible
 			makePlayerVisibleToAll(player);
-			
-			if(!alive.contains(player.getName()))
-				alive.add(player.getName());
-			if(spectators.containsKey(player.getName()))
-				spectators.remove(player.getName());
 		}
 		else
 		{
@@ -541,13 +623,8 @@ public class PlayerManager
 			player.getInventory().clear();
 			makePlayerInvisibleToAll(player);
 			
-			if(alive.contains(player.getName()))
-				alive.remove(player.getName());
-			if(!spectators.containsKey(player.getName()))
-			{
-				spectators.put(player.getName(), null);
+			if ( wasAlive )
 				player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
-			}
 		}
 	}
 	
@@ -680,14 +757,16 @@ public class PlayerManager
 	
 	public String getFollowTarget(Player player)
 	{
-		if ( spectators.containsKey(player.getName()) )
-			return spectators.get(player.getName());
-		return null;
+		Info info = playerInfo.get(player.getName());
+		return info == null ? null : info.target;
 	}
 	
 	public void setFollowTarget(Player player, String target)
 	{
-		spectators.put(player.getName(), target);
+		Info info = playerInfo.get(player.getName());
+		
+		if ( info != null )
+			info.target = target;
 	}
 	
 	private final double maxFollowSpectateRangeSq = 40 * 40, maxAcceptableOffsetDot = 0.65;
@@ -695,9 +774,12 @@ public class PlayerManager
 	
 	public void checkFollowTarget(Player player)
 	{
-		String targetName = spectators.get(player.getName()); 
-		if ( targetName == null )
+		Info info = playerInfo.get(player.getName());
+		
+		if ( info == null || info.target == null )
 			return; // don't have a target, don't want to get moved to it
+		
+		String targetName = info.target;
 		
 		Player target = plugin.getServer().getPlayerExact(targetName);
 		if ( !isAlive(targetName) || target == null || !target.isOnline() )
@@ -856,11 +938,14 @@ public class PlayerManager
 	
 	public String getDefaultFollowTarget()
 	{
-		for ( String name : alive )
+		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
 		{
-			Player player = plugin.getServer().getPlayerExact(name);
+			if ( !entry.getValue().isAlive() )
+				continue;
+			
+			Player player = plugin.getServer().getPlayerExact(entry.getKey());
 			if ( player != null && player.isOnline() )
-				return name;
+				return entry.getKey();
 		}
 		return null;
 	}

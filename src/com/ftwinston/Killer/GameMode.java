@@ -53,7 +53,7 @@ public abstract class GameMode
 	public abstract boolean informOfKillerAssignment(PlayerManager pm);
 	public abstract boolean informOfKillerIdentity();
 	
-	public abstract boolean playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, boolean isKiller, int numKillersAssigned);
+	public abstract void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info, int numKillersAssigned);
 	public abstract void prepareKiller(Player player, PlayerManager pm);
 	public abstract void prepareFriendly(Player player, PlayerManager pm);
 	

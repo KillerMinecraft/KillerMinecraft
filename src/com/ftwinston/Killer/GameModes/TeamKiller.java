@@ -1,9 +1,11 @@
 package com.ftwinston.Killer.GameModes;
 
+import java.util.Map;
 import java.util.Random;
 
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.PlayerManager;
+import com.ftwinston.Killer.PlayerManager.Info;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -68,11 +70,9 @@ public class TeamKiller extends GameMode
 	public boolean immediateKillerAssignment() { return true; }
 	
 	@Override
-	public boolean playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, boolean isKiller, int numKillersAssigned)
+	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info, int numKillersAssigned)
 	{
-		if ( isKiller ) // inform them that they're still a killer
-			player.sendMessage("Welcome back. You are on the " + ChatColor.RED + "red" + ChatColor.RESET + " team."); 
-		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
+		if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
 		{
 			String message = "Welcome to Killer Minecraft! Players ";
 			message += numKillersAssigned > 0 ? "have been" : "will soon be";
@@ -93,48 +93,37 @@ public class TeamKiller extends GameMode
 			
 			if ( numKillersAssigned > 0 )
 			{
-				if ( plugin.lateJoinersStartAsSpectator )
-					return false; // not alive, should be a spectator
-
 				// add them to whichever team has fewest left alive
 				int numFriendliesAlive = 0, numKillersAlive = 0;
-				for ( String count : pm.getSurvivors() )
-					if ( pm.isKiller(count) )
+				for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
+					if ( entry.getValue().isKiller() )
 						numKillersAlive++;
 					else
 						numFriendliesAlive++;
 				
 				if ( numKillersAlive > numFriendliesAlive )
 				{
-					pm.setKiller(player.getName());
+					info.setKiller(true);
 					plugin.getServer().broadcastMessage(player.getName() + " is on the " + ChatColor.RED + "red" + ChatColor.RESET + " team.");
-					pm.colorPlayerName(player, ChatColor.RED);
 				}
 				else if ( numKillersAlive == numFriendliesAlive )
 				{
 					if ( r.nextInt() == 1 )
 					{
-						pm.setKiller(player.getName());
-						plugin.getServer().broadcastMessage(player.getName() + " is on the " + ChatColor.RED + "red" + ChatColor.RESET + " team.");
-						pm.colorPlayerName(player, ChatColor.RED);						
+						info.setKiller(true);
+						plugin.getServer().broadcastMessage(player.getName() + " is on the " + ChatColor.RED + "red" + ChatColor.RESET + " team.");					
 					}
 					else
-					{
 						plugin.getServer().broadcastMessage(player.getName() + " is on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
-						pm.colorPlayerName(player, ChatColor.BLUE);
-					}
 				}
 				else
-				{
 					plugin.getServer().broadcastMessage(player.getName() + " is on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
-					pm.colorPlayerName(player, ChatColor.BLUE);
-				}
 			}
 		}
+		else if ( info.isKiller() ) // inform them that they're still a killer
+			player.sendMessage("Welcome back. You are on the " + ChatColor.RED + "red" + ChatColor.RESET + " team."); 
 		else
 			player.sendMessage("Welcome back. You are on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
-			
-		return true; // this player should now be alive
 	}
 	
 	private final int teamSeparationOffset = 25;
@@ -184,11 +173,12 @@ public class TeamKiller extends GameMode
 		}
 		
 		boolean killersAlive = false, friendliesAlive = false;
-		for ( String survivor : pm.getSurvivors() )
-			if ( pm.isKiller(survivor) )
-				killersAlive = true;
-			else
-				friendliesAlive = true;
+		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
+			if ( entry.getValue().isAlive() )
+				if ( entry.getValue().isKiller() )
+					killersAlive = true;
+				else
+					friendliesAlive = true;
 		
 		// if only killers are left alive, the killers won
 		if ( killersAlive && !friendliesAlive )

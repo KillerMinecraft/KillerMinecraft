@@ -1,7 +1,10 @@
 package com.ftwinston.Killer.GameModes;
 
+import java.util.Map;
+
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.PlayerManager;
+import com.ftwinston.Killer.PlayerManager.Info;
 
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
@@ -63,9 +66,9 @@ public class MysteryKiller extends GameMode
 	public boolean immediateKillerAssignment() { return false; }
 	
 	@Override
-	public boolean playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, boolean isKiller, int numKillersAssigned)
+	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info, int numKillersAssigned)
 	{
-		if ( isKiller ) // inform them that they're still a killer
+		if ( info.isKiller() ) // inform them that they're still a killer
 			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (numKillersAssigned > 1 ? "a" : "the" ) + " killer!"); 
 		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
 		{
@@ -85,14 +88,9 @@ public class MysteryKiller extends GameMode
 			
 			message += " to the plinth near the spawn.";
 			player.sendMessage(message);
-			
-			if ( numKillersAssigned > 0 && plugin.lateJoinersStartAsSpectator )
-				return false; // not alive, should be a spectator
 		}
 		else
 			player.sendMessage("Welcome back. You are not the killer, and you're still alive.");
-			
-		return true; // this player should now be alive
 	}
 	
 	@Override
@@ -252,25 +250,32 @@ public class MysteryKiller extends GameMode
 			return;
 		}
 		
-		// if only one person left, and they're not the killer, tell people they can /vote if they want to start a new game
-		if ( pm.numSurvivors() == 1 && !pm.isKiller(pm.getSurvivors().get(0)) )
-		{
-			Player last = plugin.getServer().getPlayerExact(pm.getSurvivors().get(0));
-			if ( last != null && last.isOnline() )
-			{
-				plugin.getServer().broadcastMessage("There's only one player left, and they can't be the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
-				return;
-			}
-		}
-		
 		// if there's no one alive that isn't a killer, the killer(s) won
-		else
+		boolean onlyKillersLeft = true;
+		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
+			if ( entry.getValue().isAlive() && !entry.getValue().isKiller() )
+			{// this person is alive and not a killer
+				onlyKillersLeft = false;
+				break;
+			}
+		
+		if ( onlyKillersLeft )
 		{
-			for ( String survivor : pm.getSurvivors() )
-				if ( !pm.isKiller(survivor) )
-					return;
-			
 			pm.gameFinished(true, false, null, null);
+			return;
 		}
+
+		// if only one person left (and they're not the killer), tell people they can /vote if they want to start a new game
+		if ( pm.numSurvivors() == 1 )
+			for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
+				if ( entry.getValue().isAlive() )
+				{
+					Player last = plugin.getServer().getPlayerExact(entry.getKey());
+					if ( last != null && last.isOnline() )
+					{
+						plugin.getServer().broadcastMessage("There's only one player left, and they're not the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
+						return;
+					}
+				}
 	}
 }
