@@ -16,7 +16,7 @@ public class StatsManager
 		isTracking = false;
 	}
 
-	private static final int version = 1;
+	private static final int version = 2;
 	boolean isTracking; 
 	private Date startedOn;
 	private int numPlayersStart, numPlayersLateJoin, numPlayersQuit, numKillers, numKillersAdminAdded;
