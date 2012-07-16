@@ -149,7 +149,10 @@ public class EventListener implements Listener
 	        {// does the player have one of the winning items in their inventory?	        	
 	        	for ( Material material : plugin.winningItems )
 		        	if ( event.getPlayer().getInventory().contains(material) )
+					{
 		        		plugin.getGameMode().checkForEndOfGame(plugin.playerManager, event.getPlayer(), material);
+						return;
+					}
 	        }
 	  	}
     }

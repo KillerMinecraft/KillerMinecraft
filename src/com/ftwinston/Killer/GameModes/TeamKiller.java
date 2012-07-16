@@ -16,6 +16,9 @@ public class TeamKiller extends GameMode
 	
 	@Override
 	public String getName() { return "Team Killer"; }
+	
+	@Override
+	public int getModeNumber() { return 4; }
 
 	@Override
 	public int absMinPlayers() { return 2; }

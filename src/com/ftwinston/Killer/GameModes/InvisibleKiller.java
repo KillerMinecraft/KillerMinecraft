@@ -21,6 +21,9 @@ public class InvisibleKiller extends GameMode
 {
 	@Override
 	public String getName() { return "Invisible Killer"; }
+	
+	@Override
+	public int getModeNumber() { return 2; }
 
 	@Override
 	public int absMinPlayers() { return 2; }

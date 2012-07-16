@@ -16,6 +16,9 @@ public class MysteryKiller extends GameMode
 	public String getName() { return "Mystery Killer"; }
 
 	@Override
+	public int getModeNumber() { return 1; }
+	
+	@Override
 	public int absMinPlayers() { return 3; }
 
 	@Override

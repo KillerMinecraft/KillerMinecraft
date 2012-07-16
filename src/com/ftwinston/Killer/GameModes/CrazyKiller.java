@@ -17,6 +17,9 @@ public class CrazyKiller extends GameMode
 {
 	@Override
 	public String getName() { return "Crazy Killer"; }
+	
+	@Override
+	public int getModeNumber() { return 3; }
 
 	@Override
 	public int absMinPlayers() { return 2; }

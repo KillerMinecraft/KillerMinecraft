@@ -40,6 +40,7 @@ public abstract class GameMode
 	protected Killer plugin;
 	
 	public abstract String getName();
+	public abstract int getModeNumber();
 	public abstract int absMinPlayers();
 	public abstract boolean killersCompassPointsAtFriendlies();
 	public abstract boolean friendliesCompassPointsAtKiller();

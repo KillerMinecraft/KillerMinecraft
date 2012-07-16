@@ -28,7 +28,7 @@ public class StatsManager
 		startedOn = new Date();
 	}
 	
-	public void gameFinished(int numPlayers, int outcome, int winningItemID)
+	public void gameFinished(GameMode mode, int numPlayers, int outcome, int winningItemID)
 	{
 		if ( !isTracking || !plugin.reportStats)
 			return;
@@ -43,7 +43,7 @@ public class StatsManager
 		final URL statsPage;
 		try
 		{
-			statsPage = new URL("http://killer.ftwinston.com/?d=" + duration + "&v=" + version + "&o=" + outcome + "&i=" + winningItemID + "&ns=" + numPlayersStart + "&ne=" + numPlayers + "&nl=" + numPlayersLateJoin + "&nq=" + numPlayersQuit + "&nk=" + numKillers + "&na=" + numKillersAdminAdded);
+			statsPage = new URL("http://killer.ftwinston.com/?m=" + mode.getModeNumber() + "&d=" + duration + "&v=" + version + "&o=" + outcome + "&i=" + winningItemID + "&ns=" + numPlayersStart + "&ne=" + numPlayers + "&nl=" + numPlayersLateJoin + "&nq=" + numPlayersQuit + "&nk=" + numKillers + "&na=" + numKillersAdminAdded);
 		}
 		catch ( MalformedURLException ex )
 		{

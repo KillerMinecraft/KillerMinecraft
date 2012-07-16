@@ -421,7 +421,7 @@ public class PlayerManager
 		else
 			message = "No players survived, game drawn!";
 		
-		plugin.statsManager.gameFinished(numSurvivors(), killerWon ? 1 : (friendliesWon ? 2 : 0), winningItem == null ? 0 : winningItem.getId());
+		plugin.statsManager.gameFinished(plugin.getGameMode(), numSurvivors(), killerWon ? 1 : (friendliesWon ? 2 : 0), winningItem == null ? 0 : winningItem.getId());
 		
 		plugin.getServer().broadcastMessage(ChatColor.YELLOW + message);
 		if ( plugin.autoReveal )
@@ -489,7 +489,7 @@ public class PlayerManager
 			
 			// this game was "aborted"
 			if ( plugin.statsManager.isTracking )
-				plugin.statsManager.gameFinished(numSurvivors(), 3, 0);
+				plugin.statsManager.gameFinished(plugin.getGameMode(), numSurvivors(), 3, 0);
 		}
 		else
 		{
