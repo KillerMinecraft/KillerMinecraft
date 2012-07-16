@@ -110,7 +110,7 @@ public class Killer extends JavaPlugin
 	
 	private void setupConfiguration()
 	{
-		getConfig().addDefault("defaultGameMode", "MysteryKiller");
+		getConfig().addDefault("defaultGameMode", "Mystery Killer");
 		getConfig().addDefault("canChangeGameMode", true);
 		getConfig().addDefault("autoAssign", false);
 		getConfig().addDefault("autoReassign", false);
