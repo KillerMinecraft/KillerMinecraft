@@ -225,7 +225,10 @@ public class EventListener implements Listener
     	
     	
     	if ( !PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+		{// colored player names shouldn't produce colored messages
+			event.setMessage(ChatColor.RESET + event.getMessage());
     		return;
+		}
 
     	// mark spectator chat, and hide it from non-spectators
     	event.setMessage(ChatColor.YELLOW + "[Spec] " + ChatColor.RESET + event.getMessage());

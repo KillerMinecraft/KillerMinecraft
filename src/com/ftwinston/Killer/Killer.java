@@ -226,6 +226,46 @@ public class Killer extends JavaPlugin
 				voteManager.showVoteMenu((Player)sender);
 			return true;
 		}
+		else if (cmd.getName().equalsIgnoreCase("team"))
+		{
+			if ( !getGameMode().informOfKillerIdentity() )
+			{
+				sender.sendMessage("Team chat is not available in " + getGameMode().getName() + " mode");
+				return true;
+			}
+		
+			if ( !(sender instanceof Player) )
+				return true;
+			
+			if ( args.length == 0 )
+			{
+				sender.sendMessage("Usage: /team <message>");
+				return true;
+			}
+			
+			String message = "[Team] " + ChatColor.RESET + args[0];
+			for ( int i=1; i<args.length; i++ )
+				message += " " + args[i];
+			
+			Player player = (Player)sender;
+			PlayerManager.Info info = playerManager.getInfo(player.getName());
+		
+			// most of this code is a clone of the actual chat code in NetServerHandler.chat
+			PlayerChatEvent event = new PlayerChatEvent(player, "ignored");
+			getServer().getPluginManager().callEvent(event);
+
+			if (event.isCancelled())
+				return true;
+		
+			message = String.format(event.getFormat(), event.getPlayer().getDisplayName(), message);
+			getServer().getConsoleSender().sendMessage(message);
+			
+			for (Player recipient : event.getRecipients())
+                if ( playerManager.isKiller(recipient.getName()) == info.isKiller() )
+					recipient.sendMessage(message);
+			
+			return true;
+		}
 		else if (cmd.getName().equalsIgnoreCase("killer"))
 		{
 			if ( sender instanceof Player && !((Player)sender).isOp() )
