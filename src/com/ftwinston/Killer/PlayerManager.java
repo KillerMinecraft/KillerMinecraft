@@ -58,7 +58,7 @@ public class PlayerManager
 	
 	public class Info
 	{
-		public Info(boolean alive) { a = alive; k = false; target = null; }
+		public Info(boolean alive) { a = alive; k = false; target = null; numAlive ++; }
 		
 		private boolean k, a;
 		public boolean isKiller() { return k; }
@@ -392,16 +392,30 @@ public class PlayerManager
 	public void playerKilled(String playerName)
 	{
 		Player player = plugin.getServer().getPlayerExact(playerName);
-		if ( player != null && player.isOnline() )
-			setAlive(player, false);
-
-		else // player disconnected ... still move them to spectator list, but have no player record to adjust
+		if ( player == null || !player.isOnline() )
 		{
 			Info info = playerInfo.get(playerName);
 			if ( info != null )
+			{
 				info.setAlive(false);
+
+				if ( numKillersAssigned() > 0 && plugin.banOnDeath )
+				{
+					player.setBanned(true);
+					player.kickPlayer("You died, and are now banned until the end of the game");
+				}
+			}
+			return;
 		}
 		
+		if ( numKillersAssigned() == 0 )
+		{// game hasn't started yet, just respawn them normally
+			setAlive(player, true);
+			return;	
+		}
+		
+		setAlive(player, false);
+
 		if ( plugin.banOnDeath )
 		{
 			player.setBanned(true);
