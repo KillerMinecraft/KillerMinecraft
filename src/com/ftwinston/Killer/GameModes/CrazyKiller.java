@@ -98,7 +98,6 @@ public class CrazyKiller extends GameMode
 	@Override
 	public void prepareKiller(Player player, PlayerManager pm)
 	{
-		pm.makePlayerInvisibleToAll(player);
 		player.sendMessage("Every dirt block you pick up will turn into TNT...");
 		
 		PlayerInventory inv = player.getInventory();
