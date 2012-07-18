@@ -58,7 +58,7 @@ public class PlayerManager
 	
 	public class Info
 	{
-		public Info(boolean alive) { a = alive; k = false; target = null; numAlive ++; }
+		public Info(boolean alive) { a = alive; k = false; target = null; if ( alive ) numAlive ++; }
 		
 		private boolean k, a;
 		public boolean isKiller() { return k; }
@@ -83,10 +83,10 @@ public class PlayerManager
 		{
 			if ( b )
 			{
-				if ( !a ) // not currently a killer, being assigned
+				if ( !a ) // not currently alive, being assigned
 					numAlive ++;
 			}
-			else if ( a ) // currently a killer, being cleared
+			else if ( a ) // currently alive, being cleared
 				numAlive --;
 		
 			a = b;
