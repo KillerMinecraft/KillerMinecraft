@@ -460,7 +460,7 @@ public class PlayerManager
 				message = "All of the " + plugin.getGameMode().describePlayer(false) + "s have";
 			else
 				message = "The " + plugin.getGameMode().describePlayer(false) + " has";
-			message += " been killed, the " + plugin.getGameMode().describePlayer(true);
+			message += " died, the " + plugin.getGameMode().describePlayer(true);
 			
 			if ( numKillersAssigned() > 1 )
 			{
