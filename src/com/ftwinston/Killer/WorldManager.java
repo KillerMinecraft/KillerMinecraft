@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -27,6 +28,8 @@ import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 
 public class WorldManager
@@ -230,7 +233,7 @@ public class WorldManager
 			return world;
 		}
 		
-		public void removeItems(World world)
+		public void removeAllItems(World world)
 		{
 			List<Entity> list = world.getEntities();
 			Iterator<Entity> entities = list.iterator();

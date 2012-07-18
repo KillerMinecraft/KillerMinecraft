@@ -237,7 +237,7 @@ public class PlayerManager
 		
 		int num = 0, nextIndex = 0;
 		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-		
+		{
 			if ( nextIndex > numKillers )
 				return true; // somehow exceeded array bounds, just stop there
 				

@@ -12,6 +12,7 @@ import org.bukkit.conversations.MessagePrompt;
 import org.bukkit.conversations.NumericPrompt;
 import org.bukkit.conversations.Prompt;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 public class VoteManager
 {
@@ -290,7 +291,7 @@ public class VoteManager
         voteConvFactory.withConversationCanceller(new InactivityCanceller(plugin, 30));
 	}
 
-	protected class InactivityCanceller : InactivityConversationCanceller
+	protected class InactivityCanceller extends InactivityConversationCanceller
 	{
 		public InactivityCanceller(Plugin plugin, int timeoutSeconds)
 		{
