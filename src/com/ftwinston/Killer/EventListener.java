@@ -223,6 +223,9 @@ public class EventListener implements Listener
     		}
     	}
     	
+    	// don't mess with spectator chat if they're in the vote setup conversation
+    	if ( event.getPlayer().isConversing() )
+    		return;
     	
     	if ( !PlayerManager.instance.isSpectator(event.getPlayer().getName()))
 		{// colored player names shouldn't produce colored messages
