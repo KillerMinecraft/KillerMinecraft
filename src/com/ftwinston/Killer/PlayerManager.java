@@ -398,11 +398,12 @@ public class PlayerManager
 			if ( info != null )
 			{
 				info.setAlive(false);
-
-				if ( numKillersAssigned() > 0 && plugin.banOnDeath )
+				if ( numKillersAssigned() > 0 )
 				{
-					player.setBanned(true);
-					player.kickPlayer("You died, and are now banned until the end of the game");
+					if ( plugin.banOnDeath )
+						player.setBanned(true);
+				
+					plugin.getGameMode().checkForEndOfGame(this, null, null);
 				}
 			}
 			return;
