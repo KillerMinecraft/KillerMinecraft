@@ -207,41 +207,40 @@ public class PlayerManager
 		if ( !plugin.statsManager.isTracking )
 			plugin.statsManager.gameStarted(numSurvivors());
 		
-		int[] killerIndices;
+		
 		if ( numKillers >= availablePlayers )
 		{// should this ever happen? seriously? everyone's a killer. that's screwed.
-			 killerIndices = new int[availablePlayers];
-			 for ( int i=0; i<availablePlayers; i++ )
-				 killerIndices[i] = i;
+			 return false;
 		}
-		else
+		
+		int[] killerIndices = new int[numKillers];
+		for ( int i=0; i<numKillers; i++ )
 		{
-			killerIndices = new int[numKillers];
-			for ( int i=0; i<killerIndices.length; i++ )
+			int rand;
+			boolean ok;
+			do
 			{
-				int rand;
-				boolean ok;
-				do
-				{
-					rand = random.nextInt(availablePlayers);
-					ok = true;
-					for ( int j=0; j<i; j++ )
-						if ( rand == killerIndices[j] ) // already used this one, it's not good to use again
-						{
-							ok = false;
-							break;
-						}
+				rand = random.nextInt(availablePlayers);
+				ok = true;
+				for ( int j=0; j<i; j++ )
+					if ( rand == killerIndices[j] ) // already used this one, it's not good to use again
+					{
+						ok = false;
+						break;
+					}
 
-				} while ( !ok );
-				killerIndices[i] = rand;
-			}
+			} while ( !ok );
+			killerIndices[i] = rand;
 		}
 		
 		Arrays.sort(killerIndices);
 		
 		int num = 0, nextIndex = 0;
 		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-		{
+		
+			if ( nextIndex > numKillers )
+				return true; // somehow exceeded array bounds, just stop there
+				
 			if ( !entry.getValue().isAlive() || entry.getValue().isKiller() )
 				continue;
 			
