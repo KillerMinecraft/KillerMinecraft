@@ -624,6 +624,7 @@ public class PlayerManager
 		else
 			wasAlive = info.isAlive();
 		
+		info.setAlive(bAlive);
 		if ( bAlive )
 		{
 			// you shouldn't stop being able to fly in creative mode, cos you're (hopefully) only there for testing

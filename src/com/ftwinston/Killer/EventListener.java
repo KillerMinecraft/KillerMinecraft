@@ -52,7 +52,7 @@ public class EventListener implements Listener
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
     				{
-    					PlayerManager.instance.setAlive(player,false);
+    					plugin.playerManager.setAlive(player, plugin.playerManager.numKillersAssigned() == 0);
     					plugin.playerManager.checkPlayerCompassTarget(player);
     				}
     			}
