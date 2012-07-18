@@ -7,6 +7,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.conversations.Conversation;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.ConversationFactory;
+import org.bukkit.conversations.InactivityConversationCanceller;
 import org.bukkit.conversations.MessagePrompt;
 import org.bukkit.conversations.NumericPrompt;
 import org.bukkit.conversations.Prompt;
@@ -286,9 +287,25 @@ public class VoteManager
         voteConvFactory.withFirstPrompt(initialPrompt);
         voteConvFactory.withLocalEcho(false);
         voteConvFactory.withModality(false);
-        voteConvFactory.withTimeout(15);
+        voteConvFactory.withConversationCanceller(new InactivityCanceller(plugin, 30));
 	}
 
+	protected class InactivityCanceller : InactivityConversationCanceller
+	{
+		public InactivityCanceller(Plugin plugin, int timeoutSeconds)
+		{
+			super(plugin, timeoutSeconds);
+		}
+	
+		@Override
+		protected void cancelling(Conversation conversation)
+		{
+			Player player = conversation.getForWhom() instanceof Player ? (Player)conversation.getForWhom() : null;
+			if ( player != null )
+				player.sendMessage("Vote setup cancelled");
+		}
+	}
+	
 	public void showVoteMenu(Player sender)
 	{
 		Player player = (Player)sender;
