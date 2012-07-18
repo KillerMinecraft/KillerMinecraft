@@ -324,6 +324,9 @@ public class PlayerManager
 				plugin.statsManager.playerJoinedLate();
 			}
 			playerInfo.put(player.getName(), info);
+			
+			// this player is new for this game, but they might still have stuff from previous game on same world. clear them down.
+			resetPlayer(player, true);
 		}
 		else
 			isNewPlayer = false;
