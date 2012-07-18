@@ -209,9 +209,7 @@ public class PlayerManager
 		
 		
 		if ( numKillers >= availablePlayers )
-		{// should this ever happen? seriously? everyone's a killer. that's screwed.
-			 return false;
-		}
+			numKillers = availablePlayers; // should this ever happen? seriously? everyone should be a killer. that's screwed.
 		
 		int[] killerIndices = new int[numKillers];
 		for ( int i=0; i<numKillers; i++ )
@@ -238,9 +236,6 @@ public class PlayerManager
 		int num = 0, nextIndex = 0;
 		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
 		{
-			if ( nextIndex > numKillers )
-				return true; // somehow exceeded array bounds, just stop there
-				
 			if ( !entry.getValue().isAlive() || entry.getValue().isKiller() )
 				continue;
 			
@@ -248,7 +243,7 @@ public class PlayerManager
 			if ( player == null || !player.isOnline() )
 				continue;
 
-			if ( num == killerIndices[nextIndex] )
+			if ( nextIndex < numKillers && num == killerIndices[nextIndex] )
 			{
 				entry.getValue().setKiller(true);
 				
