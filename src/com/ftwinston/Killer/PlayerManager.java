@@ -293,9 +293,14 @@ public class PlayerManager
 	}
 	
 	public void colorPlayerName(Player player, ChatColor color)
-	{		
+	{
 		player.setDisplayName(color + ChatColor.stripColor(player.getDisplayName()));
-		player.setPlayerListName(color + ChatColor.stripColor(player.getPlayerListName()));
+		
+		// mustn't be > 16 chars, or it throws an exception
+		String name = ChatColor.stripColor(player.getPlayerListName());
+		if ( name.length() > 15 )
+			name = name.substring(0, 15);
+		player.setPlayerListName(color + name);
 	}
 
 	public void playerJoined(Player player)
