@@ -374,8 +374,11 @@ public class Killer extends JavaPlugin
 			// remove all user-placed portal, obsidian, chests, dispensers and furnaces? We'd have to track them being placed.
 			
 			getServer().broadcastMessage("Game is restarting, using the same world...");
- 
 			World defaultWorld = getServer().getWorlds().get(0);
+ 
+			if ( resetItems )
+				worldManager.removeAllItems(defaultWorld);
+			
 			for ( Player player : getServer().getOnlinePlayers() )
 				playerManager.putPlayerInWorld(player, defaultWorld);
 			

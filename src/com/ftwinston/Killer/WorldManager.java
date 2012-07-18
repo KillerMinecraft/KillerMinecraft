@@ -230,6 +230,18 @@ public class WorldManager
 			return world;
 		}
 		
+		public void removeItems(World world)
+		{
+			List<Entity> list = world.getEntities();
+			Iterator<Entity> entities = list.iterator();
+			while (entities.hasNext())
+			{
+				Entity entity = entities.next();
+				if (entity instanceof Item)
+					entity.remove();
+			}
+		}
+		
 		@SuppressWarnings("rawtypes")
 		private void bindRegionFiles()
 		{
