@@ -632,8 +632,11 @@ public class PlayerManager
 				player.setAllowFlight(false);
 			}
 
-			// fixme: reconnecting killer in invisible killer mode will become visible
-			makePlayerVisibleToAll(player);
+			if ( !wasAlive )
+			{
+				makePlayerVisibleToAll(player);
+				player.sendMessage("You are no longer a spectator.");
+			}
 		}
 		else
 		{
