@@ -61,7 +61,7 @@ public class TeamKiller extends GameMode
 	}
 	
 	@Override
-	public boolean informOfKillerAssignment(PlayerManager pm) { return true; }
+	public boolean informOfKillerAssignment(PlayerManager pm) { return false; }
 	
 	@Override
 	public boolean informOfKillerIdentity() { return true; }

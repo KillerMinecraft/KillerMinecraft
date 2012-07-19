@@ -14,6 +14,7 @@ import com.ftwinston.Killer.PlayerManager;
 import com.ftwinston.Killer.GameModes.CrazyKiller;
 import com.ftwinston.Killer.GameModes.InvisibleKiller;
 import com.ftwinston.Killer.GameModes.MysteryKiller;
+import com.ftwinston.Killer.GameModes.TeamKiller;
 
 public abstract class GameMode
 {
@@ -30,6 +31,10 @@ public abstract class GameMode
 		gameModes.put(g.getName(), g);
 		
 		g = new CrazyKiller();
+		g.plugin = killer;
+		gameModes.put(g.getName(), g);
+		
+		g = new TeamKiller();
 		g.plugin = killer;
 		gameModes.put(g.getName(), g);
 	}

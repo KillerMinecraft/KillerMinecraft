@@ -250,15 +250,18 @@ public class PlayerManager
 			{
 				entry.getValue().setKiller(true);
 				
-				String message = ChatColor.RED + "You are ";
-				message += numKillers > 1 || numKillersAssigned() > 1 ? "now a" : "the";
-				message += " killer!";
-				
-				if ( !plugin.getGameMode().informOfKillerAssignment(this) && !plugin.getGameMode().informOfKillerIdentity() )
-					message += ChatColor.WHITE + " No one else has been told a new killer was assigned.";
+				// don't show this in team killer mode, but do show it in mystery killer, even when assigning a new killer midgame and not telling everyone else
+				if ( plugin.getGameMode().informOfKillerAssignment(this) || !plugin.getGameMode().informOfKillerIdentity() )
+				{
+					String message = ChatColor.RED + "You are ";
+					message += numKillers > 1 || numKillersAssigned() > 1 ? "now a" : "the";
+					message += " killer!";
 					
-				player.sendMessage(message);
-				
+					if ( !plugin.getGameMode().informOfKillerAssignment(this) && !plugin.getGameMode().informOfKillerIdentity() )
+						message += ChatColor.WHITE + " No one else has been told a new killer was assigned.";
+						
+					player.sendMessage(message);
+				}
 				if ( plugin.getGameMode().informOfKillerIdentity() )
 				{
 					if ( plugin.getGameMode().informOfKillerAssignment(this) )
