@@ -78,7 +78,7 @@ public class InvisibleKiller extends GameMode
 		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
 			if ( entry.getValue().isKiller() && entry.getValue().isAlive() && !entry.getKey().equals(player.getName()) )
 			{
-				Player killer = plugin.getServer().getPlayerExact(entry.getKey())
+				Player killer = plugin.getServer().getPlayerExact(entry.getKey());
 				if ( killer != null && killer.isOnline() )
 					pm.hidePlayer(player, killer);
 			}

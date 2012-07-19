@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.Set;
 
 import net.minecraft.server.Packet201PlayerInfo;
+
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -291,7 +292,7 @@ public class PlayerManager
 	
 	public void colorPlayerName(Player player, ChatColor color)
 	{
-		string oldListName = player.getPlayerListName();
+		String oldListName = player.getPlayerListName();
 	
 		player.setDisplayName(color + ChatColor.stripColor(player.getDisplayName()));
 		
@@ -305,14 +306,14 @@ public class PlayerManager
 		for ( Player online : plugin.getServer().getOnlinePlayers() )
 			if ( !online.canSee(player) )
 			{
-				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999);
+				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999));
 				sendForScoreboard(online, player, true);
 			}
 	}
 	
 	public void clearPlayerNameColor(Player player)
 	{
-		string oldListName = player.getPlayerListName();
+		String oldListName = player.getPlayerListName();
 		
 		player.setDisplayName(ChatColor.stripColor(player.getDisplayName()));
 		player.setPlayerListName(ChatColor.stripColor(player.getPlayerListName()));
@@ -321,7 +322,7 @@ public class PlayerManager
 		for ( Player online : plugin.getServer().getOnlinePlayers() )
 			if ( !online.canSee(player) )
 			{
-				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999);
+				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999));
 				sendForScoreboard(online, player, true);
 			}
 	}
@@ -693,7 +694,7 @@ public class PlayerManager
 	
 	public void sendForScoreboard(Player viewer, Player other, boolean show)
 	{
-		((CraftPlayer)viewer).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(other.getPlayerListName(), show, show ? ((CraftPlayer)other).getHandle().ping) : 9999);
+		((CraftPlayer)viewer).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(other.getPlayerListName(), show, show ? ((CraftPlayer)other).getHandle().ping : 9999));
 	}
 	
 	public void makePlayerInvisibleToAll(Player player)
