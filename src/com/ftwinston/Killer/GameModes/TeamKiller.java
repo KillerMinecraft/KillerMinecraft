@@ -52,12 +52,12 @@ public class TeamKiller extends GameMode
 	}
 	
 	@Override
-	public String describePlayer(boolean killer)
+	public String describePlayer(boolean killer, boolean plural)
 	{
 		if ( killer )
-			return "red player";
+			return "red team";
 		else
-			return "blue player";
+			return "blue team";
 	}
 	
 	@Override

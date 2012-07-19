@@ -50,12 +50,12 @@ public class CrazyKiller extends GameMode
 	}
 	
 	@Override
-	public String describePlayer(boolean killer)
+	public String describePlayer(boolean killer, boolean plural)
 	{
 		if ( killer )
-			return "killer";
+			return plural ? "killers" : "killer";
 		else
-			return "friendly player";
+			return plural ? "friendly players" : "friendly player";
 	}
 	
 	@Override
