@@ -299,6 +299,12 @@ public class PlayerManager
 			name = name.substring(0, 15);
 		player.setPlayerListName(color + name);
 	}
+	
+	public void clearPlayerNameColor(Player player)
+	{
+		player.setDisplayName(ChatColor.stripColor(player.getDisplayName()));
+		player.setPlayerListName(ChatColor.stripColor(player.getPlayerListName()));
+	}
 
 	public void playerJoined(Player player)
 	{
@@ -418,6 +424,9 @@ public class PlayerManager
 			setAlive(player, true);
 			return;	
 		}
+		
+		if ( plugin.getGameMode().informOfKillerIdentity() )
+			plugin.playerManager.clearPlayerNameColor(player);
 		
 		setAlive(player, false);
 
@@ -688,8 +697,7 @@ public class PlayerManager
 			inv.setBoots(null);		
 		}
 		
-		player.setDisplayName(ChatColor.stripColor(player.getDisplayName()));
-		player.setPlayerListName(ChatColor.stripColor(player.getPlayerListName()));
+		clearPlayerNameColor(player);
 	}
 	
 	public void putPlayerInWorld(Player player, World world)
