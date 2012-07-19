@@ -233,8 +233,8 @@ public class Killer extends JavaPlugin
 				sender.sendMessage("Team chat is not available in " + getGameMode().getName() + " mode");
 				return true;
 			}
-		
-			if ( !(sender instanceof Player) )
+			
+			if ( playerManager.numKillersAssigned() == 0 || !(sender instanceof Player) )
 				return true;
 			
 			if ( args.length == 0 )
