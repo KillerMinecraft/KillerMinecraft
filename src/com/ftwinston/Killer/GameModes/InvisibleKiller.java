@@ -74,8 +74,19 @@ public class InvisibleKiller extends GameMode
 	@Override
 	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info, int numKillersAssigned)
 	{
+		// hide all killers from this player!
+		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
+			if ( entry.getValue().isKiller() && entry.getValue().isAlive() && !entry.getKey().equals(player.getName()) )
+			{
+				Player killer = plugin.getServer().getPlayerExact(entry.getKey())
+				if ( killer != null && killer.isOnline() )
+					pm.hidePlayer(player, killer);
+			}
+			
 		if ( info.isKiller() ) // inform them that they're still a killer
-			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (numKillersAssigned > 1 ? "a" : "the" ) + " killer, and you are invisible!"); 
+		{
+			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (numKillersAssigned > 1 ? "a" : "the" ) + " killer, and you are invisible!");
+		}
 		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
 		{
 			String message = "Welcome to Killer Minecraft! One player ";

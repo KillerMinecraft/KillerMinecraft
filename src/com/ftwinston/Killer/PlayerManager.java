@@ -291,6 +291,8 @@ public class PlayerManager
 	
 	public void colorPlayerName(Player player, ChatColor color)
 	{
+		string oldListName = player.getPlayerListName();
+	
 		player.setDisplayName(color + ChatColor.stripColor(player.getDisplayName()));
 		
 		// mustn't be > 16 chars, or it throws an exception
@@ -298,12 +300,30 @@ public class PlayerManager
 		if ( name.length() > 15 )
 			name = name.substring(0, 15);
 		player.setPlayerListName(color + name);
+		
+		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
+		for ( Player online : plugin.getServer().getOnlinePlayers() )
+			if ( !online.canSee(player) )
+			{
+				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999);
+				sendForScoreboard(online, player, true);
+			}
 	}
 	
 	public void clearPlayerNameColor(Player player)
 	{
+		string oldListName = player.getPlayerListName();
+		
 		player.setDisplayName(ChatColor.stripColor(player.getDisplayName()));
 		player.setPlayerListName(ChatColor.stripColor(player.getPlayerListName()));
+		
+		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
+		for ( Player online : plugin.getServer().getOnlinePlayers() )
+			if ( !online.canSee(player) )
+			{
+				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999);
+				sendForScoreboard(online, player, true);
+			}
 	}
 
 	public void playerJoined(Player player)
@@ -314,7 +334,7 @@ public class PlayerManager
 			{
 				Player other = plugin.getServer().getPlayerExact(entry.getKey());
 				if ( other != null && other.isOnline() )
-					player.hidePlayer(other);
+					hidePlayer(player, other);
 			}
 			
 		Info info = playerInfo.get(player.getName());
@@ -346,6 +366,11 @@ public class PlayerManager
 			
 			player.sendMessage(message);
 			setAlive(player, false);
+			
+			// send this player to everyone else's scoreboards, because they're now invisible, and won't show otherwise
+			for ( Player online : plugin.getServer().getOnlinePlayers() )
+				if ( online != player && !online.canSee(player) )
+					sendForScoreboard(online, player, true);
 		}
 		else
 		{
@@ -660,16 +685,21 @@ public class PlayerManager
 		}
 	}
 	
-	
-	public void sendForScoreboard(Player viewer, Player other)
+	public void hidePlayer(Player fromMe, Player hideMe)
 	{
-		((CraftPlayer)viewer).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(other.getPlayerListName(), true, ((CraftPlayer)other).getHandle().ping));
+		fromMe.hidePlayer(hideMe);
+		sendForScoreboard(fromMe, hideMe, true); // hiding will take them out of the scoreboard, so put them back in again
+	}
+	
+	public void sendForScoreboard(Player viewer, Player other, boolean show)
+	{
+		((CraftPlayer)viewer).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(other.getPlayerListName(), show, show ? ((CraftPlayer)other).getHandle().ping) : 9999);
 	}
 	
 	public void makePlayerInvisibleToAll(Player player)
 	{
 		for(Player p : plugin.getServer().getOnlinePlayers())
-			p.hidePlayer(player);
+			hidePlayer(p, player);
 	}
 	
 	public void makePlayerVisibleToAll(Player player)

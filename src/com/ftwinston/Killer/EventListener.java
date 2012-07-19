@@ -262,6 +262,11 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent p)
     {
+		// the quit message should be sent to the scoreboard of anyone who this player was invisible to
+		for ( Player online : plugin.getServer().getOnlinePlayers() )
+			if ( !online.canSee(player) )
+				sendForScoreboard(online, player, false);
+		
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(p.getPlayer().getName(), true), 600);
     }
     
