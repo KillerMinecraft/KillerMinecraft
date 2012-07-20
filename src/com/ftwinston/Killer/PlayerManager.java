@@ -738,7 +738,7 @@ public class PlayerManager
 	
 	public void putPlayerInWorld(Player player, World world)
 	{	
-		if ( player.isDead() || player.getWorld() == world )
+		if ( player.isDead() && player.getWorld() == world )
 			return;
 		
 		Location spawn = world.getSpawnLocation();

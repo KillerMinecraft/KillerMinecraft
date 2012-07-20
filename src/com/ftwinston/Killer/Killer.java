@@ -379,11 +379,11 @@ public class Killer extends JavaPlugin
 			getServer().broadcastMessage("Game is restarting, using the same world...");
 			World defaultWorld = getServer().getWorlds().get(0);
  
-			worldManager.removeAllItems(defaultWorld);
-			defaultWorld.setTime(0);
-			
 			for ( Player player : getServer().getOnlinePlayers() )
 				playerManager.putPlayerInWorld(player, defaultWorld);
+			
+			worldManager.removeAllItems(defaultWorld);
+			defaultWorld.setTime(0);
 			
 			playerManager.reset(true);
 			gameMode.explainGameModeForAll(playerManager);
