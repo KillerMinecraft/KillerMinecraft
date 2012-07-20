@@ -81,7 +81,7 @@ public class InvisibleKiller extends GameMode
 		else
 			message += "One player " + (pm.numKillersAssigned() > 0 ? "has been" : "will soon be");
 		
-		message += " randomly chosen to be the killer, and must kill everyone else. "(isKiller ? "You" : "They") + (numKillersAssigned() > 0 ? "are" : "will be") + " invisible, but will become briefly visible when damaged. " + (isKiller ? "You" : "They") + " cannot be hit while invisible, except by ranged weapons, and also have a compass that points at the other players.\nThe other players are each given an infinity bow and splash damage potions, and their compasses will point at the killer. To win, they must kill the killer, or bring a ";
+		message += " randomly chosen to be the killer, and must kill everyone else. " + (isKiller ? "You" : "They") + (pm.numKillersAssigned() > 0 ? "are" : "will be") + " invisible, but will become briefly visible when damaged. " + (isKiller ? "You" : "They") + " cannot be hit while invisible, except by ranged weapons, and also have a compass that points at the other players.\nThe other players are each given an infinity bow and splash damage potions, and their compasses will point at the killer. To win, they must kill the killer, or bring a ";
 			
 		message += plugin.tidyItemName(plugin.winningItems[0]);
 		

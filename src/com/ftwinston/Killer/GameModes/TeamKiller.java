@@ -72,7 +72,6 @@ public class TeamKiller extends GameMode
 	@Override
 	public void explainGameMode(Player player, PlayerManager pm)
 	{
-		boolean isKiller = pm.isKiller(player.getName());
 		String message = getName() + "\n";
 		message += "Players " + (pm.numKillersAssigned() > 0 ? "have been" : "will soon be") + " split into two teams, and each team must race to bring a ";
 			

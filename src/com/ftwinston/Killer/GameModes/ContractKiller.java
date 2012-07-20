@@ -8,8 +8,9 @@ import com.ftwinston.Killer.PlayerManager;
 import com.ftwinston.Killer.PlayerManager.Info;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.Material;
 
 public class ContractKiller extends GameMode
@@ -61,7 +62,6 @@ public class ContractKiller extends GameMode
 	@Override
 	public void explainGameMode(Player player, PlayerManager pm)
 	{
-		boolean isKiller = pm.isKiller(player.getName());
 		String message = getName() + "\n";
 		message += "Everyone " + (pm.numKillersAssigned() > 0 ? "has been" : "will soon be") + " assigned a target, and they must try and kill this player without being seen doing so by anybody else. Your compass will point towards your victim, and if anyone sees you kill them, you will die instead of them. Remember that someone else is hunting you! If you kill anyone other than your target or your hunter, you will die instead of them.\nWhen you kill your target, you are assigned their target, and the game continues until only one player remains alive.";
 		player.sendMessage(message);
@@ -76,18 +76,16 @@ public class ContractKiller extends GameMode
 			
 			if ( pm.numKillersAssigned() == 0 )
 				return;
-		
-			PlayerManager.Info info = pm.getInfo(player.getName());
-		
+				
 			// pick a player to be this player's hunter. This player's victim will be the hunter's victim.
 			int numCandidates = 0;
 			for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-				if ( entry.isAlive() && entry.isKiller() )
+				if ( entry.getValue().isAlive() && entry.getValue().isKiller() )
 					numCandidates ++;
 			
-			int hunterIndex = r.nextInt(numCandidates), int i = 0;
+			int hunterIndex = r.nextInt(numCandidates), i = 0;
 			for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-				if ( entry.isAlive() && entry.isKiller() )
+				if ( entry.getValue().isAlive() && entry.getValue().isKiller() )
 					if ( i == hunterIndex )
 					{
 						info.target = entry.getValue().target;
@@ -109,7 +107,6 @@ public class ContractKiller extends GameMode
 		{
 			String message = "Welcome back.";
 			
-			PlayerManager.Info info = pm.getInfo(player.getName());
 			if ( info != null && info.target != null )
 				message += " Your target is: " +  ChatColor.YELLOW + info.target + ChatColor.RESET + "!";
 				
@@ -120,10 +117,10 @@ public class ContractKiller extends GameMode
 	@Override
 	public void playerKilled(Player player, PlayerManager pm, PlayerManager.Info info)
 	{
-		if ( numSurvivors() > 1 ) 
+		if ( pm.numSurvivors() > 1 ) 
 			// find this player's hunter ... change their target to this player's target
 			for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-				if ( player.getName().equals(entry.getValue().target)
+				if ( player.getName().equals(entry.getValue().target) )
 				{
 					entry.getValue().target = info.target;
 					Player hunterPlayer = plugin.getServer().getPlayerExact(entry.getKey());
@@ -134,9 +131,7 @@ public class ContractKiller extends GameMode
 			
 		info.target = null;
 	}
-	
-	private final int teamSeparationOffset = 25;
-	
+		
 	@Override
 	public void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer)
 	{

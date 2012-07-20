@@ -96,7 +96,7 @@ public class PlayerManager
 		}
 		
 		// spectator target, and also kill target in Contract Killer mode
-		String target;
+		public String target;
 	}
 	
 	private Map<String, Info> playerInfo = new LinkedHashMap<String, Info>();
@@ -378,7 +378,7 @@ public class PlayerManager
 		}
 		else
 		{
-			plugin.getGameMode().playerJoined(player, this, isNewPlayer, info, numKillersAssigned());
+			plugin.getGameMode().playerJoined(player, this, isNewPlayer, info);
 			
 			if ( info.isAlive() )
 			{

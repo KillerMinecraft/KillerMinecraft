@@ -97,7 +97,7 @@ public class MysteryKiller extends GameMode
 		if ( info.isKiller() ) // inform them that they're still a killer
 			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (pm.numKillersAssigned() > 1 ? "a" : "the" ) + " killer!"); 
 		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
-			player.sendMessage("Welcome to Killer Minecraft!")
+			player.sendMessage("Welcome to Killer Minecraft!");
 		else
 			player.sendMessage("Welcome back. You are not the killer, and you're still alive.");
 	}
