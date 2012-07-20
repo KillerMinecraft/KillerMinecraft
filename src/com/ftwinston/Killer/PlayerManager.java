@@ -433,9 +433,10 @@ public class PlayerManager
 	public void playerKilled(String playerName)
 	{
 		Player player = plugin.getServer().getPlayerExact(playerName);
+		Info info = playerInfo.get(playerName);
+		
 		if ( player == null || !player.isOnline() )
 		{
-			Info info = playerInfo.get(playerName);
 			if ( info != null )
 			{
 				info.setAlive(false);
@@ -443,7 +444,8 @@ public class PlayerManager
 				{
 					if ( plugin.banOnDeath )
 						player.setBanned(true);
-				
+
+					plugin.getGameMode().playerKilled(player, this, info);
 					plugin.getGameMode().checkForEndOfGame(this, null, null);
 				}
 			}
@@ -467,6 +469,7 @@ public class PlayerManager
 			player.kickPlayer("You died, and are now banned until the end of the game");
 		}
 		
+		plugin.getGameMode().playerKilled(player, this, info);
 		plugin.getGameMode().checkForEndOfGame(this, null, null);
 	}
 	
