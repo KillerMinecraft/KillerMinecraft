@@ -201,7 +201,7 @@ public class VoteManager
         final NumericPrompt restartPrompt = new NumericPrompt() {
         	public String getPromptText(ConversationContext context)
 			{
-				return "How do you want to restart?\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " In the same world, keeping items\n" + ChatColor.GOLD + "2." + ChatColor.RESET + " In the same world, removing items\n" + ChatColor.GOLD + "3." + ChatColor.RESET + " In a new world\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
+				return "How do you want to restart?\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " In the same world\n" + ChatColor.GOLD + "3." + ChatColor.RESET + " In a new world\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
 			}
 			
 			protected Prompt acceptValidatedInput(ConversationContext context, Number val)
@@ -212,26 +212,18 @@ public class VoteManager
 					return cantVotePrompt;
 				
 				else if ( val.intValue() == 1 )
-					startVote("End this round, and start a new round with the same world & items?", player, new Runnable() {
+					startVote("End this round, and start a new round with the same world?", player, new Runnable() {
 						public void run()
 						{
-							plugin.restartGame(true, false);
+							plugin.restartGame(true);
 						}
 					}, null, null);
 				
 				else if ( val.intValue() == 2 )
-					startVote("End this round, and start a new round with the same world, removing all players' items?", player, new Runnable() {
-						public void run()
-						{
-							plugin.restartGame(true, true);
-						}
-					}, null, null);
-				
-				else if ( val.intValue() == 3 )
 					startVote("End this round, and start a new round in a new world?", player, new Runnable() {
 						public void run()
 						{
-							plugin.restartGame(false, true);
+							plugin.restartGame(false);
 						}
 					}, null, null);
 				

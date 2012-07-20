@@ -549,7 +549,7 @@ public class PlayerManager
 				@Override
 				public void run()
 				{
-	    			plugin.restartGame(false, true);					
+	    			plugin.restartGame(false);					
 				}
 	    	}, 200L);
 		}
@@ -558,18 +558,18 @@ public class PlayerManager
 			Runnable yesResult = new Runnable() {
 				public void run()
 				{
-					plugin.restartGame(true, false);
+					plugin.restartGame(true);
 				}
 			};
 			
 			Runnable noResult = new Runnable() {
 				public void run()
 				{
-					plugin.restartGame(false, true);
+					plugin.restartGame(false);
 				}
 			};
 			
-			plugin.voteManager.startVote("Start next round with the same world & items?", null, yesResult, noResult, noResult);
+			plugin.voteManager.startVote("Start next round with the same world?", null, yesResult, noResult, noResult);
 		}
 	}
 	

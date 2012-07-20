@@ -313,12 +313,12 @@ public class Killer extends JavaPlugin
 				if ( args[1].equalsIgnoreCase("same") )
 				{
 					getServer().broadcastMessage(sender.getName() + " is restarting the game in the same world");
-					restartGame(true,  true);
+					restartGame(true);
 				}
 				else if ( args[1].equalsIgnoreCase("new") )
 				{
 					getServer().broadcastMessage(sender.getName() + " is restarting the game in a new world");
-					restartGame(false,  true);
+					restartGame(false);
 				}
 				else
 					sender.sendMessage("Usage: /killer restart new (for new world), or /killer restart same (for same world)");
@@ -359,7 +359,7 @@ public class Killer extends JavaPlugin
 		return plinthPressurePlateLocation;
 	}
 	
-	public void restartGame(boolean useSameWorld, boolean resetItems)
+	public void restartGame(boolean useSameWorld)
 	{
 		if ( restarting )
 			return;
@@ -376,21 +376,16 @@ public class Killer extends JavaPlugin
 		
 		if ( useSameWorld )
 		{
-			// what should we do to the world on restart if we're not deleting it?
-			// remove all user-placed portal, obsidian, chests, dispensers and furnaces? We'd have to track them being placed.
-			
 			getServer().broadcastMessage("Game is restarting, using the same world...");
 			World defaultWorld = getServer().getWorlds().get(0);
  
-			if ( resetItems )
-				worldManager.removeAllItems(defaultWorld);
-			
+			worldManager.removeAllItems(defaultWorld);
 			defaultWorld.setTime(0);
 			
 			for ( Player player : getServer().getOnlinePlayers() )
 				playerManager.putPlayerInWorld(player, defaultWorld);
 			
-			playerManager.reset(resetItems);
+			playerManager.reset(true);
 			gameMode.explainGameModeForAll(playerManager);
 			playerManager.checkImmediateKillerAssignment();
 		}
@@ -402,14 +397,14 @@ public class Killer extends JavaPlugin
 		{
 			restarting = true;
 			getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
-			playerManager.reset(resetItems);
+			playerManager.reset(true);
 			worldManager.deleteWorlds(new Runnable() {
 				public void run()
 				{
 					if ( getGameMode().usesPlinth() )
 						plinthPressurePlateLocation = worldManager.createPlinth(getServer().getWorlds().get(0));
 					
-					playerManager.reset(false);
+					playerManager.reset(true);
 					restarting = false;
 					gameMode.explainGameModeForAll(playerManager);
 					playerManager.checkImmediateKillerAssignment();
