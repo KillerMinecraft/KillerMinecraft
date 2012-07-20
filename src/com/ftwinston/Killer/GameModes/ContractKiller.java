@@ -138,14 +138,17 @@ public class ContractKiller extends GameMode
 	private final int teamSeparationOffset = 25;
 	
 	@Override
-	public void prepareKiller(Player player, PlayerManager pm)
+	public void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
+		if ( !isNewPlayer )
+			return; // don't give items when rejoining
+		
 		PlayerInventory inv = player.getInventory();
 		inv.addItem(new ItemStack(Material.COMPASS, 1));
 	}
 	
 	@Override
-	public void prepareFriendly(Player player, PlayerManager pm)
+	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
 	}
 	

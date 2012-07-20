@@ -133,10 +133,13 @@ public class TeamKiller extends GameMode
 	private final int teamSeparationOffset = 25;
 	
 	@Override
-	public void prepareKiller(Player player, PlayerManager pm)
+	public void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
 		player.sendMessage("You are on the " + ChatColor.RED + "red" + ChatColor.RESET + " team.");
 		
+		if ( !isNewPlayer )
+			return; // don't do the teleport thing when reconnecting
+			
 		Location moveTo = player.getWorld().getSpawnLocation();
 		moveTo.setZ(moveTo.getZ() + teamSeparationOffset + r.nextDouble() * 6);
 		moveTo.setX(moveTo.getX() + r.nextDouble() * 6);
@@ -146,10 +149,13 @@ public class TeamKiller extends GameMode
 	}
 	
 	@Override
-	public void prepareFriendly(Player player, PlayerManager pm)
+	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
 		player.sendMessage("You are on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
 		
+		if ( !isNewPlayer )
+			return; // don't do the teleport thing when reconnecting
+			
 		Location moveTo = player.getWorld().getSpawnLocation();
 		moveTo.setZ(moveTo.getZ() - teamSeparationOffset - r.nextDouble() * 6);
 		moveTo.setX(moveTo.getX() + r.nextDouble() * 6);

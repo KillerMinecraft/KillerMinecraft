@@ -68,8 +68,8 @@ public abstract class GameMode
 	public abstract void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info);
 	public void playerKilled(Player player, PlayerManager pm, PlayerManager.Info info) { }
 	
-	public abstract void prepareKiller(Player player, PlayerManager pm);
-	public abstract void prepareFriendly(Player player, PlayerManager pm);
+	public abstract void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer);
+	public abstract void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer);
 	
 	public abstract void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth);
 	

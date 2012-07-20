@@ -269,7 +269,7 @@ public class PlayerManager
 					colorPlayerName(player, ChatColor.RED);
 				}
 				
-				plugin.getGameMode().prepareKiller(player, this);
+				plugin.getGameMode().prepareKiller(player, this, true);
 				
 				nextIndex ++;
 				
@@ -279,7 +279,7 @@ public class PlayerManager
 			}
 			else if ( !isKiller(player.getName()) )
 			{
-				plugin.getGameMode().prepareFriendly(player, this);
+				plugin.getGameMode().prepareFriendly(player, this, true);
 				
 				if ( plugin.getGameMode().informOfKillerIdentity() )
 					colorPlayerName(player, ChatColor.BLUE);
@@ -385,9 +385,9 @@ public class PlayerManager
 				setAlive(player, true);
 				
 				if ( info.isKiller() )
-					plugin.getGameMode().prepareKiller(player, this);
+					plugin.getGameMode().prepareKiller(player, this, isNewPlayer);
 				else
-					plugin.getGameMode().prepareFriendly(player, this);
+					plugin.getGameMode().prepareFriendly(player, this, isNewPlayer);
 				
 				if ( plugin.getGameMode().informOfKillerIdentity() )
 					colorPlayerName(player, info.isKiller() ? ChatColor.RED : ChatColor.BLUE);

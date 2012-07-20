@@ -103,8 +103,11 @@ public class MysteryKiller extends GameMode
 	}
 	
 	@Override
-	public void prepareKiller(Player player, PlayerManager pm)
+	public void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
+		if ( !isNewPlayer )
+			return; // don't let the killer rejoin to get more items
+	
 		PlayerInventory inv = player.getInventory();
 		int numFriendlies = pm.numSurvivors() - pm.numKillersAssigned();
 		
@@ -237,9 +240,8 @@ public class MysteryKiller extends GameMode
 	}
 	
 	@Override
-	public void prepareFriendly(Player player, PlayerManager pm)
+	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
-		
 	}
 	
 	@Override

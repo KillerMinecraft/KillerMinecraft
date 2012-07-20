@@ -118,11 +118,14 @@ public class InvisibleKiller extends GameMode
 	}
 	
 	@Override
-	public void prepareKiller(Player player, PlayerManager pm)
+	public void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
 		pm.makePlayerInvisibleToAll(player);
 		player.sendMessage("You are invisible");
 		
+		if ( !isNewPlayer )
+			return; // don't teleport or give new items on rejoining
+			
 		PlayerInventory inv = player.getInventory();
 		inv.addItem(new ItemStack(Material.COMPASS, 1));
 		inv.addItem(new ItemStack(Material.COOKED_BEEF, 10));
@@ -146,10 +149,13 @@ public class InvisibleKiller extends GameMode
 	}
 	
 	@Override
-	public void prepareFriendly(Player player, PlayerManager pm)
+	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
 		PlayerInventory inv = player.getInventory();
 		
+		if ( !isNewPlayer )
+			return; // don't give items on rejoining
+			
 		ItemStack stack = new ItemStack(Material.BOW, 1);
 		stack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
 		inv.addItem(stack);

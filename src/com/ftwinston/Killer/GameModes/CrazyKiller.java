@@ -105,9 +105,12 @@ public class CrazyKiller extends GameMode
 	}
 	
 	@Override
-	public void prepareKiller(Player player, PlayerManager pm)
+	public void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
 		player.sendMessage("Every dirt block you pick up will turn into TNT...");
+		
+		if ( !isNewPlayer )
+			return; // don't teleport or give new items on rejoining
 		
 		PlayerInventory inv = player.getInventory();
 		inv.addItem(new ItemStack(Material.COMPASS, 1));
@@ -139,8 +142,11 @@ public class CrazyKiller extends GameMode
 	}
 	
 	@Override
-	public void prepareFriendly(Player player, PlayerManager pm)
+	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
+		if ( !isNewPlayer )
+			return; // don't give items on rejoining
+			
 		PlayerInventory inv = player.getInventory();
 		inv.addItem(new ItemStack(Material.IRON_SWORD, 1));
 	}
