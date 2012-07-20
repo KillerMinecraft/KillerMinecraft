@@ -70,28 +70,34 @@ public class TeamKiller extends GameMode
 	public boolean immediateKillerAssignment() { return true; }
 	
 	@Override
-	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info, int numKillersAssigned)
+	public void explainGameMode(Player player, PlayerManager pm)
+	{
+		boolean isKiller = pm.isKiller(player.getName());
+		String message = getName() + "\n";
+		message += "Players " + (pm.numKillersAssigned() > 0 ? "have been" : "will soon be") + " split into two teams, and each team must race to bring a ";
+			
+		message += plugin.tidyItemName(plugin.winningItems[0]);
+		
+		if ( plugin.winningItems.length > 1 )
+		{
+			for ( int i=1; i<plugin.winningItems.length-1; i++)
+				message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
+			
+			message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+		}
+		
+		message += " to the plinth near the spawn, or to eliminate the other.\nUse the scoreboard to check what team each player is on.";
+		player.sendMessage(message);
+	}
+	
+	@Override
+	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
 	{
 		if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
 		{
-			String message = "Welcome to Killer Minecraft! Players ";
-			message += numKillersAssigned > 0 ? "have been" : "will soon be";
-			message += " split into two teams, and the teams must race to bring a ";
+			player.sendMessage("Welcome to Killer Minecraft!");
 			
-			message += plugin.tidyItemName(plugin.winningItems[0]);
-			
-			if ( plugin.winningItems.length > 1 )
-			{
-				for ( int i=1; i<plugin.winningItems.length-1; i++)
-					message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
-				
-				message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
-			}
-			
-			message += " to the plinth near the spawn, or to eliminate each other.";
-			player.sendMessage(message);
-			
-			if ( numKillersAssigned > 0 )
+			if ( pm.numKillersAssigned() > 0 )
 			{
 				// add them to whichever team has fewest left alive
 				int numFriendliesAlive = 0, numKillersAlive = 0;
@@ -120,10 +126,8 @@ public class TeamKiller extends GameMode
 					plugin.getServer().broadcastMessage(player.getName() + " is on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
 			}
 		}
-		else if ( info.isKiller() ) // inform them that they're still a killer
-			player.sendMessage("Welcome back. You are on the " + ChatColor.RED + "red" + ChatColor.RESET + " team."); 
 		else
-			player.sendMessage("Welcome back. You are on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
+			player.sendMessage("Welcome back.");
 	}
 	
 	private final int teamSeparationOffset = 25;

@@ -266,6 +266,12 @@ public class Killer extends JavaPlugin
 			
 			return true;
 		}
+		else if (cmd.getName().equalsIgnoreCase("help"))
+		{
+			if ( sender instanceof Player )
+				getGameMode().explainGameMode((Player)sender, playerManager);
+			return true;
+		}
 		else if (cmd.getName().equalsIgnoreCase("killer"))
 		{
 			if ( sender instanceof Player && !((Player)sender).isOp() )
@@ -276,7 +282,7 @@ public class Killer extends JavaPlugin
 			
 			if ( args.length == 0 )
 			{
-				sender.sendMessage("Usage: /killer add, /killer clear, /killer reallocate, /killer restart");
+				sender.sendMessage("Usage: /killer mode, /killer restart, /killer add, /killer clear, /killer reallocate");
 				return true;
 			}
 			
@@ -321,7 +327,7 @@ public class Killer extends JavaPlugin
 			{
 				if ( args.length < 2 )
 				{
-					sender.sendMessage("Usage: /killer mode <game mode>");
+					sender.sendMessage("Current game mode is " + getGameMode().getName());
 					return true;
 				}
 				String mode = args[1];
@@ -385,6 +391,7 @@ public class Killer extends JavaPlugin
 				playerManager.putPlayerInWorld(player, defaultWorld);
 			
 			playerManager.reset(resetItems);
+			gameMode.explainGameModeForAll(playerManager);
 			playerManager.checkImmediateKillerAssignment();
 		}
 		else if ( stopServerToRecreateWorld )
@@ -404,6 +411,7 @@ public class Killer extends JavaPlugin
 					
 					playerManager.reset(false);
 					restarting = false;
+					gameMode.explainGameModeForAll(playerManager);
 					playerManager.checkImmediateKillerAssignment();
 				}
 			});

@@ -398,6 +398,8 @@ public class PlayerManager
 				player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
 			}
 		}
+		if ( isNewPlayer );
+			plugin.getGameMode().explainGameMode(player, this);
 		
 		if ( numKillersAssigned() == 0 )
 		{

@@ -58,7 +58,14 @@ public abstract class GameMode
 	public abstract boolean informOfKillerAssignment(PlayerManager pm);
 	public abstract boolean informOfKillerIdentity();
 	
-	public abstract void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info, int numKillersAssigned);
+	public abstract void explainGameMode(Player player, PlayerManager pm);
+	public void explainGameModeForAll(PlayerManager pm)
+	{
+		for ( Player player : plugin.getServer().getOnlinePlayers() )
+			explainGameMode(player, pm);
+	}
+	
+	public abstract void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info);
 	public abstract void prepareKiller(Player player, PlayerManager pm);
 	public abstract void prepareFriendly(Player player, PlayerManager pm);
 	

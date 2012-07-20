@@ -72,7 +72,33 @@ public class InvisibleKiller extends GameMode
 	public boolean immediateKillerAssignment() { return true; }
 	
 	@Override
-	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info, int numKillersAssigned)
+	public void explainGameMode(Player player, PlayerManager pm)
+	{
+		boolean isKiller = pm.isKiller(player.getName());
+		String message = getName() + "\n";
+		if ( isKiller )
+			message += "You have been";
+		else
+			message += "One player " + (pm.numKillersAssigned() > 0 ? "has been" : "will soon be");
+		
+		message += " randomly chosen to be the killer, and must kill everyone else. "(isKiller ? "You" : "They") + (numKillersAssigned() > 0 ? "are" : "will be") + " invisible, but will become briefly visible when damaged. " + (isKiller ? "You" : "They") + " cannot be hit while invisible, except by ranged weapons, and also have a compass that points at the other players.\nThe other players are each given an infinity bow and splash damage potions, and their compasses will point at the killer. To win, they must kill the killer, or bring a ";
+			
+		message += plugin.tidyItemName(plugin.winningItems[0]);
+		
+		if ( plugin.winningItems.length > 1 )
+		{
+			for ( int i=1; i<plugin.winningItems.length-1; i++)
+				message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
+			
+			message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+		}
+		
+		message += " to the plinth near the spawn.";
+		player.sendMessage(message);
+	}
+	
+	@Override
+	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
 	{
 		// hide all killers from this player!
 		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
@@ -82,30 +108,11 @@ public class InvisibleKiller extends GameMode
 				if ( killer != null && killer.isOnline() )
 					pm.hidePlayer(player, killer);
 			}
-			
+		
 		if ( info.isKiller() ) // inform them that they're still a killer
-		{
-			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (numKillersAssigned > 1 ? "a" : "the" ) + " killer, and you are invisible!");
-		}
+			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (pm.numKillersAssigned() > 1 ? "a" : "the" ) + " killer, and you are invisible!");
 		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
-		{
-			String message = "Welcome to Killer Minecraft! One player ";
-			message += numKillersAssigned > 0 ? "has been" : "will soon be";
-			message += " assigned as the killer, and must kill the rest. They will be invisible, but will become briefly visible when damaged. To win, the other players must bring a ";
-			
-			message += plugin.tidyItemName(plugin.winningItems[0]);
-			
-			if ( plugin.winningItems.length > 1 )
-			{
-				for ( int i=1; i<plugin.winningItems.length-1; i++)
-					message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
-				
-				message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
-			}
-			
-			message += " to the plinth near the spawn. To help, they all get infinity bows and splash damage potions, and compasses will point at the killer.";
-			player.sendMessage(message);
-		}
+			player.sendMessage("Welcome to Killer Minecraft!");
 		else
 			player.sendMessage("Welcome back. You are not the killer, and you're still alive.");
 	}

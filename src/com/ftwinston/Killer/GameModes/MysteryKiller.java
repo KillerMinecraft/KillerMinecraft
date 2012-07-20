@@ -66,15 +66,16 @@ public class MysteryKiller extends GameMode
 	public boolean immediateKillerAssignment() { return false; }
 	
 	@Override
-	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info, int numKillersAssigned)
+	public void explainGameMode(Player player, PlayerManager pm)
 	{
-		if ( info.isKiller() ) // inform them that they're still a killer
-			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (numKillersAssigned > 1 ? "a" : "the" ) + " killer!"); 
-		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
-		{
-			String message = "Welcome to Killer Minecraft! One player ";
-			message += numKillersAssigned > 0 ? "has been" : "will soon be";
-			message += " assigned as the killer, and must kill the rest. To win, the other players must bring a ";
+		boolean isKiller = pm.isKiller(player.getName());
+		String message = getName() + "\n";
+		if ( isKiller )
+			message += "You have been";
+		else
+			message += "One player " + (pm.numKillersAssigned() > 0 ? "has been" : "will soon be");
+		
+		message += " randomly chosen to be the killer, and must kill everyone else. No one else knows who the killer is, and to win, the other players must bring a ";
 			
 			message += plugin.tidyItemName(plugin.winningItems[0]);
 			
@@ -86,9 +87,17 @@ public class MysteryKiller extends GameMode
 				message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
 			}
 			
-			message += " to the plinth near the spawn.";
+			message += " to the plinth near the spawn.\nThe other players will not automatically win when the killer is killed, and another killer may be assigned once the first one is dead.";
 			player.sendMessage(message);
-		}
+	}
+	
+	@Override
+	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
+	{
+		if ( info.isKiller() ) // inform them that they're still a killer
+			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (pm.numKillersAssigned() > 1 ? "a" : "the" ) + " killer!"); 
+		else if ( isNewPlayer ) // this is a new player, tell them the rules & state of the game
+			player.sendMessage("Welcome to Killer Minecraft!")
 		else
 			player.sendMessage("Welcome back. You are not the killer, and you're still alive.");
 	}

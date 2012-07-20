@@ -12,3 +12,5 @@ commands:
     usage: Send a message only to team members, in game modes other than Mystery Killer and Contract Killer
   killer:
     usage: Admin commands to change the killer & restart the game. Only usable by op / console.
+  help:
+    usage: Shows information about the current game mode.
