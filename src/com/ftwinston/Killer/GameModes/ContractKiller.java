@@ -3,7 +3,6 @@ package com.ftwinston.Killer.GameModes;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.PlayerManager;
@@ -18,8 +17,6 @@ import org.bukkit.Material;
 
 public class ContractKiller extends GameMode
 {
-	Random r = new Random();
-	
 	@Override
 	public String getName() { return "Contract Killer"; }
 	
@@ -35,6 +32,9 @@ public class ContractKiller extends GameMode
 	@Override
 	public boolean friendliesCompassPointsAtKiller() { return false; }
 
+	@Override
+	public boolean compassPointsAtTarget() { return true; }
+	
 	@Override
 	public boolean discreteDeathMessages() { return false; }
 

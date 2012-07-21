@@ -78,7 +78,17 @@ public class Killer extends JavaPlugin
         	{
 	        	for ( Player player : instance.getServer().getOnlinePlayers() )
 	        		if ( playerManager.isAlive(player.getName()) && player.getInventory().contains(Material.COMPASS) )
-	        			if ( playerManager.isKiller(player.getName()) )
+	        			if ( getGameMode().compassPointsAtTarget() )
+	        			{
+    						String targetName = playerManager.getInfo(player.getName()).target;
+    						if ( targetName != null )
+    						{
+    							Player targetPlayer = getServer().getPlayerExact(targetName);
+    							if ( targetPlayer != null && targetPlayer.isOnline() && targetPlayer.getWorld() == player.getWorld() )
+    								player.setCompassTarget(targetPlayer.getLocation());
+    						}
+	        			}
+	        			else if ( playerManager.isKiller(player.getName()) )
 	        			{
 	        				if ( getGameMode().killersCompassPointsAtFriendlies() )
 			        			player.setCompassTarget(playerManager.getNearestPlayerTo(player, true));	

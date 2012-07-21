@@ -658,7 +658,7 @@ public class PlayerManager
 	
     public void checkPlayerCompassTarget(Player player)
     {
-    	if ( plugin.getGameMode().usesPlinth() && player.getWorld().getEnvironment() == Environment.NORMAL )
+    	if ( plugin.getGameMode().usesPlinth() && player.getWorld().getEnvironment() == Environment.NORMAL && !plugin.getGameMode().compassPointsAtTarget() )
 		{
 			if ( isKiller(player.getName()) )
 			{

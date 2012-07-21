@@ -55,6 +55,7 @@ public abstract class GameMode
 	public abstract int absMinPlayers();
 	public abstract boolean killersCompassPointsAtFriendlies();
 	public abstract boolean friendliesCompassPointsAtKiller();
+	public boolean compassPointsAtTarget() { return false; }
 	public abstract boolean discreteDeathMessages();
 	public abstract boolean usesPlinth();
 	public abstract int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers);
