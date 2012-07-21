@@ -1,5 +1,7 @@
 package com.ftwinston.Killer.GameModes;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -8,6 +10,7 @@ import com.ftwinston.Killer.PlayerManager;
 import com.ftwinston.Killer.PlayerManager.Info;
 
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -42,6 +45,61 @@ public class ContractKiller extends GameMode
 	public int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers)
 	{
 		return numAlive - numAliveKillers;
+	}
+	
+	public boolean assignKillers(int numKillers, CommandSender sender, PlayerManager pm)
+	{
+		List<Map.Entry<String, Info>> players = new LinkedList<Map.Entry<String, Info>>();
+		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
+			if ( entry.getValue().isAlive() )
+				players.add(entry);
+		
+		if ( players.size() < absMinPlayers() )
+		{
+			String message = "Insufficient players to assign a killer. A minimum of " + absMinPlayers() + " players are required.";
+			if ( sender != null )
+				sender.sendMessage(message);
+			if ( informOfKillerAssignment(pm) )
+				plugin.getServer().broadcastMessage(message);
+			return false;
+		}
+		
+		
+		if ( !plugin.statsManager.isTracking )
+			plugin.statsManager.gameStarted(pm.numSurvivors());
+		
+		Map.Entry<String, Info> firstOne = players.remove(r.nextInt(players.size()));
+		Map.Entry<String, Info> prevOne = firstOne;
+		
+		while ( players.size() > 0 )
+		{
+			Map.Entry<String, Info> current = players.remove(r.nextInt(players.size())); 
+			prevOne.getValue().target = current.getKey();
+			
+			Player hunterPlayer = plugin.getServer().getPlayerExact(prevOne.getKey());
+			if ( hunterPlayer != null && hunterPlayer.isOnline() )
+				hunterPlayer.sendMessage("Your target is: " +  ChatColor.YELLOW + current.getKey() + ChatColor.RESET + "!");
+			prevOne = current;
+			
+			plugin.statsManager.killerAdded();
+			if ( sender != null )
+				plugin.statsManager.killerAddedByAdmin();
+		}
+		
+		prevOne.getValue().target = firstOne.getKey();
+		
+		Player hunterPlayer = plugin.getServer().getPlayerExact(prevOne.getKey());
+		if ( hunterPlayer != null && hunterPlayer.isOnline() )
+			hunterPlayer.sendMessage("Your target is: " +  ChatColor.YELLOW + firstOne.getKey() + ChatColor.RESET + "!");
+		
+		plugin.statsManager.killerAdded();
+		if ( sender != null )
+			plugin.statsManager.killerAddedByAdmin();
+		
+
+		plugin.getServer().broadcastMessage("All players have been allocated a target to kill");
+
+		return true;
 	}
 	
 	@Override

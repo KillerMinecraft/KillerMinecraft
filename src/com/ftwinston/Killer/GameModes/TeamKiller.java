@@ -1,7 +1,6 @@
 package com.ftwinston.Killer.GameModes;
 
 import java.util.Map;
-import java.util.Random;
 
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.PlayerManager;
@@ -13,9 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.Material;
 
 public class TeamKiller extends GameMode
-{
-	Random r = new Random();
-	
+{	
 	@Override
 	public String getName() { return "Team Killer"; }
 	
