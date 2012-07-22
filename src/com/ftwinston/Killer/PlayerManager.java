@@ -589,12 +589,15 @@ public class PlayerManager
 
 	public void resetPlayer(Player player, boolean resetInventory)
 	{
-		player.setTotalExperience(0);
-		player.setHealth(player.getMaxHealth());
-		player.setFoodLevel(20);
-		player.setSaturation(20);
-		player.setExhaustion(0);
-		player.setFireTicks(0);
+		if ( !player.isDead() )
+		{
+			player.setTotalExperience(0);
+			player.setHealth(player.getMaxHealth());
+			player.setFoodLevel(20);
+			player.setSaturation(20);
+			player.setExhaustion(0);
+			player.setFireTicks(0);
+		}
 		
 		if ( resetInventory )
 		{
