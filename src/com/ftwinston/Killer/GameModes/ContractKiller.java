@@ -80,7 +80,10 @@ public class ContractKiller extends GameMode
 			
 			Player hunterPlayer = plugin.getServer().getPlayerExact(prevOne.getKey());
 			if ( hunterPlayer != null && hunterPlayer.isOnline() )
+			{
 				hunterPlayer.sendMessage("Your target is: " +  ChatColor.YELLOW + current.getKey() + ChatColor.RESET + "!");
+				prepareKiller(hunterPlayer, pm, true);
+			}
 			prevOne = current;
 			
 			plugin.statsManager.killerAdded();
@@ -92,7 +95,10 @@ public class ContractKiller extends GameMode
 		
 		Player hunterPlayer = plugin.getServer().getPlayerExact(prevOne.getKey());
 		if ( hunterPlayer != null && hunterPlayer.isOnline() )
+		{
 			hunterPlayer.sendMessage("Your target is: " +  ChatColor.YELLOW + firstOne.getKey() + ChatColor.RESET + "!");
+			prepareKiller(hunterPlayer, pm, true);
+		}
 		
 		plugin.statsManager.killerAdded();
 		if ( sender != null )

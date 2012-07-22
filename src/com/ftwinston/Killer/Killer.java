@@ -103,8 +103,8 @@ public class Killer extends JavaPlugin
         	{
 	        	for ( Player player : instance.getServer().getOnlinePlayers() )
 	        	{
-	        		String target = playerManager.getFollowTarget(player);
-	        		if ( target != null )
+	        		PlayerManager.Info info = playerManager.getInfo(player.getName());
+	        		if ( !info.isAlive() && info.target != null )
 	        			playerManager.checkFollowTarget(player);
 	        	}
         	}
