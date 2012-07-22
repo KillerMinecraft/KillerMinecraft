@@ -15,6 +15,7 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 
 import com.ftwinston.Killer.PlayerManager;
 
+import com.ftwinston.Killer.GameModes.ContractKiller;
 import com.ftwinston.Killer.GameModes.CrazyKiller;
 import com.ftwinston.Killer.GameModes.InvisibleKiller;
 import com.ftwinston.Killer.GameModes.MysteryKiller;
@@ -40,6 +41,10 @@ public abstract class GameMode
 		gameModes.put(g.getName(), g);
 		
 		g = new TeamKiller();
+		g.plugin = killer;
+		gameModes.put(g.getName(), g);
+		
+		g = new ContractKiller();
 		g.plugin = killer;
 		gameModes.put(g.getName(), g);
 	}
