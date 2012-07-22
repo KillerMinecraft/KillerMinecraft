@@ -160,36 +160,19 @@ public class EventListener implements Listener
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event)
     {
-        if( event.getEntity() instanceof Player )
-        {
-        	Player player = (Player)event.getEntity();
-        	if(PlayerManager.instance.isSpectator(player.getName()))
-        		event.setCancelled(true);
-        }
-        else if (event instanceof EntityDamageByEntityEvent )
+        if ( event instanceof EntityDamageByEntityEvent )
         {
         	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
         	if ( damager != null && damager instanceof Player && PlayerManager.instance.isSpectator(((Player)damager).getName()))
 				event.setCancelled(true);
         }
-	}
-    
-    @EventHandler
-    public void onPlayerDamage(EntityDamageEvent event)
-    {
-        if( event.getEntity() instanceof Player )
+        if( !event.isCancelled() && event.getEntity() instanceof Player )
         {
         	Player player = (Player)event.getEntity();
         	if(PlayerManager.instance.isSpectator(player.getName()))
         		event.setCancelled(true);
 			else
 				plugin.getGameMode().playerDamaged(event);
-        }
-        if (!event.isCancelled() && event instanceof EntityDamageByEntityEvent )
-        {
-        	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
-        	if ( damager != null && damager instanceof Player && PlayerManager.instance.isSpectator(((Player)damager).getName()))
-				event.setCancelled(true);
         }
 	}
     

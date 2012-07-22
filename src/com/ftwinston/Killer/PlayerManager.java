@@ -746,32 +746,29 @@ public class PlayerManager
 			}
 		}
 		
+		if ( !canSee(player,  target, maxFollowSpectateRangeSq) )
+			moveToSee(player, target);
+	}
+	
+	public boolean canSee(Player player, Player target, double maxDistanceSq)
+	{
 		Location specLoc = player.getEyeLocation();
 		Location targetLoc = target.getEyeLocation();
 		
 		// check they're in the same world
 		if ( specLoc.getWorld() != targetLoc.getWorld() )
-		{
-			moveToSee(player, target);
-			return;
-		}
+			return false;
 		
 		// then check the distance is appropriate
 		double targetDistSqr = specLoc.distanceSquared(targetLoc); 
-		if ( targetDistSqr > maxFollowSpectateRangeSq )
-		{
-			moveToSee(player, target);
-			return;
-		}
+		if ( targetDistSqr > maxDistanceSq )
+			return false;
 		
 		// check if they're facing the right way
 		Vector specDir = specLoc.getDirection().normalize();
 		Vector dirToTarget = targetLoc.subtract(specLoc).toVector().normalize();
 		if ( specDir.dot(dirToTarget) < maxAcceptableOffsetDot )
-		{
-			moveToSee(player, target);
-			return;
-		}
+			return false;
 		
 		// then do a ray trace to see if there's anything in the way
         Iterator<Block> itr = new BlockIterator(specLoc.getWorld(), specLoc.toVector(), dirToTarget, 0, (int)Math.sqrt(targetDistSqr));
@@ -779,11 +776,10 @@ public class PlayerManager
         {
             Block block = itr.next();
             if ( !block.isEmpty() )
-			{
-				moveToSee(player, target);
-				return;
-			}
+            	return false;
         }
+        
+        return true;
 	}
 	
 	public void moveToSee(Player player, Player target)
