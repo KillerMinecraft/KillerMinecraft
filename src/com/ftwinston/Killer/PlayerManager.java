@@ -160,10 +160,12 @@ public class PlayerManager
 	private boolean assignKillers(int numKillers, CommandSender sender)
 	{
 		countdownStarted = false;
-		return plugin.getGameMode().assignKillers(numKillers, sender, this);
+		boolean retval = plugin.getGameMode().assignKillers(numKillers, sender, this);
 		
 		if ( numKillersAssigned() == 0 )
 			plugin.getGameMode().gameStarted();
+		
+		return retval;
 	}
 	
 	public void colorPlayerName(Player player, ChatColor color)

@@ -64,16 +64,15 @@ public class InvisibleKiller extends GameMode
 	}
 	
 	private static final double maxKillerDetectionRangeSq = 50 * 50;
-	private Map<String, boolean> inRangeLastTime = new LinkedHashMap<String, boolean>();
+	private Map<String, Boolean> inRangeLastTime = new LinkedHashMap<String, Boolean>();
 	
 	@Override
 	public void gameStarted()
 	{
-		updateRangeMessageProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-			long lastRun = 0;
+		updateRangeMessageProcessID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			public void run()
 			{
-				for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
+				for ( Map.Entry<String, Info> entry : plugin.playerManager.getPlayerInfo() )
 					if ( entry.getValue().isAlive() && !entry.getValue().isKiller() )
 					{
 						Player looker = plugin.getServer().getPlayerExact(entry.getKey());
@@ -81,7 +80,7 @@ public class InvisibleKiller extends GameMode
 							continue;
 						
 						double bestRangeSq = maxKillerDetectionRangeSq + 1;						
-						for ( Map.Entry<String, Info> entry2 : pm.getPlayerInfo() )
+						for ( Map.Entry<String, Info> entry2 : plugin.playerManager.getPlayerInfo() )
 							if ( entry2.getValue().isAlive() && entry2.getValue().isKiller() )
 							{
 								Player target = plugin.getServer().getPlayerExact(entry2.getKey());
@@ -106,7 +105,7 @@ public class InvisibleKiller extends GameMode
 						}
 					}
 			}		
-		}), 50, 100);
+		}, 50, 100);
 	}
 	
 	@Override
