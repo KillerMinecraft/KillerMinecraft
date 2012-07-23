@@ -30,27 +30,27 @@ public abstract class GameMode
 	{
 		GameMode g = new MysteryKiller();
 		g.plugin = killer;
-		gameModes.put(g.getName(), g);
+		gameModes.put(g.getName().toLowerCase(), g);
 		
 		g = new InvisibleKiller();
 		g.plugin = killer;
-		gameModes.put(g.getName(), g);
+		gameModes.put(g.getName().toLowerCase(), g);
 		
 		g = new CrazyKiller();
 		g.plugin = killer;
-		gameModes.put(g.getName(), g);
+		gameModes.put(g.getName().toLowerCase(), g);
 		
 		g = new TeamKiller();
 		g.plugin = killer;
-		gameModes.put(g.getName(), g);
+		gameModes.put(g.getName().toLowerCase(), g);
 		
 		g = new ContractKiller();
 		g.plugin = killer;
-		gameModes.put(g.getName(), g);
+		gameModes.put(g.getName().toLowerCase(), g);
 	}
 	
-	public static GameMode getByName(String name) { return gameModes.get(name); }
-	public static GameMode getDefault() { return gameModes.get("Mystery Killer"); }
+	public static GameMode getByName(String name) { return gameModes.get(name.toLowerCase()); }
+	public static GameMode getDefault() { return gameModes.get("mystery killer"); }
 	
 	protected Killer plugin;
 	protected Random r = new Random();
