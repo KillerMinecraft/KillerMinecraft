@@ -161,6 +161,9 @@ public class PlayerManager
 	{
 		countdownStarted = false;
 		return plugin.getGameMode().assignKillers(numKillers, sender, this);
+		
+		if ( numKillersAssigned() == 0 )
+			plugin.getGameMode().gameStarted();
 	}
 	
 	public void colorPlayerName(Player player, ChatColor color)
@@ -345,6 +348,8 @@ public class PlayerManager
 	
 	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)
 	{
+		plugin.getGameMode().gameFinished();
+	
 		String message = null;
 		int numFriendlies = playerInfo.size() - numKillersAssigned();
 		

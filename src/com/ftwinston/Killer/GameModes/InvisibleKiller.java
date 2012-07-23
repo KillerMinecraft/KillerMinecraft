@@ -1,5 +1,6 @@
 package com.ftwinston.Killer.GameModes;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -34,7 +35,7 @@ public class InvisibleKiller extends GameMode
 	public boolean killersCompassPointsAtFriendlies() { return true; }
 
 	@Override
-	public boolean friendliesCompassPointsAtKiller() { return true; }
+	public boolean friendliesCompassPointsAtKiller() { return false; }
 
 	@Override
 	public boolean discreteDeathMessages() { return false; }
@@ -61,6 +62,65 @@ public class InvisibleKiller extends GameMode
 		else
 			return plural ? "friendly players" : "friendly player";
 	}
+	
+	private static final double maxKillerDetectionRangeSq = 50 * 50;
+	private Map<String, boolean> inRangeLastTime = new LinkedHashMap<String, boolean>();
+	
+	@Override
+	public void gameStarted()
+	{
+		updateRangeMessageProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+			long lastRun = 0;
+			public void run()
+			{
+				for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
+					if ( entry.getValue().isAlive() && !entry.getValue().isKiller() )
+					{
+						Player looker = plugin.getServer().getPlayerExact(entry.getKey());
+						if ( looker == null || !looker.isOnline() )
+							continue;
+						
+						double bestRangeSq = maxKillerDetectionRangeSq + 1;						
+						for ( Map.Entry<String, Info> entry2 : pm.getPlayerInfo() )
+							if ( entry2.getValue().isAlive() && entry2.getValue().isKiller() )
+							{
+								Player target = plugin.getServer().getPlayerExact(entry2.getKey());
+								if ( target == null || !target.isOnline() || target.getWorld() != looker.getWorld() )
+									continue;
+								
+								double rangeSq = target.getLocation().distanceSquared(looker.getLocation());
+								if ( rangeSq < bestRangeSq )
+									bestRangeSq = rangeSq;
+							}
+						
+						if ( bestRangeSq < maxKillerDetectionRangeSq )
+						{
+							int bestRange = (int)(Math.sqrt(bestRangeSq) + 0.5); // round to nearest integer
+							looker.sendMessage(ChatColor.RED + "Killer detected! Range: " + bestRange + " metres");
+							inRangeLastTime.put(looker.getName(), true);
+						}
+						else if ( inRangeLastTime.containsKey(looker.getName()) && inRangeLastTime.get(looker.getName()) )
+						{
+							looker.sendMessage("No killer detected");
+							inRangeLastTime.put(looker.getName(), false);
+						}
+					}
+			}		
+		}), 50, 100);
+	}
+	
+	@Override
+	public void gameFinished()
+	{
+		if ( updateRangeMessageProcessID != -1 )
+		{
+			plugin.getServer().getScheduler().cancelTask(updateRangeMessageProcessID);
+			updateRangeMessageProcessID = -1;
+		}
+		
+		inRangeLastTime.clear();
+	}
+	
 	
 	@Override
 	public boolean informOfKillerAssignment(PlayerManager pm) { return true; }
@@ -167,10 +227,6 @@ public class InvisibleKiller extends GameMode
 		pot.splash();
 		stack = pot.toItemStack(Math.max(2, 64 / (pm.numSurvivors() - 1)));
 		inv.addItem(stack);
-		
-		// give them the items needed to make a compass
-		inv.addItem(new ItemStack(Material.IRON_INGOT, 4));
-		inv.addItem(new ItemStack(Material.REDSTONE, 1));
 	}
 	
 	@Override
@@ -259,7 +315,7 @@ public class InvisibleKiller extends GameMode
 		restoreMessageProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new RestoreInvisibility(player.getName()), 100L); // 5 seconds
 	}
 	
-	private int restoreMessageProcessID = -1;
+	private int restoreMessageProcessID = -1, updateRangeMessageProcessID = -1;
 	
     class RestoreInvisibility implements Runnable
     {

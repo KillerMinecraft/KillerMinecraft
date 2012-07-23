@@ -77,6 +77,9 @@ public abstract class GameMode
 			explainGameMode(player, pm);
 	}
 	
+	public void gameStarted() { }
+	public void gameFinished() { }
+	
 	public boolean assignKillers(int numKillers, CommandSender sender, PlayerManager pm)
 	{
 		int availablePlayers = 0;
