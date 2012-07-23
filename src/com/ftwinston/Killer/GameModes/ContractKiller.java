@@ -66,7 +66,6 @@ public class ContractKiller extends GameMode
 			return false;
 		}
 		
-		
 		if ( !plugin.statsManager.isTracking )
 			plugin.statsManager.gameStarted(pm.numSurvivors());
 		
@@ -77,6 +76,7 @@ public class ContractKiller extends GameMode
 		{
 			Map.Entry<String, Info> current = players.remove(r.nextInt(players.size())); 
 			prevOne.getValue().target = current.getKey();
+			prevOne.getValue().setKiller(true);
 			
 			Player hunterPlayer = plugin.getServer().getPlayerExact(prevOne.getKey());
 			if ( hunterPlayer != null && hunterPlayer.isOnline() )
@@ -92,6 +92,7 @@ public class ContractKiller extends GameMode
 		}
 		
 		prevOne.getValue().target = firstOne.getKey();
+		prevOne.getValue().setKiller(true);
 		
 		Player hunterPlayer = plugin.getServer().getPlayerExact(prevOne.getKey());
 		if ( hunterPlayer != null && hunterPlayer.isOnline() )
@@ -184,8 +185,9 @@ public class ContractKiller extends GameMode
 	
 	@Override
 	public void playerDamaged(EntityDamageEvent event)
-	{		
-		if ( !(event instanceof EntityDamageByEntityEvent) || plugin.playerManager.numKillersAssigned() == 0 )
+	{
+		PlayerManager pm = plugin.playerManager;
+		if ( !(event instanceof EntityDamageByEntityEvent) || pm.numKillersAssigned() == 0 )
 			return;
 
 		EntityDamageByEntityEvent edbee = (EntityDamageByEntityEvent)event;
@@ -196,18 +198,20 @@ public class ContractKiller extends GameMode
 			
 			Player victim = (Player)event.getEntity();
 			Player attacker = (Player)edbee.getDamager();
-					
+			
+			String victimTarget = pm.getInfo(victim.getName()).target; 
+			String attackerTarget = pm.getInfo(attacker.getName()).target; 
+			
 			// armour is a problem. looks like its handled in EntityHuman.b(DamageSource damagesource, int i) - can replicate the code ... technically also account for enchantments
 			if ( event.getDamage() >= victim.getHealth() )
-				if ( plugin.playerManager.getInfo(attacker.getName()).target.equals(plugin.playerManager.getInfo(victim.getName())) ||
-					 plugin.playerManager.getInfo(victim.getName()).target.equals(plugin.playerManager.getInfo(attacker.getName())) )
+				if ( attackerTarget.equals(victim.getName()) || victimTarget.equals(attacker.getName()) )
 				{// this interaction was allowed ... should still check if they were observed!
-					 for ( Player observer : plugin.getServer().getOnlinePlayers() )					
-					 {
-						 if ( observer == victim || observer == attacker || !plugin.playerManager.isAlive(observer.getName()) )
+					for ( Player observer : plugin.getServer().getOnlinePlayers() )					
+					{
+						 if ( observer == victim || observer == attacker || !pm.isAlive(observer.getName()) )
 							 continue;
 						 
-						 if ( plugin.playerManager.canSee(observer, attacker, maxObservationRangeSq) )
+						 if ( pm.canSee(observer, attacker, maxObservationRangeSq) )
 						 {
 							 event.setCancelled(true);
 							 attacker.damage(50);
@@ -217,7 +221,7 @@ public class ContractKiller extends GameMode
 							 observer.sendMessage("You observed " + attacker.getName() + " trying to kill " + victim.getName() + ", so " + attacker.getName() + " was killed instead.");
 							 break;
 						 }
-					 }
+					}
 				}
 				else
 				{
@@ -235,6 +239,7 @@ public class ContractKiller extends GameMode
 	public void playerKilled(Player player, PlayerManager pm, PlayerManager.Info info)
 	{
 		if ( pm.numSurvivors() > 1 ) 
+		{
 			// find this player's hunter ... change their target to this player's target
 			for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
 				if ( player.getName().equals(entry.getValue().target) )
@@ -245,7 +250,7 @@ public class ContractKiller extends GameMode
 						hunterPlayer.sendMessage("Your target has changed, and is now: " +  ChatColor.YELLOW + info.target + ChatColor.RESET + "!");
 					break;
 				}
-			
+		}	
 		info.target = null;
 	}
 		
@@ -260,9 +265,7 @@ public class ContractKiller extends GameMode
 	}
 	
 	@Override
-	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer)
-	{
-	}
+	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer) { }
 	
 	@Override
 	public void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth)

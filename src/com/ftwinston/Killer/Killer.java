@@ -25,7 +25,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class Killer extends JavaPlugin
 {
 	public static Killer instance;
-	Logger log = Logger.getLogger("Minecraft");
+	public Logger log = Logger.getLogger("Minecraft");
 	private Location plinthPressurePlateLocation;
 
 	private EventListener eventListener = new EventListener(this);
