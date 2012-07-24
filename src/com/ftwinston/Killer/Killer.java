@@ -384,6 +384,9 @@ public class Killer extends JavaPlugin
 			getServer().broadcastMessage("Changing to " + gameMode.getName() + " mode");
 		}
 		
+		if ( statsManager.isTracking )
+			statsManager.gameFinished(getGameMode(), playerManager.numSurvivors(), 3, 0);
+		
 		if ( useSameWorld )
 		{
 			getServer().broadcastMessage("Game is restarting, using the same world...");
