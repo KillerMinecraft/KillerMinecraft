@@ -420,8 +420,7 @@ public class PlayerManager
 		plugin.statsManager.gameFinished(plugin.getGameMode(), numSurvivors(), killerWon ? 1 : (friendliesWon ? 2 : 0), winningItem == null ? 0 : winningItem.getId());
 		
 		plugin.getServer().broadcastMessage(ChatColor.YELLOW + message);
-		if ( plugin.autoReveal )
-			clearKillers(null);
+		clearKillers(null);
 
 		if ( winningItem != null || plugin.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getServer().getOnlinePlayers().length == 0 )
 		{	// plinth victory or other scenario where we don't want a vote schedule a game restart in 10 secs, with a new world

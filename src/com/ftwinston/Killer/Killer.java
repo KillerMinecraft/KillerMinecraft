@@ -34,7 +34,7 @@ public class Killer extends JavaPlugin
 	public VoteManager voteManager;
 	public StatsManager statsManager;
 	
-	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, autoReveal, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, stopServerToRecreateWorld, reportStats;
+	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, stopServerToRecreateWorld, reportStats;
 	public Material[] winningItems;
 	
 	private int compassProcessID, spectatorFollowProcessID;
@@ -124,7 +124,6 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("canChangeGameMode", true);
 		getConfig().addDefault("autoAssign", false);
 		getConfig().addDefault("autoReassign", false);
-		getConfig().addDefault("autoReveal", true);
 		getConfig().addDefault("restartDay", true);
 		getConfig().addDefault("lateJoinersStartAsSpectator", false);
 		getConfig().addDefault("banOnDeath", false);
@@ -149,7 +148,6 @@ public class Killer extends JavaPlugin
 		canChangeGameMode = getConfig().getBoolean("canChangeGameMode");
 		autoAssignKiller = getConfig().getBoolean("autoAssign");
 		autoReassignKiller = getConfig().getBoolean("autoReassign");
-		autoReveal = getConfig().getBoolean("autoReveal");
 		restartDayWhenFirstPlayerJoins = getConfig().getBoolean("restartDay");
 		lateJoinersStartAsSpectator = getConfig().getBoolean("lateJoinersStartAsSpectator");
 		banOnDeath = getConfig().getBoolean("banOnDeath");
