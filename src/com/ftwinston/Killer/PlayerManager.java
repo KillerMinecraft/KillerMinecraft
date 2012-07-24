@@ -160,9 +160,10 @@ public class PlayerManager
 	private boolean assignKillers(int numKillers, CommandSender sender)
 	{
 		countdownStarted = false;
+		boolean startOfGame = numKillersAssigned() == 0;
 		boolean retval = plugin.getGameMode().assignKillers(numKillers, sender, this);
 		
-		if ( numKillersAssigned() == 0 )
+		if ( startOfGame )
 			plugin.getGameMode().gameStarted();
 		
 		return retval;
