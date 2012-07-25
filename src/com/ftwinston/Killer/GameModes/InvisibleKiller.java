@@ -210,6 +210,8 @@ public class InvisibleKiller extends GameMode
 	@Override
 	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
+		player.sendMessage("Use the /team command to chat without the killer seeing your messages");
+	
 		PlayerInventory inv = player.getInventory();
 		
 		if ( !isNewPlayer )
@@ -299,7 +301,6 @@ public class InvisibleKiller extends GameMode
 		Player player = (Player)event.getEntity();
 		if ( !plugin.playerManager.isKiller(player.getName()) )
 			return;
-			
 		
 		if ( restoreMessageProcessID != -1 )
 		{// the "cooldown" must be reset

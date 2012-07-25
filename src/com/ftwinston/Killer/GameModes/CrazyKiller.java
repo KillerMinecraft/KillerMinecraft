@@ -144,6 +144,8 @@ public class CrazyKiller extends GameMode
 	@Override
 	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
+		player.sendMessage("Use the /team command to chat without the killer seeing your messages");
+	
 		if ( !isNewPlayer )
 			return; // don't give items on rejoining
 			

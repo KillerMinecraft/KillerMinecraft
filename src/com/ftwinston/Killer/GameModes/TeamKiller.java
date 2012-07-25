@@ -131,7 +131,7 @@ public class TeamKiller extends GameMode
 	@Override
 	public void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
-		player.sendMessage("You are on the " + ChatColor.RED + "red" + ChatColor.RESET + " team.");
+		player.sendMessage("You are on the " + ChatColor.RED + "red" + ChatColor.RESET + " team. Use the /team command to chat without the other team seeing your messages.");
 		
 		if ( !isNewPlayer )
 			return; // don't do the teleport thing when reconnecting
@@ -147,7 +147,7 @@ public class TeamKiller extends GameMode
 	@Override
 	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
-		player.sendMessage("You are on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
+		player.sendMessage("You are on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team. Use the /team command to chat without the other team seeing your messages.");
 		
 		if ( !isNewPlayer )
 			return; // don't do the teleport thing when reconnecting
