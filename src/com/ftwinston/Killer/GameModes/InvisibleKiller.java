@@ -114,7 +114,7 @@ public class InvisibleKiller extends GameMode
 						{
 							int bestRange = (int)(Math.sqrt(bestRangeSq) + 0.5); // round to nearest integer
 							if ( entry.getValue().isKiller() )
-								looker.sendMessage("Range to nearest player: " + bestRange + " metres" + " (they know you're there)");
+								looker.sendMessage("Range to nearest player: " + bestRange + " metres");
 							else
 								looker.sendMessage((entry.getValue().isKiller() ? "Player " : ChatColor.RED + "Killer detected!") + " Range: " + bestRange + " metres");
 							inRangeLastTime.put(looker.getName(), true);
@@ -204,7 +204,7 @@ public class InvisibleKiller extends GameMode
 	public void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer)
 	{
 		pm.makePlayerInvisibleToAll(player);
-		player.sendMessage("You are invisible");
+		player.sendMessage("You are invisible. Other players will see a message telling them how far away you are every 10 seconds. You will see a message with the distance to the nearest player at the same time.");
 		
 		if ( !isNewPlayer )
 			return; // don't teleport or give new items on rejoining
