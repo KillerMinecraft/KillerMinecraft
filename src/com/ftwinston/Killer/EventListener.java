@@ -12,7 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockFace;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -180,11 +179,8 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
     {
-		Location clicked = event.getBlockClicked().getLocation();
-		BlockFace face = event.getBlockFace();
-		Location affected = new Location(clicked.getWorld(), clicked.getBlockX() + face.getModX(), clicked.getBlockY() + face.getModY(), clicked.getBlockZ() + face.getModZ());
-		
-		if ( isOnPlinth(affected) )
+		Block affected = event.getBlockClicked().getRelative(event.getBlockFace());
+		if ( isOnPlinth(affected.getLocation()) )
 			event.setCancelled(true);
 			
 		if ( !event.isCancelled() 
