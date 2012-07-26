@@ -69,43 +69,67 @@ public class InvisibleKiller extends GameMode
 	@Override
 	public void gameStarted()
 	{
+		inRangeLastTime.clear();
 		updateRangeMessageProcessID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			public void run()
 			{
 				for ( Map.Entry<String, Info> entry : plugin.playerManager.getPlayerInfo() )
-					if ( entry.getValue().isAlive() && !entry.getValue().isKiller() )
+					if ( entry.getValue().isAlive() )
 					{
 						Player looker = plugin.getServer().getPlayerExact(entry.getKey());
 						if ( looker == null || !looker.isOnline() )
 							continue;
 						
-						double bestRangeSq = maxKillerDetectionRangeSq + 1;						
-						for ( Map.Entry<String, Info> entry2 : plugin.playerManager.getPlayerInfo() )
-							if ( entry2.getValue().isAlive() && entry2.getValue().isKiller() )
-							{
-								Player target = plugin.getServer().getPlayerExact(entry2.getKey());
-								if ( target == null || !target.isOnline() || target.getWorld() != looker.getWorld() )
-									continue;
-								
-								double rangeSq = target.getLocation().distanceSquared(looker.getLocation());
-								if ( rangeSq < bestRangeSq )
-									bestRangeSq = rangeSq;
-							}
+						double bestRangeSq = maxKillerDetectionRangeSq + 1;
+						if ( entry.getValue().isKiller() ) 
+						{
+							for ( Map.Entry<String, Info> entry2 : plugin.playerManager.getPlayerInfo() )
+								if ( entry2.getValue().isAlive() && !entry2.getValue().isKiller() )
+								{
+									Player target = plugin.getServer().getPlayerExact(entry2.getKey());
+									if ( target == null || !target.isOnline() || target.getWorld() != looker.getWorld() )
+										continue;
+									
+									double rangeSq = target.getLocation().distanceSquared(looker.getLocation());
+									if ( rangeSq < bestRangeSq )
+										bestRangeSq = rangeSq;
+								}
+						}
+						else
+						{
+							for ( Map.Entry<String, Info> entry2 : plugin.playerManager.getPlayerInfo() )
+								if ( entry2.getValue().isAlive() && entry2.getValue().isKiller() )
+								{
+									Player target = plugin.getServer().getPlayerExact(entry2.getKey());
+									if ( target == null || !target.isOnline() || target.getWorld() != looker.getWorld() )
+										continue;
+									
+									double rangeSq = target.getLocation().distanceSquared(looker.getLocation());
+									if ( rangeSq < bestRangeSq )
+										bestRangeSq = rangeSq;
+								}
+						}
 						
 						if ( bestRangeSq < maxKillerDetectionRangeSq )
 						{
 							int bestRange = (int)(Math.sqrt(bestRangeSq) + 0.5); // round to nearest integer
-							looker.sendMessage(ChatColor.RED + "Killer detected! Range: " + bestRange + " metres");
+							if ( entry.getValue().isKiller() )
+								looker.sendMessage("Range to nearest player: " + bestRange + " metres" + " (they know you're there)");
+							else
+								looker.sendMessage((entry.getValue().isKiller() ? "Player " : ChatColor.RED + "Killer detected!") + " Range: " + bestRange + " metres");
 							inRangeLastTime.put(looker.getName(), true);
 						}
 						else if ( inRangeLastTime.containsKey(looker.getName()) && inRangeLastTime.get(looker.getName()) )
 						{
-							looker.sendMessage("No killer detected");
+							if ( entry.getValue().isKiller() )
+								looker.sendMessage("All players are out of range");
+							else
+								looker.sendMessage("No killer detected");
 							inRangeLastTime.put(looker.getName(), false);
 						}
 					}
-			}		
-		}, 50, 100);
+			}
+		}, 50, 200);
 	}
 	
 	@Override
