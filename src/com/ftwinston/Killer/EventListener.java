@@ -183,7 +183,7 @@ public class EventListener implements Listener
 		if ( isOnPlinth(affected.getLocation()) )
 			event.setCancelled(true);
 			
-		if ( !event.isCancelled() 
+		if ( !event.isCancelled() )
 			plugin.getGameMode().playerEmptiedBucket(event);
     }
     
