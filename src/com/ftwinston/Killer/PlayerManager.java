@@ -351,8 +351,6 @@ public class PlayerManager
 	
 	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)
 	{
-		plugin.getGameMode().gameFinished();
-	
 		String message = null;
 		int numFriendlies = playerInfo.size() - numKillersAssigned();
 		
