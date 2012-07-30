@@ -228,7 +228,7 @@ public class EventListener implements Listener
     	
     	// hide this chat from all non-spectators
     	for ( Player recipient : recipients )
-    		if ( !PlayerManager.instance.isSpectator(recipient.getName()))
+    		if ( recipient != null && recipient.isOnline() && !PlayerManager.instance.isSpectator(recipient.getName()))
     			event.getRecipients().remove(recipient);
     }
     
@@ -295,7 +295,7 @@ public class EventListener implements Listener
 				if ( player != null && player.isOnline() )
 					return; // player has reconnected, so don't kill them
 				
-				if ( plugin.playerManager.numKillersAssigned() > 0 && plugin.playerManager.isAlive(player.getName()) )
+				if ( plugin.playerManager.numKillersAssigned() > 0 && plugin.playerManager.isAlive(name) )
 					plugin.statsManager.playerQuit();
 			}
     		plugin.playerManager.playerKilled(name);
