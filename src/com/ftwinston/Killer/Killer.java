@@ -376,7 +376,7 @@ public class Killer extends JavaPlugin
 		if ( statsManager.isTracking )
 			statsManager.gameFinished(getGameMode(), playerManager.numSurvivors(), 3, 0);
 		
-		plugin.getGameMode().gameFinished();
+		getGameMode().gameFinished();
 		
 		if ( gameMode != nextGameMode )
 		{
