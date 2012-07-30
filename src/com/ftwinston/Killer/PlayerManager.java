@@ -554,11 +554,9 @@ public class PlayerManager
 				player.setAllowFlight(false);
 			}
 
+			makePlayerVisibleToAll(player);
 			if ( !wasAlive )
-			{
-				makePlayerVisibleToAll(player);
 				player.sendMessage("You are no longer a spectator.");
-			}
 		}
 		else
 		{
