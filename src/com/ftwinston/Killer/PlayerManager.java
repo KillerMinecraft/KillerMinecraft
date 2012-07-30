@@ -841,9 +841,6 @@ public class PlayerManager
 		        }
 	        }
 		}
-
-		// as we're dealing in eye position thus far, reduce the Y to get the "feet position"
-		bestLoc.setY(bestLoc.getY() - player.getEyeHeight());
 		
 		// work out the yaw
 		double xDif = targetLoc.getX() - bestLoc.getX();
@@ -880,6 +877,9 @@ public class PlayerManager
 			bestLoc.setPitch(-(float)Math.toDegrees(Math.atan(yDif / horizDist)));
 		else
 			bestLoc.setPitch((float)Math.toDegrees(Math.atan(-yDif / horizDist)));
+		
+		// as we're dealing in eye position thus far, reduce the Y to get the "feet position"
+		bestLoc.setY(bestLoc.getY() - player.getEyeHeight());
 		
 		// set them as flying so they don't fall from this position, then do the teleport
 		player.setFlying(true);
