@@ -611,7 +611,9 @@ public class PlayerManager
 			inv.setHelmet(null);
 			inv.setChestplate(null);
 			inv.setLeggings(null);
-			inv.setBoots(null);		
+			inv.setBoots(null);
+			
+			player.closeInventory(); // this stops them from keeping items they had in (e.g.) a crafting table
 		}
 		
 		clearPlayerNameColor(player);
