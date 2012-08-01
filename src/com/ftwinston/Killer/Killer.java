@@ -395,12 +395,12 @@ public class Killer extends JavaPlugin
 			for ( Player player : getServer().getOnlinePlayers() )
 				playerManager.putPlayerInWorld(player, defaultWorld);
 			
-			worldManager.removeAllItems(defaultWorld);
-			defaultWorld.setTime(0);
-			
 			playerManager.reset(true);
 			gameMode.explainGameModeForAll(playerManager);
 			playerManager.checkImmediateKillerAssignment();
+			
+			worldManager.removeAllItems(defaultWorld);
+			defaultWorld.setTime(0);
 		}
 		else if ( stopServerToRecreateWorld )
 		{
