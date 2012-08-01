@@ -1,5 +1,6 @@
 package com.ftwinston.Killer;
 
+import java.util.HashSet;
 import java.util.List;
 
 import org.bukkit.Bukkit;
@@ -223,11 +224,8 @@ public class EventListener implements Listener
 
     	// mark spectator chat, and hide it from non-spectators
     	event.setMessage(ChatColor.YELLOW + "[Spec] " + ChatColor.RESET + event.getMessage());
-
-    	Player[] recipients = (Player[])event.getRecipients().toArray();
     	
-    	// hide this chat from all non-spectators
-    	for ( Player recipient : recipients )
+    	for (Player recipient : new HashSet<Player>(event.getRecipients()))
     		if ( recipient != null && recipient.isOnline() && !PlayerManager.instance.isSpectator(recipient.getName()))
     			event.getRecipients().remove(recipient);
     }
