@@ -90,7 +90,7 @@ public class MysteryKiller extends GameMode
 			message += " to the plinth near the spawn.\nThe other players will not automatically win when the killer is killed, and another killer may be assigned once the first one is dead.";
 			
 			if ( isKiller )
-				message += " If you make a compass, it will point at the nearest player."
+				message += "\nIf you make a compass, it will point at the nearest player.";
 			player.sendMessage(message);
 	}
 	
