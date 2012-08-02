@@ -88,6 +88,9 @@ public class MysteryKiller extends GameMode
 			}
 			
 			message += " to the plinth near the spawn.\nThe other players will not automatically win when the killer is killed, and another killer may be assigned once the first one is dead.";
+			
+			if ( isKiller )
+				message += " If you make a compass, it will point at the nearest player."
 			player.sendMessage(message);
 	}
 	
@@ -108,6 +111,8 @@ public class MysteryKiller extends GameMode
 		if ( !isNewPlayer )
 			return; // don't let the killer rejoin to get more items
 	
+		player.sendMessage("If you make a compass, it will point at the nearest player.");
+				
 		PlayerInventory inv = player.getInventory();
 		int numFriendlies = pm.numSurvivors() - pm.numKillersAssigned();
 		
