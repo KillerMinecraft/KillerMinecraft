@@ -216,6 +216,9 @@ public class ContractKiller extends GameMode
 						 return false;
 					 }
 				}
+				
+				if ( attackerTarget.equals(victim.getName()) && pm.numSurvivors() > 1)
+					victim.sendMessage("You killed your hunter - but someone else is hunting you now!");
 			}
 			else
 			{
