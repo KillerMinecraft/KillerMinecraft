@@ -11,8 +11,9 @@ import com.ftwinston.Killer.PlayerManager.Info;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ItemStack;
@@ -320,11 +321,10 @@ public class InvisibleKiller extends GameMode
 	}
 	
 	@Override
-	public void playerDamaged(EntityDamageEvent event)
+	public boolean playerDamaged(Player victim, Entity attacker, DamageCause cause, int amount)
 	{
-		Player player = (Player)event.getEntity();
-		if ( !plugin.playerManager.isKiller(player.getName()) )
-			return;
+		if ( !plugin.playerManager.isKiller(victim.getName()) )
+			return true;
 		
 		if ( restoreMessageProcessID != -1 )
 		{// the "cooldown" must be reset
@@ -332,11 +332,12 @@ public class InvisibleKiller extends GameMode
 		}
 		else
 		{// make them visible for a period of time
-			plugin.playerManager.makePlayerVisibleToAll(player);
-			player.sendMessage(ChatColor.RED + "You can be seen!");
+			plugin.playerManager.makePlayerVisibleToAll(victim);
+			victim.sendMessage(ChatColor.RED + "You can be seen!");
 		}
 		
-		restoreMessageProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new RestoreInvisibility(player.getName()), 100L); // 5 seconds
+		restoreMessageProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new RestoreInvisibility(victim.getName()), 100L); // 5 seconds
+		return true;
 	}
 	
 	private int restoreMessageProcessID = -1, updateRangeMessageProcessID = -1;

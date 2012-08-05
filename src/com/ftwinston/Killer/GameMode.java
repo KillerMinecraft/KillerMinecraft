@@ -8,8 +8,9 @@ import java.util.Random;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 
@@ -220,7 +221,7 @@ public abstract class GameMode
 	
 	public abstract void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth);
 	
-	public void playerDamaged(EntityDamageEvent event) { }
+	public boolean playerDamaged(Player victim, Entity attacker, DamageCause cause, int amount) { return true; }
 	public void playerEmptiedBucket(PlayerBucketEmptyEvent event) { }
 	public void playerPickedUpItem(PlayerPickupItemEvent event) { }
 }

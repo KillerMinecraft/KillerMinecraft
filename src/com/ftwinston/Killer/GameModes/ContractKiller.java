@@ -10,9 +10,9 @@ import com.ftwinston.Killer.PlayerManager.Info;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.Material;
@@ -184,55 +184,51 @@ public class ContractKiller extends GameMode
 	private static final double maxObservationRangeSq = 60 * 60;
 	
 	@Override
-	public void playerDamaged(EntityDamageEvent event)
+	public boolean playerDamaged(Player victim, Entity attacker, DamageCause cause, int amount)
 	{
 		PlayerManager pm = plugin.playerManager;
-		if ( !(event instanceof EntityDamageByEntityEvent) || pm.numKillersAssigned() == 0 )
-			return;
 
-		EntityDamageByEntityEvent edbee = (EntityDamageByEntityEvent)event;
-		if ( event.getEntity() instanceof Player )
-		{
-			if ( !(edbee.getDamager() instanceof Player) )
-				return;
-			
-			Player victim = (Player)event.getEntity();
-			Player attacker = (Player)edbee.getDamager();
-			
-			String victimTarget = pm.getInfo(victim.getName()).target; 
-			String attackerTarget = pm.getInfo(attacker.getName()).target; 
-			
-			// armour is a problem. looks like its handled in EntityHuman.b(DamageSource damagesource, int i) - can replicate the code ... technically also account for enchantments
-			if ( event.getDamage() >= victim.getHealth() )
-				if ( attackerTarget.equals(victim.getName()) || victimTarget.equals(attacker.getName()) )
-				{// this interaction was allowed ... should still check if they were observed!
-					for ( Player observer : plugin.getServer().getOnlinePlayers() )					
-					{
-						 if ( observer == victim || observer == attacker || !pm.isAlive(observer.getName()) )
-							 continue;
-						 
-						 if ( pm.canSee(observer, attacker, maxObservationRangeSq) )
-						 {
-							 event.setCancelled(true);
-							 attacker.damage(50);
-							 
-							 attacker.sendMessage("You were observed trying to kill " + victim.getName() + " by " + observer.getName() + ", so you've been killed instead.");
-							 victim.sendMessage(attacker.getName() + " tried to kill you, but was observed doing so by " + observer.getName() + " - so " + attacker.getName() + " has been killed instead.");
-							 observer.sendMessage("You observed " + attacker.getName() + " trying to kill " + victim.getName() + ", so " + attacker.getName() + " was killed instead.");
-							 break;
-						 }
-					}
-				}
-				else
+		if ( !(attacker instanceof Player) )
+			return true; // we only care about damage by players
+		
+		Player attackerPlayer = (Player)attacker;
+		
+		String victimTarget = pm.getInfo(victim.getName()).target; 
+		String attackerTarget = pm.getInfo(attackerPlayer.getName()).target; 
+		
+		// armour is a problem. looks like its handled in EntityHuman.b(DamageSource damagesource, int i) - can replicate the code ... technically also account for enchantments
+		if ( amount >= victim.getHealth() )
+			if ( attackerTarget.equals(victim.getName()) || victimTarget.equals(attackerPlayer.getName()) )
+			{// this interaction was allowed ... should still check if they were observed!
+				for ( Player observer : plugin.getServer().getOnlinePlayers() )					
 				{
-					// this wasn't a valid kill target, and was a killing blow. Cancel, and kill the attacker.
-					event.setCancelled(true);
-					attacker.damage(50);
-					
-					attacker.sendMessage(victim.getName() + " was neither your target nor your hunter, so you've been killed for trying to kill them!");
-					victim.sendMessage(attacker.getName() + " tried to kill you - they've been killed instead.");
+					 if ( observer == victim || observer == attacker || !pm.isAlive(observer.getName()) )
+						 continue;
+					 
+					 if ( pm.canSee(observer, attackerPlayer, maxObservationRangeSq) )
+					 {
+						 attackerPlayer.damage(50);
+						 
+						 attackerPlayer.sendMessage("You were observed trying to kill " + victim.getName() + " by " + observer.getName() + ", so you've been killed instead.");
+						 victim.sendMessage(attackerPlayer.getName() + " tried to kill you, but was observed doing so by " + observer.getName() + " - so " + attackerPlayer.getName() + " has been killed instead.");
+						 observer.sendMessage("You observed " + attackerPlayer.getName() + " trying to kill " + victim.getName() + ", so " + attackerPlayer.getName() + " was killed instead.");
+						 
+						 return false;
+					 }
 				}
-		}
+			}
+			else
+			{
+				// this wasn't a valid kill target, and was a killing blow
+				attackerPlayer.damage(50);
+				
+				attackerPlayer.sendMessage(victim.getName() + " was neither your target nor your hunter, so you've been killed for trying to kill them!");
+				victim.sendMessage(attackerPlayer.getName() + " tried to kill you - they've been killed instead.");
+				
+				return false; // cancel the damage
+			}
+		
+		return true;
 	}
 	
 	@Override

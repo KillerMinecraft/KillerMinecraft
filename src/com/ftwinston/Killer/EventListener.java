@@ -8,6 +8,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -164,17 +165,36 @@ public class EventListener implements Listener
         if ( event instanceof EntityDamageByEntityEvent )
         {
         	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
-        	if ( damager != null && damager instanceof Player && PlayerManager.instance.isSpectator(((Player)damager).getName()))
-				event.setCancelled(true);
+        	if ( damager != null && damager instanceof Player )
+        	{
+        		if ( PlayerManager.instance.isSpectator(((Player)damager).getName()))
+        			event.setCancelled(true);
+        	}
         }
-        if( !event.isCancelled() && event.getEntity() instanceof Player )
+        if ( event.isCancelled() || event.getEntity() == null || !(event.getEntity() instanceof Player))
+        	return;
+        
+        Entity attacker = null;
+        Player victim = (Player)event.getEntity();
+        
+        if ( event instanceof EntityDamageByEntityEvent )
         {
-        	Player player = (Player)event.getEntity();
-        	if(PlayerManager.instance.isSpectator(player.getName()))
-        		event.setCancelled(true);
-			else
-				plugin.getGameMode().playerDamaged(event);
+        	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
+        	if ( damager != null )
+        		if ( damager instanceof Player )
+        			attacker = damager;
+        		else if ( damager instanceof Arrow )
+    			{
+        			Arrow arrow = (Arrow)damager;
+        			if ( arrow.getShooter() instanceof Player )
+        				attacker = (Player)arrow.getShooter();
+				}
         }
+
+    	if(PlayerManager.instance.isSpectator(victim.getName()))
+    		event.setCancelled(true);
+		else if ( !plugin.getGameMode().playerDamaged(victim, attacker, event.getCause(), event.getDamage()) )
+			event.setCancelled(true);
 	}
     
     @EventHandler
