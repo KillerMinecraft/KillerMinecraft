@@ -468,7 +468,7 @@ public class PlayerManager
 		
 		if ( numKillersAssigned() > 0 )
 		{
-			if ( !plugin.getGameMode().informOfKillerIdentity() )
+			if ( plugin.getGameMode().revealKillersIdentityAtEnd() )
 			{
 				message = ChatColor.RED + (sender == null ? "Revealed: " : "Revealed by " + sender.getName() + ": ");
 				if ( numKillersAssigned() == 1 )

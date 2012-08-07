@@ -66,6 +66,9 @@ public class MysteryKiller extends GameMode
 	public boolean immediateKillerAssignment() { return false; }
 	
 	@Override
+	public boolean revealKillersIdentityAtEnd() { return true; }
+	
+	@Override
 	public void explainGameMode(Player player, PlayerManager pm)
 	{
 		boolean isKiller = pm.isKiller(player.getName());

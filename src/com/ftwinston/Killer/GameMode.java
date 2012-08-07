@@ -70,6 +70,7 @@ public abstract class GameMode
 	public abstract boolean immediateKillerAssignment();
 	public abstract boolean informOfKillerAssignment(PlayerManager pm);
 	public abstract boolean informOfKillerIdentity();
+	public abstract boolean revealKillersIdentityAtEnd();
 	
 	public abstract void explainGameMode(Player player, PlayerManager pm);
 	public void explainGameModeForAll(PlayerManager pm)

@@ -65,6 +65,9 @@ public class CrazyKiller extends GameMode
 	public boolean informOfKillerIdentity() { return true; }
 	
 	@Override
+	public boolean revealKillersIdentityAtEnd() { return false; }
+	
+	@Override
 	public boolean immediateKillerAssignment() { return true; }
 	
 	@Override

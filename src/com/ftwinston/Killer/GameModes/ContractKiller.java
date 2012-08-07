@@ -124,6 +124,9 @@ public class ContractKiller extends GameMode
 	public boolean informOfKillerIdentity() { return false; }
 	
 	@Override
+	public boolean revealKillersIdentityAtEnd() { return false; }
+	
+	@Override
 	public boolean immediateKillerAssignment() { return true; }
 	
 	@Override
