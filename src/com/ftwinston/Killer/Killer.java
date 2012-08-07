@@ -372,7 +372,7 @@ public class Killer extends JavaPlugin
 		if ( restarting )
 			return;
 		
-		playerManager.stopCountdown();
+		playerManager.stopAssignmentCountdown();
 		
 		// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 		if ( statsManager.isTracking )
