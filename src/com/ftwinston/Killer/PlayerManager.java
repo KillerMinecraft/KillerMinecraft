@@ -291,17 +291,20 @@ public class PlayerManager
 	int countdownProcessID = -1;
 	public void checkImmediateKillerAssignment()
 	{
-		if ( countDownProcessID == -1 && plugin.getGameMode().immediateKillerAssignment() && numSurvivors() >= plugin.getGameMode().absMinPlayers() )
-		{
-			plugin.getServer().broadcastMessage("Allocation in 30 seconds...");
-			countdownProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-				@Override
-				public void run()
-				{
-					assignKillers(null);
-				}
-			}, 600L);
-		}
+		if ( countDownProcessID == -1 && plugin.getGameMode().immediateKillerAssignment() )
+			if ( numSurvivors() >= plugin.getGameMode().absMinPlayers() )
+			{
+				plugin.getServer().broadcastMessage("Allocation in 30 seconds...");
+				countdownProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+					@Override
+					public void run()
+					{
+						assignKillers(null);
+					}
+				}, 600L);
+			}
+			else
+				plugin.getServer().broadcastMessage(ChatColor.RED + "Insufficient players to start game - " + plugin.getGameMode().getName() + " requires at least " + plugin.getGameMode().absMinPlayers() + " players");
 	}
 	
 	public void stopAssignmentCountdown()
