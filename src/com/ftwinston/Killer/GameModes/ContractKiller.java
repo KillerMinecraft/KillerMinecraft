@@ -1,5 +1,6 @@
 package com.ftwinston.Killer.GameModes;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -118,6 +119,12 @@ public class ContractKiller extends GameMode
 	}
 	
 	@Override
+	public void gameFinished()
+	{
+		victimWarningTimes.clear();
+	}
+	
+	@Override
 	public boolean informOfKillerAssignment(PlayerManager pm) { return false; }
 	
 	@Override
@@ -233,7 +240,41 @@ public class ContractKiller extends GameMode
 				
 				return false; // cancel the damage
 			}
+		else if ( attackerTarget.equals(victim.getName()) )
+		{
+			if ( shouldSendVictimMessage(victim.getName(), attacker.getName(), "H") )
+				victim.sendMessage(attackerPlayer.getName() + " is your hunter - " + ChatColor.RED + "they can kill you!");
+		}
+		else if ( victimTarget.equals(attackerPlayer.getName()) )
+		{
+			if ( shouldSendVictimMessage(victim.getName(), attacker.getName(), "V") )
+				victim.sendMessage(attackerPlayer.getName() + " is your victim - " + ChatColor.RED + "they can kill you!");
+		}
+		else
+		{
+			if ( shouldSendVictimMessage(victim.getName(), attacker.getName(), "-") )
+				victim.sendMessage(attackerPlayer.getName() + " is neither your hunter nor your victim - they cannot kill you, and will die if they try!");
+		}
+		return true;
+	}
+	
+	private static final long victimWarningRepeatInterval = 200;
+	private Map<String, long> victimWarningTimes = new LinkedHashMap<String, long>();
+	private boolean shouldSendVictimMessage(String victim, String attacker, String relationship)
+	{
+		// if there's a value saved for this player pair/relationship, see if it was saved within the last 10 secs - if so, don't send.
+		String key = victim + "|" + attacker + "|" + relationship;
+		long currentTime = plugin.getServer().getWorlds().get(0).getTime();
 		
+		if ( victimWarningTimes.containsKey(key) )
+		{
+			long warnedTime = victimWarningTimes.get(key);
+			if ( currentTime - warnedTime <= victimWarningRepeatInterval )
+				return false; // they were warned about this attacker IN THIS RELATIONSHIP within the last 10 secs. Don't warn again.
+		}
+		
+		// save this off, so they don't get this same message again in the next 10 secs
+		victimWarningTimes.put(key, currentTime);
 		return true;
 	}
 	
