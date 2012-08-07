@@ -96,7 +96,7 @@ public class TeamKiller extends GameMode
 		{
 			player.sendMessage("Welcome to Killer Minecraft!");
 			
-			if ( pm.numKillersAssigned() > 0 )
+			if ( pm.numKillersAssigned() > 0 && info.isAlive() )
 			{
 				// add them to whichever team has fewest left alive
 				int numFriendliesAlive = 0, numKillersAlive = 0;

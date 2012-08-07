@@ -143,8 +143,8 @@ public class ContractKiller extends GameMode
 		if ( isNewPlayer ) // this is a new player, and the game's started ... so fit them into the victim list
 		{
 			player.sendMessage("Welcome to Killer Minecraft!");
-			
-			if ( pm.numKillersAssigned() == 0 )
+					
+			if ( !info.isAlive() || pm.numKillersAssigned() == 0 )
 				return;
 				
 			// pick a player to be this player's hunter. This player's victim will be the hunter's victim.
@@ -177,7 +177,7 @@ public class ContractKiller extends GameMode
 		{
 			String message = "Welcome back.";
 			
-			if ( info != null && info.target != null )
+			if ( info != null && info.isAlive() && info.target != null )
 				message += " Your target is: " +  ChatColor.YELLOW + info.target + ChatColor.RESET + "!";
 				
 			player.sendMessage(message);

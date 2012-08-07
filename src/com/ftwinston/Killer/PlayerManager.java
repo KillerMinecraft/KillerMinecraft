@@ -239,6 +239,8 @@ public class PlayerManager
 		else
 			isNewPlayer = false;
 			
+		plugin.getGameMode().playerJoined(player, this, isNewPlayer, info);
+		
 		if ( !info.isAlive() )
 		{
 			String message = isNewPlayer ? "" : "Welcome Back. ";
@@ -254,8 +256,6 @@ public class PlayerManager
 		}
 		else
 		{
-			plugin.getGameMode().playerJoined(player, this, isNewPlayer, info);
-			
 			if ( info.isAlive() )
 			{
 				setAlive(player, true);
@@ -372,7 +372,7 @@ public class PlayerManager
 			else
 				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(true, numKillersAssigned() > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(true, numKillersAssigned() > 1) + (numKillersAssigned() > 1 ? "s win! " : " wins");
 		}
-		else if ( numKillersAssigned() == 0 ) // some mode might not assign specific killers. In this case, we only care about the winning player
+		else if ( numKillersAssigned() == 0 || numFriendlies == 0 ) // some mode might not assign specific killers, or have everyone as a killer. In this case, we only care about the winning player
 		{
 			if ( numSurvivors() == 1 )
 				for ( Map.Entry<String, Info> entry : getPlayerInfo() )
