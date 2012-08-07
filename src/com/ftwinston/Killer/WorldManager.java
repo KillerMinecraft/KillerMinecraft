@@ -13,10 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import net.minecraft.server.Convertable;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.RegionFile;
-import net.minecraft.server.WorldLoaderServer;
 import net.minecraft.server.WorldServer;
 import net.minecraft.server.WorldType;
 
@@ -384,7 +382,7 @@ public class WorldManager
 					Method a;
 					try
 					{
-						a = ms.getClass().getDeclaredMethod("a", Convertable.class, String.class, long.class, WorldType.class);
+						a = MinecraftServer.class.getDeclaredMethod("a", String.class, String.class, long.class, WorldType.class);
 					}
 					catch ( NoSuchMethodException ex )
 					{
@@ -396,7 +394,7 @@ public class WorldManager
 					try
 					{
 						a.setAccessible(true);
-						a.invoke(ms, new WorldLoaderServer(ms.server.getWorldContainer()), s, seedGen.nextLong(), worldtype);
+						a.invoke(ms, s, s, seedGen.nextLong(), worldtype);
 						a.setAccessible(false);
 					}
 					catch ( IllegalAccessException ex )
