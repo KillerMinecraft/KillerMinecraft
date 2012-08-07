@@ -374,8 +374,8 @@ public class WorldManager
 					plugin.log.info("Generating new worlds...");
 					MinecraftServer ms = getMinecraftServer();
 
-					String s = ms.propertyManager.getString("level-name", "world");
-					String s2 = ms.propertyManager.getString("level-type", "DEFAULT");
+					String s = ms.getPropertyManager().getString("level-name", "world");
+					String s2 = ms.getPropertyManager().getString("level-type", "DEFAULT");
 					WorldType worldtype = WorldType.getType(s2);
 
 					if (worldtype == null)

@@ -18,8 +18,9 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.util.LazyPlayerSet;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerChatEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Killer extends JavaPlugin
@@ -259,13 +260,13 @@ public class Killer extends JavaPlugin
 			PlayerManager.Info info = playerManager.getInfo(player.getName());
 		
 			// most of this code is a clone of the actual chat code in NetServerHandler.chat
-			PlayerChatEvent event = new PlayerChatEvent(player, "ignored");
+			AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(true, player, "ignored", new LazyPlayerSet());
 			getServer().getPluginManager().callEvent(event);
 
 			if (event.isCancelled())
 				return true;
 		
-			message = String.format(event.getFormat(), event.getPlayer().getDisplayName(), message);
+			message = String.format(event.getFormat(), player.getDisplayName(), message);
 			getServer().getConsoleSender().sendMessage(message);
 			
 			for (Player recipient : event.getRecipients())

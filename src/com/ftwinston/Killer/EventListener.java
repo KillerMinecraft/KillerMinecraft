@@ -23,9 +23,9 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
@@ -216,7 +216,7 @@ public class EventListener implements Listener
     }
     
     @EventHandler
-    public void onPlayerChat(PlayerChatEvent event)
+    public void onPlayerChat(AsyncPlayerChatEvent event)
     {
     	if ( plugin.voteManager.isInVote() )
     	{
