@@ -126,7 +126,7 @@ public class PlayerManager
 	
 	public void reset(boolean resetInventories)
 	{
-		countdownStarted = false;
+		stopAssignmentCountdown();
 
 		playerInfo.clear();
 		numKillers = numAlive = 0;
@@ -159,7 +159,7 @@ public class PlayerManager
 	
 	private boolean assignKillers(int numKillers, CommandSender sender)
 	{
-		countdownStarted = false;
+		stopAssignmentCountdown();
 		boolean startOfGame = numKillersAssigned() == 0;
 		boolean retval = plugin.getGameMode().assignKillers(numKillers, sender, this);
 		
@@ -288,14 +288,13 @@ public class PlayerManager
 			checkPlayerCompassTarget(player);
 	}
 	
-	boolean countdownStarted = false;
+	int countdownProcessID = -1;
 	public void checkImmediateKillerAssignment()
 	{
-		if ( !countdownStarted && plugin.getGameMode().immediateKillerAssignment() && numSurvivors() >= plugin.getGameMode().absMinPlayers() )
+		if ( countDownProcessID == -1 && plugin.getGameMode().immediateKillerAssignment() && numSurvivors() >= plugin.getGameMode().absMinPlayers() )
 		{
 			plugin.getServer().broadcastMessage("Allocation in 30 seconds...");
-			countdownStarted = true;
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+			countdownProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				@Override
 				public void run()
 				{
@@ -303,6 +302,15 @@ public class PlayerManager
 				}
 			}, 600L);
 		}
+	}
+	
+	public void stopAssignmentCountdown()
+	{
+		if ( countdownProcessID == -1 )
+			return;
+		
+		plugin.getServer().getScheduler().cancelTask(countdownProcessID);
+		countdownProcessID = -1;
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time
