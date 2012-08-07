@@ -291,7 +291,7 @@ public class PlayerManager
 	int countdownProcessID = -1;
 	public void checkImmediateKillerAssignment()
 	{
-		if ( countDownProcessID == -1 && plugin.getGameMode().immediateKillerAssignment() )
+		if ( countdownProcessID == -1 && plugin.getGameMode().immediateKillerAssignment() )
 			if ( numSurvivors() >= plugin.getGameMode().absMinPlayers() )
 			{
 				plugin.getServer().broadcastMessage("Allocation in 30 seconds...");

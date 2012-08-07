@@ -242,24 +242,24 @@ public class ContractKiller extends GameMode
 			}
 		else if ( attackerTarget.equals(victim.getName()) )
 		{
-			if ( shouldSendVictimMessage(victim.getName(), attacker.getName(), "H") )
+			if ( shouldSendVictimMessage(victim.getName(), attackerPlayer.getName(), "H") )
 				victim.sendMessage(attackerPlayer.getName() + " is your hunter - " + ChatColor.RED + "they can kill you!");
 		}
 		else if ( victimTarget.equals(attackerPlayer.getName()) )
 		{
-			if ( shouldSendVictimMessage(victim.getName(), attacker.getName(), "V") )
+			if ( shouldSendVictimMessage(victim.getName(), attackerPlayer.getName(), "V") )
 				victim.sendMessage(attackerPlayer.getName() + " is your victim - " + ChatColor.RED + "they can kill you!");
 		}
 		else
 		{
-			if ( shouldSendVictimMessage(victim.getName(), attacker.getName(), "-") )
+			if ( shouldSendVictimMessage(victim.getName(), attackerPlayer.getName(), "-") )
 				victim.sendMessage(attackerPlayer.getName() + " is neither your hunter nor your victim - they cannot kill you, and will die if they try!");
 		}
 		return true;
 	}
 	
 	private static final long victimWarningRepeatInterval = 200;
-	private Map<String, long> victimWarningTimes = new LinkedHashMap<String, long>();
+	private Map<String, Long> victimWarningTimes = new LinkedHashMap<String, Long>();
 	private boolean shouldSendVictimMessage(String victim, String attacker, String relationship)
 	{
 		// if there's a value saved for this player pair/relationship, see if it was saved within the last 10 secs - if so, don't send.
