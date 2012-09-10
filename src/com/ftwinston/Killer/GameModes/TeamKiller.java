@@ -98,28 +98,27 @@ public class TeamKiller extends GameMode
 			
 			if ( pm.numKillersAssigned() > 0 && info.isAlive() )
 			{
-				// add them to whichever team has fewest left alive
-				int numFriendliesAlive = 0, numKillersAlive = 0;
+				// add them to whichever team has fewest players
+				int numFriendlies = 0, numKillers = 0;
 				for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
 					if ( entry.getValue().isKiller() )
-						numKillersAlive++;
+						numKillers++;
 					else
-						numFriendliesAlive++;
+						numFriendlies++;
 				
-				if ( numKillersAlive > numFriendliesAlive )
+				boolean killer;
+				
+				if ( numKillers < numFriendlies )
+					killer = true;
+				else if ( numKillers == numFriendlies )
+					killer = r.nextInt() == 1;
+				else
+					killer = false;
+				
+				if ( killer )
 				{
 					info.setKiller(true);
 					plugin.getServer().broadcastMessage(player.getName() + " is on the " + ChatColor.RED + "red" + ChatColor.RESET + " team.");
-				}
-				else if ( numKillersAlive == numFriendliesAlive )
-				{
-					if ( r.nextInt() == 1 )
-					{
-						info.setKiller(true);
-						plugin.getServer().broadcastMessage(player.getName() + " is on the " + ChatColor.RED + "red" + ChatColor.RESET + " team.");					
-					}
-					else
-						plugin.getServer().broadcastMessage(player.getName() + " is on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
 				}
 				else
 					plugin.getServer().broadcastMessage(player.getName() + " is on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
