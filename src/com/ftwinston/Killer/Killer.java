@@ -260,7 +260,7 @@ public class Killer extends JavaPlugin
 			PlayerManager.Info info = playerManager.getInfo(player.getName());
 		
 			// most of this code is a clone of the actual chat code in NetServerHandler.chat
-			AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(true, player, "ignored", new LazyPlayerSet());
+			AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(false, player, "ignored", new LazyPlayerSet());
 			getServer().getPluginManager().callEvent(event);
 
 			if (event.isCancelled())
