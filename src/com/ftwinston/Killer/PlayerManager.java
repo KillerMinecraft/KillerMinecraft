@@ -389,7 +389,7 @@ public class PlayerManager
 		else if ( killerWon )
 		{
 			if ( numFriendlies > 1 )
-				message = "All of the " + plugin.getGameMode().describePlayer(false, true) + "s have";
+				message = "All of the " + plugin.getGameMode().describePlayer(false, true) + " have";
 			else
 				message = "The " + plugin.getGameMode().describePlayer(false, false) + " has";
 			message += " died, the " + plugin.getGameMode().describePlayer(true, numKillersAssigned() > 1);
