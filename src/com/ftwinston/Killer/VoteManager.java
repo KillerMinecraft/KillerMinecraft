@@ -215,7 +215,7 @@ public class VoteManager
 					startVote("End this round, and start a new round with the same world?", player, new Runnable() {
 						public void run()
 						{
-							plugin.restartGame(true);
+							plugin.restartGame(true, null);
 						}
 					}, null, null);
 				
@@ -223,7 +223,7 @@ public class VoteManager
 					startVote("End this round, and start a new round in a new world?", player, new Runnable() {
 						public void run()
 						{
-							plugin.restartGame(false);
+							plugin.restartGame(false, null);
 						}
 					}, null, null);
 				

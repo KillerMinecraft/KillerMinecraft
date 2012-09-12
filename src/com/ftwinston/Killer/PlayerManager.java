@@ -438,7 +438,7 @@ public class PlayerManager
 				@Override
 				public void run()
 				{
-	    			plugin.restartGame(false);					
+	    			plugin.restartGame(false, null);					
 				}
 	    	}, 200L);
 		}
@@ -447,14 +447,14 @@ public class PlayerManager
 			Runnable yesResult = new Runnable() {
 				public void run()
 				{
-					plugin.restartGame(true);
+					plugin.restartGame(true, null);
 				}
 			};
 			
 			Runnable noResult = new Runnable() {
 				public void run()
 				{
-					plugin.restartGame(false);
+					plugin.restartGame(false, null);
 				}
 			};
 			

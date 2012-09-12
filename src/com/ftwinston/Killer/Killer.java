@@ -320,15 +320,9 @@ public class Killer extends JavaPlugin
 				}
 				
 				if ( args[1].equalsIgnoreCase("same") )
-				{
-					getServer().broadcastMessage(sender.getName() + " is restarting the game in the same world");
-					restartGame(true);
-				}
+					restartGame(true, sender);
 				else if ( args[1].equalsIgnoreCase("new") )
-				{
-					getServer().broadcastMessage(sender.getName() + " is restarting the game in a new world");
-					restartGame(false);
-				}
+					restartGame(false, sender);
 				else
 					sender.sendMessage("Usage: /killer restart new (for new world), or /killer restart same (for same world)");
 			}
@@ -368,7 +362,7 @@ public class Killer extends JavaPlugin
 		return plinthPressurePlateLocation;
 	}
 	
-	public void restartGame(boolean useSameWorld)
+	public void restartGame(boolean useSameWorld, CommandSender restartedBy)
 	{
 		if ( restarting )
 			return;
@@ -384,7 +378,7 @@ public class Killer extends JavaPlugin
 		if ( gameMode != nextGameMode )
 		{
 			gameMode = nextGameMode;
-			getServer().broadcastMessage("Changing to " + gameMode.getName() + " mode");
+			getServer().broadcastMessage("Changed to " + gameMode.getName() + " mode");
 		}
 		
 		if ( statsManager.isTracking )
@@ -392,7 +386,10 @@ public class Killer extends JavaPlugin
 		
 		if ( useSameWorld )
 		{
-			getServer().broadcastMessage("Game is restarting, using the same world...");
+			if ( restartedBy != null )
+				getServer().broadcastMessage(restartedBy.getName() + " is restarting the game, using the same world...");
+			else
+				getServer().broadcastMessage("Game is restarting, using the same world...");
 			World defaultWorld = getServer().getWorlds().get(0);
  
 			for ( Player player : getServer().getOnlinePlayers() )
@@ -412,7 +409,11 @@ public class Killer extends JavaPlugin
 		else
 		{
 			restarting = true;
-			getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
+			if ( restartedBy != null )
+				getServer().broadcastMessage(restartedBy.getName() + " is restarting the game, please wait while the world is deleted and a new one is prepared...");
+			else
+				getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
+			
 			playerManager.reset(true);
 			worldManager.deleteWorlds(new Runnable() {
 				public void run()
