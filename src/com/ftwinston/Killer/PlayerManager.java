@@ -134,7 +134,7 @@ public class PlayerManager
 		for ( Player player : plugin.getServer().getOnlinePlayers() )
 		{
 			resetPlayer(player, resetInventories);
-			setAlive(player,true);
+			setAlive(player, true, true);
 		}
 		
 		if ( plugin.banOnDeath )
@@ -247,7 +247,7 @@ public class PlayerManager
 			message += "You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.";
 			
 			player.sendMessage(message);
-			setAlive(player, false);
+			setAlive(player, false, true);
 			
 			// send this player to everyone else's scoreboards, because they're now invisible, and won't show otherwise
 			for ( Player online : plugin.getServer().getOnlinePlayers() )
@@ -258,7 +258,7 @@ public class PlayerManager
 		{
 			if ( info.isAlive() )
 			{
-				setAlive(player, true);
+				setAlive(player, true, true);
 				
 				if ( info.isKiller() )
 					plugin.getGameMode().prepareKiller(player, this, isNewPlayer);
@@ -270,7 +270,7 @@ public class PlayerManager
 			}
 			else
 			{
-				setAlive(player, false); // game mode made them a spectator for some reason
+				setAlive(player, false, true); // game mode made them a spectator for some reason
 				player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
 			}
 		}
@@ -341,14 +341,14 @@ public class PlayerManager
 		
 		if ( numKillersAssigned() == 0 )
 		{// game hasn't started yet, just respawn them normally
-			setAlive(player, true);
+			setAlive(player, true, false);
 			return;	
 		}
 		
 		if ( plugin.getGameMode().informOfKillerIdentity() )
 			plugin.playerManager.clearPlayerNameColor(player);
 		
-		setAlive(player, false);
+		setAlive(player, false, false);
 
 		if ( plugin.banOnDeath )
 		{
@@ -540,7 +540,7 @@ public class PlayerManager
 		return info != null && info.isKiller();
 	}
 
-	public void setAlive(Player player, boolean bAlive)
+	public void setAlive(Player player, boolean bAlive, boolean updateVisibility)
 	{
 		boolean wasAlive;
 		Info info = playerInfo.get(player.getName());
@@ -563,7 +563,8 @@ public class PlayerManager
 				player.setAllowFlight(false);
 			}
 
-			makePlayerVisibleToAll(player);
+			if ( updateVisibility )
+				makePlayerVisibleToAll(player);
 			if ( !wasAlive )
 				player.sendMessage("You are no longer a spectator.");
 		}
@@ -571,7 +572,9 @@ public class PlayerManager
 		{
 			player.setAllowFlight(true);
 			player.getInventory().clear();
-			makePlayerInvisibleToAll(player);
+			
+			if ( updateVisibility )
+				makePlayerInvisibleToAll(player);
 			
 			if ( wasAlive )
 				player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
@@ -592,13 +595,15 @@ public class PlayerManager
 	public void makePlayerInvisibleToAll(Player player)
 	{
 		for(Player p : plugin.getServer().getOnlinePlayers())
-			hidePlayer(p, player);
+			if (p != player && p.canSee(player))
+				hidePlayer(p, player);
 	}
 	
 	public void makePlayerVisibleToAll(Player player)
 	{
 		for(Player p :  plugin.getServer().getOnlinePlayers())
-			p.showPlayer(player);
+			if (p != player && !p.canSee(player))
+				p.showPlayer(player);
 	}
 
 	public void resetPlayer(Player player, boolean resetInventory)
