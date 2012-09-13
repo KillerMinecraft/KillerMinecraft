@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import jline.internal.Log;
+
 import net.minecraft.server.Packet201PlayerInfo;
 
 import org.bukkit.ChatColor;
@@ -362,6 +364,7 @@ public class PlayerManager
 	
 	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)
 	{
+		Log.warn("gameFinished called...");
 		String message = null;
 		int numFriendlies = playerInfo.size() - numKillersAssigned();
 		
@@ -375,12 +378,14 @@ public class PlayerManager
 		else if ( numKillersAssigned() == 0 || numFriendlies == 0 ) // some mode might not assign specific killers, or have everyone as a killer. In this case, we only care about the winning player
 		{
 			if ( numSurvivors() == 1 )
+			{
 				for ( Map.Entry<String, Info> entry : getPlayerInfo() )
 					if ( entry.getValue().isAlive() )
 					{
 						message = "Only one player left standing, " + entry.getKey() + " wins!";
 						break;
 					}
+			}
 			else if ( numSurvivors() == 0 )
 				message = "No players survived, game drawn!";
 			else
