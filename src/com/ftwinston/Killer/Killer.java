@@ -19,8 +19,12 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.util.LazyPlayerSet;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Killer extends JavaPlugin
@@ -60,6 +64,7 @@ public class Killer extends JavaPlugin
         
         GameMode.setupGameModes(this);
         setupConfiguration();
+        createRecipes();
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
         playerManager = new PlayerManager(this);
@@ -117,6 +122,43 @@ public class Killer extends JavaPlugin
 		worldManager.onDisable();
 		getServer().getScheduler().cancelTask(compassProcessID);
 		getServer().getScheduler().cancelTask(spectatorFollowProcessID);
+	}
+	
+	private void createRecipes()
+	{
+		// add "simplified" dispenser recipe: replace bow with sapling (of any sort) 
+		ShapedRecipe dispenser = new ShapedRecipe(new ItemStack(Material.DISPENSER, 1));
+		dispenser.shape(new String[] { "AAA", "ABA", "ACA" });
+		dispenser.setIngredient('A', Material.COBBLESTONE);
+		dispenser.setIngredient('B', Material.SAPLING);
+		dispenser.setIngredient('C', Material.REDSTONE);
+		getServer().addRecipe(dispenser);
+		
+		short zero = 0;
+		
+		ShapelessRecipe recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGGS, 1, zero, (byte)EntityType.SPIDER.getTypeId()));
+		recipe.addIngredient(Material.FEATHER);
+		getServer().addRecipe(recipe);
+		
+		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.ZOMBIE.getTypeId()));
+		recipe.addIngredient(Material.ROTTEN_FLESH);
+		getServer().addRecipe(recipe);
+		
+		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.CREEPER.getTypeId()));
+		recipe.addIngredient(Material.SULPHUR);
+		getServer().addRecipe(recipe);
+		
+		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SKELETON.getTypeId()));
+		recipe.addIngredient(3, Material.INK_SACK, 15);
+		getServer().addRecipe(recipe);
+		
+		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.ENDERMAN.getTypeId()));
+		recipe.addIngredient(Material.ENDER_PEARL);
+		getServer().addRecipe(recipe);
+		
+		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SLIME.getTypeId()));
+		recipe.addIngredient(Material.SLIME_BALL);
+		getServer().addRecipe(recipe);
 	}
 	
 	private void setupConfiguration()
