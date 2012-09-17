@@ -629,6 +629,10 @@ public class PlayerManager
 				inv.setBoots(null);
 				
 				player.closeInventory(); // this stops them from keeping items they had in (e.g.) a crafting table
+				
+				if ( isAlive(player.getName()) ) // if any starting items are configured, give them if the player is alive
+					for ( Material material : plugin.startingItems )
+						inv.addItem(new ItemStack(material));
 			}
 		}
 		

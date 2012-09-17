@@ -10,6 +10,7 @@ package com.ftwinston.Killer;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
@@ -40,7 +41,7 @@ public class Killer extends JavaPlugin
 	public StatsManager statsManager;
 	
 	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, stopServerToRecreateWorld, reportStats;
-	public Material[] winningItems;
+	public Material[] winningItems, startingItems;
 	
 	private int compassProcessID, spectatorFollowProcessID;
 	private boolean restarting;
@@ -172,8 +173,8 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("banOnDeath", false);
 		getConfig().addDefault("informEveryoneOfReassignedKillers", true);
 		getConfig().addDefault("reportStats", true);
-		getConfig().addDefault("winningItems", Arrays.asList(Material.BLAZE_ROD.getId(), Material.GHAST_TEAR.getId()));		
-		
+		getConfig().addDefault("winningItems", Arrays.asList(Material.BLAZE_ROD.getId(), Material.GHAST_TEAR.getId()));
+		getConfig().addDefault("startingItems", new ArrayList<Integer>());
 		
 		getConfig().addDefault("autoRecreateWorld", false);
 		getConfig().addDefault("stopServerToRecreateWorld", false);
@@ -199,17 +200,30 @@ public class Killer extends JavaPlugin
 		stopServerToRecreateWorld = getConfig().getBoolean("stopServerToRecreateWorld");
 		reportStats = getConfig().getBoolean("reportStats");
 
-		List<Integer> winningItemIDs = getConfig().getIntegerList("winningItems"); 
-		winningItems = new Material[winningItemIDs.size()];
+		List<Integer> itemIDs = getConfig().getIntegerList("winningItems"); 
+		winningItems = new Material[itemIDs.size()];
 		for ( int i=0; i<winningItems.length; i++ )
 		{
-			Material mat = Material.getMaterial(winningItemIDs.get(i));
+			Material mat = Material.getMaterial(itemIDs.get(i));
 			if ( mat == null )
 			{
 				mat = Material.BLAZE_ROD;
-				log.warning("Material ID " + winningItemIDs.get(i) + " not recognized.");
+				log.warning("Winning item ID " + itemIDs.get(i) + " not recognized.");
 			} 
 			winningItems[i] = mat;
+		}
+		
+		itemIDs = getConfig().getIntegerList("startingItems"); 
+		startingItems = new Material[itemIDs.size()];
+		for ( int i=0; i<startingItems.length; i++ )
+		{
+			Material mat = Material.getMaterial(itemIDs.get(i));
+			if ( mat == null )
+			{
+				mat = Material.STONE_PICKAXE;
+				log.warning("Starting item ID " + itemIDs.get(i) + " not recognized.");
+			} 
+			startingItems[i] = mat;
 		}
 	}
 	
