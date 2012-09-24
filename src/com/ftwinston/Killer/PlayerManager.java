@@ -577,6 +577,7 @@ public class PlayerManager
 		else
 		{
 			player.setAllowFlight(true);
+			player.setFlying(true);
 			Inventory inv = player.getInventory(); 
 			inv.clear();
 			inv.addItem(new ItemStack(plugin.teleportModeItem, 1));
