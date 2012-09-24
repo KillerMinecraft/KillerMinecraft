@@ -269,9 +269,9 @@ public class Killer extends JavaPlugin
 			{
 				if ( playerManager.getFollowTarget(player) == null )
 				{
-					playerManager.setFollowTarget(player, playerManager.getDefaultFollowTarget());
+					playerManager.setFollowTarget(player, playerManager.getNearestFollowTarget(player));
 					playerManager.checkFollowTarget(player);
-					sender.sendMessage("Follow mode enabled. Type " + ChatColor.YELLOW + "/spec follow" + ChatColor.RESET + " again to exist follow mode, or /spec <player name> to follow another player.");
+					sender.sendMessage("Follow mode enabled. Right click or type " + ChatColor.YELLOW + "/spec follow" + ChatColor.RESET + " again to exist follow mode. Left click or type /spec <player name> to follow another player.");
 				}
 				else
 				{

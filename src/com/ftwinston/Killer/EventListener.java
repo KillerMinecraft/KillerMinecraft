@@ -13,6 +13,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
@@ -135,16 +136,44 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event)
     {
+    	// spectators can't interact with anything, but they do use clicking to handle their spectator stuff
+    	String playerName = event.getPlayer().getName();
+    	if ( plugin.playerManager.isSpectator(playerName) )
+    	{
+    		event.setCancelled(true);
+    		PlayerManager.Info info = plugin.playerManager.getInfo(playerName); 
+    		
+    		if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
+    		{
+				if ( info.target != null )
+				{// cycle to next target
+					plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNextFollowTarget(event.getPlayer(), info.target));
+    				plugin.playerManager.checkFollowTarget(event.getPlayer());
+    				event.getPlayer().sendMessage("Following " + info.target + ".");
+				}
+				else
+					plugin.playerManager.doSpectatorTeleport(event.getPlayer()); // teleport
+    		}
+    		else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
+    		{
+    			if ( info.target != null )
+    			{
+    				info.target = null; // clear target
+					event.getPlayer().sendMessage("Follow mode disabled.");
+    			}
+    			else
+    			{
+    				plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNearestFollowTarget(event.getPlayer()));
+    				plugin.playerManager.checkFollowTarget(event.getPlayer());
+    				event.getPlayer().sendMessage("Follow mode enabled.");
+    			}
+    		}
+    		return;
+    	}
+
     	if(event.isCancelled())
     		return;
 
-    	// spectators can't interact with anything
-    	if ( plugin.playerManager.isSpectator(event.getPlayer().getName()))
-    	{
-    		event.setCancelled(true);
-    		return;
-    	}
-    	
 	  	if(event.getClickedBlock().getType() == Material.STONE_PLATE)
 	  	{
 	        if ( isOnPlinth(event.getClickedBlock().getLocation()) )

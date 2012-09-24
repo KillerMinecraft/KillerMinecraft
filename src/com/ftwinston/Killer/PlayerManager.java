@@ -761,7 +761,7 @@ public class PlayerManager
 		Player target = plugin.getServer().getPlayerExact(targetName);
 		if ( !isAlive(targetName) || target == null || !target.isOnline() )
 		{
-			targetName = getDefaultFollowTarget();
+			targetName = getNearestFollowTarget(player);
 			setFollowTarget(player, targetName);
 			if ( targetName == null )
 				return; // if there isn't a valid follow target, don't let it try to move them to it
@@ -909,8 +909,50 @@ public class PlayerManager
 		player.teleport(bestLoc);
 	}
 	
-	public String getDefaultFollowTarget()
+	public String getNearestFollowTarget(Player lookFor)
 	{
+		double nearestDistSq = Double.MAX_VALUE;
+		String nearestName = null;
+		
+		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+		{
+			if ( !entry.getValue().isAlive() )
+				continue;
+			
+			Player player = plugin.getServer().getPlayerExact(entry.getKey());
+			if ( player != null && player.isOnline() )
+			{
+				double testDistSq = player.getLocation().distanceSquared(lookFor.getLocation());
+				if ( testDistSq < nearestDistSq )
+				{
+					nearestName = player.getName();
+					nearestDistSq = testDistSq;
+				}
+			}
+				
+		}
+		return nearestName;
+	}
+	
+	public String getNextFollowTarget(Player lookFor, String currentTargetName)
+	{
+		boolean useNextTarget = false;		
+		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+		{
+			if ( !useNextTarget && entry.getKey().equals(currentTargetName) )
+			{
+				useNextTarget = true;
+				continue;
+			}
+			if ( !entry.getValue().isAlive() || !useNextTarget )
+				continue;
+			
+			Player player = plugin.getServer().getPlayerExact(entry.getKey());
+			if ( player != null && player.isOnline() )
+				return entry.getKey();
+		}
+		
+		// couldn't find one, or ran off the end of the list, so start again at the beginning, and use the first valid one
 		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
 		{
 			if ( !entry.getValue().isAlive() )
@@ -920,6 +962,15 @@ public class PlayerManager
 			if ( player != null && player.isOnline() )
 				return entry.getKey();
 		}
+		
+		// there really just wasn't one
 		return null;
+	}
+
+	// teleport forward a short distance, to get around doors, walls, etc. that spectators can't dig through
+	public void doSpectatorTeleport(Player player)
+	{
+		// TODO Auto-generated method stub
+		player.sendMessage("Teleporting forwards. Honest.");
 	}
 }
