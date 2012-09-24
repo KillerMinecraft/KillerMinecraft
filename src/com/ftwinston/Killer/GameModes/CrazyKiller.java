@@ -123,7 +123,6 @@ public class CrazyKiller extends GameMode
 		inv.addItem(new ItemStack(Material.STONE, 64));
 		
 		// you don't START with piles of TNT, however
-		inv.remove(Material.DIRT);
 		inv.addItem(new ItemStack(Material.TNT, 4));
 		
 		// teleport the killer a little bit away from the other players, to stop them being immediately stabbed
