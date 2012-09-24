@@ -139,26 +139,33 @@ public class Killer extends JavaPlugin
 		
 		ShapelessRecipe recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGGS, 1, zero, (byte)EntityType.SPIDER.getTypeId()));
 		recipe.addIngredient(Material.FEATHER);
+		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.ZOMBIE.getTypeId()));
 		recipe.addIngredient(Material.ROTTEN_FLESH);
+		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.CREEPER.getTypeId()));
 		recipe.addIngredient(Material.SULPHUR);
+		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SKELETON.getTypeId()));
-		recipe.addIngredient(3, Material.INK_SACK, 15);
+		//recipe.addIngredient(3, Material.INK_SACK, 15);
+		recipe.addIngredient(Material.BONE);
+		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.ENDERMAN.getTypeId()));
 		recipe.addIngredient(Material.ENDER_PEARL);
+		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SLIME.getTypeId()));
 		recipe.addIngredient(Material.SLIME_BALL);
+		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 	}
 	
