@@ -29,10 +29,12 @@ import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
 
 public class EventListener implements Listener
 {
@@ -135,6 +137,31 @@ public class EventListener implements Listener
     }
     
     @EventHandler
+    public void onPlayerItemSwitch(PlayerItemHeldEvent event)
+    {
+    	if ( plugin.playerManager.isSpectator(event.getPlayer().getName()) )
+    	{
+    		ItemStack item = event.getPlayer().getInventory().getItem(event.getNewSlot());
+    		
+    		if ( item == null )
+    			plugin.playerManager.setFollowTarget(event.getPlayer(), null);
+    		else if ( item.getType() == plugin.teleportModeItem )
+    		{
+    			event.getPlayer().sendMessage("Free look mode: right click to teleport forward");
+    			plugin.playerManager.setFollowTarget(event.getPlayer(), null);
+    		}
+    		else if ( item.getType() == plugin.followModeItem )
+    		{
+    			event.getPlayer().sendMessage("Follow mode: click to cycle target");
+    			plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNearestFollowTarget(event.getPlayer()));
+				plugin.playerManager.checkFollowTarget(event.getPlayer());
+    		}
+    		else
+    			plugin.playerManager.setFollowTarget(event.getPlayer(), null);
+    	}
+    }
+    
+    @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event)
     {
     	// spectators can't interact with anything, but they do use clicking to handle their spectator stuff
@@ -142,33 +169,33 @@ public class EventListener implements Listener
     	if ( plugin.playerManager.isSpectator(playerName) )
     	{
     		event.setCancelled(true);
-    		PlayerManager.Info info = plugin.playerManager.getInfo(playerName); 
+    		Material held = event.getPlayer().getItemInHand().getType();
     		
-    		if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
+    		if ( held == plugin.teleportModeItem )
     		{
-				if ( info.target != null )
-				{// cycle to next target
-					plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNextFollowTarget(event.getPlayer(), info.target));
+    			if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
+    			{
+    				plugin.playerManager.doSpectatorTeleport(event.getPlayer()); // teleport
+    			}
+    		}
+    		else if ( held == plugin.followModeItem )
+    		{
+        		PlayerManager.Info info = plugin.playerManager.getInfo(playerName); 
+        		
+    			if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
+        		{
+    				plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNextFollowTarget(event.getPlayer(), info.target, true));
     				plugin.playerManager.checkFollowTarget(event.getPlayer());
     				event.getPlayer().sendMessage("Following " + info.target + ".");
-				}
-				else
-					plugin.playerManager.doSpectatorTeleport(event.getPlayer()); // teleport
-    		}
-    		else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
-    		{
-    			if ( info.target != null )
-    			{
-    				info.target = null; // clear target
-					event.getPlayer().sendMessage("Follow mode disabled.");
-    			}
-    			else
-    			{
-    				plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNearestFollowTarget(event.getPlayer()));
+        		}
+    			else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
+        		{
+    				plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNextFollowTarget(event.getPlayer(), info.target, false));
     				plugin.playerManager.checkFollowTarget(event.getPlayer());
-    				event.getPlayer().sendMessage("Follow mode enabled.");
-    			}
+    				event.getPlayer().sendMessage("Following " + info.target + ".");
+        		}
     		}
+    		
     		return;
     	}
 

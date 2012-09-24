@@ -46,6 +46,8 @@ public class Killer extends JavaPlugin
 	private int compassProcessID, spectatorFollowProcessID;
 	private boolean restarting;
 	
+	public Material teleportModeItem = Material.WATCH, followModeItem = Material.ARROW;
+	
 	private GameMode gameMode, nextGameMode;
 	public GameMode getGameMode() { return gameMode; }
 	public GameMode getNextGameMode() { return nextGameMode; }
@@ -271,7 +273,7 @@ public class Killer extends JavaPlugin
 				{
 					playerManager.setFollowTarget(player, playerManager.getNearestFollowTarget(player));
 					playerManager.checkFollowTarget(player);
-					sender.sendMessage("Follow mode enabled. Right click or type " + ChatColor.YELLOW + "/spec follow" + ChatColor.RESET + " again to exist follow mode. Left click or type /spec <player name> to follow another player.");
+					sender.sendMessage("Follow mode enabled. Type " + ChatColor.YELLOW + "/spec follow" + ChatColor.RESET + " again to exist follow mode. Type /spec <player name> to follow another player.");
 				}
 				else
 				{

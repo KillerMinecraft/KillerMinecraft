@@ -1,10 +1,10 @@
 package com.ftwinston.Killer;
 
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
 
 import jline.internal.Log;
 
@@ -21,6 +21,7 @@ import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.BlockIterator;
@@ -101,7 +102,7 @@ public class PlayerManager
 		public String target;
 	}
 	
-	private Map<String, Info> playerInfo = new LinkedHashMap<String, Info>();
+	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();
 	public Set<Map.Entry<String, Info>> getPlayerInfo() { return playerInfo.entrySet(); }
 	
 	// any changes are automatically tracked, so these values should always be right. Includes dead killers!
@@ -576,11 +577,14 @@ public class PlayerManager
 		else
 		{
 			player.setAllowFlight(true);
-			player.getInventory().clear();
+			Inventory inv = player.getInventory(); 
+			inv.clear();
+			inv.addItem(new ItemStack(plugin.teleportModeItem, 1));
+			inv.addItem(new ItemStack(plugin.followModeItem, 1));
 			makePlayerInvisibleToAll(player);
 			
 			if ( wasAlive )
-				player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
+				player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Clicking has different effects depending on the selected item. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
 		}
 	}
 	
@@ -934,10 +938,12 @@ public class PlayerManager
 		return nearestName;
 	}
 	
-	public String getNextFollowTarget(Player lookFor, String currentTargetName)
+	public String getNextFollowTarget(Player lookFor, String currentTargetName, boolean forwards)
 	{
-		boolean useNextTarget = false;		
-		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+		Set<Map.Entry<String, Info>> players = forwards ? playerInfo.entrySet() : playerInfo.descendingMap().entrySet();
+		boolean useNextTarget = false;
+		
+		for ( Map.Entry<String, Info> entry : players )
 		{
 			if ( !useNextTarget && entry.getKey().equals(currentTargetName) )
 			{
@@ -951,9 +957,9 @@ public class PlayerManager
 			if ( player != null && player.isOnline() )
 				return entry.getKey();
 		}
-		
+				
 		// couldn't find one, or ran off the end of the list, so start again at the beginning, and use the first valid one
-		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+		for ( Map.Entry<String, Info> entry : players )
 		{
 			if ( !entry.getValue().isAlive() )
 				continue;
