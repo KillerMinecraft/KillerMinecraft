@@ -27,6 +27,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
@@ -186,6 +187,14 @@ public class EventListener implements Listener
 					}
 	        }
 	  	}
+    }
+
+    @EventHandler
+    public void onItemDrop(PlayerDropItemEvent event)
+    {
+    	// spectators can't drop items
+    	if ( plugin.playerManager.isSpectator(event.getPlayer().getName()) )
+    		event.setCancelled(true);
     }
     
     @EventHandler
