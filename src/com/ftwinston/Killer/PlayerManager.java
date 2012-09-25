@@ -808,7 +808,7 @@ public class PlayerManager
         while (itr.hasNext())
         {
             Block block = itr.next();
-            if ( !block.isEmpty() )
+            if ( block != null && !block.isEmpty() )
             	return false;
         }
         
