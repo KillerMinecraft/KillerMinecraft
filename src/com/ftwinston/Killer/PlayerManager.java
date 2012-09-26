@@ -58,7 +58,7 @@ public class PlayerManager
 			long lastRun = 0;
 			public void run()
 			{
-				long time = plugin.getServer().getWorlds().get(0).getTime();
+				long time = plugin.worldManager.mainWorld.getTime();
 			
 				if ( time < lastRun ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
 					assignKillers(null);
@@ -285,14 +285,17 @@ public class PlayerManager
 			}
 		}
 		if ( isNewPlayer );
+		{
 			plugin.getGameMode().explainGameMode(player, this);
+			player.setBedSpawnLocation(plugin.worldManager.mainWorld.getSpawnLocation());
+		}
 		
 		if ( numKillersAssigned() == 0 )
 		{
 			checkImmediateKillerAssignment();
 			
 			if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getServer().getOnlinePlayers().length == 1 )
-				plugin.getServer().getWorlds().get(0).setTime(0);
+				plugin.worldManager.mainWorld.setTime(0);
 		}
 		else
 			checkPlayerCompassTarget(player);

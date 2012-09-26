@@ -35,7 +35,7 @@ public class WorldManager
 		public static WorldManager instance;
 		
 		private Killer plugin;
-		public WorldManager(Killer killer)
+		public WorldManager(Killer killer, String mainWorldName, String holdingWorldName)
 		{
 			plugin = killer;
 			instance = this;
@@ -47,8 +47,72 @@ public class WorldManager
 				seedGen = new Random();
 				bindRegionFiles();
 				serverFolder = plugin.getServer().getWorldContainer();
-				holdingWorld = getOrCreateHoldingWorld();
+				holdingWorld = getOrCreateHoldingWorld(holdingWorldName);
 			}
+
+			// try to find the main world, based on the config-provided name
+			List<World> worlds = plugin.getServer().getWorlds();
+
+			for ( World world : worlds )
+				if ( world.getName().equals(mainWorldName) )
+				{
+					mainWorld = world;
+					break;
+				}
+			
+			// couldn't find main world specified, so get the first "overworld" world
+			if ( mainWorld == null )
+			{
+				for ( World world : worlds )
+					if ( world.getEnvironment() == Environment.NORMAL )
+					{
+						mainWorld = world;
+						break;
+					}
+			
+				// still couldn't find something suitable, get any old world
+				if ( mainWorld == null )
+					mainWorld = worlds.get(0);
+				
+				plugin.log.warning("Killer couldn't find \"" + mainWorldName + "\" main world, using " + mainWorld.getName() + " instead");
+			}
+			
+			// now find the main world's corresponding nether world
+			String worldName = mainWorldName + "_nether"; // todo: check this name
+			
+			for ( World world : worlds )
+				if ( world.getName().equals(worldName) )
+				{
+					netherWorld = world;
+					break;
+				}
+			
+			// couldn't find main world specified, so get the first "overworld" world
+			if ( netherWorld == null )
+			{
+				for ( World world : worlds )
+					if ( world.getEnvironment() == Environment.NETHER )
+					{
+						netherWorld = world;
+						break;
+					}
+			
+				// still couldn't find something suitable, get any old world
+				if ( netherWorld == null )
+					netherWorld = worlds.get(0);
+				
+				plugin.log.warning("Killer couldn't find \"" + worldName + "\" nether world, using " + netherWorld.getName() + " instead");
+			}
+			
+			// now find corresponding End world, if present. If not present, don't go grabbing another end world, just assume we don't have one.
+			worldName = mainWorldName + "_end"; // todo: check this name
+			
+			for ( World world : worlds )
+				if ( world.getName().equals(worldName) )
+				{
+					netherWorld = world;
+					break;
+				}
 		}
 		
 		public void onDisable()
@@ -65,8 +129,10 @@ public class WorldManager
 		private static HashMap regionfiles;
 		private static Field rafField;
 		
-		private final String holdingWorldName = "holding";
+		public World mainWorld;
 		public World holdingWorld;
+		public World netherWorld;
+		public World endWorld;
 		
 		private MinecraftServer getMinecraftServer()
 		{
@@ -88,12 +154,12 @@ public class WorldManager
 			return null;
 		}
 				
-		private World getOrCreateHoldingWorld() 
+		private World getOrCreateHoldingWorld(String name) 
 		{
-	        World world = plugin.getServer().getWorld(holdingWorldName);
+	        World world = plugin.getServer().getWorld(name);
 	        if ( world == null )
 	        {
-		        WorldCreator wc = new WorldCreator(holdingWorldName);
+		        WorldCreator wc = new WorldCreator(name);
 		        wc.generateStructures(false);
 		        wc.generator(new HoldingWorldGenerator());
 				wc.environment(Environment.THE_END);
@@ -171,8 +237,8 @@ public class WorldManager
 				Map<String, World> worlds = (Map<String, World>)f.get(plugin.getServer());
 				f.setAccessible(false);
 				
-				worlds.remove(holdingWorldName);
-				worlds.put(holdingWorldName, holdingWorld);
+				worlds.remove(holdingWorld.getName());
+				worlds.put(holdingWorld.getName(), holdingWorld);
 
 				/*plugin.log.info("CraftServer worlds:");
 				for ( Map.Entry<String, World> map : worlds.entrySet() )
@@ -350,19 +416,33 @@ public class WorldManager
 		{
 			plugin.log.info("Clearing out old worlds...");
 			
-			List<World> worlds = plugin.getServer().getWorlds();
-			String[] worldNames = new String[worlds.size()-1];
-			int i=0;
+			int i = 0;
+			if ( mainWorld != null )
+				i++;
+			if ( netherWorld != null )
+				i++;
+			if ( endWorld != null )
+				i++;
 			
-			for ( World world : worlds )
+			String[] worldNames = new String[i];
+			i=0;
+			
+			if ( mainWorld != null )
 			{
-				if ( world.getName() == holdingWorldName )
-					continue;
+				forceUnloadWorld(mainWorld, holdingWorld);
+				worldNames[i++] = mainWorld.getName();
+			}
 				
-				worldNames[i++] = world.getName();
+			if ( netherWorld != null )
+			{
+				forceUnloadWorld(netherWorld, holdingWorld);
+				worldNames[i++] = netherWorld.getName();
+			}
 				
-				forceUnloadWorld(world, holdingWorld);
-				plugin.log.info("Unloaded " + world.getName());
+			if ( endWorld != null )
+			{
+				forceUnloadWorld(endWorld, holdingWorld);
+				worldNames[i++] = endWorld.getName();
 			}
 			
 			// now we want to try to delete the world folders
@@ -415,11 +495,10 @@ public class WorldManager
 						runWhenDone.run();
 					
 					// move ALL players back into the main world
-					World defaultWorld = plugin.getServer().getWorlds().get(0);
 					for ( Player player : plugin.getServer().getOnlinePlayers() )
 					{
 						plugin.playerManager.resetPlayer(player, true);
-						plugin.playerManager.putPlayerInWorld(player,  defaultWorld);
+						plugin.playerManager.putPlayerInWorld(player, mainWorld);
 					}
 				}
 

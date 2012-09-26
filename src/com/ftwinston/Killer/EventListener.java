@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
@@ -49,6 +50,9 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event)
     {
+		if ( !isWorldRunningKiller(event.getPlayer().getWorld()) )
+			return;
+	
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     	{
     		final String playerName = event.getPlayer().getName();
@@ -70,17 +74,33 @@ public class EventListener implements Listener
     @EventHandler
     public void OnPlayerChangedWorld(PlayerChangedWorldEvent event)
     {
-		Player player = event.getPlayer();
-    	if(PlayerManager.instance.isSpectator(player.getName()))
-    		PlayerManager.instance.setAlive(player, false);
-		else
-			plugin.playerManager.checkPlayerCompassTarget(player);
+		boolean wasInKiller = isWorldRunningKiller(event.getFrom());
+		boolean nowInKiller = isWorldRunningKiller(event.getPlayer().getWorld());
+		
+		if ( wasInKiller )
+		{
+			if ( nowInKiller )
+			{
+				Player player = event.getPlayer();
+				if(PlayerManager.instance.isSpectator(player.getName()))
+					PlayerManager.instance.setAlive(player, false);
+				else
+					plugin.playerManager.checkPlayerCompassTarget(player);
+			}
+			else
+				playerQuit(event.getPlayer());
+		}
+		else if ( nowInKiller )
+			playerJoined(event.getPlayer());
     }
     
     // prevent spectators picking up anything
     @EventHandler
     public void onPlayerPickupItem(PlayerPickupItemEvent event)
     {
+		if ( !isWorldRunningKiller(event.getPlayer().getWorld()) )
+			return;
+
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     		event.setCancelled(true);
     	else
@@ -91,6 +111,9 @@ public class EventListener implements Listener
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event)
     {
+		if ( !isWorldRunningKiller(event.getPlayer().getWorld()) )
+			return;
+
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     		event.setCancelled(true);
     	else if ( isOnPlinth(event.getBlock().getLocation()) )
@@ -101,6 +124,9 @@ public class EventListener implements Listener
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event)
     {
+		if ( !isWorldRunningKiller(event.getPlayer().getWorld()) )
+			return;
+		
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     		event.setCancelled(true);
     	else if ( isOnPlinth(event.getBlock().getLocation()) )
@@ -111,6 +137,9 @@ public class EventListener implements Listener
     @EventHandler
     public void BlockFromTo(BlockFromToEvent event)
     {
+		if ( !isWorldRunningKiller(event.getToBlock().getLocation().getWorld()) )
+			return;
+		
         if ( isOnPlinth(event.getToBlock().getLocation()) )
             event.setCancelled(true);
     }
@@ -118,6 +147,9 @@ public class EventListener implements Listener
     @EventHandler
     public void onBlockPistonExtend(BlockPistonExtendEvent event)
     {
+		if ( !isWorldRunningKiller(event.getBlock().getLocation().getWorld()) )
+			return;
+		
     	if ( isOnPlinth(event.getBlock().getLocation()) )
     		event.setCancelled(true);
     }
@@ -125,6 +157,9 @@ public class EventListener implements Listener
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event)
     {
+		if ( !isWorldRunningKiller(event.getEntity().getWorld()) )
+			return;
+		
     	List<Block> blocks = event.blockList();
 
 		// remove any plinth blocks from the list, stop them being destroyed
@@ -139,6 +174,9 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerItemSwitch(PlayerItemHeldEvent event)
     {
+		if ( !isWorldRunningKiller(event.getPlayer().getWorld()) )
+			return;
+		
     	if ( plugin.playerManager.isSpectator(event.getPlayer().getName()) )
     	{
     		ItemStack item = event.getPlayer().getInventory().getItem(event.getNewSlot());
@@ -164,6 +202,9 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event)
     {
+		if ( !isWorldRunningKiller(event.getPlayer().getWorld()) )
+			return;
+		
     	// spectators can't interact with anything, but they do use clicking to handle their spectator stuff
     	String playerName = event.getPlayer().getName();
     	if ( plugin.playerManager.isSpectator(playerName) )
@@ -219,6 +260,9 @@ public class EventListener implements Listener
     @EventHandler
     public void onItemDrop(PlayerDropItemEvent event)
     {
+		if ( !isWorldRunningKiller(event.getPlayer().getWorld()) )
+			return;
+		
     	// spectators can't drop items
     	if ( plugin.playerManager.isSpectator(event.getPlayer().getName()) )
     		event.setCancelled(true);
@@ -227,6 +271,9 @@ public class EventListener implements Listener
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event)
     {
+		if ( !isWorldRunningKiller(event.getEntity().getWorld()) )
+			return;
+		
         if ( event instanceof EntityDamageByEntityEvent )
         {
         	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
@@ -265,6 +312,9 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
     {
+		if ( !isWorldRunningKiller(event.getPlayer().getWorld()) )
+			return;
+		
 		Block affected = event.getBlockClicked().getRelative(event.getBlockFace());
 		if ( isOnPlinth(affected.getLocation()) )
 			event.setCancelled(true);
@@ -283,6 +333,9 @@ public class EventListener implements Listener
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event)
     {
+		if ( !isWorldRunningKiller(event.getPlayer().getWorld()) )
+			return;
+		
     	if ( plugin.voteManager.isInVote() )
     	{
     		if ( event.getMessage().equalsIgnoreCase("Y") && plugin.voteManager.doVote(event.getPlayer(), true) )
@@ -315,36 +368,52 @@ public class EventListener implements Listener
     			event.getRecipients().remove(recipient);
     }
     
+	private boolean isWorldRunningKiller(World world)
+	{
+		return world == plugin.worldManager.mainWorld || world == plugin.worldManager.netherWorld || world == plugin.worldManager.endWorld || world == plugin.worldManager.holdingWorld;
+	}
+	
     @EventHandler
 	public void onPlayerJoin(PlayerJoinEvent p)
     {
-		// if I log into the holding world (cos I logged out there), move me back to the main world's spawn and clear me out
-		if ( p.getPlayer().getLocation().getWorld() == WorldManager.instance.holdingWorld )
-		{
-			Player player = p.getPlayer();
-			player.getInventory().clear();
-			player.setTotalExperience(0);
-			player.teleport(plugin.getServer().getWorlds().get(0).getSpawnLocation());
-		}
-		
-    	PlayerManager.instance.playerJoined(p.getPlayer());
-    }
-    
+		if ( isWorldRunningKiller(p.getPlayer().getWorld()) )
+			playerJoined(p.getPlayer());
+	}
+	
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent p)
     {
+		if ( isWorldRunningKiller(p.getPlayer().getWorld()) )
+			playerQuit(p.getPlayer());
+	}
+	
+	private void playerJoined(Player player)
+	{
+		// if I log into the holding world (cos I logged out there), move me back to the main world's spawn and clear me out
+		if ( player.getWorld() == plugin.worldManager.holdingWorld )
+		{
+			player.getInventory().clear();
+			player.setTotalExperience(0);
+			player.teleport(plugin.worldManager.mainWorld.getSpawnLocation());
+		}
+		
+    	PlayerManager.instance.playerJoined(player);
+    }
+    
+	private void playerQuit(Player player)
+	{
 		// the quit message should be sent to the scoreboard of anyone who this player was invisible to
 		for ( Player online : plugin.getServer().getOnlinePlayers() )
-			if ( !online.canSee(p.getPlayer()) )
-				plugin.playerManager.sendForScoreboard(online, p.getPlayer(), false);
+			if ( !online.canSee(player) )
+				plugin.playerManager.sendForScoreboard(online, player, false);
 		
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(p.getPlayer().getName(), true), 600);
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName(), true), 600);
     }
     
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event)
     {
-    	if (!(event instanceof PlayerDeathEvent))
+    	if (!(event instanceof PlayerDeathEvent) || !isWorldRunningKiller(event.getEntity().getWorld()) )
     		return;
     	
     	PlayerDeathEvent pEvent = (PlayerDeathEvent)event;

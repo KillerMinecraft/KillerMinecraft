@@ -35,7 +35,7 @@ public class Killer extends JavaPlugin
 	private Location plinthPressurePlateLocation;
 
 	private EventListener eventListener = new EventListener(this);
-	private WorldManager worldManager;
+	public WorldManager worldManager;
 	public PlayerManager playerManager;
 	public VoteManager voteManager;
 	public StatsManager statsManager;
@@ -47,6 +47,8 @@ public class Killer extends JavaPlugin
 	private boolean restarting;
 	
 	public Material teleportModeItem = Material.WATCH, followModeItem = Material.ARROW;
+	
+	public String mainWorldName, netherWorldName, endWorldName, holdingWorldName;
 	
 	private GameMode gameMode, nextGameMode;
 	public GameMode getGameMode() { return gameMode; }
@@ -82,12 +84,12 @@ public class Killer extends JavaPlugin
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
         playerManager = new PlayerManager(this);
-        worldManager = new WorldManager(this);
+        worldManager = new WorldManager(this, getConfig().getString("gameWorld"), getConfig().getString("holdingWorld"));
         voteManager = new VoteManager(this);
         statsManager = new StatsManager(this);
         
         if ( getGameMode().usesPlinth() ) // create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
-        	plinthPressurePlateLocation = worldManager.createPlinth(getServer().getWorlds().get(0));
+        	plinthPressurePlateLocation = worldManager.createPlinth(worldManager.mainWorld);
         
         // disable spawn protection
         getServer().setSpawnRadius(0);
@@ -199,6 +201,10 @@ public class Killer extends JavaPlugin
 		
 		getConfig().addDefault("autoRecreateWorld", false);
 		getConfig().addDefault("stopServerToRecreateWorld", false);
+		
+		getConfig().addDefault("gameWorld", getServer().getWorlds().get(0).getName());
+		getConfig().addDefault("holdingWorld", "holding");
+		
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		
@@ -270,12 +276,12 @@ public class Killer extends JavaPlugin
 			Player player = (Player)sender;
 			if ( args[0].equalsIgnoreCase("main") )
 			{
-				playerManager.putPlayerInWorld(player, getServer().getWorlds().get(0));
+				playerManager.putPlayerInWorld(player, worldManager.mainWorld);
 			}
 			else if ( args[0].equalsIgnoreCase("nether") )
 			{
-				if ( getServer().getWorlds().size() > 1 )
-					playerManager.putPlayerInWorld(player, getServer().getWorlds().get(1));
+				if ( worldManager.netherWorld != null )
+					playerManager.putPlayerInWorld(player, worldManager.netherWorld);
 				else
 					sender.sendMessage("Nether world not found, please try again");
 			}
@@ -467,7 +473,7 @@ public class Killer extends JavaPlugin
 				getServer().broadcastMessage(restartedBy.getName() + " is restarting the game, using the same world...");
 			else
 				getServer().broadcastMessage("Game is restarting, using the same world...");
-			World defaultWorld = getServer().getWorlds().get(0);
+			World defaultWorld = worldManager.mainWorld;
  
 			for ( Player player : getServer().getOnlinePlayers() )
 				playerManager.putPlayerInWorld(player, defaultWorld);
@@ -496,7 +502,7 @@ public class Killer extends JavaPlugin
 				public void run()
 				{
 					if ( getGameMode().usesPlinth() )
-						plinthPressurePlateLocation = worldManager.createPlinth(getServer().getWorlds().get(0));
+						plinthPressurePlateLocation = worldManager.createPlinth(worldManager.mainWorld);
 					
 					playerManager.reset(true);
 					restarting = false;
