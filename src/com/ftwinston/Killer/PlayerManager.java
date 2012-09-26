@@ -850,7 +850,7 @@ public class PlayerManager
 				dir = dir.normalize();
 			}
 			
-			Location pos = findSpaceForPlayer(player, targetLoc, dir, idealFollowSpectateRange, false);
+			Location pos = findSpaceForPlayer(player, targetLoc, dir, idealFollowSpectateRange, false, true);
 			if ( pos == null )
 				pos = targetLoc;
 			
@@ -978,7 +978,7 @@ public class PlayerManager
 		return null;
 	}
 
-	private Location findSpaceForPlayer(Player player, Location targetLoc, Vector dir, int maxDist, boolean seekClosest)
+	private Location findSpaceForPlayer(Player player, Location targetLoc, Vector dir, int maxDist, boolean seekClosest, boolean abortOnAnySolid)
 	{
 		Location bestPos = null;
 
@@ -986,13 +986,16 @@ public class PlayerManager
 		while (itr.hasNext())
 		{
 			Block block = itr.next();
-			if ( !block.isEmpty() )
-				break;
+			if ( !block.isEmpty() && !block.isLiquid() )
+				if ( abortOnAnySolid )
+					break;
+				else
+					continue;
 			
 			Block blockBelow = targetLoc.getWorld().getBlockAt(block.getLocation().getBlockX(), block.getLocation().getBlockY()-1, block.getLocation().getBlockZ());
 			if ( blockBelow.isEmpty() || blockBelow.isLiquid() )
 			{
-				bestPos = block.getLocation().add(new Vector(0.5, player.getEyeHeight()-1, 0.5));
+				bestPos = blockBelow.getLocation().add(new Vector(0.5, player.getEyeHeight()-1, 0.5));
 				if ( seekClosest )
 					return bestPos;
 			}
@@ -1014,10 +1017,16 @@ public class PlayerManager
 		Location traceStartPos = goThroughTarget ? lookAtPos.add(facingDir) : lookAtPos;
 		Vector traceDir = goThroughTarget ? facingDir : facingDir.multiply(-1.0);
 	
-		Location targetPos = findSpaceForPlayer(player, traceStartPos, traceDir, goThroughTarget ? maxSpecTeleportPenetrationDist : maxSpecTeleportDist, true);
+		Location targetPos = findSpaceForPlayer(player, traceStartPos, traceDir, goThroughTarget ? maxSpecTeleportPenetrationDist : maxSpecTeleportDist, true, false);
 
 		player.setFlying(true);
 		if ( targetPos != null )
+		{
+			targetPos.setPitch(player.getLocation().getPitch());
+			targetPos.setYaw(player.getLocation().getYaw());
 			player.teleport(targetPos);
+		}
+		else
+			player.sendMessage("No space to teleport into!");
 	}
 }

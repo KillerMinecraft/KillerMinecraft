@@ -226,13 +226,13 @@ public class EventListener implements Listener
         		{
     				plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNextFollowTarget(event.getPlayer(), info.target, true));
     				plugin.playerManager.checkFollowTarget(event.getPlayer());
-    				event.getPlayer().sendMessage("Following " + info.target + ".");
+    				event.getPlayer().sendMessage("Following " + info.target);
         		}
     			else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
         		{
     				plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNextFollowTarget(event.getPlayer(), info.target, false));
     				plugin.playerManager.checkFollowTarget(event.getPlayer());
-    				event.getPlayer().sendMessage("Following " + info.target + ".");
+    				event.getPlayer().sendMessage("Following " + info.target);
         		}
     		}
     		
