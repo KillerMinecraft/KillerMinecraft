@@ -67,6 +67,7 @@ public class Killer extends JavaPlugin
 	{
         instance = this;
         restarting = false;
+        GameMode.setupGameModes(this);
         setupConfiguration();
 		
 		if ( firstStart )
@@ -79,7 +80,6 @@ public class Killer extends JavaPlugin
 			firstStart = false;
 		}
 		
-        GameMode.setupGameModes(this);
 		createRecipes();
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
@@ -87,10 +87,10 @@ public class Killer extends JavaPlugin
         worldManager = new WorldManager(this, getConfig().getString("gameWorld"), getConfig().getString("holdingWorld"));
         voteManager = new VoteManager(this);
         statsManager = new StatsManager(this);
-        
+		
         if ( getGameMode().usesPlinth() ) // create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
         	plinthPressurePlateLocation = worldManager.createPlinth(worldManager.mainWorld);
-        
+		
         // disable spawn protection
         getServer().setSpawnRadius(0);
         
