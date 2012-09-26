@@ -987,6 +987,9 @@ public class PlayerManager
 		while (itr.hasNext())
 		{
 			Block block = itr.next();
+			if ( block == null || block.getLocation().getBlockY() <= 0 || block.getLocation().getBlockY() >= block.getWorld().getMaxHeight() )
+				break; // don't go out the world
+			
 			if ( !block.isEmpty() && !block.isLiquid() )
 				if ( abortOnAnySolid )
 					break;
