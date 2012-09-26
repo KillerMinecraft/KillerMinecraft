@@ -287,7 +287,7 @@ public class PlayerManager
 		if ( isNewPlayer );
 		{
 			plugin.getGameMode().explainGameMode(player, this);
-			player.setBedSpawnLocation(plugin.worldManager.mainWorld.getSpawnLocation());
+			player.setBedSpawnLocation(null);
 		}
 		
 		if ( numKillersAssigned() == 0 )
