@@ -147,7 +147,7 @@ public class EventListener implements Listener
     			plugin.playerManager.setFollowTarget(event.getPlayer(), null);
     		else if ( item.getType() == plugin.teleportModeItem )
     		{
-    			event.getPlayer().sendMessage("Free look mode: right click to teleport forward");
+    			event.getPlayer().sendMessage("Free look mode: left click to teleport " + ChatColor.YELLOW + "to" + ChatColor.RESET + " where you're looking, right click to teleport " + ChatColor.YELLOW + "through" + ChatColor.RESET + " through what you're looking");
     			plugin.playerManager.setFollowTarget(event.getPlayer(), null);
     		}
     		else if ( item.getType() == plugin.followModeItem )
@@ -173,10 +173,10 @@ public class EventListener implements Listener
     		
     		if ( held == plugin.teleportModeItem )
     		{
-    			if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
-    			{
-    				plugin.playerManager.doSpectatorTeleport(event.getPlayer()); // teleport
-    			}
+				if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
+    				plugin.playerManager.doSpectatorTeleport(event.getPlayer(), false);
+    			else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
+    				plugin.playerManager.doSpectatorTeleport(event.getPlayer(), true);
     		}
     		else if ( held == plugin.followModeItem )
     		{

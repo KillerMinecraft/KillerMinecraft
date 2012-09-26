@@ -1,5 +1,6 @@
 package com.ftwinston.Killer;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
@@ -39,6 +40,11 @@ public class PlayerManager
 		this.plugin = _plugin;
 		instance = this;
 		random = new Random();
+		
+		transparentBlocks.clear();
+		transparentBlocks.add(new Byte((byte)Material.AIR.getId()));
+		transparentBlocks.add(new Byte((byte)Material.WATER.getId()));
+		transparentBlocks.add(new Byte((byte)Material.STATIONARY_WATER.getId()));
 		
     	startCheckAutoAssignKiller();
 	}
@@ -751,7 +757,7 @@ public class PlayerManager
 			info.target = target;
 	}
 	
-	private final double maxFollowSpectateRangeSq = 40 * 40, maxAcceptableOffsetDot = 0.65;
+	private final double maxFollowSpectateRangeSq = 40 * 40, maxAcceptableOffsetDot = 0.65, farEnoughSpectateRangeSq = 35 * 35;
 	private final int maxSpectatePositionAttempts = 5, idealFollowSpectateRange = 20;
 	
 	public void checkFollowTarget(Player player)
@@ -841,33 +847,19 @@ public class PlayerManager
 				dir = dir.normalize();
 			}
 			
-			Location pos = targetLoc;
-			// keep going until we reach the ideal distance or hit a non-empty block
-			Iterator<Block> itr = new BlockIterator(targetLoc.getWorld(), targetLoc.toVector(), dir, 0, idealFollowSpectateRange);
-	        while (itr.hasNext())
-	        {
-	            Block block = itr.next();
-	            if ( !block.isEmpty() )
-	            	break;
-	            
-	            if ( targetLoc.getWorld().getBlockAt(block.getLocation().getBlockX(), block.getLocation().getBlockY()-1, block.getLocation().getBlockZ()).isEmpty() )
-	            	pos = block.getLocation().add(0.5, player.getEyeHeight()-1, 0.5);
-	        }
-	        
-	        if ( !itr.hasNext() ) // we made it the max distance! use this!
-	        {
-	        	bestLoc = pos;
-	        	break;
-	        }
-	        else
-	        {
-	        	double distSq = pos.distanceSquared(targetLoc); 
-	        	if ( distSq > bestDistSq )
-		        {
-		        	bestLoc = pos;
-		        	bestDistSq = distSq; 
-		        }
-	        }
+			Location pos = findSpaceForPlayer(player, targetLoc, dir, idealFollowSpectateRange, false);
+			if ( pos == null )
+				pos = targetLoc;
+			
+			double distSq = pos.distanceSquared(targetLoc); 
+			if ( distSq > bestDistSq )
+			{
+				bestLoc = pos;
+				bestDistSq = distSq; 
+				
+				if ( distSq > farEnoughSpectateRangeSq )
+					break; // close enough to the max distance, just use this
+			}
 		}
 		
 		// work out the yaw
@@ -974,10 +966,46 @@ public class PlayerManager
 		return null;
 	}
 
-	// teleport forward a short distance, to get around doors, walls, etc. that spectators can't dig through
-	public void doSpectatorTeleport(Player player)
+	private Location findSpaceForPlayer(Player player, Location targetLoc, Vector dir, int maxDist, boolean seekClosest)
 	{
-		// TODO Auto-generated method stub
-		player.sendMessage("Teleporting forwards. Honest.");
+		Location bestPos = null;
+
+		Iterator<Block> itr = new BlockIterator(targetLoc.getWorld(), targetLoc.toVector(), dir, 0, maxDist);
+		while (itr.hasNext())
+		{
+			Block block = itr.next();
+			if ( !block.isEmpty() )
+				break;
+			
+			Block blockBelow = targetLoc.getWorld().getBlockAt(block.getLocation().getBlockX(), block.getLocation().getBlockY()-1, block.getLocation().getBlockZ());
+			if ( blockBelow.isEmpty() || blockBelow.isLiquid() )
+			{
+				bestPos = block.getLocation().add(new Vector(0.5, player.getEyeHeight()-1, 0.5));
+				if ( seekClosest )
+					return bestPos;
+			}
+		}
+		
+		return bestPos;
+	}
+	
+	
+	private final int maxSpecTeleportDist = 64, maxSpecTeleportPenetrationDist = 32;
+	private final HashSet<Byte> transparentBlocks = new HashSet<Byte>();
+	
+	// teleport forward, to get around doors, walls, etc. that spectators can't dig through
+	public void doSpectatorTeleport(Player player, boolean goThroughTarget)
+	{
+		Location lookAtPos = player.getTargetBlock(transparentBlocks, maxSpecTeleportDist).getLocation();
+		
+		Vector facingDir = player.getLocation().getDirection().normalize();
+		Location traceStartPos = goThroughTarget ? lookAtPos.add(facingDir) : lookAtPos;
+		Vector traceDir = goThroughTarget ? facingDir : facingDir.multiply(-1.0);
+	
+		Location targetPos = findSpaceForPlayer(player, traceStartPos, traceDir, goThroughTarget ? maxSpecTeleportPenetrationDist : maxSpecTeleportDist, true);
+
+		player.setFlying(true);
+		if ( targetPos != null )
+			player.teleport(targetPos);
 	}
 }
