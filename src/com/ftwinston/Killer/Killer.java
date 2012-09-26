@@ -60,14 +60,25 @@ public class Killer extends JavaPlugin
 			getServer().broadcastMessage(changedBy.getName() + " set the next game mode to " + g.getName());
 	}
 	
+	boolean firstStart = true;
 	public void onEnable()
 	{
         instance = this;
         restarting = false;
-        
-        GameMode.setupGameModes(this);
         setupConfiguration();
-        createRecipes();
+		
+		if ( firstStart )
+		{
+			if ( getConfig().getBoolean("startDisabled") )
+			{
+				getServer().getPluginManager().disablePlugin(this);
+				log.info("Killer's startDisabled config setting is set to true, so the plugin will now disabling itself.");
+			}
+			firstStart = false;
+		}
+		
+        GameMode.setupGameModes(this);
+		createRecipes();
 		
         getServer().getPluginManager().registerEvents(eventListener, this);
         playerManager = new PlayerManager(this);
@@ -173,6 +184,7 @@ public class Killer extends JavaPlugin
 	
 	private void setupConfiguration()
 	{
+		getConfig().addDefault("startDisabled", false);
 		getConfig().addDefault("defaultGameMode", "Mystery Killer");
 		getConfig().addDefault("canChangeGameMode", true);
 		getConfig().addDefault("autoAssign", false);
