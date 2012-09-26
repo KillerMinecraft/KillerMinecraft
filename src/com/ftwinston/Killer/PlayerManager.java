@@ -568,6 +568,9 @@ public class PlayerManager
 		}
 		else
 			wasAlive = info.isAlive();
+
+		Inventory inv = player.getInventory(); 
+		inv.clear();
 		
 		info.setAlive(bAlive);
 		if ( bAlive )
@@ -587,8 +590,6 @@ public class PlayerManager
 		{
 			player.setAllowFlight(true);
 			player.setFlying(true);
-			Inventory inv = player.getInventory(); 
-			inv.clear();
 			inv.addItem(new ItemStack(plugin.teleportModeItem, 1));
 			inv.addItem(new ItemStack(plugin.followModeItem, 1));
 			makePlayerInvisibleToAll(player);
