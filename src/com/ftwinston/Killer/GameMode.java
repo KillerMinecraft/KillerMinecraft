@@ -75,7 +75,7 @@ public abstract class GameMode
 	public abstract void explainGameMode(Player player, PlayerManager pm);
 	public void explainGameModeForAll(PlayerManager pm)
 	{
-		for ( Player player : plugin.getServer().getOnlinePlayers() )
+		for ( Player player : plugin.getOnlinePlayers() )
 			explainGameMode(player, pm);
 	}
 	
@@ -101,7 +101,7 @@ public abstract class GameMode
 			if ( sender != null )
 				sender.sendMessage(message);
 			if ( informOfKillerAssignment(pm) )
-				plugin.getServer().broadcastMessage(message);
+				plugin.broadcastMessage(message);
 			return false;
 		}
 		
@@ -126,7 +126,7 @@ public abstract class GameMode
 				message += " killer";
 			message += " knows who they are.";
 
-			plugin.getServer().broadcastMessage(message);
+			plugin.broadcastMessage(message);
 		}
 	
 		if ( !plugin.statsManager.isTracking )
@@ -187,7 +187,7 @@ public abstract class GameMode
 				if ( informOfKillerIdentity() )
 				{
 					if ( informOfKillerAssignment(pm) )
-						plugin.getServer().broadcastMessage(player.getName() + " is the killer!");
+						plugin.broadcastMessage(player.getName() + " is the killer!");
 					pm.colorPlayerName(player, ChatColor.RED);
 				}
 				

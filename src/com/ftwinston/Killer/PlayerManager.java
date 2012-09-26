@@ -141,7 +141,7 @@ public class PlayerManager
 		playerInfo.clear();
 		numKillers = numAlive = 0;
 		
-		for ( Player player : plugin.getServer().getOnlinePlayers() )
+		for ( Player player : plugin.getOnlinePlayers() )
 		{
 			resetPlayer(player, resetInventories);
 			setAlive(player, true);
@@ -192,7 +192,7 @@ public class PlayerManager
 		player.setPlayerListName(color + name);
 		
 		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
-		for ( Player online : plugin.getServer().getOnlinePlayers() )
+		for ( Player online : plugin.getOnlinePlayers() )
 			if ( !online.canSee(player) )
 			{
 				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999));
@@ -208,7 +208,7 @@ public class PlayerManager
 		player.setPlayerListName(ChatColor.stripColor(player.getPlayerListName()));
 		
 		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
-		for ( Player online : plugin.getServer().getOnlinePlayers() )
+		for ( Player online : plugin.getOnlinePlayers() )
 			if ( !online.canSee(player) )
 			{
 				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999));
@@ -223,7 +223,7 @@ public class PlayerManager
 			if ( !entry.getValue().isAlive() && !entry.getKey().equals(player.getName()) )
 			{
 				Player other = plugin.getServer().getPlayerExact(entry.getKey());
-				if ( other != null && other.isOnline() )
+				if ( other != null && other.isOnline() && plugin.isGameWorld(other.getWorld()) )
 					hidePlayer(player, other);
 			}
 			
@@ -260,7 +260,7 @@ public class PlayerManager
 			setAlive(player, false);
 			
 			// send this player to everyone else's scoreboards, because they're now invisible, and won't show otherwise
-			for ( Player online : plugin.getServer().getOnlinePlayers() )
+			for ( Player online : plugin.getOnlinePlayers() )
 				if ( online != player && !online.canSee(player) )
 					sendForScoreboard(online, player, true);
 		}
@@ -294,7 +294,7 @@ public class PlayerManager
 		{
 			checkImmediateKillerAssignment();
 			
-			if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getServer().getOnlinePlayers().length == 1 )
+			if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getOnlinePlayers().size() == 1 )
 				plugin.worldManager.mainWorld.setTime(0);
 		}
 		else
@@ -307,7 +307,7 @@ public class PlayerManager
 		if ( countdownProcessID == -1 && plugin.getGameMode().immediateKillerAssignment() )
 			if ( numSurvivors() >= plugin.getGameMode().absMinPlayers() )
 			{
-				plugin.getServer().broadcastMessage("Allocation in 30 seconds...");
+				plugin.broadcastMessage("Allocation in 30 seconds...");
 				countdownProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 					@Override
 					public void run()
@@ -317,7 +317,7 @@ public class PlayerManager
 				}, 600L);
 			}
 			else
-				plugin.getServer().broadcastMessage(ChatColor.RED + "Insufficient players to start game - " + plugin.getGameMode().getName() + " requires at least " + plugin.getGameMode().absMinPlayers() + " players");
+				plugin.broadcastMessage(ChatColor.RED + "Insufficient players to start game - " + plugin.getGameMode().getName() + " requires at least " + plugin.getGameMode().absMinPlayers() + " players");
 	}
 	
 	public void stopAssignmentCountdown()
@@ -444,10 +444,10 @@ public class PlayerManager
 		
 		plugin.statsManager.gameFinished(plugin.getGameMode(), numSurvivors(), killerWon ? 1 : (friendliesWon ? 2 : 0), winningItem == null ? 0 : winningItem.getId());
 		
-		plugin.getServer().broadcastMessage(ChatColor.YELLOW + message);
+		plugin.broadcastMessage(ChatColor.YELLOW + message);
 		clearKillers(null);
 
-		if ( winningItem != null || plugin.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getServer().getOnlinePlayers().length == 0 )
+		if ( winningItem != null || plugin.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getOnlinePlayers().size() == 0 )
 		{	// plinth victory or other scenario where we don't want a vote schedule a game restart in 10 secs, with a new world
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 	
@@ -513,7 +513,7 @@ public class PlayerManager
 					
 					message += "!";
 				}
-				plugin.getServer().broadcastMessage(message);
+				plugin.broadcastMessage(message);
 			}
 			
 			for ( Map.Entry<String, Info> entry : getPlayerInfo() )
@@ -527,7 +527,7 @@ public class PlayerManager
 		{
 			message = "No killers are currently assigned!";
 			if ( sender == null )
-				plugin.getServer().broadcastMessage(message);
+				plugin.broadcastMessage(message);
 			else
 				sender.sendMessage(message);
 		}	
@@ -611,14 +611,14 @@ public class PlayerManager
 	
 	public void makePlayerInvisibleToAll(Player player)
 	{
-		for(Player p : plugin.getServer().getOnlinePlayers())
+		for(Player p : plugin.getOnlinePlayers())
 			if (p != player && p.canSee(player))
 				hidePlayer(p, player);
 	}
 	
 	public void makePlayerVisibleToAll(Player player)
 	{
-		for(Player p :  plugin.getServer().getOnlinePlayers())
+		for(Player p : plugin.getOnlinePlayers())
 			if (p != player && !p.canSee(player))
 				p.showPlayer(player);
 	}
@@ -720,7 +720,7 @@ public class PlayerManager
 		Location nearest = null;
 		double nearestDistSq = Double.MAX_VALUE;
 		World playerWorld = player.getWorld();
-		for ( Player other : plugin.getServer().getOnlinePlayers() )
+		for ( Player other : plugin.getOnlinePlayers() )
 		{
 			if ( other == player || other.getWorld() != playerWorld || !isAlive(other.getName()))
 				continue;
@@ -773,7 +773,7 @@ public class PlayerManager
 		String targetName = info.target;
 		
 		Player target = plugin.getServer().getPlayerExact(targetName);
-		if ( !isAlive(targetName) || target == null || !target.isOnline() )
+		if ( !isAlive(targetName) || target == null || !target.isOnline() || !plugin.isGameWorld(target.getWorld()) )
 		{
 			targetName = getNearestFollowTarget(player);
 			setFollowTarget(player, targetName);
@@ -912,7 +912,7 @@ public class PlayerManager
 	public String getNearestFollowTarget(Player lookFor)
 	{
 		double nearestDistSq = Double.MAX_VALUE;
-		String nearestName = null;
+		String nearestName = null, firstName = null;
 		
 		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
 		{
@@ -922,16 +922,25 @@ public class PlayerManager
 			Player player = plugin.getServer().getPlayerExact(entry.getKey());
 			if ( player != null && player.isOnline() )
 			{
-				double testDistSq = player.getLocation().distanceSquared(lookFor.getLocation());
-				if ( testDistSq < nearestDistSq )
+				if ( firstName == null && plugin.isGameWorld(player.getWorld()) )
+					firstName = player.getName();
+				
+				if ( lookFor.getWorld() == player.getWorld() )
 				{
-					nearestName = player.getName();
-					nearestDistSq = testDistSq;
+					double testDistSq = player.getLocation().distanceSquared(lookFor.getLocation());
+					if ( testDistSq < nearestDistSq )
+					{
+						nearestName = player.getName();
+						nearestDistSq = testDistSq;
+					}
 				}
 			}
-				
 		}
-		return nearestName;
+		
+		if ( nearestName != null )
+			return nearestName;
+		
+		return firstName;
 	}
 	
 	public String getNextFollowTarget(Player lookFor, String currentTargetName, boolean forwards)
@@ -950,7 +959,7 @@ public class PlayerManager
 				continue;
 			
 			Player player = plugin.getServer().getPlayerExact(entry.getKey());
-			if ( player != null && player.isOnline() )
+			if ( player != null && player.isOnline() && plugin.isGameWorld(player.getWorld()) )
 				return entry.getKey();
 		}
 				
@@ -961,7 +970,7 @@ public class PlayerManager
 				continue;
 			
 			Player player = plugin.getServer().getPlayerExact(entry.getKey());
-			if ( player != null && player.isOnline() )
+			if ( player != null && player.isOnline() && plugin.isGameWorld(player.getWorld()) )
 				return entry.getKey();
 		}
 		

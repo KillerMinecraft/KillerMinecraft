@@ -63,7 +63,7 @@ public class ContractKiller extends GameMode
 			if ( sender != null )
 				sender.sendMessage(message);
 			if ( informOfKillerAssignment(pm) )
-				plugin.getServer().broadcastMessage(message);
+				plugin.broadcastMessage(message);
 			return false;
 		}
 		
@@ -107,7 +107,7 @@ public class ContractKiller extends GameMode
 			plugin.statsManager.killerAddedByAdmin();
 		
 
-		plugin.getServer().broadcastMessage("All players have been allocated a target to kill");
+		plugin.broadcastMessage("All players have been allocated a target to kill");
 
 		return true;
 	}
@@ -210,7 +210,7 @@ public class ContractKiller extends GameMode
 		if ( amount >= victim.getHealth() )
 			if ( attackerTarget.equals(victim.getName()) || victimTarget.equals(attackerPlayer.getName()) )
 			{// this interaction was allowed ... should still check if they were observed!
-				for ( Player observer : plugin.getServer().getOnlinePlayers() )					
+				for ( Player observer : plugin.getOnlinePlayers() )					
 				{
 					 if ( observer == victim || observer == attacker || !pm.isAlive(observer.getName()) )
 						 continue;

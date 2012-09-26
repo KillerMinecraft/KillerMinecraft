@@ -57,9 +57,9 @@ public class Killer extends JavaPlugin
 	{
 		nextGameMode = g;
 		if ( changedBy == null )
-			getServer().broadcastMessage("The next game mode will be " + g.getName());
+			broadcastMessage("The next game mode will be " + g.getName());
 		else
-			getServer().broadcastMessage(changedBy.getName() + " set the next game mode to " + g.getName());
+			broadcastMessage(changedBy.getName() + " set the next game mode to " + g.getName());
 	}
 	
 	boolean firstStart = true;
@@ -98,7 +98,7 @@ public class Killer extends JavaPlugin
         compassProcessID = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
         	public void run()
         	{
-	        	for ( Player player : instance.getServer().getOnlinePlayers() )
+	        	for ( Player player : instance.getOnlinePlayers() )
 	        		if ( playerManager.isAlive(player.getName()) && player.getInventory().contains(Material.COMPASS) )
 	        			if ( getGameMode().compassPointsAtTarget() )
 	        			{
@@ -123,7 +123,7 @@ public class Killer extends JavaPlugin
 		spectatorFollowProcessID = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
         	public void run()
         	{
-	        	for ( Player player : instance.getServer().getOnlinePlayers() )
+	        	for ( Player player : instance.getOnlinePlayers() )
 	        	{
 	        		PlayerManager.Info info = playerManager.getInfo(player.getName());
 	        		if ( !info.isAlive() && info.target != null )
@@ -440,6 +440,26 @@ public class Killer extends JavaPlugin
 		return false;
 	}
 
+	public boolean isGameWorld(World world)
+	{
+		return world == worldManager.mainWorld || world == worldManager.netherWorld || world == worldManager.endWorld || world == worldManager.holdingWorld;
+	}
+	
+	public List<Player> getOnlinePlayers()
+	{
+		ArrayList<Player> players = new ArrayList<Player>();
+		for ( Player player : getServer().getOnlinePlayers() )
+			if ( isGameWorld(player.getWorld()) )
+				players.add(player);
+		return players;
+	}
+	
+	public void broadcastMessage(String message)
+	{
+		for ( Player player : getOnlinePlayers() )
+			player.sendMessage(message);
+	}
+	
 	public Location getPlinthLocation()
 	{
 		return plinthPressurePlateLocation;
@@ -461,7 +481,7 @@ public class Killer extends JavaPlugin
 		if ( gameMode != nextGameMode )
 		{
 			gameMode = nextGameMode;
-			getServer().broadcastMessage("Changed to " + gameMode.getName() + " mode");
+			broadcastMessage("Changed to " + gameMode.getName() + " mode");
 		}
 		
 		if ( statsManager.isTracking )
@@ -470,12 +490,12 @@ public class Killer extends JavaPlugin
 		if ( useSameWorld )
 		{
 			if ( restartedBy != null )
-				getServer().broadcastMessage(restartedBy.getName() + " is restarting the game, using the same world...");
+				broadcastMessage(restartedBy.getName() + " is restarting the game, using the same world...");
 			else
-				getServer().broadcastMessage("Game is restarting, using the same world...");
+				broadcastMessage("Game is restarting, using the same world...");
 			World defaultWorld = worldManager.mainWorld;
  
-			for ( Player player : getServer().getOnlinePlayers() )
+			for ( Player player : getOnlinePlayers() )
 				playerManager.putPlayerInWorld(player, defaultWorld);
 			
 			playerManager.reset(true);
@@ -493,9 +513,9 @@ public class Killer extends JavaPlugin
 		{
 			restarting = true;
 			if ( restartedBy != null )
-				getServer().broadcastMessage(restartedBy.getName() + " is restarting the game, please wait while the world is deleted and a new one is prepared...");
+				broadcastMessage(restartedBy.getName() + " is restarting the game, please wait while the world is deleted and a new one is prepared...");
 			else
-				getServer().broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
+				broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
 			
 			playerManager.reset(true);
 			worldManager.deleteWorlds(new Runnable() {

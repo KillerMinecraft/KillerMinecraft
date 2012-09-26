@@ -292,7 +292,7 @@ public class MysteryKiller extends GameMode
 					Player last = plugin.getServer().getPlayerExact(entry.getKey());
 					if ( last != null && last.isOnline() )
 					{
-						plugin.getServer().broadcastMessage("There's only one player left, and they're not the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
+						plugin.broadcastMessage("There's only one player left, and they're not the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
 						return;
 					}
 				}

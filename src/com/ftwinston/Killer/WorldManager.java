@@ -495,7 +495,7 @@ public class WorldManager
 						runWhenDone.run();
 					
 					// move ALL players back into the main world
-					for ( Player player : plugin.getServer().getOnlinePlayers() )
+					for ( Player player : plugin.getOnlinePlayers() )
 					{
 						plugin.playerManager.resetPlayer(player, true);
 						plugin.playerManager.putPlayerInWorld(player, mainWorld);

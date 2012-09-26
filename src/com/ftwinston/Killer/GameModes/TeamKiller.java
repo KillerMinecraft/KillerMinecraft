@@ -118,10 +118,10 @@ public class TeamKiller extends GameMode
 				if ( killer )
 				{
 					info.setKiller(true);
-					plugin.getServer().broadcastMessage(player.getName() + " is on the " + ChatColor.RED + "red" + ChatColor.RESET + " team.");
+					plugin.broadcastMessage(player.getName() + " is on the " + ChatColor.RED + "red" + ChatColor.RESET + " team.");
 				}
 				else
-					plugin.getServer().broadcastMessage(player.getName() + " is on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
+					plugin.broadcastMessage(player.getName() + " is on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
 			}
 		}
 		else
