@@ -39,80 +39,17 @@ public class WorldManager
 		{
 			plugin = killer;
 			instance = this;
+			this.mainWorldName = mainWorldName;
 			
-			if ( plugin.stopServerToRecreateWorld )
-				holdingWorld = null;
-			else
-			{
-				seedGen = new Random();
-				bindRegionFiles();
-				serverFolder = plugin.getServer().getWorldContainer();
-				holdingWorld = getOrCreateHoldingWorld(holdingWorldName);
-			}
+			seedGen = new Random();
+			bindRegionFiles();
+			serverFolder = plugin.getServer().getWorldContainer();
+			holdingWorld = createHoldingWorld(holdingWorldName);
 
 			// try to find the main world, based on the config-provided name
-			List<World> worlds = plugin.getServer().getWorlds();
-
-			for ( World world : worlds )
-				if ( world.getName().equals(mainWorldName) )
-				{
-					mainWorld = world;
-					break;
-				}
-			
-			// couldn't find main world specified, so get the first "overworld" world
-			if ( mainWorld == null )
-			{
-				for ( World world : worlds )
-					if ( world.getEnvironment() == Environment.NORMAL )
-					{
-						mainWorld = world;
-						break;
-					}
-			
-				// still couldn't find something suitable, get any old world
-				if ( mainWorld == null )
-					mainWorld = worlds.get(0);
-				
-				plugin.log.warning("Killer couldn't find \"" + mainWorldName + "\" main world, using " + mainWorld.getName() + " instead");
-			}
-			
-			// now find the main world's corresponding nether world
-			String worldName = mainWorldName + "_nether"; // todo: check this name
-			
-			for ( World world : worlds )
-				if ( world.getName().equals(worldName) )
-				{
-					netherWorld = world;
-					break;
-				}
-			
-			// couldn't find main world specified, so get the first "overworld" world
-			if ( netherWorld == null )
-			{
-				for ( World world : worlds )
-					if ( world.getEnvironment() == Environment.NETHER )
-					{
-						netherWorld = world;
-						break;
-					}
-			
-				// still couldn't find something suitable, get any old world
-				if ( netherWorld == null )
-					netherWorld = worlds.get(0);
-				
-				plugin.log.warning("Killer couldn't find \"" + worldName + "\" nether world, using " + netherWorld.getName() + " instead");
-			}
-			
-			// now find corresponding End world, if present. If not present, don't go grabbing another end world, just assume we don't have one.
-			worldName = mainWorldName + "_end"; // todo: check this name
-			
-			for ( World world : worlds )
-				if ( world.getName().equals(worldName) )
-				{
-					netherWorld = world;
-					break;
-				}
+			mainWorld = getWorld(mainWorldName, Environment.NORMAL, true);
+			netherWorld = getWorld(mainWorldName + "_nether", Environment.NETHER, true);
+			endWorld = getWorld(mainWorldName + "_the_end", Environment.THE_END, false);
 		}
 		
 		public void onDisable()
@@ -122,6 +59,7 @@ public class WorldManager
 			serverFolder = null;
 		}
 		
+		private String mainWorldName;
 		static File serverFolder;
 		Random seedGen;
 		
@@ -133,6 +71,29 @@ public class WorldManager
 		public World holdingWorld;
 		public World netherWorld;
 		public World endWorld;
+		
+		private World getWorld(String name, Environment type, boolean getAnyOnFailure)
+		{
+			List<World> worlds = plugin.getServer().getWorlds();
+			for ( World world : worlds )
+				if ( world.getName().equals(name) )
+					return world;
+			
+			if ( !getAnyOnFailure )
+				return null;
+
+			// couldn't find world name specified, so get the first world of the right type
+			for ( World world : worlds )
+				if ( world.getEnvironment() == type )
+				{
+					plugin.log.warning("Couldn't find \"" + name + "\" world, using " + world.getName() + " instead");
+					return world;
+				}
+		
+			// still couldn't find something suitable...
+			plugin.log.warning("Couldn't find \"" + name + "\" world, using " + worlds.get(0).getName() + " instead");
+			return worlds.get(0);
+		}
 		
 		private MinecraftServer getMinecraftServer()
 		{
@@ -152,21 +113,6 @@ public class WorldManager
 			}
 			
 			return null;
-		}
-				
-		private World getOrCreateHoldingWorld(String name) 
-		{
-	        World world = plugin.getServer().getWorld(name);
-	        if ( world == null )
-	        {
-		        WorldCreator wc = new WorldCreator(name);
-		        wc.generateStructures(false);
-		        wc.generator(new HoldingWorldGenerator());
-				wc.environment(Environment.THE_END);
-				world = CreateWorld(wc, true, true, 8, 1, 8);
-	        }
-	        world.setAutoSave(false); // don't save changes to the holding world
-	        return world;
 		}
 		
 		static final int plinthPeakHeight = 76, spaceBetweenPlinthAndGlowstone = 4;
@@ -269,7 +215,47 @@ public class WorldManager
 			for ( WorldServer world : ms.worlds )
 				plugin.log.info(" " + world.dimension);*/
 		}
-			
+		
+		private World createHoldingWorld(String name) 
+		{
+	        World world = plugin.getServer().getWorld(name);
+	        if ( world != null )
+	        {// holding world already existed; delete it, because we might want to change it to correspond to config changes
+	        	
+	        	plugin.log.info("Deleting holding world, cos it already exists...");
+	        	
+	        	
+	        	forceUnloadWorld(world, null);
+	        	world = null;
+	        	try
+	        	{
+	        		Thread.sleep(200);
+	        	}
+	        	catch ( InterruptedException ex )
+	        	{
+	        	}
+	        	
+	        	clearWorldReference(name);
+				
+	    		try
+				{
+	    			delete(new File(serverFolder + File.separator + name));
+				}
+				catch ( Exception e )
+				{
+				}
+	        }
+	        	
+	        WorldCreator wc = new WorldCreator(name);
+	        wc.generateStructures(false);
+	        wc.generator(new HoldingWorldGenerator());
+			wc.environment(Environment.THE_END);
+			world = CreateWorld(wc, true, true, 8, 1, 8);
+			world.setPVP(false);
+	        world.setAutoSave(false); // don't save changes to the holding world
+	        return world;
+		}
+		
 		public World CreateWorld(WorldCreator wc, boolean loadChunks, boolean setSpawnLocation, int spawnX, int spawnY, int spawnZ)
 		{
 			World world = plugin.getServer().createWorld(wc);
@@ -289,7 +275,7 @@ public class WorldManager
 							world.loadChunk(spawnx + x, spawnz + z);
 				}
 				world.setKeepSpawnInMemory(loadChunks);
-				plugin.log.info("World '" + world.getName() + "' has been created successfully!");
+				plugin.log.info("World '" + world.getName() + "' created successfully!");
 			}
 			else
 				plugin.log.info("World creation failed!");
@@ -486,6 +472,10 @@ public class WorldManager
 						plugin.log.warning("Invocation target exception: " + ex.getMessage());
 					}
 
+					mainWorld = getWorld(mainWorldName, Environment.NORMAL, true);
+					netherWorld = getWorld(mainWorldName + "_nether", Environment.NETHER, true);
+					endWorld = getWorld(mainWorldName + "_the_end", Environment.THE_END, false);
+					
 					// now we want to ensure that the holding world gets put on the end of the worlds list, instead of staying at the beginning
 					// also ensure that the other worlds on the list are in the right order
 					sortWorldOrder();

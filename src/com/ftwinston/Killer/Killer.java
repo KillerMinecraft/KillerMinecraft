@@ -40,7 +40,7 @@ public class Killer extends JavaPlugin
 	public VoteManager voteManager;
 	public StatsManager statsManager;
 	
-	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, stopServerToRecreateWorld, reportStats;
+	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, reportStats;
 	public Material[] winningItems, startingItems;
 	
 	private int compassProcessID, spectatorFollowProcessID;
@@ -200,7 +200,6 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("startingItems", new ArrayList<Integer>());
 		
 		getConfig().addDefault("autoRecreateWorld", false);
-		getConfig().addDefault("stopServerToRecreateWorld", false);
 		
 		getConfig().addDefault("gameWorld", getServer().getWorlds().get(0).getName());
 		getConfig().addDefault("holdingWorld", "holding");
@@ -224,7 +223,6 @@ public class Killer extends JavaPlugin
 		banOnDeath = getConfig().getBoolean("banOnDeath");
 		informEveryoneOfReassignedKillers = getConfig().getBoolean("informEveryoneOfReassignedKillers");
 		autoRecreateWorld = getConfig().getBoolean("autoRecreateWorld");
-		stopServerToRecreateWorld = getConfig().getBoolean("stopServerToRecreateWorld");
 		reportStats = getConfig().getBoolean("reportStats");
 
 		List<Integer> itemIDs = getConfig().getIntegerList("winningItems"); 
@@ -504,10 +502,6 @@ public class Killer extends JavaPlugin
 			
 			worldManager.removeAllItems(defaultWorld);
 			defaultWorld.setTime(0);
-		}
-		else if ( stopServerToRecreateWorld )
-		{
-			getServer().shutdown();
 		}
 		else
 		{
