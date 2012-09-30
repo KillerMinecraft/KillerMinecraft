@@ -394,7 +394,7 @@ public class WorldManager
 				plugin.log.warning("Error unloading world: " + worldName);
 		}
 
-		public void deleteWorlds(final Runnable runWhenDone)
+		public void deleteWorlds()
 		{
 			plugin.log.info("Clearing out old worlds...");
 			
@@ -428,83 +428,80 @@ public class WorldManager
 			}
 			
 			// now we want to try to delete the world folders
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new WorldDeleter(worldNames, new Runnable() {
-				public void run()
-				{
-					plugin.log.info("Generating new worlds...");
-					MinecraftServer ms = getMinecraftServer();
-
-					String s = ms.getPropertyManager().getString("level-name", "world");
-					String s2 = ms.getPropertyManager().getString("level-type", "DEFAULT");
-					WorldType worldtype = WorldType.getType(s2);
-
-					if (worldtype == null)
-						worldtype = WorldType.NORMAL;
-					
-					Method a;
-					try
-					{
-						a = MinecraftServer.class.getDeclaredMethod("a", String.class, String.class, long.class, WorldType.class);
-					}
-					catch ( NoSuchMethodException ex )
-					{
-						plugin.log.warning("Unable to trigger default world generation, shutting down");
-						plugin.getServer().shutdown();
-						return;
-					}
-					
-					try
-					{
-						a.setAccessible(true);
-						a.invoke(ms, s, s, seedGen.nextLong(), worldtype);
-						a.setAccessible(false);
-					}
-					catch ( IllegalAccessException ex )
-					{
-						plugin.log.warning("Illegal access: " + ex.getMessage());
-					}
-					catch ( InvocationTargetException ex )
-					{
-						plugin.log.warning("Invocation target exception: " + ex.getMessage());
-					}
-
-					mainWorld = getWorld(mainWorldName, Environment.NORMAL, true);
-					netherWorld = getWorld(mainWorldName + "_nether", Environment.NETHER, true);
-					endWorld = getWorld(mainWorldName + "_the_end", Environment.THE_END, false);
-					
-					// now we want to ensure that the holding world gets put on the end of the worlds list, instead of staying at the beginning
-					// also ensure that the other worlds on the list are in the right order
-					sortWorldOrder();
-
-					// run whatever task was passed in, before putting players back in the main world
-					if ( runWhenDone != null )
-						runWhenDone.run();
-					
-					// move ALL players back into the main world
-					for ( Player player : plugin.getOnlinePlayers() )
-					{
-						plugin.playerManager.resetPlayer(player, true);
-						plugin.playerManager.putPlayerInWorld(player, mainWorld);
-					}
-				}
-
-			}), 80);
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new WorldDeleter(worldNames), 80);
 		}
 
+		public void generateWorlds(Runnable runWhenDone)
+		{
+			plugin.log.info("Generating new worlds...");
+			MinecraftServer ms = getMinecraftServer();
+
+			String s = ms.getPropertyManager().getString("level-name", "world");
+			String s2 = ms.getPropertyManager().getString("level-type", "DEFAULT");
+			WorldType worldtype = WorldType.getType(s2);
+
+			if (worldtype == null)
+				worldtype = WorldType.NORMAL;
+			
+			Method a;
+			try
+			{
+				a = MinecraftServer.class.getDeclaredMethod("a", String.class, String.class, long.class, WorldType.class);
+			}
+			catch ( NoSuchMethodException ex )
+			{
+				plugin.log.warning("Unable to trigger default world generation, shutting down");
+				plugin.getServer().shutdown();
+				return;
+			}
+			
+			try
+			{
+				a.setAccessible(true);
+				a.invoke(ms, s, s, seedGen.nextLong(), worldtype);
+				a.setAccessible(false);
+			}
+			catch ( IllegalAccessException ex )
+			{
+				plugin.log.warning("Illegal access: " + ex.getMessage());
+			}
+			catch ( InvocationTargetException ex )
+			{
+				plugin.log.warning("Invocation target exception: " + ex.getMessage());
+			}
+
+			mainWorld = getWorld(mainWorldName, Environment.NORMAL, true);
+			netherWorld = getWorld(mainWorldName + "_nether", Environment.NETHER, true);
+			endWorld = getWorld(mainWorldName + "_the_end", Environment.THE_END, false);
+			
+			// now we want to ensure that the holding world gets put on the end of the worlds list, instead of staying at the beginning
+			// also ensure that the other worlds on the list are in the right order
+			sortWorldOrder();
+
+			// run whatever task was passed in, before putting players back in the main world
+			if ( runWhenDone != null )
+				runWhenDone.run();
+			
+			// move ALL players back into the main world
+			for ( Player player : plugin.getOnlinePlayers() )
+			{
+				plugin.playerManager.resetPlayer(player, true);
+				plugin.playerManager.putPlayerInWorld(player, mainWorld);
+			}
+		}
+		
 		private class WorldDeleter implements Runnable
 	    {
 	    	String[] worlds;
-	    	Runnable runWhenDone;
 	    	
 	    	static final long retryDelay = 30;
 	    	static final int maxRetries = 5;
 	    	int attempt;
 	    	
-	    	public WorldDeleter(String[] worlds, Runnable runWhenDone)
+	    	public WorldDeleter(String[] worlds)
 	    	{
 	    		attempt = 0;
 	    		this.worlds = worlds;
-	    		this.runWhenDone = runWhenDone;
     		}
 	    	
 	    	public void run()
@@ -534,9 +531,7 @@ public class WorldManager
 						return;
 	    			}
 		    		else
-		    			plugin.log.warning("Failed to delete some world information. Continuing...");
-	    		
-	    		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone, 20);
+		    			plugin.log.warning("Failed to delete some world information!");
 	    	}
 	    }
 		

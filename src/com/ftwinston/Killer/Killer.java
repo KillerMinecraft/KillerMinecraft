@@ -41,6 +41,8 @@ public class Killer extends JavaPlugin
 	public StatsManager statsManager;
 	
 	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, reportStats;
+	public boolean autoRestartAtEndOfGame, voteRestartAtEndOfGame;
+	
 	public Material[] winningItems, startingItems;
 	
 	private int compassProcessID, spectatorFollowProcessID;
@@ -189,6 +191,8 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("startDisabled", false);
 		getConfig().addDefault("defaultGameMode", "Mystery Killer");
 		getConfig().addDefault("canChangeGameMode", true);
+		getConfig().addDefault("restartAtEndOfGame", "vote");
+		
 		getConfig().addDefault("autoAssign", false);
 		getConfig().addDefault("autoReassign", false);
 		getConfig().addDefault("restartDay", true);
@@ -216,6 +220,23 @@ public class Killer extends JavaPlugin
 		}
 		
 		canChangeGameMode = getConfig().getBoolean("canChangeGameMode");
+		String restartAtEnd = getConfig().getString("restartAtEndOfGame");
+		if ( restartAtEnd.equalsIgnoreCase("vote") )
+		{
+			voteRestartAtEndOfGame = true;
+			autoRestartAtEndOfGame = false;
+		}
+		else if ( restartAtEnd.equalsIgnoreCase("true") )
+		{
+			voteRestartAtEndOfGame = false;
+			autoRestartAtEndOfGame = true;
+		}
+		else
+		{
+			voteRestartAtEndOfGame = false;
+			autoRestartAtEndOfGame = false;
+		}
+		
 		autoAssignKiller = getConfig().getBoolean("autoAssign");
 		autoReassignKiller = getConfig().getBoolean("autoReassign");
 		restartDayWhenFirstPlayerJoins = getConfig().getBoolean("restartDay");
@@ -372,7 +393,7 @@ public class Killer extends JavaPlugin
 			
 			if ( args.length == 0 )
 			{
-				sender.sendMessage("Usage: /killer mode, /killer restart, /killer add, /killer clear, /killer reallocate");
+				sender.sendMessage("Usage: /killer mode, /killer restart, /killer end, /killer add, /killer clear, /killer reallocate");
 				return true;
 			}
 			
@@ -394,18 +415,14 @@ public class Killer extends JavaPlugin
 				if ( restarting )
 					return true;
 				
-				if ( args.length == 1 )
-				{
-					sender.sendMessage("Usage: /killer restart new (for new world), or /killer restart same (for same world)");
+				restartGame(sender);
+			}
+			else if ( args[0].equalsIgnoreCase("end") )
+			{
+				if ( restarting )
 					return true;
-				}
 				
-				if ( args[1].equalsIgnoreCase("same") )
-					restartGame(true, sender);
-				else if ( args[1].equalsIgnoreCase("new") )
-					restartGame(false, sender);
-				else
-					sender.sendMessage("Usage: /killer restart new (for new world), or /killer restart same (for same world)");
+				endGame(sender);
 			}
 			else if ( args[0].equalsIgnoreCase("mode") )
 			{
@@ -463,7 +480,55 @@ public class Killer extends JavaPlugin
 		return plinthPressurePlateLocation;
 	}
 	
-	public void restartGame(boolean useSameWorld, CommandSender restartedBy)
+	public void roundFinished()
+	{
+		if ( voteRestartAtEndOfGame )
+			voteManager.startVote("Play another game in the same world?", null, new Runnable() {
+				public void run()
+				{
+					restartGame(null);
+				}
+			}, new Runnable() {
+				public void run()
+				{
+					endGame(null);
+				}
+			}, new Runnable() {
+				public void run()
+				{
+					endGame(null);
+				}
+			});
+		else if  ( autoRestartAtEndOfGame )
+			restartGame(null);
+		else
+			endGame(null);
+	}
+	
+	public void endGame(CommandSender actionedBy)
+	{
+		if ( restarting )
+			return;
+		
+		playerManager.stopAssignmentCountdown();
+		
+		// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
+		if ( statsManager.isTracking )
+			statsManager.gameFinished(getGameMode(), playerManager.numSurvivors(), 3, 0);
+		
+		getGameMode().gameFinished();
+		
+		restarting = true;
+		if ( actionedBy != null )
+			broadcastMessage(actionedBy.getName() + " ended the gameis restarting the game, please wait while the world is deleted and a new one is prepared...");
+		else
+			broadcastMessage("The game has ended. You've been moved to the staging world to allow you to set up a new one...");
+		
+		playerManager.reset(true);
+		worldManager.deleteWorlds();
+	}
+	
+	public void restartGame(CommandSender actionedBy)
 	{
 		if ( restarting )
 			return;
@@ -482,49 +547,20 @@ public class Killer extends JavaPlugin
 			broadcastMessage("Changed to " + gameMode.getName() + " mode");
 		}
 		
-		if ( statsManager.isTracking )
-			statsManager.gameFinished(getGameMode(), playerManager.numSurvivors(), 3, 0);
-		
-		if ( useSameWorld )
-		{
-			if ( restartedBy != null )
-				broadcastMessage(restartedBy.getName() + " is restarting the game, using the same world...");
-			else
-				broadcastMessage("Game is restarting, using the same world...");
-			World defaultWorld = worldManager.mainWorld;
- 
-			for ( Player player : getOnlinePlayers() )
-				playerManager.putPlayerInWorld(player, defaultWorld);
-			
-			playerManager.reset(true);
-			gameMode.explainGameModeForAll(playerManager);
-			playerManager.checkImmediateKillerAssignment();
-			
-			worldManager.removeAllItems(defaultWorld);
-			defaultWorld.setTime(0);
-		}
+		if ( actionedBy != null )
+			broadcastMessage(actionedBy.getName() + " is restarting the game...");
 		else
-		{
-			restarting = true;
-			if ( restartedBy != null )
-				broadcastMessage(restartedBy.getName() + " is restarting the game, please wait while the world is deleted and a new one is prepared...");
-			else
-				broadcastMessage("Game is restarting, please wait while the world is deleted and a new one is prepared...");
+			broadcastMessage("Game is restarting...");
+ 
+		for ( Player player : getOnlinePlayers() )
+			playerManager.putPlayerInWorld(player, worldManager.mainWorld);
 			
-			playerManager.reset(true);
-			worldManager.deleteWorlds(new Runnable() {
-				public void run()
-				{
-					if ( getGameMode().usesPlinth() )
-						plinthPressurePlateLocation = worldManager.createPlinth(worldManager.mainWorld);
-					
-					playerManager.reset(true);
-					restarting = false;
-					gameMode.explainGameModeForAll(playerManager);
-					playerManager.checkImmediateKillerAssignment();
-				}
-			});
-		}
+		playerManager.reset(true);
+		gameMode.explainGameModeForAll(playerManager);
+		playerManager.checkImmediateKillerAssignment();
+		
+		worldManager.removeAllItems(worldManager.mainWorld);
+		worldManager.mainWorld.setTime(0);
 	}
 
 	public String tidyItemName(Material m)

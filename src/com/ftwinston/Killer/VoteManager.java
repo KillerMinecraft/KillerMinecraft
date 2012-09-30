@@ -212,18 +212,18 @@ public class VoteManager
 					return cantVotePrompt;
 				
 				else if ( val.intValue() == 1 )
-					startVote("End this round, and start a new round with the same world?", player, new Runnable() {
+					startVote("End this game, and start a new game in the same world?", player, new Runnable() {
 						public void run()
 						{
-							plugin.restartGame(true, null);
+							plugin.restartGame(null);
 						}
 					}, null, null);
 				
 				else if ( val.intValue() == 2 )
-					startVote("End this round, and start a new round in a new world?", player, new Runnable() {
+					startVote("End this game, and configure a new one?", player, new Runnable() {
 						public void run()
 						{
-							plugin.restartGame(false, null);
+							plugin.endGame(null);
 						}
 					}, null, null);
 				

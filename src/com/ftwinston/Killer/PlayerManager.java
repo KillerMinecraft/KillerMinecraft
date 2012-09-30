@@ -447,34 +447,18 @@ public class PlayerManager
 		clearKillers(null);
 
 		if ( winningItem != null || plugin.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getOnlinePlayers().size() == 0 )
-		{	// plinth victory or other scenario where we don't want a vote schedule a game restart in 10 secs, with a new world
+		{	// plinth victory or other scenario where we don't want a vote, end the game in 10 secs
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 	
 				@Override
 				public void run()
 				{
-	    			plugin.restartGame(false, null);					
+	    			plugin.endGame(null);					
 				}
 	    	}, 200L);
 		}
 		else
-		{// start a vote that's been set up to call restartGame with true / false parameter 
-			Runnable yesResult = new Runnable() {
-				public void run()
-				{
-					plugin.restartGame(true, null);
-				}
-			};
-			
-			Runnable noResult = new Runnable() {
-				public void run()
-				{
-					plugin.restartGame(false, null);
-				}
-			};
-			
-			plugin.voteManager.startVote("Start next round with the same world?", null, yesResult, noResult, noResult);
-		}
+			plugin.roundFinished();
 	}
 	
 	public void clearKillers(CommandSender sender)
