@@ -31,10 +31,13 @@ public abstract class GameMode
 	{
 		GameMode g = new MysteryKiller();
 		g.plugin = killer;
+		//g.options.put("Assign sooner", false);
+		//g.options.put("Multiple killers", false);
 		gameModes.put(g.getName().toLowerCase(), g);
 		
 		g = new InvisibleKiller();
 		g.plugin = killer;
+		//g.options.put("Decloak when sword drawn", false);
 		gameModes.put(g.getName().toLowerCase(), g);
 		
 		g = new CrazyKiller();
@@ -43,10 +46,12 @@ public abstract class GameMode
 		
 		g = new TeamKiller();
 		g.plugin = killer;
+		//g.options.put("Friendly fire", true);
 		gameModes.put(g.getName().toLowerCase(), g);
 		
 		g = new ContractKiller();
 		g.plugin = killer;
+		//g.options.put("Players spawn far apart", false);
 		gameModes.put(g.getName().toLowerCase(), g);
 	}
 	
@@ -225,4 +230,7 @@ public abstract class GameMode
 	public boolean playerDamaged(Player victim, Entity attacker, DamageCause cause, int amount) { return true; }
 	public void playerEmptiedBucket(PlayerBucketEmptyEvent event) { }
 	public void playerPickedUpItem(PlayerPickupItemEvent event) { }
+	
+	private Map<String, Boolean> options = new LinkedHashMap<String, Boolean>();
+	public Map<String, Boolean> getOptions() { return options; }
 }
