@@ -391,7 +391,7 @@ public class WorldManager
 			
 			String worldName = world.getName();
 			if ( !plugin.getServer().unloadWorld(world, false) )
-				plugin.log.warning("Error unloading world: " + worldName;
+				plugin.log.warning("Error unloading world: " + worldName);
 		}
 
 		public void deleteWorlds(final Runnable runWhenDone)
