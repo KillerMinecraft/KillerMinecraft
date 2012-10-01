@@ -389,29 +389,9 @@ public class WorldManager
 					plugin.playerManager.putPlayerInWorld(player,  movePlayersTo);
 			}
 			
-			CraftServer server = (CraftServer)plugin.getServer();
-			CraftWorld craftWorld = (CraftWorld)world;
-			
-			try
-			{
-				Field f = server.getClass().getDeclaredField("worlds");
-				f.setAccessible(true);
-				@SuppressWarnings("unchecked")
-				Map<String, World> worlds = (Map<String, World>)f.get(server);
-				worlds.remove(world.getName().toLowerCase());
-				f.setAccessible(false);
-			}
-			catch ( IllegalAccessException ex )
-			{
-				plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
-			}
-			catch  ( NoSuchFieldException ex )
-			{
-				plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
-			}
-			
-			MinecraftServer ms = getMinecraftServer();
-			ms.worlds.remove(ms.worlds.indexOf(craftWorld.getHandle()));
+			String worldName = world.getName();
+			if ( !plugin.getServer().unloadWorld(world, false) )
+				plugin.log.warning("Error unloading world: " + worldName;
 		}
 
 		public void deleteWorlds(final Runnable runWhenDone)
