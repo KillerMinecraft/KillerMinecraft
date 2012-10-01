@@ -8,10 +8,13 @@ package com.ftwinston.Killer;
  * Created 18/06/2012
  */
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
+
+import net.minecraft.server.MinecraftServer;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -19,10 +22,13 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.util.LazyPlayerSet;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
@@ -32,8 +38,11 @@ public class Killer extends JavaPlugin
 {
 	public static Killer instance;
 	public Logger log = Logger.getLogger("Minecraft");
-	private Location plinthPressurePlateLocation;
+	Location plinthPressurePlateLocation;
 
+	public boolean stagingWorldIsServerDefault;
+	public String stagingWorldName;
+	
 	private EventListener eventListener = new EventListener(this);
 	public WorldManager worldManager;
 	public PlayerManager playerManager;
@@ -41,7 +50,7 @@ public class Killer extends JavaPlugin
 	public StatsManager statsManager;
 	
 	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, reportStats;
-	public boolean playersStartInHoldingWorld, autoRestartAtEndOfGame, voteRestartAtEndOfGame;
+	public boolean autoRestartAtEndOfGame, voteRestartAtEndOfGame;
 	
 	public Material[] winningItems, startingItems;
 	
@@ -49,8 +58,6 @@ public class Killer extends JavaPlugin
 	private boolean restarting;
 	
 	public Material teleportModeItem = Material.WATCH, followModeItem = Material.ARROW;
-	
-	public String mainWorldName, netherWorldName, endWorldName, holdingWorldName;
 	
 	private GameMode gameMode, nextGameMode;
 	public GameMode getGameMode() { return gameMode; }
@@ -64,6 +71,11 @@ public class Killer extends JavaPlugin
 			broadcastMessage(changedBy.getName() + " set the next game mode to " + g.getName());
 	}
 	
+	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
+	{
+		return new StagingWorldGenerator();
+	}
+	
 	boolean firstStart = true;
 	public void onEnable()
 	{
@@ -74,25 +86,36 @@ public class Killer extends JavaPlugin
 		
 		if ( firstStart )
 		{
+			firstStart = false;
 			if ( getConfig().getBoolean("startDisabled") )
 			{
 				getServer().getPluginManager().disablePlugin(this);
 				log.info("Killer's startDisabled config setting is set to true, so the plugin will now disabling itself.");
+				return;
 			}
-			firstStart = false;
 		}
 		
 		createRecipes();
 		
-        playerManager = new PlayerManager(this);
-        worldManager = new WorldManager(this, getConfig().getString("gameWorld"), getConfig().getString("holdingWorld"));
+		//playerManager = new PlayerManager(this);
+        worldManager = new WorldManager(this, getConfig().getString("killerWorldName"));
         voteManager = new VoteManager(this);
         statsManager = new StatsManager(this);
         getServer().getPluginManager().registerEvents(eventListener, this);
-        
-        if ( getGameMode().usesPlinth() ) // create a plinth in the default world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
-        	plinthPressurePlateLocation = worldManager.createPlinth(worldManager.mainWorld);
-		
+
+		stagingWorldName = getConfig().getString("stagingWorldName");
+		MinecraftServer ms = getMinecraftServer();
+		if ( ms != null && ms.getPropertyManager().getString("level-name", "world").equalsIgnoreCase(stagingWorldName) )
+		{
+			worldManager.hijackDefaultWorldAsStagingWorld(stagingWorldName); // Killer's staging world is the server's default, so hijack how it's going to be configured
+			stagingWorldIsServerDefault = true;
+		}
+		else
+		{
+			worldManager.createStagingWorld(stagingWorldName); // staging world isn't server default, so create it as a new world
+			stagingWorldIsServerDefault = false;
+		}
+
         // disable spawn protection
         getServer().setSpawnRadius(0);
         
@@ -189,9 +212,11 @@ public class Killer extends JavaPlugin
 	private void setupConfiguration()
 	{
 		getConfig().addDefault("startDisabled", false);
+		getConfig().addDefault("stagingWorldName", "world");
+		getConfig().addDefault("killerWorldName", "killer");
+		
 		getConfig().addDefault("defaultGameMode", "Mystery Killer");
 		getConfig().addDefault("canChangeGameMode", true);
-		getConfig().addDefault("playersStartInHoldingWorld", true);
 		getConfig().addDefault("restartAtEndOfGame", "vote");
 		
 		getConfig().addDefault("autoAssign", false);
@@ -206,8 +231,6 @@ public class Killer extends JavaPlugin
 		
 		getConfig().addDefault("autoRecreateWorld", false);
 		
-		getConfig().addDefault("gameWorld", getServer().getWorlds().get(0).getName());
-		getConfig().addDefault("holdingWorld", "holding");
 		
 		getConfig().options().copyDefaults(true);
 		saveConfig();
@@ -221,7 +244,6 @@ public class Killer extends JavaPlugin
 		}
 		
 		canChangeGameMode = getConfig().getBoolean("canChangeGameMode");
-		playersStartInHoldingWorld = getConfig().getBoolean("playersStartInHoldingWorld");
 		
 		String restartAtEnd = getConfig().getString("restartAtEndOfGame");
 		if ( restartAtEnd.equalsIgnoreCase("vote") )
@@ -458,9 +480,51 @@ public class Killer extends JavaPlugin
 		return false;
 	}
 
+	public MinecraftServer getMinecraftServer()
+	{
+		try
+		{
+			CraftServer server = (CraftServer)getServer();
+			Field f = server.getClass().getDeclaredField("console");
+			f.setAccessible(true);
+			MinecraftServer console = (MinecraftServer)f.get(server);
+			f.setAccessible(false);
+			return console;
+		}
+		catch ( IllegalAccessException ex )
+		{
+		}
+		catch  ( NoSuchFieldException ex )
+		{
+		}
+		
+		return null;
+	}
+	
+	public YamlConfiguration getBukkitConfiguration()
+	{
+		YamlConfiguration config = null;
+		try
+		{
+        	Field configField = CraftServer.class.getDeclaredField("configuration");
+        	configField.setAccessible(true);
+        	config = (YamlConfiguration)configField.get((CraftServer)getServer());
+			configField.setAccessible(false);
+		}
+		catch ( IllegalAccessException ex )
+		{
+			log.warning("Error removing world from bukkit master list: " + ex.getMessage());
+		}
+		catch  ( NoSuchFieldException ex )
+		{
+			log.warning("Error removing world from bukkit master list: " + ex.getMessage());
+		}
+		return config;
+	}
+	
 	public boolean isGameWorld(World world)
 	{
-		return world == worldManager.mainWorld || world == worldManager.netherWorld || world == worldManager.endWorld || world == worldManager.holdingWorld;
+		return world == worldManager.mainWorld || world == worldManager.netherWorld || world == worldManager.endWorld || world == worldManager.stagingWorld;
 	}
 	
 	public List<Player> getOnlinePlayers()

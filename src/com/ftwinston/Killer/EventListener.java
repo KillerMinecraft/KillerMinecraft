@@ -34,6 +34,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class EventListener implements Listener
@@ -43,6 +44,13 @@ public class EventListener implements Listener
     public EventListener(Killer instance)
 	{
 		plugin = instance;
+    }
+    
+    @EventHandler
+    public void onWorldInit(WorldInitEvent event)
+    {
+    	if ( plugin.stagingWorldIsServerDefault && event.getWorld().getName().equalsIgnoreCase(plugin.stagingWorldName) )
+    		plugin.worldManager.stagingWorldCreated(event.getWorld());
     }
     
     // when you die a spectator, be made able to fly again when you respawn
@@ -384,7 +392,7 @@ public class EventListener implements Listener
 	private void playerJoined(Player player)
 	{
 		// if I log into the holding world (cos I logged out there), move me back to the main world's spawn and clear me out
-		if ( player.getWorld() == plugin.worldManager.holdingWorld )
+		if ( player.getWorld() == plugin.worldManager.stagingWorld )
 		{
 			player.getInventory().clear();
 			player.setTotalExperience(0);
