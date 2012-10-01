@@ -48,12 +48,16 @@ public class WorldManager
 			seedGen = new Random();
 			bindRegionFiles();
 			serverFolder = plugin.getServer().getWorldContainer();
-			holdingWorld = createHoldingWorld(holdingWorldName);
 
 			// try to find the main world, based on the config-provided name
 			mainWorld = getWorld(mainWorldName, Environment.NORMAL, true);
 			netherWorld = getWorld(mainWorldName + "_nether", Environment.NETHER, true);
 			endWorld = getWorld(mainWorldName + "_the_end", Environment.THE_END, false);
+			
+			holdingWorld = createHoldingWorld(holdingWorldName);
+			
+			if ( plugin.playersStartInHoldingWorld )
+				moveWorldToFront(holdingWorld);
 		}
 		
 		public void onDisable()
@@ -108,7 +112,8 @@ public class WorldManager
 				f.setAccessible(true);
 				MinecraftServer console = (MinecraftServer)f.get(server);
 				f.setAccessible(false);
-				return console;}
+				return console;
+			}
 			catch ( IllegalAccessException ex )
 			{
 			}
@@ -176,8 +181,7 @@ public class WorldManager
 			return pressurePlateLocation;
 		}
 
-		// for both the CraftServer and the MinecraftServer, remove the holding world from the front of their world lists, and add it back onto the end 
-		private void sortWorldOrder()
+		private void moveWorldToFront(World thisWorld)
 		{
 			try
 			{
@@ -187,17 +191,18 @@ public class WorldManager
 				Map<String, World> worlds = (Map<String, World>)f.get(plugin.getServer());
 				f.setAccessible(false);
 				
-				worlds.remove(holdingWorld.getName());
-				worlds.put(holdingWorld.getName(), holdingWorld);
-
-				/*plugin.log.info("CraftServer worlds:");
-				for ( Map.Entry<String, World> map : worlds.entrySet() )
-					plugin.log.info(" " + map.getKey() + " : " + map.getValue().getName());
-				
-						plugin.log.info("");
-						plugin.log.info("accessible format:");
-				for ( World world : plugin.getServer().getWorlds() )
-					plugin.log.info(" " + world.getName());*/
+				// remove & re-add all worlds except the thisWorld
+				String[] worldNames = new String[0];
+				worldNames = worlds.keySet().toArray(worldNames);
+				for ( String name : worldNames )
+				{
+					if ( name.equals(thisWorld.getName()) )
+						continue;
+					
+					World tmp = worlds.get(name);
+					worlds.remove(name);
+					worlds.put(name, tmp);
+				}
 			}
 			catch ( IllegalAccessException ex )
 			{
@@ -208,16 +213,40 @@ public class WorldManager
 				plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
 			}
 			
-			WorldServer holdingWorldServer = ((CraftWorld)holdingWorld).getHandle();
+			WorldServer worldServer = ((CraftWorld)thisWorld).getHandle();
 			
 			MinecraftServer ms = getMinecraftServer();
-			ms.worlds.remove(ms.worlds.indexOf(holdingWorldServer));
-			ms.worlds.add(holdingWorldServer);
+			ms.worlds.remove(ms.worlds.indexOf(worldServer));
+			ms.worlds.add(0, worldServer);
+		}
+		
+		private void moveWorldToEnd(World thisWorld)
+		{
+			try
+			{
+				Field f = plugin.getServer().getClass().getDeclaredField("worlds");
+				f.setAccessible(true);
+				@SuppressWarnings("unchecked")
+				Map<String, World> worlds = (Map<String, World>)f.get(plugin.getServer());
+				f.setAccessible(false);
+				
+				worlds.remove(thisWorld.getName());
+				worlds.put(thisWorld.getName(), thisWorld);
+			}
+			catch ( IllegalAccessException ex )
+			{
+				plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
+			}
+			catch  ( NoSuchFieldException ex )
+			{
+				plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
+			}
 			
-			/*plugin.log.info("");
-			plugin.log.info("MinecraftServer worlds:");
-			for ( WorldServer world : ms.worlds )
-				plugin.log.info(" " + world.dimension);*/
+			WorldServer worldServer = ((CraftWorld)thisWorld).getHandle();
+			
+			MinecraftServer ms = getMinecraftServer();
+			ms.worlds.remove(ms.worlds.indexOf(worldServer));
+			ms.worlds.add(worldServer);
 		}
 		
 		private World createHoldingWorld(String name) 
@@ -261,13 +290,6 @@ public class WorldManager
 			wc.environment(Environment.THE_END);
 			world = CreateWorld(wc, true);
 			wc.generateStructures(true);
-			
-			//HoldingWorldPopulator pop = new HoldingWorldPopulator();
-			/*for ( int x=0; x<=pop.endChunkX; x++ )
-				for ( int z=0; z<=pop.endChunkZ; z++ )
-					pop.populate(world, null, world.getChunkAt(x, z));*/  // fails cos its called for ungenerated chunks ... ?
-			//world.getPopulators().clear();
-			//world.getPopulators().add(pop);
 			
 			world.setSpawnLocation(8, 2, gen.forceStartButtonZ);
 			world.setPVP(false);
@@ -475,8 +497,8 @@ public class WorldManager
 			endWorld = getWorld(mainWorldName + "_the_end", Environment.THE_END, false);
 			
 			// now we want to ensure that the holding world gets put on the end of the worlds list, instead of staying at the beginning
-			// also ensure that the other worlds on the list are in the right order
-			sortWorldOrder();
+			if ( !plugin.playersStartInHoldingWorld )
+				moveWorldToEnd(holdingWorld);
 
 			// run whatever task was passed in, before putting players back in the main world
 			if ( runWhenDone != null )

@@ -41,7 +41,7 @@ public class Killer extends JavaPlugin
 	public StatsManager statsManager;
 	
 	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, reportStats;
-	public boolean autoRestartAtEndOfGame, voteRestartAtEndOfGame;
+	public boolean playersStartInHoldingWorld, autoRestartAtEndOfGame, voteRestartAtEndOfGame;
 	
 	public Material[] winningItems, startingItems;
 	
@@ -191,6 +191,7 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("startDisabled", false);
 		getConfig().addDefault("defaultGameMode", "Mystery Killer");
 		getConfig().addDefault("canChangeGameMode", true);
+		getConfig().addDefault("playersStartInHoldingWorld", true);
 		getConfig().addDefault("restartAtEndOfGame", "vote");
 		
 		getConfig().addDefault("autoAssign", false);
@@ -220,6 +221,8 @@ public class Killer extends JavaPlugin
 		}
 		
 		canChangeGameMode = getConfig().getBoolean("canChangeGameMode");
+		playersStartInHoldingWorld = getConfig().getBoolean("playersStartInHoldingWorld");
+		
 		String restartAtEnd = getConfig().getString("restartAtEndOfGame");
 		if ( restartAtEnd.equalsIgnoreCase("vote") )
 		{
