@@ -376,17 +376,30 @@ public class EventListener implements Listener
     }
 	
     @EventHandler
-	public void onPlayerJoin(PlayerJoinEvent p)
+	public void onPlayerJoin(PlayerJoinEvent event)
     {
-		if ( plugin.isGameWorld(p.getPlayer().getWorld()) )
-			playerJoined(p.getPlayer());
+    	if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
+    	{// put them right where we want them. So as to avoid needing a big hole in the roof.
+    		final String playerName = event.getPlayer().getName();
+    		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+    			public void run()
+    			{
+    				Player player = plugin.getServer().getPlayerExact(playerName);
+    				if ( player != null )
+    					player.teleport(plugin.worldManager.getStagingWorldSpawnPoint());
+    			}
+    		});
+    	}
+    	
+		if ( plugin.isGameWorld(event.getPlayer().getWorld()) )
+			playerJoined(event.getPlayer());
 	}
 	
     @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent p)
+    public void onPlayerQuit(PlayerQuitEvent event)
     {
-		if ( plugin.isGameWorld(p.getPlayer().getWorld()) )
-			playerQuit(p.getPlayer());
+		if ( plugin.isGameWorld(event.getPlayer().getWorld()) )
+			playerQuit(event.getPlayer());
 	}
 	
 	private void playerJoined(Player player)

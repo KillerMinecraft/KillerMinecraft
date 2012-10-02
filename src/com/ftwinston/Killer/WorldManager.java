@@ -234,7 +234,7 @@ public class WorldManager
 			worldSection.set("generator", "Killer");
 			
 			// disable the end and the nether, for the staging world. We'll re-enable once this has generated.
-			//plugin.getMinecraftServer().getPropertyManager().properties.put("allow-nether", "false");			
+			plugin.getMinecraftServer().getPropertyManager().properties.put("allow-nether", "false");			
 			configuration.set("settings.allow-end", false);
 		}
 		
@@ -293,9 +293,15 @@ public class WorldManager
 	        stagingWorld = world;
 	        
 	        plugin.getBukkitConfiguration().set("settings.allow-end", true);
-	        //plugin.getMinecraftServer().getPropertyManager().properties.put("allow-nether", "true");
+	        plugin.getMinecraftServer().getPropertyManager().properties.put("allow-nether", "true");
 	        //plugin.getMinecraftServer().getPropertyManager().savePropertiesFile();
 		}
+		
+		public Location getStagingWorldSpawnPoint()
+		{
+			return new Location(stagingWorld, 8.5, 2, StagingWorldGenerator.getWorldCenterZ() + 0.5);
+		}
+		
 		
 		public World CreateWorld(WorldCreator wc, boolean loadChunks)
 		{

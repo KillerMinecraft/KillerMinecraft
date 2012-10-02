@@ -352,15 +352,12 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// ceiling
 			for ( int x=5; x<=gen.endX; x++ )
-				if ( x > 5 && x < 10  )
-					continue; // leave a big hole above here, so that players won't spawn on the roof. Ah, minecraft. Joy.
-				else
-					for ( int z=5; z<gen.endZ - 4; z++ )
-					{
-						b = getBlockAbs(chunk, x, 7, z);
-						if ( b != null )
-							b.setType(ceiling);
-					}
+				for ( int z=5; z<gen.endZ - 4; z++ )
+				{
+					b = getBlockAbs(chunk, x, 7, z);
+					if ( b != null )
+						b.setType(ceiling);
+				}
 			
 			// high-level floor on north
 			for ( int x=5; x<gen.endX; x++ )
