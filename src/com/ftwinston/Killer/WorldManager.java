@@ -1,6 +1,7 @@
 package com.ftwinston.Killer;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Field;
@@ -243,9 +244,30 @@ public class WorldManager
 			worldSection.set("generator", "Killer");
 			
 			// disable the end and the nether, for the staging world. We'll re-enable once this has generated.
+			final String prevAllowNether = plugin.getMinecraftServer().getPropertyManager().properties.getProperty("allow-nether", "true");
+			final boolean prevAllowEnd = configuration.getBoolean("settings.allow-end", true);
 			plugin.getMinecraftServer().getPropertyManager().properties.put("allow-nether", "false");			
 			configuration.set("settings.allow-end", false);
+			
+			// restore server settings, once it's finished generating
+	        plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+				@Override
+				public void run() {
+					plugin.getMinecraftServer().getPropertyManager().properties.put("allow-nether", prevAllowNether);
+					plugin.getBukkitConfiguration().set("settings.allow-end", prevAllowEnd);
+					
+					plugin.getMinecraftServer().getPropertyManager().savePropertiesFile();
+					try
+					{
+						plugin.getBukkitConfiguration().save((File)plugin.getMinecraftServer().options.valueOf("bukkit-settings"));
+					}
+					catch ( IOException ex )
+					{
+					}
+				}
+	        });
 		}
+		
 		
 		public void createStagingWorld(final String name) 
 		{
@@ -300,10 +322,6 @@ public class WorldManager
 	        world.setAutoSave(false); // don't save changes to the staging world
 	        
 	        stagingWorld = world;
-	        
-	        plugin.getBukkitConfiguration().set("settings.allow-end", true);
-	        plugin.getMinecraftServer().getPropertyManager().properties.put("allow-nether", "true");
-	        //plugin.getMinecraftServer().getPropertyManager().savePropertiesFile();
 		}
 		
 		public Location getStagingWorldSpawnPoint()
