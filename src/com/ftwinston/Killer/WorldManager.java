@@ -43,7 +43,6 @@ public class WorldManager
 			
 			seedGen = new Random();
 			bindRegionFiles();
-			serverFolder = plugin.getServer().getWorldContainer();
 
 			// try to find the main world, based on the config-provided name
 /*			mainWorld = getWorld(mainWorldName, Environment.NORMAL, true);
@@ -55,11 +54,9 @@ public class WorldManager
 		{
 			regionfiles = null;
 			rafField = null;
-			serverFolder = null;
 		}
 		
 		private String mainWorldName;
-		static File serverFolder;
 		Random seedGen;
 		
 		@SuppressWarnings("rawtypes")
@@ -224,7 +221,7 @@ public class WorldManager
 			// as the config may have changed, delete the existing staging world 
     		try
 			{
-    			delete(new File(serverFolder + File.separator + name));
+    			delete(new File(plugin.getServer().getWorldContainer() + File.separator + name));
 			}
 			catch ( Exception e )
 			{
@@ -292,7 +289,7 @@ public class WorldManager
 				
 	    		try
 				{
-	    			delete(new File(serverFolder + File.separator + name));
+	    			delete(new File(plugin.getServer().getWorldContainer() + File.separator + name));
 				}
 				catch ( Exception e )
 				{
@@ -555,7 +552,7 @@ public class WorldManager
     				
 		    		try
 					{
-		    			if ( !delete(new File(serverFolder + File.separator + worldName)) )
+		    			if ( !delete(new File(plugin.getServer().getWorldContainer() + File.separator + worldName)) )
 		    				allGood = false;
 					}
 					catch ( Exception e )

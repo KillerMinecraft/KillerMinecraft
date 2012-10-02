@@ -215,6 +215,8 @@ public class Killer extends JavaPlugin
 		getConfig().addDefault("stagingWorldName", "world");
 		getConfig().addDefault("killerWorldName", "killer");
 		
+		getConfig().addDefault("allowRandomWorldGeneration", true);
+		
 		getConfig().addDefault("defaultGameMode", "Mystery Killer");
 		getConfig().addDefault("canChangeGameMode", true);
 		getConfig().addDefault("restartAtEndOfGame", "vote");

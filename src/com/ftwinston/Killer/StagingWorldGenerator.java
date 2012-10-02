@@ -1,5 +1,7 @@
 package com.ftwinston.Killer;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -18,7 +20,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	private int numGameModes, maxGameModeOptions, numWorldOptions;
 	private boolean allowRandomWorlds;
-	private String[] customWorldNames;
+	private List<String> customWorldNames;
 	
 	int endX, endZ, worldEndX, optionsEndX, gameModeEndZ;
 	int forceStartButtonX, forceStartButtonZ;
@@ -27,24 +29,34 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public StagingWorldGenerator()
 	{
-		// not really sure how these should be set
-		String[] customWorldNames = new String[] { "Hello", "Goodbye" };
-		boolean allowRandomWorldGeneration = true;
-		
-		
 		numGameModes = GameMode.gameModes.size();
         maxGameModeOptions = 0;
         for ( GameMode mode : GameMode.gameModes.values() )
         	if ( mode.getOptions().size() > maxGameModeOptions )
         		maxGameModeOptions = mode.getOptions().size();
+
+		allowRandomWorlds = Killer.instance.getConfig().getBoolean("allowRandomWorldGeneration");
+		customWorldNames = Killer.instance.getConfig().getStringList("customWorlds");
+		if ( customWorldNames == null )
+			customWorldNames = new ArrayList<String>();
 		
-		this.customWorldNames = customWorldNames;
-		this.allowRandomWorlds = allowRandomWorldGeneration;
+		// check custom worlds exist, if they don't, remove them
+		for ( int i=0; i<customWorldNames.size(); i++ )
+		{
+			File folder = new File(Killer.instance.getServer().getWorldContainer() + File.separator + customWorldNames.get(i));
+			if ( customWorldNames.get(i).length() > 0 && folder.exists() && folder.isDirectory() )
+				continue;
+			
+			customWorldNames.remove(i);
+			i--;
+		}
+		if ( customWorldNames.size() == 0 )
+			allowRandomWorlds = true; // If no custom worlds (are left), always allow random worlds
 		
-		if ( allowRandomWorldGeneration )
-			numWorldOptions = customWorldNames.length + numRandomWorldOptions;
+		if ( this.allowRandomWorlds )
+			numWorldOptions = customWorldNames.size() + numRandomWorldOptions;
 		else
-			numWorldOptions = customWorldNames.length;
+			numWorldOptions = customWorldNames.size();
 		// if random world generation is disabled, and no custom world names are provided ... what then?
 		
 		
@@ -211,7 +223,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						s.setLine(1, "§fNormal Random");
 					else
 					{
-						String name = gen.allowRandomWorlds ? gen.customWorldNames[num - 1] : gen.customWorldNames[num - 1];
+						String name = gen.allowRandomWorlds ? gen.customWorldNames.get(num - 1) : gen.customWorldNames.get(num);
 						if ( name.length() > 12 )
 						{
 							String[] words = name.split(" ");
