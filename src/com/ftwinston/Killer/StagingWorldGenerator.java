@@ -205,26 +205,26 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(sign);
 					b.setData((byte)0x3);
 					Sign s = (Sign)b.getState();
-					s.setLine(1, "§fWorld:");
+					s.setLine(0, "§fWorld:");
 					
 					if ( gen.allowRandomWorlds && num == 0 )
-						s.setLine(2, "§fNormal Random");
+						s.setLine(1, "§fNormal Random");
 					else
 					{
 						String name = gen.allowRandomWorlds ? gen.customWorldNames[num - 1] : gen.customWorldNames[num - 1];
 						if ( name.length() > 12 )
 						{
 							String[] words = name.split(" ");
-							s.setLine(2, "§f" + words[0]);
+							s.setLine(1, "§f" + words[0]);
 							if ( words.length > 1)
 							{
-								s.setLine(3, "§f" + words[1]);
+								s.setLine(2, "§f" + words[1]);
 								if ( words.length > 2)
-									s.setLine(4, "§f" + words[2]);
+									s.setLine(3, "§f" + words[2]);
 							}
 						}
 						else
-							s.setLine(2, "§f" + name);
+							s.setLine(1, "§f" + name);
 					}
 					s.update();
 				}
@@ -318,22 +318,22 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(sign);
 					b.setData((byte)0x5);
 					Sign s = (Sign)b.getState();
-					s.setLine(1, "§fGame mode:");
+					s.setLine(0, "§fGame mode:");
 					
 					String name = gameMode.getName();
 					if ( name.length() > 12 )
 					{
 						String[] words = name.split(" ");
-						s.setLine(2, "§f" + words[0]);
+						s.setLine(1, "§f" + words[0]);
 						if ( words.length > 1)
 						{
-							s.setLine(3, "§f" + words[1]);
+							s.setLine(2, "§f" + words[1]);
 							if ( words.length > 2)
-								s.setLine(4, "§f" + words[2]);
+								s.setLine(3, "§f" + words[2]);
 						}
 					}
 					else
-						s.setLine(2, "§f" + name);
+						s.setLine(1, "§f" + name);
 					s.update();
 				}
 				
@@ -350,10 +350,10 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					Sign s = (Sign)b.getState();
 					
 					String[] descLines = gameMode.getSignDescription();
-					s.setLine(1, descLines.length > 0 ? descLines[0] : "");
-					s.setLine(2, descLines.length > 1 ? descLines[1] : "");
-					s.setLine(3, descLines.length > 2 ? descLines[2] : "");
-					s.setLine(4, descLines.length > 3 ? descLines[3] : "");
+					s.setLine(0, descLines.length > 0 ? descLines[0] : "");
+					s.setLine(1, descLines.length > 1 ? descLines[1] : "");
+					s.setLine(2, descLines.length > 2 ? descLines[2] : "");
+					s.setLine(3, descLines.length > 3 ? descLines[3] : "");
 					s.update();
 				}
 				
@@ -365,10 +365,10 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					Sign s = (Sign)b.getState();
 					
 					String[] descLines = gameMode.getSignDescription();
-					s.setLine(1, descLines.length > 4 ? descLines[4] : "");
-					s.setLine(2, descLines.length > 5 ? descLines[5] : "");
-					s.setLine(3, descLines.length > 6 ? descLines[6] : "");
-					s.setLine(4, descLines.length > 7 ? descLines[7] : "");
+					s.setLine(0, descLines.length > 4 ? descLines[4] : "");
+					s.setLine(1, descLines.length > 5 ? descLines[5] : "");
+					s.setLine(2, descLines.length > 6 ? descLines[6] : "");
+					s.setLine(3, descLines.length > 7 ? descLines[7] : "");
 					s.update();
 				}
 				
@@ -380,10 +380,10 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					Sign s = (Sign)b.getState();
 					
 					String[] descLines = gameMode.getSignDescription();
-					s.setLine(1, descLines.length > 8 ? descLines[8] : "");
-					s.setLine(2, descLines.length > 9 ? descLines[9] : "");
-					s.setLine(3, descLines.length > 10 ? descLines[10] : "");
-					s.setLine(4, descLines.length > 11 ? descLines[11] : "");
+					s.setLine(0, descLines.length > 8 ? descLines[8] : "");
+					s.setLine(1, descLines.length > 9 ? descLines[9] : "");
+					s.setLine(2, descLines.length > 10 ? descLines[10] : "");
+					s.setLine(3, descLines.length > 11 ? descLines[11] : "");
 					s.update();
 				}
 				
