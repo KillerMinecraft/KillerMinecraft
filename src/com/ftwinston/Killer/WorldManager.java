@@ -220,6 +220,15 @@ public class WorldManager
 		
 		public void hijackDefaultWorldAsStagingWorld(String name)
 		{
+			// as the config may have changed, delete the existing staging world 
+    		try
+			{
+    			delete(new File(serverFolder + File.separator + name));
+			}
+			catch ( Exception e )
+			{
+			}
+    		
 			// in the already-loaded server configuration, create/update an entry specifying the generator to be used for the default world, which is the staging world
 			YamlConfiguration configuration = plugin.getBukkitConfiguration();
 			
