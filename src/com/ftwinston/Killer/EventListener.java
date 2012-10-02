@@ -122,10 +122,11 @@ public class EventListener implements Listener
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
 
-    	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName())
+    	  || event.getPlayer().getWorld() == plugin.worldManager.stagingWorld
+    	  || isOnPlinth(event.getBlock().getLocation())
+    	  )
     		event.setCancelled(true);
-    	else if ( isOnPlinth(event.getBlock().getLocation()) )
-			event.setCancelled(true);
     }
     
     // prevent anyone placing blocks over the plinth
@@ -134,11 +135,12 @@ public class EventListener implements Listener
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
-		
-    	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+
+    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName())
+    	  || event.getPlayer().getWorld() == plugin.worldManager.stagingWorld
+    	  || isOnPlinth(event.getBlock().getLocation())
+    	  )
     		event.setCancelled(true);
-    	else if ( isOnPlinth(event.getBlock().getLocation()) )
-			event.setCancelled(true);
     }
     
     // prevent lava/water from flowing onto the plinth
