@@ -71,31 +71,78 @@ public class CrazyKiller extends GameMode
 	public boolean immediateKillerAssignment() { return true; }
 	
 	@Override
-	public void explainGameMode(Player player, PlayerManager pm)
+	public int getNumHelpMessages(boolean forKiller) { return 6; }
+	
+	@Override
+	public String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete)
 	{
-		boolean isKiller = pm.isKiller(player.getName());
-		String message = getName() + "\n";
-		if ( isKiller )
-			message += "You have been";
-		else
-			message += "One player " + (pm.numKillersAssigned() > 0 ? "has been" : "will soon be");
-		
-		message += " randomly chosen to be the killer, and must kill everyone else. Every dirt block " + (isKiller ? "you" : "they") + " pick up turns to dynamite, and " + (isKiller ? "you" : "they") + " have a compass that points at the other players.\nThe other players are each given a sword, and to win, they must kill the killer, or bring a ";
-			
-		message += plugin.tidyItemName(plugin.winningItems[0]);
-		
-		if ( plugin.winningItems.length > 1 )
+		switch ( num )
 		{
-			for ( int i=1; i<plugin.winningItems.length-1; i++)
-				message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
-			
-			message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+			case 0:
+				if ( forKiller )
+					return "You have been chosen to be the killer, and must kill everyone else. They know who you are.";
+				else if ( isAllocationComplete )
+					return "A player has been chosen to be the killer, and must kill everyone else.";
+				else
+					return "A player will soon be chosen to be the killer. You'll be told who it is, and they will be teleported away from the other players.";
+			case 1:
+				if ( forKiller )
+					return "Every dirt block you pick up will turn into TNT, so have fun with that.";
+				else
+					return "Every dirt block the killer picks up will turn into TNT, so beware.";
+			case 2:
+				if ( forKiller )
+					return "The other players each start with a sword, so avoid a direct fight.";
+				else
+					return "The killer doesn't start iwth a sword, but all the other players do.";
+			case 3:
+				if ( forKiller )
+					return "Your compass will point at the nearest player.";
+				else
+					return "The killer starts with a compass, which points at the nearest player.";
+			case 4:
+				String message = "The other players win if the killer dies, or if they bring a ";			
+				message += plugin.tidyItemName(plugin.winningItems[0]);
+				
+				if ( plugin.winningItems.length > 1 )
+				{
+					for ( int i=1; i<plugin.winningItems.length-1; i++)
+						message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
+					
+					message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+				}
+				
+				message += " to the plinth near the spawn.";
+				return message;
+			case 5:
+				if ( forKiller )
+					return "You can make buttons and pressure plates with the stone you started with.\nTry to avoid blowing yourself up!";
+				else
+					return "The killer starts with enough stone and redstone to make plenty buttons, wires and pressure plates.";
+			default:
+				return "";
 		}
-		
-		message += " to the plinth near the spawn.";
-		player.sendMessage(message);
 	}
 	
+	@Override
+	public String[] getSignDescription()
+	{
+		return new String[] {
+			"A player is",
+			"chosen to kill",
+			"the rest. They",
+			"pick up TNT",
+			"instead of dirt",
+			"and start with",
+			"some redstone.",
+			"The others must",
+			"kill them, or",
+			"get a blaze rod",
+			"and bring it to",
+			"the spawn point"
+		};
+	}
+
 	@Override
 	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
 	{

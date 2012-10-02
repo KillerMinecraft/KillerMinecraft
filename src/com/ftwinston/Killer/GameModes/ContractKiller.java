@@ -137,11 +137,48 @@ public class ContractKiller extends GameMode
 	public boolean immediateKillerAssignment() { return true; }
 	
 	@Override
-	public void explainGameMode(Player player, PlayerManager pm)
+	public int getNumHelpMessages(boolean forKiller) { return 6; }
+	
+	@Override
+	public String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete)
 	{
-		String message = getName() + "\n";
-		message += "Everyone " + (pm.numKillersAssigned() > 0 ? "has been" : "will soon be") + " assigned a target, and they must try and kill this player without being seen doing so by anybody else. Your compass will point towards your victim, and if anyone sees you kill them, you will die instead of them. Remember that someone else is hunting you! If you kill anyone other than your target or your hunter, you will die instead of them.\nWhen you kill your target, you are assigned their target, and the game continues until only one player remains alive.";
-		player.sendMessage(message);
+		switch ( num )
+		{
+			case 0:
+				if ( isAllocationComplete )
+					return "Every player has been assigned a target to kill, which they must do without being seen by anyone else.";
+				else
+					return "Every player will soon be assigned a target to kill, which they must do without being seen by anyone else.";
+			case 1:
+				return "Your compass points towards your victim, and if anyone sees you kill them, you will die instead of them.";
+			case 2:
+				return "Remember that someone else is hunting you! If you kill anyone other than your target or your hunter, you will die instead of them.";
+			case 3:
+				return "When you kill your target, you are assigned their target, and the game continues until only one player remains alive.";
+			case 4:
+				return "When someone attacks you, you will be told if they are allowed to kill you. If they're not, don't kill them back!";
+			default:
+				return "";
+		}
+	}
+	
+	@Override
+	public String[] getSignDescription()
+	{
+		return new String[] {
+			"Each player is",
+			"given a target,",
+			"who they must",
+			"kill without",
+			"being seen. You",
+			"can only kill",
+			"your target or",
+			"your hunter.",
+			"You take your",
+			"victim's target",
+			"when they die.",
+			""
+		};
 	}
 	
 	@Override

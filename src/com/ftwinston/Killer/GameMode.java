@@ -77,12 +77,35 @@ public abstract class GameMode
 	public abstract boolean informOfKillerIdentity();
 	public abstract boolean revealKillersIdentityAtEnd();
 	
-	public abstract void explainGameMode(Player player, PlayerManager pm);
-	public void explainGameModeForAll(PlayerManager pm)
+	public void sendGameModeHelpMessage(PlayerManager pm)
 	{
 		for ( Player player : plugin.getOnlinePlayers() )
-			explainGameMode(player, pm);
+			sendGameModeHelpMessage(pm, player);
 	}
+	
+	public void sendGameModeHelpMessage(PlayerManager pm, Player player)
+	{
+		PlayerManager.Info info = pm.getInfo(player.getName());
+		if ( info.nextHelpMessage == -1 )
+			return;
+		
+		boolean isAllocationComplete = pm.numKillersAssigned() > 0; // todo: replace with proper value, once we have a game state variable
+		
+		String message = getHelpMessage(info.nextHelpMessage, info.isKiller(), isAllocationComplete);
+		if ( info.nextHelpMessage == 0 )
+			message = getName() + "\n" + message; // put the game mode name on the front of the first message
+		player.sendMessage(message);
+		
+		if ( info.nextHelpMessage == getNumHelpMessages(info.isKiller()) - 1 )
+			info.nextHelpMessage = -1;
+		else
+			info.nextHelpMessage ++;
+	}
+	
+	public abstract String[] getSignDescription();
+	
+	public abstract int getNumHelpMessages(boolean forKiller);
+	public abstract String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete);
 	
 	public void gameStarted() { }
 	public void gameFinished() { }

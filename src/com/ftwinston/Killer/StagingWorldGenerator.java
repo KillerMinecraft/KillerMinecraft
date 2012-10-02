@@ -32,7 +32,6 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		boolean allowRandomWorldGeneration = true;
 		
 		
-		
 		numGameModes = GameMode.gameModes.size();
         maxGameModeOptions = 0;
         for ( GameMode mode : GameMode.gameModes.values() )
@@ -51,14 +50,14 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		
 		// now set up helper values for where the various "extensible" things end
 		endX = Math.max(Math.max(numWorldOptions, maxGameModeOptions) * 2 + 8, 20);
-		endZ = Math.max(numGameModes * 2 + 12, 22);
+		endZ = Math.max(numGameModes * 3 + 12, 22);
 						
 		forceStartButtonX = endX - 1;
 		forceStartButtonZ = endZ / 2;
 		
 		worldEndX = numWorldOptions * 2 + 8;
 		optionsEndX = maxGameModeOptions == 0 ? 4 : maxGameModeOptions * 2 + 8;
-		gameModeEndZ = numGameModes * 2 + 8;
+		gameModeEndZ = numGameModes * 3 + 8;
 		
 		// todo: decide these, based on config or whatever
 		gameModeSelectionClosedOff = numGameModes < 2 ;
@@ -68,7 +67,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public static int getWorldCenterZ()
 	{
-		return Math.max(GameMode.gameModes.size() + 6, 11);
+		return Math.max(GameMode.gameModes.size() * 3 + 12, 22) / 2;
 	}
 	
 	@Override
@@ -88,7 +87,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public Location getFixedSpawnLocation(World world, Random random)
 	{
-		Location loc = new Location(world, 8, 2, forceStartButtonZ - 2 + random.nextDouble() * 4);
+		Location loc = new Location(world, 8, 2, forceStartButtonZ);
 		loc.setYaw(0); // if 0 actually works, this isn't needed. But we want them to face -x, at any rate
 		return loc;
 	}
@@ -209,7 +208,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					s.setLine(1, "§fWorld:");
 					
 					if ( gen.allowRandomWorlds && num == 0 )
-						s.setLine(2, "§fDefault Random");
+						s.setLine(2, "§fNormal Random");
 					else
 					{
 						String name = gen.allowRandomWorlds ? gen.customWorldNames[num - 1] : gen.customWorldNames[num - 1];
@@ -270,7 +269,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						b.setType(walls);
 				}
 			
-			// south wall, if needed
+			// south wall
 			for ( int x = 1; x < 5; x++ )
 				for ( int y = 2; y < 7; y++ )
 				{
@@ -300,19 +299,20 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// now all the buttons/signs etc IN the west wall
 			num = 0;
-			int modeZ = 7;
+			int modeZ = 8;
 			Object[] modes = GameMode.gameModes.values().toArray();
 			
 			while ( modeZ < gen.gameModeEndZ - 2 && num < gen.numGameModes )
 			{
-				b = getBlockAbs(chunk, 1, 2, modeZ);
+				b = getBlockAbs(chunk, 1, 3, modeZ);
 				if ( b != null )
 				{
 					b.setType(button);
 					b.setData((byte)0x1);
 				}
 				
-				b = getBlockAbs(chunk, 1, 3, modeZ);
+				GameMode gameMode = (GameMode)modes[num];
+				b = getBlockAbs(chunk, 1, 4, modeZ);
 				if ( b != null )
 				{
 					b.setType(sign);
@@ -320,7 +320,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					Sign s = (Sign)b.getState();
 					s.setLine(1, "§fGame mode:");
 					
-					String name = ((GameMode)modes[num]).getName();
+					String name = gameMode.getName();
 					if ( name.length() > 12 )
 					{
 						String[] words = name.split(" ");
@@ -341,7 +341,53 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				if ( b != null )
 					b.setType(lamp);
 				
-				modeZ += 2;
+				// now the game mode DESCRIPTION signs
+				b = getBlockAbs(chunk, 1, 4, modeZ-1);
+				if ( b != null )
+				{
+					b.setType(sign);
+					b.setData((byte)0x5);
+					Sign s = (Sign)b.getState();
+					
+					String[] descLines = gameMode.getSignDescription();
+					s.setLine(1, descLines.length > 0 ? descLines[0] : "");
+					s.setLine(2, descLines.length > 1 ? descLines[1] : "");
+					s.setLine(3, descLines.length > 2 ? descLines[2] : "");
+					s.setLine(4, descLines.length > 3 ? descLines[3] : "");
+					s.update();
+				}
+				
+				b = getBlockAbs(chunk, 1, 3, modeZ-1);
+				if ( b != null )
+				{
+					b.setType(sign);
+					b.setData((byte)0x5);
+					Sign s = (Sign)b.getState();
+					
+					String[] descLines = gameMode.getSignDescription();
+					s.setLine(1, descLines.length > 4 ? descLines[4] : "");
+					s.setLine(2, descLines.length > 5 ? descLines[5] : "");
+					s.setLine(3, descLines.length > 6 ? descLines[6] : "");
+					s.setLine(4, descLines.length > 7 ? descLines[7] : "");
+					s.update();
+				}
+				
+				b = getBlockAbs(chunk, 1, 2, modeZ-1);
+				if ( b != null )
+				{
+					b.setType(sign);
+					b.setData((byte)0x5);
+					Sign s = (Sign)b.getState();
+					
+					String[] descLines = gameMode.getSignDescription();
+					s.setLine(1, descLines.length > 8 ? descLines[8] : "");
+					s.setLine(2, descLines.length > 9 ? descLines[9] : "");
+					s.setLine(3, descLines.length > 10 ? descLines[10] : "");
+					s.setLine(4, descLines.length > 11 ? descLines[11] : "");
+					s.update();
+				}
+				
+				modeZ += 3;
 				num ++;
 			}
 			

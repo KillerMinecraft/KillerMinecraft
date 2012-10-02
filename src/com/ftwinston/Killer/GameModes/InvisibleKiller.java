@@ -159,31 +159,68 @@ public class InvisibleKiller extends GameMode
 	public boolean immediateKillerAssignment() { return true; }
 	
 	@Override
-	public void explainGameMode(Player player, PlayerManager pm)
+	public int getNumHelpMessages(boolean forKiller) { return 6; }
+	
+	@Override
+	public String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete)
 	{
-		boolean isKiller = pm.isKiller(player.getName());
-		String message = getName() + "\n";
-		if ( isKiller )
-			message += "You have been";
-		else
-			message += "One player " + (pm.numKillersAssigned() > 0 ? "has been" : "will soon be");
-		
-		message += " randomly chosen to be the killer, and must kill everyone else. " + (isKiller ? "You" : "They") + (pm.numKillersAssigned() > 0 ? "are" : "will be") + " invisible, but will become briefly visible when damaged. " + (isKiller ? "You" : "They") + " cannot be hit while invisible, except by ranged weapons, and also have a compass that points at the other players.\nThe other players are each given an infinity bow and splash damage potions, and their compasses will point at the killer. To win, they must kill the killer, or bring a ";
-			
-		message += plugin.tidyItemName(plugin.winningItems[0]);
-		
-		if ( plugin.winningItems.length > 1 )
+		switch ( num )
 		{
-			for ( int i=1; i<plugin.winningItems.length-1; i++)
-				message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
+			case 0:
+				if ( forKiller )
+					return "You have been chosen to be the killer, and must kill everyone else. You are invisible, but they know who you are.";
+				else if ( isAllocationComplete )
+					return "A player has been chosen to be the killer, and must kill everyone else. They are invisible!";
+				else
+					return "A player will soon be chosen to be the killer. They will be invisible, and you'll be told who it is.";
+			case 1:
+				if ( forKiller )
+					return "You will briefly become visible when damaged.\nYou cannot be hit while invisible, except by ranged weapons.";
+				else
+					return "The killer will briefly become visible when damaged.\nThey cannot be hit while invisible, except by ranged weapons.";
+			case 2:
+				return "The killer's compass points at the nearest player. The other players are told how far away the killer is.";
+			case 3:
+				return "The other players get infinity bows and splash damage potions.";
+			case 4:
+				String message = "To win, the other players must kill the killer, or bring a ";
 			
-			message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+				message += plugin.tidyItemName(plugin.winningItems[0]);
+				
+				if ( plugin.winningItems.length > 1 )
+				{
+					for ( int i=1; i<plugin.winningItems.length-1; i++)
+						message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
+					
+					message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+				}
+				
+				message += " to the plinth near the spawn.";
+				return message;
+			default:
+				return "";
 		}
-		
-		message += " to the plinth near the spawn.";
-		player.sendMessage(message);
 	}
 	
+	@Override
+	public String[] getSignDescription()
+	{
+		return new String[] {
+			"A player is",
+			"chosen to kill",
+			"the rest. They",
+			"are invisible!",
+			"Players receive",
+			"alerts when the",
+			"killer is near.",
+			"The others must",
+			"kill them, or",
+			"get a blaze rod",
+			"and bring it to",
+			"the spawn point"
+		};
+	}
+
 	@Override
 	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
 	{

@@ -502,12 +502,7 @@ public class WorldManager
 			if ( runWhenDone != null )
 				runWhenDone.run();
 			
-			// move ALL players back into the main world
-			for ( Player player : plugin.getOnlinePlayers() )
-			{
-				plugin.playerManager.resetPlayer(player, true);
-				plugin.playerManager.putPlayerInWorld(player, mainWorld);
-			}
+			plugin.playerManager.putPlayersInGameWorld();
 		}
 		
 		private class WorldDeleter implements Runnable

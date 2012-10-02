@@ -69,34 +69,75 @@ public class MysteryKiller extends GameMode
 	public boolean revealKillersIdentityAtEnd() { return true; }
 	
 	@Override
-	public void explainGameMode(Player player, PlayerManager pm)
+	public int getNumHelpMessages(boolean forKiller) { return 6; }
+	
+	@Override
+	public String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete)
 	{
-		boolean isKiller = pm.isKiller(player.getName());
-		String message = getName() + "\n";
-		if ( isKiller )
-			message += "You have been";
-		else
-			message += "One player " + (pm.numKillersAssigned() > 0 ? "has been" : "will soon be");
-		
-		message += " randomly chosen to be the killer, and must kill everyone else. No one else knows who the killer is, and to win, the other players must bring a ";
-			
-			message += plugin.tidyItemName(plugin.winningItems[0]);
-			
-			if ( plugin.winningItems.length > 1 )
-			{
-				for ( int i=1; i<plugin.winningItems.length-1; i++)
-					message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
+		switch ( num )
+		{
+			case 0:
+				if ( forKiller )
+					return "You have been chosen to try and kill everyone else. No one else has been told who was chosen.";
+				else if ( isAllocationComplete )
+					return "One player has been chosen to try and kill everyone else. No one else has been told who it is.";
+				else
+					return "One player will be chosen to try and kill everyone else. No one else will be told who it is.";
+			case 1:
+				if ( forKiller )
+					return "As the killer, you win if everyone else dies.";
+				else
+					return "The killer wins if everyone else dies... so watch your back!";
+			case 2:
+				String message = "To win, the other players must bring a ";
 				
-				message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
-			}
+				message += plugin.tidyItemName(plugin.winningItems[0]);
+				
+				if ( plugin.winningItems.length > 1 )
+				{
+					for ( int i=1; i<plugin.winningItems.length-1; i++)
+						message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
+					
+					message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+				}
+				
+				message += " to the plinth near the spawn.";
+				return message;
+			case 3:
+				return "The other players will not automatically win when the killer dies, and another killer may be assigned once the first one is dead.";
 			
-			message += " to the plinth near the spawn.\nThe other players will not automatically win when the killer is killed, and another killer may be assigned once the first one is dead.";
+			case 4:
+				return "Death messages won't say how someone died, or who killed them.";
 			
-			if ( isKiller )
-				message += "\nIf you make a compass, it will point at the nearest player.";
-			player.sendMessage(message);
+			case 5:
+				if ( forKiller )
+					return "If you make a compass, it will point at the nearest player. This won't work for other players.";
+				else
+					return "If the killer makes a compass, it will point at the nearest player. This won't work for other players.";
+			default:
+				return "";
+		}
 	}
 	
+	@Override
+	public String[] getSignDescription()
+	{
+		return new String[] {
+			"A player is",
+			"chosen to kill",
+			"the rest. Other",
+			"players aren't",
+			"told who is the",
+			"killer! Death",
+			"messages are a",
+			"bit more vague.",
+			"The others must",
+			"get a blaze rod",
+			"and bring it to",
+			"the spawn point"
+		};
+	}
+
 	@Override
 	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
 	{

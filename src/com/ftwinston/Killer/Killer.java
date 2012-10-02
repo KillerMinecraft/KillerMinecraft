@@ -404,8 +404,16 @@ public class Killer extends JavaPlugin
 		}
 		else if (cmd.getName().equalsIgnoreCase("help"))
 		{
-			if ( sender instanceof Player )
-				getGameMode().explainGameMode((Player)sender, playerManager);
+			if ( !(sender instanceof Player) )
+				return true;
+			
+			// if they've already reached the end of the messages, start again from the beginning
+			Player player = (Player)sender;
+			PlayerManager.Info info = playerManager.getInfo(player.getName());
+			if ( info.nextHelpMessage == -1 )
+				info.nextHelpMessage = 0;
+			
+			getGameMode().sendGameModeHelpMessage(playerManager, player);
 			return true;
 		}
 		else if (cmd.getName().equalsIgnoreCase("killer"))
@@ -619,12 +627,7 @@ public class Killer extends JavaPlugin
 		else
 			broadcastMessage("Game is restarting...");
  
-		for ( Player player : getOnlinePlayers() )
-			playerManager.putPlayerInWorld(player, worldManager.mainWorld);
-			
-		playerManager.reset(true);
-		gameMode.explainGameModeForAll(playerManager);
-		playerManager.checkImmediateKillerAssignment();
+		playerManager.putPlayersInGameWorld();
 		
 		worldManager.removeAllItems(worldManager.mainWorld);
 		worldManager.mainWorld.setTime(0);

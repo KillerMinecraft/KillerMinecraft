@@ -33,7 +33,7 @@ public class PlayerManager
 	public static PlayerManager instance;
 	private Killer plugin;
 	private Random random;
-	private int killerAssignProcess;
+	private int killerAssignProcess, helpMessageProcess;
 	
 	public PlayerManager(Killer _plugin)
 	{
@@ -95,17 +95,23 @@ public class PlayerManager
 		{
 			if ( b )
 			{
+				nextHelpMessage = 0;
 				if ( !a ) // not currently alive, being assigned
 					numAlive ++;
 			}
 			else if ( a ) // currently alive, being cleared
+			{
 				numAlive --;
+				nextHelpMessage = -1;
+			}
 		
 			a = b;
 		}
 		
 		// spectator target, and also kill target in Contract Killer mode
 		public String target;
+		
+		public int nextHelpMessage = 0;
 	}
 	
 	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();
@@ -141,6 +147,12 @@ public class PlayerManager
 		playerInfo.clear();
 		numKillers = numAlive = 0;
 		
+		if ( helpMessageProcess != -1 )
+		{
+			plugin.getServer().getScheduler().cancelTask(helpMessageProcess);
+			helpMessageProcess = -1;
+		}
+		
 		for ( Player player : plugin.getOnlinePlayers() )
 		{
 			resetPlayer(player, resetInventories);
@@ -157,6 +169,24 @@ public class PlayerManager
 			killerAssignProcess = -1;
 		}
 		startCheckAutoAssignKiller();
+	}
+	
+	public void putPlayersInGameWorld()
+	{
+		// move ALL players back into the main world
+		for ( Player player : plugin.getOnlinePlayers() )
+			putPlayerInWorld(player, plugin.worldManager.mainWorld);
+		
+		reset(true);
+		checkImmediateKillerAssignment();
+		
+		// start sending out help messages explaining the game rules
+		helpMessageProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+			public void run()
+			{
+				plugin.getGameMode().sendGameModeHelpMessage(plugin.playerManager);
+			}
+		}, 0, 550L); // send every 25 seconds
 	}
 	
 	public boolean assignKillers(CommandSender sender)
@@ -285,10 +315,8 @@ public class PlayerManager
 			}
 		}
 		if ( isNewPlayer );
-		{
-			plugin.getGameMode().explainGameMode(player, this);
-		}
-		
+			plugin.getGameMode().sendGameModeHelpMessage(this, player);
+			
 		if ( numKillersAssigned() == 0 )
 		{
 			checkImmediateKillerAssignment();

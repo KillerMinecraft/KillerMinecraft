@@ -70,25 +70,58 @@ public class TeamKiller extends GameMode
 	public boolean immediateKillerAssignment() { return true; }
 	
 	@Override
-	public void explainGameMode(Player player, PlayerManager pm)
+	public int getNumHelpMessages(boolean forKiller) { return 3; }
+	
+	@Override
+	public String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete)
 	{
-		String message = getName() + "\n";
-		message += "Players " + (pm.numKillersAssigned() > 0 ? "have been" : "will soon be") + " split into two teams, and each team must race to bring a ";
-			
-		message += plugin.tidyItemName(plugin.winningItems[0]);
-		
-		if ( plugin.winningItems.length > 1 )
+		switch ( num )
 		{
-			for ( int i=1; i<plugin.winningItems.length-1; i++)
-				message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
-			
-			message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+			case 0:
+				if ( isAllocationComplete )
+					return "Players have been split into two teams.\nThe scoreboard shows what team each player is on.";
+				else
+					return "Players will soon be split into two teams.\nThe scoreboard will show what team each player is on.";
+			case 1:
+				String message = "The teams must race to bring a ";			
+				message += plugin.tidyItemName(plugin.winningItems[0]);
+				
+				if ( plugin.winningItems.length > 1 )
+				{
+					for ( int i=1; i<plugin.winningItems.length-1; i++)
+						message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
+					
+					message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+				}
+				
+				message += " to the plinth near the spawn, or to kill the other team.";
+				return message;
+			case 2:
+				return "If a team are all killed, the other team wins.";
+			default:
+				return "";
 		}
-		
-		message += " to the plinth near the spawn, or to eliminate the other.\nUse the scoreboard to check what team each player is on.";
-		player.sendMessage(message);
 	}
 	
+	@Override
+	public String[] getSignDescription()
+	{
+		return new String[] {
+			"Players are put",
+			"into two teams,",
+			"which must then",
+			"either kill the",
+			"other team, or",
+			"be the first to",
+			"get a blaze rod",
+			"and bring it to",
+			"the spawn point",
+			"",
+			"",
+			""
+		};
+	}
+
 	@Override
 	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
 	{
