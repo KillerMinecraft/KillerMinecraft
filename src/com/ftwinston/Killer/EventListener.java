@@ -24,6 +24,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -328,6 +329,14 @@ public class EventListener implements Listener
 			
 		if ( !event.isCancelled() )
 			plugin.getGameMode().playerEmptiedBucket(event);
+    }
+    
+    @EventHandler
+    public void onCraftItem(CraftItemEvent event)
+    {
+    	// killer recipes can only be crafter in killer worlds, or we could screw up the rest of the server
+    	if ( plugin.allRecipes.contains(event.getRecipe()) && !plugin.isGameWorld(event.getWhoClicked().getWorld()) )
+    		event.setCancelled(true);
     }
     
     @EventHandler

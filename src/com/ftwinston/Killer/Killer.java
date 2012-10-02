@@ -38,6 +38,8 @@ public class Killer extends JavaPlugin
 {
 	public static Killer instance;
 	public Logger log = Logger.getLogger("Minecraft");
+	
+	List<Recipe> allRecipes = new ArrayList<Recipe>(); 
 	Location plinthPressurePlateLocation;
 
 	public boolean stagingWorldIsServerDefault;
@@ -174,6 +176,8 @@ public class Killer extends JavaPlugin
 		dispenser.setIngredient('B', Material.SAPLING);
 		dispenser.setIngredient('C', Material.REDSTONE);
 		getServer().addRecipe(dispenser);
+		allRecipes.add(dispenser);
+		
 		
 		short zero = 0;
 		
@@ -181,32 +185,38 @@ public class Killer extends JavaPlugin
 		recipe.addIngredient(Material.FEATHER);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
+		allRecipes.add(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.ZOMBIE.getTypeId()));
 		recipe.addIngredient(Material.ROTTEN_FLESH);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
+		allRecipes.add(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.CREEPER.getTypeId()));
 		recipe.addIngredient(Material.SULPHUR);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
+		allRecipes.add(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SKELETON.getTypeId()));
 		//recipe.addIngredient(3, Material.INK_SACK, 15);
 		recipe.addIngredient(Material.BONE);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
+		allRecipes.add(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.ENDERMAN.getTypeId()));
 		recipe.addIngredient(Material.ENDER_PEARL);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
+		allRecipes.add(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SLIME.getTypeId()));
 		recipe.addIngredient(Material.SLIME_BALL);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
+		allRecipes.add(recipe);
 	}
 	
 	private void setupConfiguration()
