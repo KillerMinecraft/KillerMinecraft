@@ -215,6 +215,10 @@ public class EventListener implements Listener
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
 		
+		if ( plugin.getGameState() == Killer.GameState.stagingWorldSetup && event.getPlayer().getWorld() == plugin.worldManager.stagingWorld
+		  && event.getClickedBlock().getType() == Material.STONE_BUTTON )
+			plugin.worldManager.setupButtonClicked(event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ());
+		
     	// spectators can't interact with anything, but they do use clicking to handle their spectator stuff
     	String playerName = event.getPlayer().getName();
     	if ( plugin.playerManager.isSpectator(playerName) )

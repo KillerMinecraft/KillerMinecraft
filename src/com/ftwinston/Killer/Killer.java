@@ -43,10 +43,11 @@ public class Killer extends JavaPlugin
 
 	public enum GameState
 	{
-		StagingWorldSetup(false, false), // players are in staging world, game is not active
-		BeforeAssignment(true, false), // game is active, killer(s) not yet assigned
-		Active(true, true), // game is active, killer(s) assigned
-		Finished(true, true); // game is finished, but not yet restarted
+		stagingWorldSetup(false, false), // players are in staging world, game is not active
+		worldGeneration(false, false), // worlds are being generated, but players still in staging world
+		beforeAssignment(true, false), // game is active, killer(s) not yet assigned
+		active(true, true), // game is active, killer(s) assigned
+		finished(true, true); // game is finished, but not yet restarted
 		
 		public final boolean usesGameWorlds, usesSpectators;
 		GameState(boolean useGameWorlds, boolean useSpectators)
@@ -56,7 +57,7 @@ public class Killer extends JavaPlugin
 		}
 	}
 	
-	private GameState gameState = GameState.StagingWorldSetup;
+	private GameState gameState = GameState.stagingWorldSetup;
 	public GameState getGameState() { return gameState; }
 	public void setGameState(GameState newState)
 	{
@@ -72,6 +73,18 @@ public class Killer extends JavaPlugin
 			playerManager.putPlayersInStagingWorld();
 			worldManager.deleteWorlds();
 		}
+		
+		if( newState == GameState.worldGeneration )
+		{
+			worldManager.generateWorlds(new Runnable() {
+				@Override
+				public void run() {
+					setGameState(GameState.beforeAssignment);
+				}
+			});
+		}
+		else if ( newState == GameState.beforeAssignment )
+			playerManager.startGame();
 	}
 	
 	

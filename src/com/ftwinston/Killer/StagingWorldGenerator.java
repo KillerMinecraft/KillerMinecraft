@@ -23,8 +23,6 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	private List<String> customWorldNames;
 	
 	int endX, endZ, worldEndX, optionsEndX, gameModeEndZ;
-	int forceStartButtonX, forceStartButtonZ;
-	
 	boolean gameModeSelectionClosedOff, worldSelectionClosedOff, gameModeOptionsClosedOff;
 	
 	public StagingWorldGenerator()
@@ -64,8 +62,13 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		endX = Math.max(Math.max(numWorldOptions, maxGameModeOptions) * 2 + 8, 20);
 		endZ = Math.max(numGameModes * 3 + 12, 22);
 						
-		forceStartButtonX = endX - 1;
+		startButtonX = endX - 1;
 		forceStartButtonZ = endZ / 2;
+		overrideButtonZ = forceStartButtonZ + 1;
+		cancelButtonZ = forceStartButtonZ - 1;
+		gameModeButtonX = 1;
+		worldOptionZ = 1;
+		gameModeOptionZ = endZ - 1;
 		
 		worldEndX = numWorldOptions * 2 + 8;
 		optionsEndX = maxGameModeOptions == 0 ? 4 : maxGameModeOptions * 2 + 8;
@@ -77,10 +80,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		gameModeOptionsClosedOff = maxGameModeOptions < 2;
 	}
 	
-	public static int getWorldCenterZ()
-	{
-		return Math.max(GameMode.gameModes.size() * 3 + 12, 22) / 2;
-	}
+	public static int startButtonX, forceStartButtonZ, overrideButtonZ, cancelButtonZ, gameModeButtonX, worldOptionZ, gameModeOptionZ;
 	
 	@Override
     public List<BlockPopulator> getDefaultPopulators(World world) {
@@ -99,7 +99,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public Location getFixedSpawnLocation(World world, Random random)
 	{
-		Location loc = new Location(world, 8, 2, forceStartButtonZ);
+		Location loc = new Location(world, 8.5, 2, forceStartButtonZ + 0.5);
 		loc.setYaw(0); // if 0 actually works, this isn't needed. But we want them to face -x, at any rate
 		return loc;
 	}

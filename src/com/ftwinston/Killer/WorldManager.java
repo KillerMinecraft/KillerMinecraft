@@ -314,7 +314,7 @@ public class WorldManager
 		
 		public void stagingWorldCreated(World world)
 		{
-			world.setSpawnLocation(8, 2, StagingWorldGenerator.getWorldCenterZ());
+			world.setSpawnLocation(8, 2, StagingWorldGenerator.forceStartButtonZ);
 			world.setPVP(false);
 	        world.setAutoSave(false); // don't save changes to the staging world
 	        
@@ -323,7 +323,7 @@ public class WorldManager
 		
 		public Location getStagingWorldSpawnPoint()
 		{
-			return new Location(stagingWorld, 8.5, 2, StagingWorldGenerator.getWorldCenterZ() + 0.5);
+			return new Location(stagingWorld, 8.5, 2, StagingWorldGenerator.forceStartButtonZ + 0.5);
 		}
 		
 		
@@ -482,52 +482,6 @@ public class WorldManager
 			// now we want to try to delete the world folders
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new WorldDeleter(worldNames), 80);
 		}
-
-		public void generateWorlds(Runnable runWhenDone)
-		{
-			plugin.log.info("Generating new worlds...");
-			MinecraftServer ms = plugin.getMinecraftServer();
-			
-			Method a;
-			try
-			{
-				a = MinecraftServer.class.getDeclaredMethod("a", String.class, String.class, long.class, WorldType.class);
-			}
-			catch ( NoSuchMethodException ex )
-			{
-				plugin.log.warning("Unable to trigger default world generation, shutting down");
-				plugin.getServer().shutdown();
-				return;
-			}
-			
-			try
-			{
-				a.setAccessible(true);
-				a.invoke(ms, mainWorldName, mainWorldName, seedGen.nextLong(), WorldType.NORMAL);
-				a.setAccessible(false);
-			}
-			catch ( IllegalAccessException ex )
-			{
-				plugin.log.warning("Illegal access: " + ex.getMessage());
-			}
-			catch ( InvocationTargetException ex )
-			{
-				plugin.log.warning("Invocation target exception: " + ex.getMessage());
-			}
-
-			mainWorld = getWorld(mainWorldName, Environment.NORMAL, true);
-			netherWorld = getWorld(mainWorldName + "_nether", Environment.NETHER, true);
-			endWorld = getWorld(mainWorldName + "_the_end", Environment.THE_END, false);
-			
-	        if ( plugin.getGameMode().usesPlinth() ) // create a plinth in the main world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
-	        	plugin.plinthPressurePlateLocation = createPlinth(mainWorld);
-	        
-			// run whatever task was passed in, before putting players back in the main world
-			if ( runWhenDone != null )
-				runWhenDone.run();
-			
-			plugin.playerManager.putPlayersInGameWorld();
-		}
 		
 		private class WorldDeleter implements Runnable
 	    {
@@ -587,5 +541,77 @@ public class WorldManager
 						//plugin.log.warning("Failed to delete file: " + f.getName());
 					}
 			return folder.delete() && retVal;
+		}
+		
+		public void setupButtonClicked(int x, int z)
+		{
+			if ( x == StagingWorldGenerator.startButtonX )
+			{
+				if ( z == StagingWorldGenerator.forceStartButtonZ )
+					plugin.log.info("Clicked force start button");
+				else if ( z == StagingWorldGenerator.overrideButtonZ )
+					plugin.log.info("Clicked override button");
+				if ( z == StagingWorldGenerator.cancelButtonZ )
+					plugin.log.info("Clicked cancel button");
+			}
+			else if ( x == StagingWorldGenerator.gameModeButtonX )
+			{
+				plugin.log.info("Clicked on game mode #" + (z-8)/3);
+			}
+			else if ( z == StagingWorldGenerator.worldOptionZ )
+			{
+				plugin.log.info("Clicked on world option #" + (x-7)/2);
+			}
+			else if ( z == StagingWorldGenerator.gameModeOptionZ )
+			{
+				plugin.log.info("Clicked on game mode option #" + (x-7)/2);
+			}
+		}
+		
+		public void generateWorlds(Runnable runWhenDone)
+		{
+			// todo: this shouldn't overwrite the default worlds, and this should account for custom worlds, etc.
+			// this MIIIGHT want to run asynchronously, at least for copying custom worlds
+			
+			plugin.log.info("Generating new worlds...");
+			MinecraftServer ms = plugin.getMinecraftServer();
+			
+			Method a;
+			try
+			{
+				a = MinecraftServer.class.getDeclaredMethod("a", String.class, String.class, long.class, WorldType.class);
+			}
+			catch ( NoSuchMethodException ex )
+			{
+				plugin.log.warning("Unable to trigger default world generation, shutting down");
+				plugin.getServer().shutdown();
+				return;
+			}
+			
+			try
+			{
+				a.setAccessible(true);
+				a.invoke(ms, mainWorldName, mainWorldName, seedGen.nextLong(), WorldType.NORMAL);
+				a.setAccessible(false);
+			}
+			catch ( IllegalAccessException ex )
+			{
+				plugin.log.warning("Illegal access: " + ex.getMessage());
+			}
+			catch ( InvocationTargetException ex )
+			{
+				plugin.log.warning("Invocation target exception: " + ex.getMessage());
+			}
+
+			mainWorld = getWorld(mainWorldName, Environment.NORMAL, true);
+			netherWorld = getWorld(mainWorldName + "_nether", Environment.NETHER, true);
+			endWorld = getWorld(mainWorldName + "_the_end", Environment.THE_END, false);
+			
+	        if ( plugin.getGameMode().usesPlinth() ) // create a plinth in the main world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
+	        	plugin.plinthPressurePlateLocation = createPlinth(mainWorld);
+	        
+			// run whatever task was passed in
+			if ( runWhenDone != null )
+				runWhenDone.run();
 		}
 }

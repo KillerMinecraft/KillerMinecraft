@@ -182,8 +182,11 @@ public class PlayerManager
 	public void putPlayersInGameWorld()
 	{
 		for ( Player player : plugin.getOnlinePlayers() )
-			putPlayerInWorld(player, plugin.worldManager.mainWorld);
-		
+			putPlayerInWorld(player, plugin.worldManager.mainWorld);	
+	}
+	
+	public void startGame()
+	{
 		reset(true);
 		checkImmediateKillerAssignment();
 		
