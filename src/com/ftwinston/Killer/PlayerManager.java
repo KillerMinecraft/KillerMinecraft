@@ -33,7 +33,7 @@ public class PlayerManager
 	public static PlayerManager instance;
 	private Killer plugin;
 	private Random random;
-	private int killerAssignProcess, helpMessageProcess;
+	private int killerAssignProcess, helpMessageProcess, compassProcess, spectatorFollowProcess;
 	
 	public PlayerManager(Killer _plugin)
 	{
@@ -166,12 +166,21 @@ public class PlayerManager
 			plugin.getServer().getScheduler().cancelTask(killerAssignProcess);
 			killerAssignProcess = -1;
 		}
-		startCheckAutoAssignKiller();
+
+		plugin.getServer().getScheduler().cancelTask(compassProcess);
+		plugin.getServer().getScheduler().cancelTask(spectatorFollowProcess);
+	}
+	
+	public void putPlayersInStagingWorld()
+	{
+		for ( Player player : plugin.getOnlinePlayers() )
+			putPlayerInWorld(player, plugin.worldManager.stagingWorld);
+		
+		reset(true);
 	}
 	
 	public void putPlayersInGameWorld()
 	{
-		// move ALL players back into the main world
 		for ( Player player : plugin.getOnlinePlayers() )
 			putPlayerInWorld(player, plugin.worldManager.mainWorld);
 		
@@ -187,6 +196,44 @@ public class PlayerManager
 		}, 0, 550L); // send every 25 seconds
 		
 		startCheckAutoAssignKiller();
+		
+		if ( plugin.getGameMode().killersCompassPointsAtFriendlies() || plugin.getGameMode().friendliesCompassPointsAtKiller() || plugin.getGameMode().compassPointsAtTarget() )
+			compassProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+	        	public void run()
+	        	{
+		        	for ( Player player : plugin.getOnlinePlayers() )
+		        		if ( isAlive(player.getName()) && player.getInventory().contains(Material.COMPASS) )
+		        			if ( plugin.getGameMode().compassPointsAtTarget() )
+		        			{
+	    						String targetName = getInfo(player.getName()).target;
+	    						if ( targetName != null )
+	    						{
+	    							Player targetPlayer = plugin.getServer().getPlayerExact(targetName);
+	    							if ( targetPlayer != null && targetPlayer.isOnline() && targetPlayer.getWorld() == player.getWorld() )
+	    								player.setCompassTarget(targetPlayer.getLocation());
+	    						}
+		        			}
+		        			else if ( isKiller(player.getName()) )
+		        			{
+		        				if ( plugin.getGameMode().killersCompassPointsAtFriendlies() )
+				        			player.setCompassTarget(getNearestPlayerTo(player, true));	
+		        			}
+		        			else if ( plugin.getGameMode().friendliesCompassPointsAtKiller() )
+			        			player.setCompassTarget(getNearestPlayerTo(player, false));
+	        	}
+	        }, 20, 10);
+	        			
+		spectatorFollowProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+        	public void run()
+        	{
+	        	for ( Player player : plugin.getOnlinePlayers() )
+	        	{
+	        		PlayerManager.Info info = getInfo(player.getName());
+	        		if ( !info.isAlive() && info.target != null )
+	        			checkFollowTarget(player);
+	        	}
+        	}
+        }, 40, 40);
 	}
 	
 	public boolean assignKillers(CommandSender sender)

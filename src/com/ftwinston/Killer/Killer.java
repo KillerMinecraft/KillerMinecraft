@@ -58,9 +58,20 @@ public class Killer extends JavaPlugin
 	
 	private GameState gameState = GameState.StagingWorldSetup;
 	public GameState getGameState() { return gameState; }
-	public void setGameState(GameState state)
+	public void setGameState(GameState newState)
 	{
-		gameState = state;
+		GameState prevState = gameState;
+		gameState = newState;
+		
+		if ( newState.usesGameWorlds && !prevState.usesGameWorlds )
+		{
+			playerManager.putPlayersInGameWorld();
+		}
+		else if ( !newState.usesGameWorlds && prevState.usesGameWorlds )
+		{
+			playerManager.putPlayersInStagingWorld();
+			worldManager.deleteWorlds();
+		}
 	}
 	
 	
@@ -81,7 +92,6 @@ public class Killer extends JavaPlugin
 	
 	public Material[] winningItems, startingItems;
 	
-	private int compassProcessID, spectatorFollowProcessID;
 	private boolean restarting;
 	
 	public Material teleportModeItem = Material.WATCH, followModeItem = Material.ARROW;
@@ -145,51 +155,12 @@ public class Killer extends JavaPlugin
 
         // disable spawn protection
         getServer().setSpawnRadius(0);
-        
-        // set up a task to mess with compasses, to point at other players as appropriate
-        compassProcessID = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-        	public void run()
-        	{
-	        	for ( Player player : instance.getOnlinePlayers() )
-	        		if ( playerManager.isAlive(player.getName()) && player.getInventory().contains(Material.COMPASS) )
-	        			if ( getGameMode().compassPointsAtTarget() )
-	        			{
-    						String targetName = playerManager.getInfo(player.getName()).target;
-    						if ( targetName != null )
-    						{
-    							Player targetPlayer = getServer().getPlayerExact(targetName);
-    							if ( targetPlayer != null && targetPlayer.isOnline() && targetPlayer.getWorld() == player.getWorld() )
-    								player.setCompassTarget(targetPlayer.getLocation());
-    						}
-	        			}
-	        			else if ( playerManager.isKiller(player.getName()) )
-	        			{
-	        				if ( getGameMode().killersCompassPointsAtFriendlies() )
-			        			player.setCompassTarget(playerManager.getNearestPlayerTo(player, true));	
-	        			}
-	        			else if ( getGameMode().friendliesCompassPointsAtKiller() )
-		        			player.setCompassTarget(playerManager.getNearestPlayerTo(player, false));
-        	}
-        }, 20, 10);
-	        			
-		spectatorFollowProcessID = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-        	public void run()
-        	{
-	        	for ( Player player : instance.getOnlinePlayers() )
-	        	{
-	        		PlayerManager.Info info = playerManager.getInfo(player.getName());
-	        		if ( !info.isAlive() && info.target != null )
-	        			playerManager.checkFollowTarget(player);
-	        	}
-        	}
-        }, 40, 40);
 	}
 	
 	public void onDisable()
 	{
+		playerManager.reset(true);
 		worldManager.onDisable();
-		getServer().getScheduler().cancelTask(compassProcessID);
-		getServer().getScheduler().cancelTask(spectatorFollowProcessID);
 	}
 	
 	private void createRecipes()
