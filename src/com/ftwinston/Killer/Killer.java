@@ -30,6 +30,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -38,6 +39,17 @@ public class Killer extends JavaPlugin
 {
 	public static Killer instance;
 	public Logger log = Logger.getLogger("Minecraft");
+	
+
+	public enum GameState
+	{
+		StagingWorldSetup, // players are in staging world, game is not active
+		BeforeAssignment, // game is active, killer(s) not yet assigned
+		Active, // game is active, killer(s) assigned
+		Finished // game is finished, but not yet restarted
+	}
+	
+	GameState gameState = GameState.StagingWorldSetup;
 	
 	List<Recipe> allRecipes = new ArrayList<Recipe>(); 
 	Location plinthPressurePlateLocation;
@@ -99,7 +111,7 @@ public class Killer extends JavaPlugin
 		
 		createRecipes();
 		
-		//playerManager = new PlayerManager(this);
+        playerManager = new PlayerManager(this);
         worldManager = new WorldManager(this, getConfig().getString("killerWorldName"));
         voteManager = new VoteManager(this);
         statsManager = new StatsManager(this);

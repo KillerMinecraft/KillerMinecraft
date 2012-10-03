@@ -28,6 +28,8 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
+import com.ftwinston.Killer.Killer.GameState;
+
 public class PlayerManager
 {
 	public static PlayerManager instance;
@@ -45,8 +47,6 @@ public class PlayerManager
 		transparentBlocks.add(new Byte((byte)Material.AIR.getId()));
 		transparentBlocks.add(new Byte((byte)Material.WATER.getId()));
 		transparentBlocks.add(new Byte((byte)Material.STATIONARY_WATER.getId()));
-		
-    	startCheckAutoAssignKiller();
 	}
 	
 	private void startCheckAutoAssignKiller()
@@ -187,6 +187,8 @@ public class PlayerManager
 				plugin.getGameMode().sendGameModeHelpMessage(plugin.playerManager);
 			}
 		}, 0, 550L); // send every 25 seconds
+		
+		startCheckAutoAssignKiller();
 	}
 	
 	public boolean assignKillers(CommandSender sender)
@@ -248,21 +250,13 @@ public class PlayerManager
 
 	public void playerJoined(Player player)
 	{
-		// hide all spectators from this player
-		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-			if ( !entry.getValue().isAlive() && !entry.getKey().equals(player.getName()) )
-			{
-				Player other = plugin.getServer().getPlayerExact(entry.getKey());
-				if ( other != null && other.isOnline() && plugin.isGameWorld(other.getWorld()) )
-					hidePlayer(player, other);
-			}
-			
 		Info info = playerInfo.get(player.getName());
 		boolean isNewPlayer;
 		if ( info == null )
 		{
 			isNewPlayer = true;
-			if (numKillersAssigned() == 0)
+			
+			if ( plugin.gameState == GameState.StagingWorldSetup || plugin.gameState == GameState.BeforeAssignment )
 				info = new Info(true);
 			else if ( plugin.lateJoinersStartAsSpectator )
 				info = new Info(false);
@@ -278,7 +272,19 @@ public class PlayerManager
 		}
 		else
 			isNewPlayer = false;
-			
+		
+		if ( plugin.gameState == GameState.StagingWorldSetup )
+			return;
+
+		// hide all spectators from this player
+		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+			if ( !entry.getValue().isAlive() && !entry.getKey().equals(player.getName()) )
+			{
+				Player other = plugin.getServer().getPlayerExact(entry.getKey());
+				if ( other != null && other.isOnline() && plugin.isGameWorld(other.getWorld()) )
+					hidePlayer(player, other);
+			}
+
 		plugin.getGameMode().playerJoined(player, this, isNewPlayer, info);
 		
 		if ( !info.isAlive() )
