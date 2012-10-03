@@ -43,13 +43,26 @@ public class Killer extends JavaPlugin
 
 	public enum GameState
 	{
-		StagingWorldSetup, // players are in staging world, game is not active
-		BeforeAssignment, // game is active, killer(s) not yet assigned
-		Active, // game is active, killer(s) assigned
-		Finished // game is finished, but not yet restarted
+		StagingWorldSetup(false, false), // players are in staging world, game is not active
+		BeforeAssignment(true, false), // game is active, killer(s) not yet assigned
+		Active(true, true), // game is active, killer(s) assigned
+		Finished(true, true); // game is finished, but not yet restarted
+		
+		public final boolean usesGameWorlds, usesSpectators;
+		GameState(boolean useGameWorlds, boolean useSpectators)
+		{
+			this.usesGameWorlds = useGameWorlds;
+			this.usesSpectators = useSpectators;
+		}
 	}
 	
-	GameState gameState = GameState.StagingWorldSetup;
+	private GameState gameState = GameState.StagingWorldSetup;
+	public GameState getGameState() { return gameState; }
+	public void setGameState(GameState state)
+	{
+		gameState = state;
+	}
+	
 	
 	List<Recipe> allRecipes = new ArrayList<Recipe>(); 
 	Location plinthPressurePlateLocation;

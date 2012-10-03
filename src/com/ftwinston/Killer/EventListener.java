@@ -38,8 +38,6 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.inventory.ItemStack;
 
-import com.ftwinston.Killer.Killer.GameState;
-
 public class EventListener implements Listener
 {
     public static Killer plugin;
@@ -418,7 +416,7 @@ public class EventListener implements Listener
 	private void playerJoined(Player player)
 	{
 		// if I log into the holding world (cos I logged out there), move me back to the main world's spawn and clear me out
-		if ( player.getWorld() == plugin.worldManager.stagingWorld && plugin.gameState != GameState.StagingWorldSetup && plugin.worldManager.mainWorld != null )
+		if ( player.getWorld() == plugin.worldManager.stagingWorld && plugin.getGameState().usesGameWorlds && plugin.worldManager.mainWorld != null )
 		{
 			player.getInventory().clear();
 			player.setTotalExperience(0);

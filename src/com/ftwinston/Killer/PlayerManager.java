@@ -28,8 +28,6 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
-import com.ftwinston.Killer.Killer.GameState;
-
 public class PlayerManager
 {
 	public static PlayerManager instance;
@@ -256,7 +254,7 @@ public class PlayerManager
 		{
 			isNewPlayer = true;
 			
-			if ( plugin.gameState == GameState.StagingWorldSetup || plugin.gameState == GameState.BeforeAssignment )
+			if ( !plugin.getGameState().usesSpectators )
 				info = new Info(true);
 			else if ( plugin.lateJoinersStartAsSpectator )
 				info = new Info(false);
@@ -273,7 +271,7 @@ public class PlayerManager
 		else
 			isNewPlayer = false;
 		
-		if ( plugin.gameState == GameState.StagingWorldSetup )
+		if ( !plugin.getGameState().usesGameWorlds )
 			return;
 
 		// hide all spectators from this player
