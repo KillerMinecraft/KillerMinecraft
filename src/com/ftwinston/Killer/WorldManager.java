@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -14,9 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.RegionFile;
-import net.minecraft.server.WorldType;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -67,30 +63,6 @@ public class WorldManager
 		public World mainWorld;
 		public World stagingWorld;
 		public World netherWorld;
-		public World endWorld;
-		
-		private World getWorld(String name, Environment type, boolean getAnyOnFailure)
-		{
-			List<World> worlds = plugin.getServer().getWorlds();
-			for ( World world : worlds )
-				if ( world.getName().equals(name) )
-					return world;
-			
-			if ( !getAnyOnFailure )
-				return null;
-
-			// couldn't find world name specified, so get the first world of the right type
-			for ( World world : worlds )
-				if ( world.getEnvironment() == type )
-				{
-					plugin.log.warning("Couldn't find \"" + name + "\" world, using " + world.getName() + " instead");
-					return world;
-				}
-		
-			// still couldn't find something suitable...
-			plugin.log.warning("Couldn't find \"" + name + "\" world, using " + worlds.get(0).getName() + " instead");
-			return worlds.get(0);
-		}
 		
 		static final int plinthPeakHeight = 76, spaceBetweenPlinthAndGlowstone = 4;
 		static final int plinthSpawnOffsetX = 20, plinthSpawnOffsetZ = 0;
@@ -456,8 +428,6 @@ public class WorldManager
 				i++;
 			if ( netherWorld != null )
 				i++;
-			if ( endWorld != null )
-				i++;
 			
 			String[] worldNames = new String[i];
 			i=0;
@@ -472,12 +442,6 @@ public class WorldManager
 			{
 				forceUnloadWorld(netherWorld, stagingWorld);
 				worldNames[i++] = netherWorld.getName();
-			}
-				
-			if ( endWorld != null )
-			{
-				forceUnloadWorld(endWorld, stagingWorld);
-				worldNames[i++] = endWorld.getName();
 			}
 			
 			// now we want to try to delete the world folders
@@ -661,47 +625,9 @@ public class WorldManager
 			}
 		}
 		
-		public void generateWorlds(Runnable runWhenDone)
+		public void generateWorlds(WorldOption generator, Runnable runWhenDone)
 		{
-			// todo: this shouldn't overwrite the default worlds, and this should account for custom worlds, etc.
-			// this MIIIGHT want to run asynchronously, at least for copying custom worlds
-			
-			// should use plugin.getWorldOption()
-			
-			
-			plugin.log.info("Generating new worlds...");
-			MinecraftServer ms = plugin.getMinecraftServer();
-			
-			Method a;
-			try
-			{
-				a = MinecraftServer.class.getDeclaredMethod("a", String.class, String.class, long.class, WorldType.class);
-			}
-			catch ( NoSuchMethodException ex )
-			{
-				plugin.log.warning("Unable to trigger default world generation, shutting down");
-				plugin.getServer().shutdown();
-				return;
-			}
-			
-			try
-			{
-				a.setAccessible(true);
-				a.invoke(ms, Settings.killerWorldName, Settings.killerWorldName, seedGen.nextLong(), WorldType.NORMAL);
-				a.setAccessible(false);
-			}
-			catch ( IllegalAccessException ex )
-			{
-				plugin.log.warning("Illegal access: " + ex.getMessage());
-			}
-			catch ( InvocationTargetException ex )
-			{
-				plugin.log.warning("Invocation target exception: " + ex.getMessage());
-			}
-
-			mainWorld = getWorld(Settings.killerWorldName, Environment.NORMAL, true);
-			netherWorld = getWorld(Settings.killerWorldName + "_nether", Environment.NETHER, true);
-			endWorld = getWorld(Settings.killerWorldName + "_the_end", Environment.THE_END, false);
+			generator.create();
 			
 	        if ( plugin.getGameMode().usesPlinth() ) // create a plinth in the main world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
 	        	plugin.plinthPressurePlateLocation = createPlinth(mainWorld);

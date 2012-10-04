@@ -93,7 +93,7 @@ public class Killer extends JavaPlugin
 		}
 		else if( newState == GameState.worldGeneration )
 		{
-			worldManager.generateWorlds(new Runnable() {
+			worldManager.generateWorlds(worldOption, new Runnable() {
 				@Override
 				public void run() {
 					setGameState(GameState.beforeAssignment);
@@ -138,6 +138,7 @@ public class Killer extends JavaPlugin
         
         Settings.setup(this);
         GameMode.setup(this);
+        WorldOption.setup(this);
 		
 		createRecipes();
 		
@@ -433,7 +434,7 @@ public class Killer extends JavaPlugin
 	
 	public boolean isGameWorld(World world)
 	{
-		return world == worldManager.mainWorld || world == worldManager.netherWorld || world == worldManager.endWorld || world == worldManager.stagingWorld;
+		return world == worldManager.mainWorld || world == worldManager.netherWorld || world == worldManager.stagingWorld;
 	}
 	
 	public List<Player> getOnlinePlayers()

@@ -72,6 +72,9 @@ public abstract class GameMode
 			//g.options.put("Players spawn far apart", false);
 			gameModes.add(g);
 		}
+		
+		if ( gameModes.size() == 1 )
+			killer.setGameMode(gameModes.get(0));
 	}
 	
 	public static GameMode get(int num) { return gameModes.get(num); }

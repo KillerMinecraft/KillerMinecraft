@@ -1,6 +1,5 @@
 package com.ftwinston.Killer;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -29,16 +28,6 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
         	if ( mode.getOptions().size() > maxGameModeOptions )
         		maxGameModeOptions = mode.getOptions().size();
 		
-		// check custom worlds exist, if they don't, remove them
-		for ( int i=0; i<Settings.customWorldNames.size(); i++ )
-		{
-			File folder = new File(Killer.instance.getServer().getWorldContainer() + File.separator + Settings.customWorldNames.get(i));
-			if ( Settings.customWorldNames.get(i).length() > 0 && folder.exists() && folder.isDirectory() )
-				continue;
-			
-			Settings.customWorldNames.remove(i);
-			i--;
-		}
 		if ( Settings.customWorldNames.size() == 0 )
 			Settings.allowRandomWorlds = true; // If no custom worlds (are left), always allow random worlds
 		
