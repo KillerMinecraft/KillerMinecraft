@@ -423,62 +423,37 @@ public class WorldManager
 		{
 			plugin.log.info("Clearing out old worlds...");
 			
-			int i = 0;
-			if ( mainWorld != null )
-				i++;
-			if ( netherWorld != null )
-				i++;
-			
-			String[] worldNames = new String[i];
-			i=0;
 			
 			if ( mainWorld != null )
-			{
 				forceUnloadWorld(mainWorld, stagingWorld);
-				worldNames[i++] = mainWorld.getName();
-			}
-				
+			
 			if ( netherWorld != null )
-			{
 				forceUnloadWorld(netherWorld, stagingWorld);
-				worldNames[i++] = netherWorld.getName();
-			}
+			
+			mainWorld = netherWorld = null;
 			
 			// now we want to try to delete the world folders
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new WorldDeleter(worldNames), 80);
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new WorldDeleter(Settings.killerWorldName, Settings.killerWorldName + "_nether"), 80);
 		}
 		
 		private class WorldDeleter implements Runnable
 	    {
-	    	String[] worlds;
+	    	String world1, world2;
 	    	
 	    	static final long retryDelay = 30;
 	    	static final int maxRetries = 5;
 	    	int attempt;
 	    	
-	    	public WorldDeleter(String[] worlds)
+	    	public WorldDeleter(String name1, String name2)
 	    	{
 	    		attempt = 0;
-	    		this.worlds = worlds;
+	    		world1 = name1;
+	    		world2 = name2;
     		}
 	    	
 	    	public void run()
 	    	{
-	    		boolean allGood = true;
-    			for ( String worldName : worlds )
-    			{
-    				clearWorldReference(worldName);
-    				
-		    		try
-					{
-		    			if ( !delete(new File(plugin.getServer().getWorldContainer() + File.separator + worldName)) )
-		    				allGood = false;
-					}
-					catch ( Exception e )
-					{
-						plugin.log.info("An error occurred when deleting the " + worldName + " world: " + e.getMessage());
-					}
-    			}
+	    		boolean allGood = deleteWorld(world1) && deleteWorld(world2);
 	    			
 	    		if ( !allGood )
 		    		if ( attempt < maxRetries )
@@ -490,6 +465,24 @@ public class WorldManager
 	    			}
 		    		else
 		    			plugin.log.warning("Failed to delete some world information!");
+	    	}
+	    	
+	    	private boolean deleteWorld(String worldName)
+	    	{
+	    		clearWorldReference(worldName);
+	    		boolean allGood = true;
+				
+	    		try
+				{
+	    			if ( !delete(new File(plugin.getServer().getWorldContainer() + File.separator + worldName)) )
+	    				allGood = false;
+				}
+				catch ( Exception e )
+				{
+					plugin.log.info("An error occurred when deleting the " + worldName + " world: " + e.getMessage());
+				}
+	    		
+	    		return allGood;
 	    	}
 	    }
 		

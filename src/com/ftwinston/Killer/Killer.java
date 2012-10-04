@@ -161,6 +161,9 @@ public class Killer extends JavaPlugin
 			stagingWorldIsServerDefault = false;
 		}
 
+		// remove existing Killer worlds
+		worldManager.deleteWorlds();
+		
         // disable spawn protection
         getServer().setSpawnRadius(0);
 	}
