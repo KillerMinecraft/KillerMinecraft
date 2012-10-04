@@ -112,8 +112,8 @@ public class Killer extends JavaPlugin
         instance = this;
         restarting = false;
         
-        GameMode.setupGameModes(this);
         Settings.setup(this);
+        GameMode.setupGameModes(this);
 		
 		createRecipes();
 		

@@ -151,7 +151,7 @@ public class VoteManager
 				String message = "The current game mode is " + ChatColor.YELLOW + plugin.getGameMode().getName() + ChatColor.RESET + ", and the next game mode will be " + ChatColor.YELLOW + plugin.getNextGameMode().getName() + ChatColor.RESET + ".\nWhat do you want to set the next game mode to?";
 				
 				int i = 1;
-				for (GameMode mode : GameMode.gameModes.values())
+				for (GameMode mode : GameMode.gameModes)
 				{
 					if ( plugin.getNextGameMode() == mode )
 						continue;
@@ -174,7 +174,7 @@ public class VoteManager
 				int choice = val.intValue();
 				
 				int i = 1;
-				for (final GameMode mode : GameMode.gameModes.values())
+				for (final GameMode mode : GameMode.gameModes)
 				{
 					if ( plugin.getNextGameMode() == mode )
 						continue;

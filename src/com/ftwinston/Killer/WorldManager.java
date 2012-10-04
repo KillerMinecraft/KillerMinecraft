@@ -554,11 +554,18 @@ public class WorldManager
 			}
 			else if ( x == StagingWorldGenerator.gameModeButtonX )
 			{
-				plugin.log.info("Clicked on game mode #" + (z-8)/3);
+				plugin.log.info("Clicked on game mode: " + GameMode.get((z-8)/3).getName());
+				
+				// ... update game mode option buttons?
 			}
 			else if ( z == StagingWorldGenerator.worldOptionZ )
 			{
-				plugin.log.info("Clicked on world option #" + (x-7)/2);
+				int num = (x-7)/2;
+				
+				if ( num > 0 )
+					plugin.log.info("Clicked on custom world option:" + Settings.customWorldNames.get(num-1));
+				
+				plugin.log.info("Clicked on random world option #" + (num+1));
 			}
 			else if ( z == StagingWorldGenerator.gameModeOptionZ )
 			{

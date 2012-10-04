@@ -1,7 +1,6 @@
 package com.ftwinston.Killer;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -18,47 +17,41 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 {
 	private final int numRandomWorldOptions = 1;
 	
-	private int numGameModes, maxGameModeOptions, numWorldOptions;
-	private List<String> customWorldNames;
+	private int maxGameModeOptions, numWorldOptions;
 	
 	int endX, endZ, worldEndX, optionsEndX, gameModeEndZ;
 	boolean gameModeSelectionClosedOff, worldSelectionClosedOff, gameModeOptionsClosedOff;
 	
 	public StagingWorldGenerator()
 	{
-		numGameModes = GameMode.gameModes.size();
         maxGameModeOptions = 0;
-        for ( GameMode mode : GameMode.gameModes.values() )
+        for ( GameMode mode : GameMode.gameModes )
         	if ( mode.getOptions().size() > maxGameModeOptions )
         		maxGameModeOptions = mode.getOptions().size();
-
-		customWorldNames = Killer.instance.getConfig().getStringList("customWorlds");
-		if ( customWorldNames == null )
-			customWorldNames = new ArrayList<String>();
 		
 		// check custom worlds exist, if they don't, remove them
-		for ( int i=0; i<customWorldNames.size(); i++ )
+		for ( int i=0; i<Settings.customWorldNames.size(); i++ )
 		{
-			File folder = new File(Killer.instance.getServer().getWorldContainer() + File.separator + customWorldNames.get(i));
-			if ( customWorldNames.get(i).length() > 0 && folder.exists() && folder.isDirectory() )
+			File folder = new File(Killer.instance.getServer().getWorldContainer() + File.separator + Settings.customWorldNames.get(i));
+			if ( Settings.customWorldNames.get(i).length() > 0 && folder.exists() && folder.isDirectory() )
 				continue;
 			
-			customWorldNames.remove(i);
+			Settings.customWorldNames.remove(i);
 			i--;
 		}
-		if ( customWorldNames.size() == 0 )
+		if ( Settings.customWorldNames.size() == 0 )
 			Settings.allowRandomWorlds = true; // If no custom worlds (are left), always allow random worlds
 		
 		if ( Settings.allowRandomWorlds )
-			numWorldOptions = customWorldNames.size() + numRandomWorldOptions;
+			numWorldOptions = Settings.customWorldNames.size() + numRandomWorldOptions;
 		else
-			numWorldOptions = customWorldNames.size();
+			numWorldOptions = Settings.customWorldNames.size();
 		// if random world generation is disabled, and no custom world names are provided ... what then?
 		
 		
 		// now set up helper values for where the various "extensible" things end
 		endX = Math.max(Math.max(numWorldOptions, maxGameModeOptions) * 2 + 8, 20);
-		endZ = Math.max(numGameModes * 3 + 12, 22);
+		endZ = Math.max(GameMode.gameModes.size() * 3 + 12, 22);
 						
 		startButtonX = endX - 1;
 		forceStartButtonZ = endZ / 2;
@@ -70,10 +63,10 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		
 		worldEndX = numWorldOptions * 2 + 8;
 		optionsEndX = maxGameModeOptions == 0 ? 4 : maxGameModeOptions * 2 + 8;
-		gameModeEndZ = numGameModes * 3 + 8;
+		gameModeEndZ = GameMode.gameModes.size() * 3 + 8;
 		
 		// todo: decide these, based on config or whatever
-		gameModeSelectionClosedOff = numGameModes < 2 ;
+		gameModeSelectionClosedOff = GameMode.gameModes.size() < 2 ;
 		worldSelectionClosedOff = numWorldOptions < 2;
 		gameModeOptionsClosedOff = maxGameModeOptions < 2;
 	}
@@ -221,7 +214,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						s.setLine(1, "§fNormal Random");
 					else
 					{
-						String name = Settings.allowRandomWorlds ? gen.customWorldNames.get(num - 1) : gen.customWorldNames.get(num);
+						String name = Settings.customWorldNames.get(Settings.allowRandomWorlds ? num - 1 : num);
 						if ( name.length() > 12 )
 						{
 							String[] words = name.split(" ");
@@ -310,9 +303,8 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			// now all the buttons/signs etc IN the west wall
 			num = 0;
 			int modeZ = 8;
-			Object[] modes = GameMode.gameModes.values().toArray();
-			
-			while ( modeZ < gen.gameModeEndZ - 2 && num < gen.numGameModes )
+						
+			while ( modeZ < gen.gameModeEndZ - 2 && num < GameMode.gameModes.size() )
 			{
 				b = getBlockAbs(chunk, 1, 3, modeZ);
 				if ( b != null )
@@ -321,7 +313,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setData((byte)0x1);
 				}
 				
-				GameMode gameMode = (GameMode)modes[num];
+				GameMode gameMode = GameMode.get(num);
 				b = getBlockAbs(chunk, 1, 4, modeZ);
 				if ( b != null )
 				{

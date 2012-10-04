@@ -1,7 +1,9 @@
 package com.ftwinston.Killer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -25,38 +27,54 @@ import com.ftwinston.Killer.PlayerManager.Info;
 
 public abstract class GameMode
 {
-	public static Map<String, GameMode> gameModes = new LinkedHashMap<String, GameMode>();
+	public static List<GameMode> gameModes = new ArrayList<GameMode>();
 
 	public static void setupGameModes(Killer killer)
 	{
-		GameMode g = new MysteryKiller();
-		g.plugin = killer;
-		//g.options.put("Assign sooner", false);
-		//g.options.put("Multiple killers", false);
-		gameModes.put(g.getName().toLowerCase(), g);
+		GameMode g;
+	
+		if ( Settings.allowModeMysteryKiller )
+		{
+			g = new MysteryKiller();
+			g.plugin = killer;
+			//g.options.put("Assign sooner", false);
+			//g.options.put("Multiple killers", false);
+			gameModes.add(g);
+		}
 		
-		g = new InvisibleKiller();
-		g.plugin = killer;
-		//g.options.put("Decloak when sword drawn", false);
-		gameModes.put(g.getName().toLowerCase(), g);
+		if ( Settings.allowModeInvisibleKiller )
+		{
+			g = new InvisibleKiller();
+			g.plugin = killer;
+			//g.options.put("Decloak when sword drawn", false);
+			gameModes.add(g);
+		}
 		
-		g = new CrazyKiller();
-		g.plugin = killer;
-		gameModes.put(g.getName().toLowerCase(), g);
+		if ( Settings.allowModeCrazyKiller )
+		{
+			g = new CrazyKiller();
+			g.plugin = killer;
+			gameModes.add(g);
+		}
 		
-		g = new TeamKiller();
-		g.plugin = killer;
-		//g.options.put("Friendly fire", true);
-		gameModes.put(g.getName().toLowerCase(), g);
+		if ( Settings.allowModeTeamKiller )
+		{
+			g = new TeamKiller();
+			g.plugin = killer;
+			//g.options.put("Friendly fire", true);
+			gameModes.add(g);
+		}
 		
-		g = new ContractKiller();
-		g.plugin = killer;
-		//g.options.put("Players spawn far apart", false);
-		gameModes.put(g.getName().toLowerCase(), g);
+		if ( Settings.allowModeContractKiller )
+		{
+			g = new ContractKiller();
+			g.plugin = killer;
+			//g.options.put("Players spawn far apart", false);
+			gameModes.add(g);
+		}
 	}
 	
-	public static GameMode getByName(String name) { return gameModes.get(name.toLowerCase()); }
-	public static GameMode getDefault() { return gameModes.get("mystery killer"); }
+	public static GameMode get(int num) { return gameModes.get(num); }
 	
 	protected Killer plugin;
 	protected Random r = new Random();
