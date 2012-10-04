@@ -102,7 +102,7 @@ public class Settings
 	
 		List<Integer> itemIDs = plugin.getConfig().getIntegerList(keyName); 
 		Material[] retVal = new Material[itemIDs.size()];
-		for ( int i=0; i<winningItems.length; i++ )
+		for ( int i=0; i<retVal.length; i++ )
 		{
 			Material mat = Material.getMaterial(itemIDs.get(i));
 			if ( mat == null )

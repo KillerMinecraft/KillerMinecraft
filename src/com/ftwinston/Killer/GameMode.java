@@ -29,7 +29,7 @@ public abstract class GameMode
 {
 	public static List<GameMode> gameModes = new ArrayList<GameMode>();
 
-	public static void setupGameModes(Killer killer)
+	public static void setup(Killer killer)
 	{
 		GameMode g;
 	

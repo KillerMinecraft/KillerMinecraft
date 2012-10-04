@@ -42,8 +42,10 @@ public class Killer extends JavaPlugin
 
 	public enum GameState
 	{
-		stagingWorldSetup(false, false), // players are in staging world, game is not active
-		worldGeneration(false, false), // worlds are being generated, but players still in staging world
+		stagingWorldSetup(false, false), // in staging world, players need to choose mode/world
+		stagingWorldReady(false, false), // in staging world, players need to push start
+		stagingWorldConfirm(false, false), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
+		worldGeneration(false, false), // in staging world, game worlds are being generated
 		beforeAssignment(true, false), // game is active, killer(s) not yet assigned
 		active(true, true), // game is active, killer(s) assigned
 		finished(true, true); // game is finished, but not yet restarted
@@ -73,7 +75,23 @@ public class Killer extends JavaPlugin
 			worldManager.deleteWorlds();
 		}
 		
-		if( newState == GameState.worldGeneration )
+		if ( newState == GameState.stagingWorldSetup )
+		{
+			worldManager.showStartButton(false);
+			worldManager.showConfirmButtons(false);
+		}
+		else if ( newState == GameState.stagingWorldReady )
+		{
+			worldManager.showStartButton(true);
+			worldManager.showConfirmButtons(false);
+		}
+		else if ( newState == GameState.stagingWorldConfirm )
+		{
+			broadcastMessage(getGameMode().getName() + " requires at least " + getGameMode().absMinPlayers() + " players.\nYou only have " + getOnlinePlayers().size() + ".\nIf you want to start anyway, push the confirm button.");
+			worldManager.showStartButton(false);
+			worldManager.showConfirmButtons(true);
+		}
+		else if( newState == GameState.worldGeneration )
 		{
 			worldManager.generateWorlds(new Runnable() {
 				@Override
@@ -97,8 +115,14 @@ public class Killer extends JavaPlugin
 	public PlayerManager playerManager;
 	public VoteManager voteManager;
 	public StatsManager statsManager;
-	private GameMode gameMode;
+	
+	private GameMode gameMode = null;
 	public GameMode getGameMode() { return gameMode; }
+	public boolean setGameMode(GameMode g) { gameMode = g; return gameMode != null && worldOption != null; }
+	
+	private WorldOption worldOption = null;
+	public WorldOption getWorldOption() { return worldOption; }
+	public boolean setWorldOption(WorldOption w) { worldOption = w; return gameMode != null && worldOption != null; }
 	
 	private boolean restarting;
 	
@@ -113,7 +137,7 @@ public class Killer extends JavaPlugin
         restarting = false;
         
         Settings.setup(this);
-        GameMode.setupGameModes(this);
+        GameMode.setup(this);
 		
 		createRecipes();
 		

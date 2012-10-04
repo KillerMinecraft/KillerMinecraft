@@ -24,11 +24,14 @@ import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+
+import com.ftwinston.Killer.Killer.GameState;
 
 public class WorldManager
 {
@@ -546,26 +549,46 @@ public class WorldManager
 			if ( x == StagingWorldGenerator.startButtonX )
 			{
 				if ( z == StagingWorldGenerator.forceStartButtonZ )
+				{
 					plugin.log.info("Clicked force start button");
+					if ( plugin.getOnlinePlayers().size() >= plugin.getGameMode().absMinPlayers() )
+						plugin.setGameState(GameState.worldGeneration);
+					else
+						plugin.setGameState(GameState.stagingWorldConfirm);
+				}
 				else if ( z == StagingWorldGenerator.overrideButtonZ )
+				{
 					plugin.log.info("Clicked override button");
+					plugin.setGameState(GameState.worldGeneration);
+				}
 				if ( z == StagingWorldGenerator.cancelButtonZ )
+				{
 					plugin.log.info("Clicked cancel button");
+					plugin.setGameState(GameState.stagingWorldReady);
+				}
 			}
 			else if ( x == StagingWorldGenerator.gameModeButtonX )
 			{
-				plugin.log.info("Clicked on game mode: " + GameMode.get((z-8)/3).getName());
+				GameMode gameMode = GameMode.get((z-8)/3);
+				if ( plugin.setGameMode(gameMode) )
+				{
+					if ( plugin.getGameState() != GameState.stagingWorldReady )
+						plugin.setGameState(GameState.stagingWorldReady);
+				}
 				
+				plugin.log.info("Clicked on game mode: " + gameMode.getName());
 				// ... update game mode option buttons?
 			}
 			else if ( z == StagingWorldGenerator.worldOptionZ )
 			{
-				int num = (x-7)/2;
+				WorldOption world = WorldOption.get((x-7)/2);
+				if ( plugin.setWorldOption(world) )	
+				{
+					if ( plugin.getGameState() != GameState.stagingWorldReady )
+						plugin.setGameState(GameState.stagingWorldReady);
+				}
 				
-				if ( num > 0 )
-					plugin.log.info("Clicked on custom world option:" + Settings.customWorldNames.get(num-1));
-				
-				plugin.log.info("Clicked on random world option #" + (num+1));
+				plugin.log.info("Clicked on world option:" + world.getName());
 			}
 			else if ( z == StagingWorldGenerator.gameModeOptionZ )
 			{
@@ -573,10 +596,78 @@ public class WorldManager
 			}
 		}
 		
+		public void showStartButton(boolean show)
+		{
+			Block button = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 2, StagingWorldGenerator.forceStartButtonZ);
+			Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 3, StagingWorldGenerator.forceStartButtonZ);
+			
+			if ( show )
+			{
+				button.setType(Material.STONE_BUTTON);
+				button.setData((byte)0x2);
+				
+				sign.setType(Material.WALL_SIGN);
+				sign.setData((byte)0x4);
+				Sign s = (Sign)sign.getState();
+				s.setLine(1, "Push to");
+				s.setLine(2, "start the game");
+				s.update();
+			}
+			else
+			{
+				button.setType(Material.AIR);
+				sign.setType(Material.AIR);
+			}
+		}
+		
+		public void showConfirmButtons(boolean show)
+		{
+			Block bOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 2, StagingWorldGenerator.overrideButtonZ);
+			Block bCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 2, StagingWorldGenerator.cancelButtonZ);
+			
+			Block sOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 3, StagingWorldGenerator.overrideButtonZ);
+			Block sCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 3, StagingWorldGenerator.cancelButtonZ);
+			
+			if ( show )
+			{
+				bOverride.setType(Material.STONE_BUTTON);
+				bOverride.setData((byte)0x2);
+				
+				bCancel.setType(Material.STONE_BUTTON);
+				bCancel.setData((byte)0x2);
+				
+				sOverride.setType(Material.WALL_SIGN);
+				sOverride.setData((byte)0x4);
+				Sign s = (Sign)sOverride.getState();
+				s.setLine(1, "Push to");
+				s.setLine(2, "confirm the");
+				s.setLine(3, "game mode");
+				s.update();
+				
+				sCancel.setType(Material.WALL_SIGN);
+				sCancel.setData((byte)0x4);
+				s = (Sign)sCancel.getState();
+				s.setLine(1, "Push to");
+				s.setLine(2, "cancel this");
+				s.setLine(3, "game mode");
+				s.update();
+			}
+			else
+			{
+				bOverride.setType(Material.AIR);
+				bCancel.setType(Material.AIR);
+				sOverride.setType(Material.AIR);
+				sCancel.setType(Material.AIR);
+			}
+		}
+		
 		public void generateWorlds(Runnable runWhenDone)
 		{
 			// todo: this shouldn't overwrite the default worlds, and this should account for custom worlds, etc.
 			// this MIIIGHT want to run asynchronously, at least for copying custom worlds
+			
+			// should use plugin.getWorldOption()
+			
 			
 			plugin.log.info("Generating new worlds...");
 			MinecraftServer ms = plugin.getMinecraftServer();
