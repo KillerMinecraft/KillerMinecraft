@@ -287,7 +287,7 @@ public class WorldManager
 		
 		public void stagingWorldCreated(World world)
 		{
-			world.setSpawnLocation(8, 2, StagingWorldGenerator.forceStartButtonZ);
+			world.setSpawnLocation(8, 2, StagingWorldGenerator.startButtonZ);
 			world.setPVP(false);
 	        world.setAutoSave(false); // don't save changes to the staging world
 	        
@@ -296,7 +296,7 @@ public class WorldManager
 		
 		public Location getStagingWorldSpawnPoint()
 		{
-			return new Location(stagingWorld, 8.5, 2, StagingWorldGenerator.forceStartButtonZ + 0.5);
+			return new Location(stagingWorld, 8.5, 2, StagingWorldGenerator.startButtonZ + 0.5);
 		}
 		
 		
@@ -512,7 +512,7 @@ public class WorldManager
 		{
 			if ( x == StagingWorldGenerator.startButtonX )
 			{
-				if ( z == StagingWorldGenerator.forceStartButtonZ )
+				if ( z == StagingWorldGenerator.startButtonZ )
 				{
 					plugin.log.info("Clicked force start button");
 					if ( plugin.getOnlinePlayers().size() >= plugin.getGameMode().absMinPlayers() )
@@ -525,11 +525,13 @@ public class WorldManager
 					plugin.log.info("Clicked override button");
 					plugin.setGameState(GameState.worldGeneration);
 				}
-				if ( z == StagingWorldGenerator.cancelButtonZ )
+				else if ( z == StagingWorldGenerator.cancelButtonZ )
 				{
 					plugin.log.info("Clicked cancel button");
 					plugin.setGameState(GameState.stagingWorldReady);
 				}
+				else
+					plugin.log.info("Clicked unrecognised button at z=" + z + ". Start button is at z=" + StagingWorldGenerator.startButtonZ + ".");
 			}
 			else if ( x == StagingWorldGenerator.gameModeButtonX )
 			{
@@ -562,8 +564,8 @@ public class WorldManager
 		
 		public void showStartButton(boolean show)
 		{
-			Block button = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 2, StagingWorldGenerator.forceStartButtonZ);
-			Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 3, StagingWorldGenerator.forceStartButtonZ);
+			Block button = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 2, StagingWorldGenerator.startButtonZ);
+			Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 3, StagingWorldGenerator.startButtonZ);
 			
 			if ( show )
 			{
@@ -627,6 +629,7 @@ public class WorldManager
 		
 		public void generateWorlds(WorldOption generator, Runnable runWhenDone)
 		{
+			plugin.log.info("Preparing new worlds...");
 			generator.create();
 			
 	        if ( plugin.getGameMode().usesPlinth() ) // create a plinth in the main world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.

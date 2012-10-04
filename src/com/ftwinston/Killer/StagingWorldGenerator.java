@@ -43,9 +43,9 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		endZ = Math.max(GameMode.gameModes.size() * 3 + 12, 22);
 						
 		startButtonX = endX - 1;
-		forceStartButtonZ = endZ / 2;
-		overrideButtonZ = forceStartButtonZ + 1;
-		cancelButtonZ = forceStartButtonZ - 1;
+		startButtonZ = endZ / 2;
+		overrideButtonZ = startButtonZ + 1;
+		cancelButtonZ = startButtonZ - 1;
 		gameModeButtonX = 1;
 		worldOptionZ = 1;
 		gameModeOptionZ = endZ - 1;
@@ -60,7 +60,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		gameModeOptionsClosedOff = maxGameModeOptions < 2;
 	}
 	
-	public static int startButtonX, forceStartButtonZ, overrideButtonZ, cancelButtonZ, gameModeButtonX, worldOptionZ, gameModeOptionZ;
+	public static int startButtonX, startButtonZ, overrideButtonZ, cancelButtonZ, gameModeButtonX, worldOptionZ, gameModeOptionZ;
 	
 	@Override
     public List<BlockPopulator> getDefaultPopulators(World world) {
@@ -79,7 +79,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public Location getFixedSpawnLocation(World world, Random random)
 	{
-		Location loc = new Location(world, 8.5, 2, forceStartButtonZ + 0.5);
+		Location loc = new Location(world, 8.5, 2, startButtonZ + 0.5);
 		loc.setYaw(0); // if 0 actually works, this isn't needed. But we want them to face -x, at any rate
 		return loc;
 	}
