@@ -629,7 +629,7 @@ public class WorldManager
 		
 		public void generateWorlds(WorldOption generator, Runnable runWhenDone)
 		{
-			plugin.log.info("Preparing new worlds...");
+			plugin.broadcastMessage("Preparing new worlds...");
 			generator.create();
 			
 	        if ( plugin.getGameMode().usesPlinth() ) // create a plinth in the main world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.

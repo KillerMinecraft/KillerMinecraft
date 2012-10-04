@@ -42,19 +42,20 @@ public class Killer extends JavaPlugin
 
 	public enum GameState
 	{
-		stagingWorldSetup(false, false), // in staging world, players need to choose mode/world
-		stagingWorldReady(false, false), // in staging world, players need to push start
-		stagingWorldConfirm(false, false), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
-		worldGeneration(false, false), // in staging world, game worlds are being generated
-		beforeAssignment(true, false), // game is active, killer(s) not yet assigned
-		active(true, true), // game is active, killer(s) assigned
-		finished(true, true); // game is finished, but not yet restarted
+		stagingWorldSetup(false, false, true), // in staging world, players need to choose mode/world
+		stagingWorldReady(false, false, true), // in staging world, players need to push start
+		stagingWorldConfirm(false, false, true), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
+		worldGeneration(false, false, false), // in staging world, game worlds are being generated
+		beforeAssignment(true, false, false), // game is active, killer(s) not yet assigned
+		active(true, true, false), // game is active, killer(s) assigned
+		finished(true, true, false); // game is finished, but not yet restarted
 		
-		public final boolean usesGameWorlds, usesSpectators;
-		GameState(boolean useGameWorlds, boolean useSpectators)
+		public final boolean usesGameWorlds, usesSpectators, canChangeGameSetup;
+		GameState(boolean useGameWorlds, boolean useSpectators, boolean canChangeGameSetup)
 		{
 			this.usesGameWorlds = useGameWorlds;
 			this.usesSpectators = useSpectators;
+			this.canChangeGameSetup = canChangeGameSetup;
 		}
 	}
 	

@@ -215,7 +215,7 @@ public class EventListener implements Listener
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
 		
-		if ( plugin.getGameState() == Killer.GameState.stagingWorldSetup && event.getPlayer().getWorld() == plugin.worldManager.stagingWorld
+		if ( plugin.getGameState().canChangeGameSetup && event.getPlayer().getWorld() == plugin.worldManager.stagingWorld
 		  && event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.STONE_BUTTON )
 		{
 			plugin.worldManager.setupButtonClicked(event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ());
