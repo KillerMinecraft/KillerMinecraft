@@ -50,7 +50,7 @@ public class EventListener implements Listener
     @EventHandler
     public void onWorldInit(WorldInitEvent event)
     {
-    	if ( plugin.stagingWorldIsServerDefault && event.getWorld().getName().equalsIgnoreCase(plugin.stagingWorldName) )
+    	if ( plugin.stagingWorldIsServerDefault && event.getWorld().getName().equalsIgnoreCase(Settings.stagingWorldName) )
     		plugin.worldManager.stagingWorldCreated(event.getWorld());
     }
     

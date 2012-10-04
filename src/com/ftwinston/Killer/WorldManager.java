@@ -35,19 +35,18 @@ public class WorldManager
 		public static WorldManager instance;
 		
 		private Killer plugin;
-		public WorldManager(Killer killer, String mainWorldName)
+		public WorldManager(Killer killer)
 		{
 			plugin = killer;
 			instance = this;
-			this.mainWorldName = mainWorldName;
 			
 			seedGen = new Random();
 			bindRegionFiles();
 
 			// try to find the main world, based on the config-provided name
-/*			mainWorld = getWorld(mainWorldName, Environment.NORMAL, true);
-			netherWorld = getWorld(mainWorldName + "_nether", Environment.NETHER, true);
-			endWorld = getWorld(mainWorldName + "_the_end", Environment.THE_END, false);*/
+/*			mainWorld = getWorld(Settings.killerWorldName, Environment.NORMAL, true);
+			netherWorld = getWorld(Settings.killerWorldName + "_nether", Environment.NETHER, true);
+			endWorld = getWorld(Settings.killerWorldName + "_the_end", Environment.THE_END, false);*/
 		}
 		
 		public void onDisable()
@@ -56,7 +55,6 @@ public class WorldManager
 			rafField = null;
 		}
 		
-		private String mainWorldName;
 		Random seedGen;
 		
 		@SuppressWarnings("rawtypes")
@@ -591,7 +589,7 @@ public class WorldManager
 			try
 			{
 				a.setAccessible(true);
-				a.invoke(ms, mainWorldName, mainWorldName, seedGen.nextLong(), WorldType.NORMAL);
+				a.invoke(ms, Settings.killerWorldName, Settings.killerWorldName, seedGen.nextLong(), WorldType.NORMAL);
 				a.setAccessible(false);
 			}
 			catch ( IllegalAccessException ex )
@@ -603,9 +601,9 @@ public class WorldManager
 				plugin.log.warning("Invocation target exception: " + ex.getMessage());
 			}
 
-			mainWorld = getWorld(mainWorldName, Environment.NORMAL, true);
-			netherWorld = getWorld(mainWorldName + "_nether", Environment.NETHER, true);
-			endWorld = getWorld(mainWorldName + "_the_end", Environment.THE_END, false);
+			mainWorld = getWorld(Settings.killerWorldName, Environment.NORMAL, true);
+			netherWorld = getWorld(Settings.killerWorldName + "_nether", Environment.NETHER, true);
+			endWorld = getWorld(Settings.killerWorldName + "_the_end", Environment.THE_END, false);
 			
 	        if ( plugin.getGameMode().usesPlinth() ) // create a plinth in the main world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
 	        	plugin.plinthPressurePlateLocation = createPlinth(mainWorld);

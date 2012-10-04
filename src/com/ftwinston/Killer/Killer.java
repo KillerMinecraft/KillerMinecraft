@@ -91,7 +91,6 @@ public class Killer extends JavaPlugin
 	Location plinthPressurePlateLocation;
 
 	public boolean stagingWorldIsServerDefault;
-	public String stagingWorldName;
 	
 	private EventListener eventListener = new EventListener(this);
 	public WorldManager worldManager;
@@ -108,7 +107,6 @@ public class Killer extends JavaPlugin
 		return new StagingWorldGenerator();
 	}
 	
-	boolean firstStart = true;
 	public void onEnable()
 	{
         instance = this;
@@ -117,35 +115,23 @@ public class Killer extends JavaPlugin
         GameMode.setupGameModes(this);
         Settings.setup(this);
 		
-		if ( firstStart )
-		{
-			firstStart = false;
-			if ( getConfig().getBoolean("startDisabled") )
-			{
-				getServer().getPluginManager().disablePlugin(this);
-				log.info("Killer's startDisabled config setting is set to true, so the plugin will now disabling itself.");
-				return;
-			}
-		}
-		
 		createRecipes();
 		
         playerManager = new PlayerManager(this);
-        worldManager = new WorldManager(this, getConfig().getString("killerWorldName"));
+        worldManager = new WorldManager(this);
         voteManager = new VoteManager(this);
         statsManager = new StatsManager(this);
         getServer().getPluginManager().registerEvents(eventListener, this);
 
-		stagingWorldName = getConfig().getString("stagingWorldName");
 		MinecraftServer ms = getMinecraftServer();
-		if ( ms != null && ms.getPropertyManager().getString("level-name", "world").equalsIgnoreCase(stagingWorldName) )
+		if ( ms != null && ms.getPropertyManager().getString("level-name", "world").equalsIgnoreCase(Settings.stagingWorldName) )
 		{
-			worldManager.hijackDefaultWorldAsStagingWorld(stagingWorldName); // Killer's staging world is the server's default, so hijack how it's going to be configured
+			worldManager.hijackDefaultWorldAsStagingWorld(Settings.stagingWorldName); // Killer's staging world is the server's default, so hijack how it's going to be configured
 			stagingWorldIsServerDefault = true;
 		}
 		else
 		{
-			worldManager.createStagingWorld(stagingWorldName); // staging world isn't server default, so create it as a new world
+			worldManager.createStagingWorld(Settings.stagingWorldName); // staging world isn't server default, so create it as a new world
 			stagingWorldIsServerDefault = false;
 		}
 

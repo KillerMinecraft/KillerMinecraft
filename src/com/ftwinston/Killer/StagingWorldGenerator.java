@@ -19,7 +19,6 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	private final int numRandomWorldOptions = 1;
 	
 	private int numGameModes, maxGameModeOptions, numWorldOptions;
-	private boolean allowRandomWorlds;
 	private List<String> customWorldNames;
 	
 	int endX, endZ, worldEndX, optionsEndX, gameModeEndZ;
@@ -33,7 +32,6 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
         	if ( mode.getOptions().size() > maxGameModeOptions )
         		maxGameModeOptions = mode.getOptions().size();
 
-		allowRandomWorlds = Killer.instance.getConfig().getBoolean("allowRandomWorldGeneration");
 		customWorldNames = Killer.instance.getConfig().getStringList("customWorlds");
 		if ( customWorldNames == null )
 			customWorldNames = new ArrayList<String>();
@@ -49,9 +47,9 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			i--;
 		}
 		if ( customWorldNames.size() == 0 )
-			allowRandomWorlds = true; // If no custom worlds (are left), always allow random worlds
+			Settings.allowRandomWorlds = true; // If no custom worlds (are left), always allow random worlds
 		
-		if ( this.allowRandomWorlds )
+		if ( Settings.allowRandomWorlds )
 			numWorldOptions = customWorldNames.size() + numRandomWorldOptions;
 		else
 			numWorldOptions = customWorldNames.size();
@@ -219,11 +217,11 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					Sign s = (Sign)b.getState();
 					s.setLine(0, "§fWorld:");
 					
-					if ( gen.allowRandomWorlds && num == 0 )
+					if ( Settings.allowRandomWorlds && num == 0 )
 						s.setLine(1, "§fNormal Random");
 					else
 					{
-						String name = gen.allowRandomWorlds ? gen.customWorldNames.get(num - 1) : gen.customWorldNames.get(num);
+						String name = Settings.allowRandomWorlds ? gen.customWorldNames.get(num - 1) : gen.customWorldNames.get(num);
 						if ( name.length() > 12 )
 						{
 							String[] words = name.split(" ");

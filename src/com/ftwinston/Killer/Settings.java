@@ -8,46 +8,43 @@ import org.bukkit.Material;
 
 public class Settings
 {
-
-	public static boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, reportStats;
-	public static boolean autoRestartAtEndOfGame, voteRestartAtEndOfGame;
+	public static boolean
+	autoAssignKiller, // probably want to keep this
+	autoReassignKiller, // only relevant for mystery killer, i think. Game mode setting, on by default? Or config.
+	restartDayWhenFirstPlayerJoins, // don't want to keep this. Worlds are being created at start time anyway
+	lateJoinersStartAsSpectator,
+	banOnDeath,
+	informEveryoneOfReassignedKillers, // umm ... not sure
+	reportStats,
+	allowRandomWorlds,
+	autoRestartAtEndOfGame,
+	voteRestartAtEndOfGame;
+	
+	public static String
+	stagingWorldName,
+	killerWorldName;
 	
 	public static Material[] winningItems, startingItems;
 	
-
 	public static Material teleportModeItem = Material.WATCH, followModeItem = Material.ARROW;
 	
-
 	public static void setup(Killer plugin)
 	{
-		plugin.getConfig().addDefault("startDisabled", false);
-		plugin.getConfig().addDefault("stagingWorldName", "world");
-		plugin.getConfig().addDefault("killerWorldName", "killer");
-		
-		plugin.getConfig().addDefault("allowRandomWorldGeneration", true);
-		
-		plugin.getConfig().addDefault("defaultGameMode", "Mystery Killer");
-		plugin.getConfig().addDefault("canChangeGameMode", true);
-		plugin.getConfig().addDefault("restartAtEndOfGame", "vote");
-		
-		plugin.getConfig().addDefault("autoAssign", false);
-		plugin.getConfig().addDefault("autoReassign", false);
-		plugin.getConfig().addDefault("restartDay", true);
-		plugin.getConfig().addDefault("lateJoinersStartAsSpectator", false);
-		plugin.getConfig().addDefault("banOnDeath", false);
-		plugin.getConfig().addDefault("informEveryoneOfReassignedKillers", true);
-		plugin.getConfig().addDefault("reportStats", true);
-		plugin.getConfig().addDefault("winningItems", Arrays.asList(Material.BLAZE_ROD.getId(), Material.GHAST_TEAR.getId()));
-		plugin.getConfig().addDefault("startingItems", new ArrayList<Integer>());
-		
-		plugin.getConfig().addDefault("autoRecreateWorld", false);
-	
 		plugin.getConfig().options().copyDefaults(true);
-		plugin.saveConfig();
 		
-		canChangeGameMode = plugin.getConfig().getBoolean("canChangeGameMode");
+		autoAssignKiller = readBoolean(plugin, "autoAssign", false);
+		autoReassignKiller = readBoolean(plugin, "autoReassign", false);
+		restartDayWhenFirstPlayerJoins = readBoolean(plugin, "restartDay", true);
+		lateJoinersStartAsSpectator = readBoolean(plugin, "lateJoinersStartAsSpectator", false);
+		banOnDeath = readBoolean(plugin, "banOnDeath", false);
+		informEveryoneOfReassignedKillers = readBoolean(plugin, "informEveryoneOfReassignedKillers", true);
+		reportStats = readBoolean(plugin, "reportStats", true);
+		allowRandomWorlds = readBoolean(plugin, "allowRandomWorldGeneration", true);
 		
-		String restartAtEnd = plugin.getConfig().getString("restartAtEndOfGame");
+		stagingWorldName = readString(plugin, "stagingWorldName", "world");
+		killerWorldName = readString(plugin, "killerWorldName", "killer");
+		
+		String restartAtEnd = readString(plugin, "restartAtEndOfGame", "vote");
 		if ( restartAtEnd.equalsIgnoreCase("vote") )
 		{
 			voteRestartAtEndOfGame = true;
@@ -63,40 +60,42 @@ public class Settings
 			voteRestartAtEndOfGame = false;
 			autoRestartAtEndOfGame = false;
 		}
-		
-		autoAssignKiller = plugin.getConfig().getBoolean("autoAssign");
-		autoReassignKiller = plugin.getConfig().getBoolean("autoReassign");
-		restartDayWhenFirstPlayerJoins = plugin.getConfig().getBoolean("restartDay");
-		lateJoinersStartAsSpectator = plugin.getConfig().getBoolean("lateJoinersStartAsSpectator");
-		banOnDeath = plugin.getConfig().getBoolean("banOnDeath");
-		informEveryoneOfReassignedKillers = plugin.getConfig().getBoolean("informEveryoneOfReassignedKillers");
-		autoRecreateWorld = plugin.getConfig().getBoolean("autoRecreateWorld");
-		reportStats = plugin.getConfig().getBoolean("reportStats");
 
-		List<Integer> itemIDs = plugin.getConfig().getIntegerList("winningItems"); 
-		winningItems = new Material[itemIDs.size()];
+		winningItems = readMaterialList(plugin, "winningItems", Arrays.asList(Material.BLAZE_ROD.getId(), Material.GHAST_TEAR.getId()), Material.BLAZE_ROD);		
+		startingItems = readMaterialList(plugin, "startingItems", new ArrayList<Integer>(), Material.STONE_PICKAXE);
+		
+		plugin.saveConfig();
+	}
+	
+	private static boolean readBoolean(Killer plugin, String keyName, boolean defaultVal)
+	{
+		plugin.getConfig().addDefault(keyName, defaultVal);
+		return plugin.getConfig().getBoolean(keyName);
+	}
+	
+	private static String readString(Killer plugin, String keyName, String defaultVal)
+	{
+		plugin.getConfig().addDefault(keyName, defaultVal);
+		return plugin.getConfig().getString(keyName);
+	}
+	
+	private static Material[] readMaterialList(Killer plugin, String keyName, List<Integer> defaultValues, Material defaultOnError)
+	{
+		plugin.getConfig().addDefault(keyName, defaultValues);
+	
+		List<Integer> itemIDs = plugin.getConfig().getIntegerList(keyName); 
+		Material[] retVal = new Material[itemIDs.size()];
 		for ( int i=0; i<winningItems.length; i++ )
 		{
 			Material mat = Material.getMaterial(itemIDs.get(i));
 			if ( mat == null )
 			{
-				mat = Material.BLAZE_ROD;
-				plugin.log.warning("Winning item ID " + itemIDs.get(i) + " not recognized.");
+				mat = defaultOnError;
+				plugin.log.warning("Item ID " + itemIDs.get(i) + " not recognized in " + keyName + ".");
 			} 
-			winningItems[i] = mat;
+			retVal[i] = mat;
 		}
 		
-		itemIDs = plugin.getConfig().getIntegerList("startingItems"); 
-		startingItems = new Material[itemIDs.size()];
-		for ( int i=0; i<startingItems.length; i++ )
-		{
-			Material mat = Material.getMaterial(itemIDs.get(i));
-			if ( mat == null )
-			{
-				mat = Material.STONE_PICKAXE;
-				plugin.log.warning("Starting item ID " + itemIDs.get(i) + " not recognized.");
-			} 
-			startingItems[i] = mat;
-		}
+		return retVal;
 	}
 }

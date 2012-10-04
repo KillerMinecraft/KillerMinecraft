@@ -235,9 +235,6 @@ public class VoteManager
         	
 			public String getPromptText(ConversationContext context)
 			{
-				if ( Settings.canChangeGameMode )
-					return "What do you want to start a vote on? Say the number to choose:\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " Change next game mode\n" + ChatColor.GOLD + "2." + ChatColor.RESET + " Restart game\n" + ChatColor.GOLD + "3." + ChatColor.RESET + " Clear killer\n" + ChatColor.GOLD + "4." + ChatColor.RESET + " Reallocate killer\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
-				
 				return "What do you want to start a vote on? Say the number to choose:\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " Restart game\n" + ChatColor.GOLD + "2." + ChatColor.RESET + " Clear killer\n" + ChatColor.GOLD + "3." + ChatColor.RESET + " Reallocate killer\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
 			}
 			
@@ -246,16 +243,11 @@ public class VoteManager
 				Player player = context.getForWhom() instanceof Player ? (Player)context.getForWhom() : null;
 				
 				int choice = val.intValue();
-				if ( !Settings.canChangeGameMode )
-					choice++; // "first choice" isn't available
 				
-				//if ( choice == 1 )
-					//return gameModePrompt;
-					
-				if ( choice == 2 )
+				if ( choice == 1 )
 					return restartPrompt;
 				
-				else if ( choice == 3 )
+				else if ( choice == 2 )
 					startVote("Clear the killer, so that there isn't one assigned?", player, new Runnable() {
 						public void run()
 						{
@@ -263,7 +255,7 @@ public class VoteManager
 						}
 					}, null, null);
 					
-				else if ( choice == 4 )
+				else if ( choice == 3 )
 					startVote("Clear the killer, and assign a new one?", player, new Runnable() {
 						public void run()
 						{

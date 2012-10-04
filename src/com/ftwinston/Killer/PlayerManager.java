@@ -528,7 +528,7 @@ public class PlayerManager
 		plugin.broadcastMessage(ChatColor.YELLOW + message);
 		clearKillers(null);
 
-		if ( winningItem != null || Settings.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getOnlinePlayers().size() == 0 )
+		if ( winningItem != null || plugin.voteManager.isInVote() || plugin.getOnlinePlayers().size() == 0 )
 		{	// plinth victory or other scenario where we don't want a vote, end the game in 10 secs
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 	
