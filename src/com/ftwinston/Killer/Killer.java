@@ -486,7 +486,7 @@ public class Killer extends JavaPlugin
 		
 		restarting = true;
 		if ( actionedBy != null )
-			broadcastMessage(actionedBy.getName() + " ended the gameis restarting the game, please wait while the world is deleted and a new one is prepared...");
+			broadcastMessage(actionedBy.getName() + " ended the game. You've been moved to the staging world to allow you to set up a new one...");
 		else
 			broadcastMessage("The game has ended. You've been moved to the staging world to allow you to set up a new one...");
 		
