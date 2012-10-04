@@ -6,6 +6,7 @@ import java.util.Random;
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.PlayerManager;
 import com.ftwinston.Killer.PlayerManager.Info;
+import com.ftwinston.Killer.Settings;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -42,7 +43,7 @@ public class CrazyKiller extends GameMode
 	public int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers)
 	{
 		// if we're not set to auto-reassign the killer once one has been assigned at all, even if they're no longer alive / connected, don't do so
-		if ( !plugin.autoReassignKiller && numKillers > 0 )
+		if ( !Settings.autoReassignKiller && numKillers > 0 )
 			return 0;
 		
 		// for now, one living killer at a time is plenty
@@ -102,14 +103,14 @@ public class CrazyKiller extends GameMode
 					return "The killer starts with a compass, which points at the nearest player.";
 			case 4:
 				String message = "The other players win if the killer dies, or if they bring a ";			
-				message += plugin.tidyItemName(plugin.winningItems[0]);
+				message += plugin.tidyItemName(Settings.winningItems[0]);
 				
-				if ( plugin.winningItems.length > 1 )
+				if ( Settings.winningItems.length > 1 )
 				{
-					for ( int i=1; i<plugin.winningItems.length-1; i++)
-						message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
+					for ( int i=1; i<Settings.winningItems.length-1; i++)
+						message += ", a " + plugin.tidyItemName(Settings.winningItems[i]);
 					
-					message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+					message += " or a " + plugin.tidyItemName(Settings.winningItems[Settings.winningItems.length-1]);
 				}
 				
 				message += " to the plinth near the spawn.";

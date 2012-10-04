@@ -9,7 +9,6 @@ package com.ftwinston.Killer;
  */
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
@@ -99,27 +98,10 @@ public class Killer extends JavaPlugin
 	public PlayerManager playerManager;
 	public VoteManager voteManager;
 	public StatsManager statsManager;
-	
-	public boolean canChangeGameMode, autoAssignKiller, autoReassignKiller, restartDayWhenFirstPlayerJoins, lateJoinersStartAsSpectator, banOnDeath, informEveryoneOfReassignedKillers, autoRecreateWorld, reportStats;
-	public boolean autoRestartAtEndOfGame, voteRestartAtEndOfGame;
-	
-	public Material[] winningItems, startingItems;
+	private GameMode gameMode;
+	public GameMode getGameMode() { return gameMode; }
 	
 	private boolean restarting;
-	
-	public Material teleportModeItem = Material.WATCH, followModeItem = Material.ARROW;
-	
-	private GameMode gameMode, nextGameMode;
-	public GameMode getGameMode() { return gameMode; }
-	public GameMode getNextGameMode() { return nextGameMode; }
-	public void setNextGameMode(GameMode g, CommandSender changedBy)
-	{
-		nextGameMode = g;
-		if ( changedBy == null )
-			broadcastMessage("The next game mode will be " + g.getName());
-		else
-			broadcastMessage(changedBy.getName() + " set the next game mode to " + g.getName());
-	}
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
@@ -131,8 +113,9 @@ public class Killer extends JavaPlugin
 	{
         instance = this;
         restarting = false;
+        
         GameMode.setupGameModes(this);
-        setupConfiguration();
+        Settings.setup(this);
 		
 		if ( firstStart )
 		{
@@ -226,97 +209,6 @@ public class Killer extends JavaPlugin
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		allRecipes.add(recipe);
-	}
-	
-	private void setupConfiguration()
-	{
-		getConfig().addDefault("startDisabled", false);
-		getConfig().addDefault("stagingWorldName", "world");
-		getConfig().addDefault("killerWorldName", "killer");
-		
-		getConfig().addDefault("allowRandomWorldGeneration", true);
-		
-		getConfig().addDefault("defaultGameMode", "Mystery Killer");
-		getConfig().addDefault("canChangeGameMode", true);
-		getConfig().addDefault("restartAtEndOfGame", "vote");
-		
-		getConfig().addDefault("autoAssign", false);
-		getConfig().addDefault("autoReassign", false);
-		getConfig().addDefault("restartDay", true);
-		getConfig().addDefault("lateJoinersStartAsSpectator", false);
-		getConfig().addDefault("banOnDeath", false);
-		getConfig().addDefault("informEveryoneOfReassignedKillers", true);
-		getConfig().addDefault("reportStats", true);
-		getConfig().addDefault("winningItems", Arrays.asList(Material.BLAZE_ROD.getId(), Material.GHAST_TEAR.getId()));
-		getConfig().addDefault("startingItems", new ArrayList<Integer>());
-		
-		getConfig().addDefault("autoRecreateWorld", false);
-		
-		
-		getConfig().options().copyDefaults(true);
-		saveConfig();
-		
-		gameMode = nextGameMode = GameMode.getByName(getConfig().getString("defaultGameMode"));
-		
-		if ( gameMode == null )
-		{
-			log.warning("Invalid value for defaultGameMode: " + getConfig().getString("defaultGameMode"));
-			gameMode = nextGameMode = GameMode.getDefault();
-		}
-		
-		canChangeGameMode = getConfig().getBoolean("canChangeGameMode");
-		
-		String restartAtEnd = getConfig().getString("restartAtEndOfGame");
-		if ( restartAtEnd.equalsIgnoreCase("vote") )
-		{
-			voteRestartAtEndOfGame = true;
-			autoRestartAtEndOfGame = false;
-		}
-		else if ( restartAtEnd.equalsIgnoreCase("true") )
-		{
-			voteRestartAtEndOfGame = false;
-			autoRestartAtEndOfGame = true;
-		}
-		else
-		{
-			voteRestartAtEndOfGame = false;
-			autoRestartAtEndOfGame = false;
-		}
-		
-		autoAssignKiller = getConfig().getBoolean("autoAssign");
-		autoReassignKiller = getConfig().getBoolean("autoReassign");
-		restartDayWhenFirstPlayerJoins = getConfig().getBoolean("restartDay");
-		lateJoinersStartAsSpectator = getConfig().getBoolean("lateJoinersStartAsSpectator");
-		banOnDeath = getConfig().getBoolean("banOnDeath");
-		informEveryoneOfReassignedKillers = getConfig().getBoolean("informEveryoneOfReassignedKillers");
-		autoRecreateWorld = getConfig().getBoolean("autoRecreateWorld");
-		reportStats = getConfig().getBoolean("reportStats");
-
-		List<Integer> itemIDs = getConfig().getIntegerList("winningItems"); 
-		winningItems = new Material[itemIDs.size()];
-		for ( int i=0; i<winningItems.length; i++ )
-		{
-			Material mat = Material.getMaterial(itemIDs.get(i));
-			if ( mat == null )
-			{
-				mat = Material.BLAZE_ROD;
-				log.warning("Winning item ID " + itemIDs.get(i) + " not recognized.");
-			} 
-			winningItems[i] = mat;
-		}
-		
-		itemIDs = getConfig().getIntegerList("startingItems"); 
-		startingItems = new Material[itemIDs.size()];
-		for ( int i=0; i<startingItems.length; i++ )
-		{
-			Material mat = Material.getMaterial(itemIDs.get(i));
-			if ( mat == null )
-			{
-				mat = Material.STONE_PICKAXE;
-				log.warning("Starting item ID " + itemIDs.get(i) + " not recognized.");
-			} 
-			startingItems[i] = mat;
-		}
 	}
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
@@ -478,28 +370,6 @@ public class Killer extends JavaPlugin
 				
 				endGame(sender);
 			}
-			else if ( args[0].equalsIgnoreCase("mode") )
-			{
-				if ( args.length < 2 )
-				{
-					sender.sendMessage("Current game mode is " + getGameMode().getName());
-					return true;
-				}
-				String mode = args[1];
-				for ( int i=2; i<args.length; i++ )
-					mode += " " + args[i];
-				
-				GameMode check = GameMode.getByName(mode);
-				if ( check == null )
-				{
-					String message = "Invalid game mode: " + mode + "! Valid modes are:";
-					for (GameMode possibility : GameMode.gameModes.values())
-						message += "\n " + possibility.getName();
-					sender.sendMessage(message);	
-				}
-				else
-					setNextGameMode(check, sender);
-			}
 			else
 				sender.sendMessage("Invalid parameter: " + args[0] + " - type /killer to list allowed parameters");
 			
@@ -578,7 +448,7 @@ public class Killer extends JavaPlugin
 	
 	public void roundFinished()
 	{
-		if ( voteRestartAtEndOfGame )
+		if ( Settings.voteRestartAtEndOfGame )
 			voteManager.startVote("Play another game in the same world?", null, new Runnable() {
 				public void run()
 				{
@@ -595,7 +465,7 @@ public class Killer extends JavaPlugin
 					endGame(null);
 				}
 			});
-		else if  ( autoRestartAtEndOfGame )
+		else if  ( Settings.autoRestartAtEndOfGame )
 			restartGame(null);
 		else
 			endGame(null);
@@ -636,12 +506,6 @@ public class Killer extends JavaPlugin
 			statsManager.gameFinished(getGameMode(), playerManager.numSurvivors(), 3, 0);
 		
 		getGameMode().gameFinished();
-		
-		if ( gameMode != nextGameMode )
-		{
-			gameMode = nextGameMode;
-			broadcastMessage("Changed to " + gameMode.getName() + " mode");
-		}
 		
 		if ( actionedBy != null )
 			broadcastMessage(actionedBy.getName() + " is restarting the game...");

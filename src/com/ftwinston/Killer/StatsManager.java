@@ -30,7 +30,7 @@ public class StatsManager
 	
 	public void gameFinished(GameMode mode, int numPlayers, int outcome, int winningItemID)
 	{
-		if ( !isTracking || !plugin.reportStats)
+		if ( !isTracking || !Settings.reportStats)
 			return;
 	
 		isTracking = false;

@@ -49,7 +49,7 @@ public class PlayerManager
 	
 	private void startCheckAutoAssignKiller()
 	{
-		if ( !plugin.autoAssignKiller )
+		if ( !Settings.autoAssignKiller )
 			return;
 		
 		killerAssignProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
@@ -157,7 +157,7 @@ public class PlayerManager
 			setAlive(player, true);
 		}
 		
-		if ( plugin.banOnDeath )
+		if ( Settings.banOnDeath )
 			for ( OfflinePlayer player : plugin.getServer().getBannedPlayers() )
 				player.setBanned(false);
 		
@@ -306,7 +306,7 @@ public class PlayerManager
 			
 			if ( !plugin.getGameState().usesSpectators )
 				info = new Info(true);
-			else if ( plugin.lateJoinersStartAsSpectator )
+			else if ( Settings.lateJoinersStartAsSpectator )
 				info = new Info(false);
 			else
 			{
@@ -375,7 +375,7 @@ public class PlayerManager
 		{
 			checkImmediateKillerAssignment();
 			
-			if ( plugin.restartDayWhenFirstPlayerJoins && plugin.getOnlinePlayers().size() == 1 )
+			if ( Settings.restartDayWhenFirstPlayerJoins && plugin.getOnlinePlayers().size() == 1 )
 				plugin.worldManager.mainWorld.setTime(0);
 		}
 		else
@@ -423,7 +423,7 @@ public class PlayerManager
 				info.setAlive(false);
 				if ( numKillersAssigned() > 0 )
 				{
-					if ( plugin.banOnDeath )
+					if ( Settings.banOnDeath )
 						player.setBanned(true);
 
 					plugin.getGameMode().playerKilled(player, this, info);
@@ -444,7 +444,7 @@ public class PlayerManager
 		
 		setAlive(player, false);
 
-		if ( plugin.banOnDeath )
+		if ( Settings.banOnDeath )
 		{
 			player.setBanned(true);
 			player.kickPlayer("You died, and are now banned until the end of the game");
@@ -528,7 +528,7 @@ public class PlayerManager
 		plugin.broadcastMessage(ChatColor.YELLOW + message);
 		clearKillers(null);
 
-		if ( winningItem != null || plugin.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getOnlinePlayers().size() == 0 )
+		if ( winningItem != null || Settings.autoRecreateWorld || plugin.voteManager.isInVote() || plugin.getOnlinePlayers().size() == 0 )
 		{	// plinth victory or other scenario where we don't want a vote, end the game in 10 secs
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 	
@@ -655,8 +655,8 @@ public class PlayerManager
 		{
 			player.setAllowFlight(true);
 			player.setFlying(true);
-			inv.addItem(new ItemStack(plugin.teleportModeItem, 1));
-			inv.addItem(new ItemStack(plugin.followModeItem, 1));
+			inv.addItem(new ItemStack(Settings.teleportModeItem, 1));
+			inv.addItem(new ItemStack(Settings.followModeItem, 1));
 			makePlayerInvisibleToAll(player);
 			
 			if ( wasAlive )
@@ -712,7 +712,7 @@ public class PlayerManager
 				player.closeInventory(); // this stops them from keeping items they had in (e.g.) a crafting table
 				
 				if ( isAlive(player.getName()) ) // if any starting items are configured, give them if the player is alive
-					for ( Material material : plugin.startingItems )
+					for ( Material material : Settings.startingItems )
 						inv.addItem(new ItemStack(material));
 			}
 		}

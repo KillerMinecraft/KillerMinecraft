@@ -193,12 +193,12 @@ public class EventListener implements Listener
     		
     		if ( item == null )
     			plugin.playerManager.setFollowTarget(event.getPlayer(), null);
-    		else if ( item.getType() == plugin.teleportModeItem )
+    		else if ( item.getType() == Settings.teleportModeItem )
     		{
     			event.getPlayer().sendMessage("Free look mode: left click to teleport " + ChatColor.YELLOW + "to" + ChatColor.RESET + " where you're looking, right click to teleport " + ChatColor.YELLOW + "through" + ChatColor.RESET + " through what you're looking");
     			plugin.playerManager.setFollowTarget(event.getPlayer(), null);
     		}
-    		else if ( item.getType() == plugin.followModeItem )
+    		else if ( item.getType() == Settings.followModeItem )
     		{
     			event.getPlayer().sendMessage("Follow mode: click to cycle target");
     			plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNearestFollowTarget(event.getPlayer()));
@@ -226,14 +226,14 @@ public class EventListener implements Listener
     		event.setCancelled(true);
     		Material held = event.getPlayer().getItemInHand().getType();
     		
-    		if ( held == plugin.teleportModeItem )
+    		if ( held == Settings.teleportModeItem )
     		{
 				if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
     				plugin.playerManager.doSpectatorTeleport(event.getPlayer(), false);
     			else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
     				plugin.playerManager.doSpectatorTeleport(event.getPlayer(), true);
     		}
-    		else if ( held == plugin.followModeItem )
+    		else if ( held == Settings.followModeItem )
     		{
         		PlayerManager.Info info = plugin.playerManager.getInfo(playerName); 
         		
@@ -261,7 +261,7 @@ public class EventListener implements Listener
 	  	{
 	        if ( isOnPlinth(event.getClickedBlock().getLocation()) )
 	        {// does the player have one of the winning items in their inventory?	        	
-	        	for ( Material material : plugin.winningItems )
+	        	for ( Material material : Settings.winningItems )
 		        	if ( event.getPlayer().getInventory().contains(material) )
 					{
 		        		plugin.getGameMode().checkForEndOfGame(plugin.playerManager, event.getPlayer(), material);

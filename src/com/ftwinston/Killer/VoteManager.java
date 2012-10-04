@@ -144,7 +144,7 @@ public class VoteManager
 				return Prompt.END_OF_CONVERSATION;
 			}
 		};
-		
+		/*
 		final NumericPrompt gameModePrompt = new NumericPrompt() {
         	public String getPromptText(ConversationContext context)
 			{
@@ -197,7 +197,7 @@ public class VoteManager
 				return Prompt.END_OF_CONVERSATION;
 			}
         };
-		
+		*/
         final NumericPrompt restartPrompt = new NumericPrompt() {
         	public String getPromptText(ConversationContext context)
 			{
@@ -235,7 +235,7 @@ public class VoteManager
         	
 			public String getPromptText(ConversationContext context)
 			{
-				if ( plugin.canChangeGameMode )
+				if ( Settings.canChangeGameMode )
 					return "What do you want to start a vote on? Say the number to choose:\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " Change next game mode\n" + ChatColor.GOLD + "2." + ChatColor.RESET + " Restart game\n" + ChatColor.GOLD + "3." + ChatColor.RESET + " Clear killer\n" + ChatColor.GOLD + "4." + ChatColor.RESET + " Reallocate killer\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
 				
 				return "What do you want to start a vote on? Say the number to choose:\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " Restart game\n" + ChatColor.GOLD + "2." + ChatColor.RESET + " Clear killer\n" + ChatColor.GOLD + "3." + ChatColor.RESET + " Reallocate killer\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
@@ -246,11 +246,11 @@ public class VoteManager
 				Player player = context.getForWhom() instanceof Player ? (Player)context.getForWhom() : null;
 				
 				int choice = val.intValue();
-				if ( !plugin.canChangeGameMode )
+				if ( !Settings.canChangeGameMode )
 					choice++; // "first choice" isn't available
 				
-				if ( choice == 1 )
-					return gameModePrompt;
+				//if ( choice == 1 )
+					//return gameModePrompt;
 					
 				if ( choice == 2 )
 					return restartPrompt;

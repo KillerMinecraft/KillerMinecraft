@@ -5,6 +5,7 @@ import java.util.Map;
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.PlayerManager;
 import com.ftwinston.Killer.PlayerManager.Info;
+import com.ftwinston.Killer.Settings;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -84,14 +85,14 @@ public class TeamKiller extends GameMode
 					return "Players will soon be split into two teams.\nThe scoreboard will show what team each player is on.";
 			case 1:
 				String message = "The teams must race to bring a ";			
-				message += plugin.tidyItemName(plugin.winningItems[0]);
+				message += plugin.tidyItemName(Settings.winningItems[0]);
 				
-				if ( plugin.winningItems.length > 1 )
+				if ( Settings.winningItems.length > 1 )
 				{
-					for ( int i=1; i<plugin.winningItems.length-1; i++)
-						message += ", a " + plugin.tidyItemName(plugin.winningItems[i]);
+					for ( int i=1; i<Settings.winningItems.length-1; i++)
+						message += ", a " + plugin.tidyItemName(Settings.winningItems[i]);
 					
-					message += " or a " + plugin.tidyItemName(plugin.winningItems[plugin.winningItems.length-1]);
+					message += " or a " + plugin.tidyItemName(Settings.winningItems[Settings.winningItems.length-1]);
 				}
 				
 				message += " to the plinth near the spawn, or to kill the other team.";
