@@ -165,7 +165,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				for ( int x = 5; x < gen.worldEndX; x++ )
 					for ( int y = 2; y < 7; y++ )
 					{
-						b = getBlockAbs(chunk, x, y, 5);
+						b = getBlockAbs(chunk, x, y, 4);
 						if ( b != null )
 							b.setType(closedOffWall);
 					}
