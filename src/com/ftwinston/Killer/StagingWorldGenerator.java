@@ -14,9 +14,7 @@ import org.bukkit.generator.BlockPopulator;
 
 public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 {
-	private final int numRandomWorldOptions = 1;
-	
-	private int maxGameModeOptions, numWorldOptions;
+	private int maxGameModeOptions;
 	
 	int endX, endZ, worldEndX, optionsEndX, gameModeEndZ;
 	boolean gameModeSelectionClosedOff, worldSelectionClosedOff, gameModeOptionsClosedOff;
@@ -31,15 +29,8 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		if ( Settings.customWorldNames.size() == 0 )
 			Settings.allowRandomWorlds = true; // If no custom worlds (are left), always allow random worlds
 		
-		if ( Settings.allowRandomWorlds )
-			numWorldOptions = Settings.customWorldNames.size() + numRandomWorldOptions;
-		else
-			numWorldOptions = Settings.customWorldNames.size();
-		// if random world generation is disabled, and no custom world names are provided ... what then?
-		
-		
 		// now set up helper values for where the various "extensible" things end
-		endX = Math.max(Math.max(numWorldOptions, maxGameModeOptions) * 2 + 8, 20);
+		endX = Math.max(Math.max(WorldOption.options.size(), maxGameModeOptions) * 2 + 8, 20);
 		endZ = Math.max(GameMode.gameModes.size() * 3 + 12, 22);
 						
 		startButtonX = endX - 1;
@@ -50,13 +41,13 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		worldOptionZ = 1;
 		gameModeOptionZ = endZ - 1;
 		
-		worldEndX = numWorldOptions * 2 + 8;
+		worldEndX = WorldOption.options.size() * 2 + 8;
 		optionsEndX = maxGameModeOptions == 0 ? 4 : maxGameModeOptions * 2 + 8;
 		gameModeEndZ = GameMode.gameModes.size() * 3 + 8;
 		
 		// todo: decide these, based on config or whatever
 		gameModeSelectionClosedOff = GameMode.gameModes.size() < 2 ;
-		worldSelectionClosedOff = numWorldOptions < 2;
+		worldSelectionClosedOff = WorldOption.options.size() < 2;
 		gameModeOptionsClosedOff = maxGameModeOptions < 2;
 	}
 	
@@ -110,7 +101,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			Material mainFloor = Material.SMOOTH_BRICK;
 			Material ceiling = Material.GLOWSTONE;
 			Material walls = Material.SMOOTH_BRICK;
-			Material closedOffWall = Material.IRON_FENCE;
+			Material closedOffWall = Material.SMOOTH_BRICK; // Material.IRON_FENCE
 			
 			Material slab = Material.STEP;
 			Material loweredFloor = Material.NETHERRACK;
@@ -182,7 +173,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			// now all the buttons/signs etc IN the north wall
 			int num = 0;
 			int worldX = 7;
-			while ( worldX < gen.worldEndX - 2 && num < gen.numWorldOptions )
+			while ( worldX < gen.worldEndX - 2 && num < WorldOption.options.size() )
 			{
 				b = getBlockAbs(chunk, worldX, 2, 1);
 				if ( b != null )
@@ -199,25 +190,20 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					Sign s = (Sign)b.getState();
 					s.setLine(0, "§fWorld:");
 					
-					if ( Settings.allowRandomWorlds && num == 0 )
-						s.setLine(1, "§fNormal Random");
-					else
+					String name = WorldOption.get(num).getName();
+					if ( name.length() > 12 )
 					{
-						String name = Settings.customWorldNames.get(Settings.allowRandomWorlds ? num - 1 : num);
-						if ( name.length() > 12 )
+						String[] words = name.split(" ");
+						s.setLine(1, "§f" + words[0]);
+						if ( words.length > 1)
 						{
-							String[] words = name.split(" ");
-							s.setLine(1, "§f" + words[0]);
-							if ( words.length > 1)
-							{
-								s.setLine(2, "§f" + words[1]);
-								if ( words.length > 2)
-									s.setLine(3, "§f" + words[2]);
-							}
+							s.setLine(2, "§f" + words[1]);
+							if ( words.length > 2)
+								s.setLine(3, "§f" + words[2]);
 						}
-						else
-							s.setLine(1, "§f" + name);
 					}
+					else
+						s.setLine(1, "§f" + name);
 					s.update();
 				}
 				
