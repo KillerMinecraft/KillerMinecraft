@@ -8,8 +8,10 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.generator.BlockPopulator;
 
 public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
@@ -19,7 +21,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	int endX, endZ, worldEndX, optionsEndX, gameModeEndZ;
 	boolean gameModeSelectionClosedOff, worldSelectionClosedOff, gameModeOptionsClosedOff;
 	
-	public StagingWorldGenerator()
+	public StagingWorldGenerator(boolean forceChangeEnvironment)
 	{
         maxGameModeOptions = 0;
         for ( GameMode mode : GameMode.gameModes )
@@ -45,10 +47,11 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		optionsEndX = maxGameModeOptions == 0 ? 4 : maxGameModeOptions * 2 + 8;
 		gameModeEndZ = GameMode.gameModes.size() * 3 + 8;
 		
-		// todo: decide these, based on config or whatever
 		gameModeSelectionClosedOff = GameMode.gameModes.size() < 2 ;
 		worldSelectionClosedOff = WorldOption.options.size() < 2;
 		gameModeOptionsClosedOff = maxGameModeOptions < 2;
+		
+		mustChangeEnvironment = forceChangeEnvironment;
 	}
 	
 	public static int startButtonX, startButtonZ, overrideButtonZ, cancelButtonZ, gameModeButtonX, worldOptionZ, gameModeOptionZ;
@@ -63,8 +66,15 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
         return x >= 0 && z >= 0 && x <= endX / 16 && z <= endZ / 16;
     }
     
+	private boolean mustChangeEnvironment = true;
 	public byte[][] generateBlockSections(World world, Random random, int cx, int cz, BiomeGrid biomes)
 	{
+		if ( mustChangeEnvironment )
+		{
+			CraftWorld cw = (CraftWorld)world;
+			cw.setEnvironment(Environment.THE_END);
+			mustChangeEnvironment = false;
+		}
 		return new byte[1][];
 	}
 	

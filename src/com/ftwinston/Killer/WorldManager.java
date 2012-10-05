@@ -274,11 +274,10 @@ public class WorldManager
 				@Override
 				public void run() {
 			        WorldCreator wc = new WorldCreator(name);
-		    		StagingWorldGenerator gen = new StagingWorldGenerator();
+		    		StagingWorldGenerator gen = new StagingWorldGenerator(false);
 			        wc.generator(gen);
-					wc.environment(Environment.NORMAL);
+					wc.environment(Environment.THE_END);
 					World newWorld = CreateWorld(wc, true);
-					wc.generateStructures(true);
 					
 					stagingWorldCreated(newWorld);
 				}
