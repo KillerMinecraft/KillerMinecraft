@@ -125,12 +125,12 @@ public class EventListener implements Listener
 		if ( fromWorld == plugin.worldManager.mainWorld )
 		{
 			toWorld = plugin.worldManager.netherWorld;
-			blockRatio = 8;
+			blockRatio = 0.125;
 		}
 		else if ( fromWorld == plugin.worldManager.netherWorld )
 		{
 			toWorld = plugin.worldManager.mainWorld;
-			blockRatio = 0.125;
+			blockRatio = 8;
 		}
 		else
 			return;
