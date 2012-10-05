@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
@@ -33,6 +34,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.world.WorldInitEvent;
@@ -105,6 +107,30 @@ public class EventListener implements Listener
 			event.getPlayer().teleport(plugin.worldManager.getStagingWorldSpawnPoint()); // place them manually, to avoid needing a big hole in the roof
     }
     
+	@EventHandler
+	public void onPlayerPortal(PlayerPortalEvent event)
+	{// we're kinda doing the dirty work in making nether portals work, here
+		World fromWorld = event.getTo().getWorld();
+		World toWorld;
+		double blockRatio;
+		
+		if ( fromWorld == plugin.worldManager.mainWorld )
+		{
+			toWorld = plugin.worldManager.netherWorld;
+			blockRatio = 8;
+		}
+		else if ( fromWorld == plugin.worldManager.netherWorld )
+		{
+			toWorld = plugin.worldManager.mainWorld;
+			blockRatio = 0.125;
+		}
+		else
+			return;
+		
+		Location playerLoc = event.getPlayer().getLocation();
+		event.setTo(new Location(toWorld, (playerLoc.getX() * blockRatio), playerLoc.getY(), (playerLoc.getZ() * blockRatio), playerLoc.getYaw(), playerLoc.getPitch()));
+	}
+	
     // prevent spectators picking up anything
     @EventHandler
     public void onPlayerPickupItem(PlayerPickupItemEvent event)
