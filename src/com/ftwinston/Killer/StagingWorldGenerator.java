@@ -56,6 +56,18 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public static int startButtonX, startButtonZ, overrideButtonZ, cancelButtonZ, gameModeButtonX, worldOptionZ, gameModeOptionZ;
 	
+	public static byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
+		colorStartButton = 1 /* orange */, colorOverrideButton = 14 /* red */, colorCancelButton = 13 /* green */;
+	
+	public static int getGameModeZ(int num) { return 8 + num * 3; }
+	public static int getWorldOptionX(int num) { return 7 + num * 2; }
+	public static int getGameModeOptionX(int num) { return 7 + num * 2; }
+	
+	public static int getGameModeNumFromZ(int z) { return (z - 8) / 3; }
+	public static int getWorldOptionNumFromX(int x) { return (x - 7) / 2; }
+	public static int getGameModeOptionNumFromX(int x) { return (x - 7) / 2; }
+	
+	
 	@Override
     public List<BlockPopulator> getDefaultPopulators(World world) {
         return Arrays.asList((BlockPopulator)new StagingWorldPopulator(this));
@@ -116,7 +128,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			Material slab = Material.STEP;
 			Material loweredFloor = Material.NETHERRACK;
 			
-			Material lamp = Material.REDSTONE_LAMP_OFF;
+			Material wool = Material.WOOL;
 			Material button = Material.STONE_BUTTON;
 			Material sign = Material.WALL_SIGN;
 			Block b;
@@ -181,10 +193,9 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				}
 			
 			// now all the buttons/signs etc IN the north wall
-			int num = 0;
-			int worldX = 7;
-			while ( worldX < gen.worldEndX - 2 && num < WorldOption.options.size() )
+			for ( int num=0; num < WorldOption.options.size(); num++ )
 			{
+				int worldX = getWorldOptionX(num);
 				b = getBlockAbs(chunk, worldX, 2, 1);
 				if ( b != null )
 				{
@@ -219,10 +230,10 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				
 				b = getBlockAbs(chunk, worldX, 3, 0);
 				if ( b != null )
-					b.setType(lamp);
-				
-				worldX += 2;
-				num ++;
+				{
+					b.setType(wool);
+					b.setData(WorldOption.options.size() == 1 ? colorOptionOn : colorOptionOff);
+				}
 			}
 			
 			
@@ -286,11 +297,9 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				}
 			
 			// now all the buttons/signs etc IN the west wall
-			num = 0;
-			int modeZ = 8;
-						
-			while ( modeZ < gen.gameModeEndZ - 2 && num < GameMode.gameModes.size() )
+			for ( int num=0; num < GameMode.gameModes.size(); num++ )
 			{
+				int modeZ = getGameModeZ(num);
 				b = getBlockAbs(chunk, 1, 3, modeZ);
 				if ( b != null )
 				{
@@ -326,7 +335,10 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				
 				b = getBlockAbs(chunk, 0, 3, modeZ);
 				if ( b != null )
-					b.setType(lamp);
+				{
+					b.setType(wool);
+					b.setData(GameMode.gameModes.size() == 1 ? colorOptionOn : colorOptionOff);
+				}
 				
 				// now the game mode DESCRIPTION signs
 				b = getBlockAbs(chunk, 1, 4, modeZ-1);
@@ -373,9 +385,6 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					s.setLine(3, descLines.length > 11 ? descLines[11] : "");
 					s.update();
 				}
-				
-				modeZ += 3;
-				num ++;
 			}
 			
 			
@@ -548,10 +557,9 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				}
 			
 			// now all the buttons/signs etc IN the south wall
-			num = 0;
-			int optionX = 7;
-			while ( optionX < gen.optionsEndX - 2 && num < gen.maxGameModeOptions )
+			for ( int num=0; num < gen.maxGameModeOptions; num++ )
 			{
+				int optionX = getGameModeOptionX(num);
 				b = getBlockAbs(chunk, optionX, 2, gen.endZ - 1);
 				if ( b != null )
 				{
@@ -572,10 +580,10 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				
 				b = getBlockAbs(chunk, optionX, 3, gen.endZ);
 				if ( b != null )
-					b.setType(lamp);
-				
-				worldX += 2;
-				num ++;
+				{
+					b.setType(wool);
+					b.setData(colorOptionOff);
+				}
 			}
 		}
 	}

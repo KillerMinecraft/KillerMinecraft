@@ -120,74 +120,6 @@ public class WorldManager
 			
 			return pressurePlateLocation;
 		}
-/*
-		private void moveWorldToFront(World thisWorld)
-		{
-			try
-			{
-				Field f = plugin.getServer().getClass().getDeclaredField("worlds");
-				f.setAccessible(true);
-				@SuppressWarnings("unchecked")
-				Map<String, World> worlds = (Map<String, World>)f.get(plugin.getServer());
-				f.setAccessible(false);
-				
-				// remove & re-add all worlds except the thisWorld
-				String[] worldNames = new String[0];
-				worldNames = worlds.keySet().toArray(worldNames);
-				for ( String name : worldNames )
-				{
-					if ( name.equals(thisWorld.getName()) )
-						continue;
-					
-					World tmp = worlds.get(name);
-					worlds.remove(name);
-					worlds.put(name, tmp);
-				}
-			}
-			catch ( IllegalAccessException ex )
-			{
-				plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
-			}
-			catch  ( NoSuchFieldException ex )
-			{
-				plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
-			}
-			
-			WorldServer worldServer = ((CraftWorld)thisWorld).getHandle();
-			
-			MinecraftServer ms = plugin.getMinecraftServer();
-			ms.worlds.remove(ms.worlds.indexOf(worldServer));
-			ms.worlds.add(0, worldServer);
-		}
-		
-		private void moveWorldToEnd(World thisWorld)
-		{
-			try
-			{
-				Field f = plugin.getServer().getClass().getDeclaredField("worlds");
-				f.setAccessible(true);
-				@SuppressWarnings("unchecked")
-				Map<String, World> worlds = (Map<String, World>)f.get(plugin.getServer());
-				f.setAccessible(false);
-				
-				worlds.remove(thisWorld.getName());
-				worlds.put(thisWorld.getName(), thisWorld);
-			}
-			catch ( IllegalAccessException ex )
-			{
-				plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
-			}
-			catch  ( NoSuchFieldException ex )
-			{
-				plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
-			}
-			
-			WorldServer worldServer = ((CraftWorld)thisWorld).getHandle();
-			
-			MinecraftServer ms = plugin.getMinecraftServer();
-			ms.worlds.remove(ms.worlds.indexOf(worldServer));
-			ms.worlds.add(worldServer);
-		}*/
 		
 		public void hijackDefaultWorldAsStagingWorld(String name)
 		{
@@ -522,29 +454,43 @@ public class WorldManager
 			}
 			else if ( x == StagingWorldGenerator.gameModeButtonX )
 			{
-				GameMode gameMode = GameMode.get((z-8)/3);
+				int num = StagingWorldGenerator.getGameModeNumFromZ(z);
+				
+				// update all the color blocks
+				for ( int i=0; i<GameMode.gameModes.size(); i++ )
+					stagingWorld.getBlockAt(x-1, 3, StagingWorldGenerator.getGameModeZ(i)).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+				
+				GameMode gameMode = GameMode.get(num);
 				if ( plugin.setGameMode(gameMode) )
 				{
 					if ( plugin.getGameState() != GameState.stagingWorldReady )
 						plugin.setGameState(GameState.stagingWorldReady);
 				}
-				
-				// ... update game mode option buttons?
 			}
 			else if ( z == StagingWorldGenerator.worldOptionZ )
 			{
-				WorldOption world = WorldOption.get((x-7)/2);
+				int num = StagingWorldGenerator.getWorldOptionNumFromX(x);
+				
+				// update all the color blocks
+				for ( int i=0; i<WorldOption.options.size(); i++ )
+					stagingWorld.getBlockAt(StagingWorldGenerator.getWorldOptionX(i), 3, z-1).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+				
+				WorldOption world = WorldOption.get(num);
 				if ( plugin.setWorldOption(world) )	
 				{
 					if ( plugin.getGameState() != GameState.stagingWorldReady )
 						plugin.setGameState(GameState.stagingWorldReady);
 				}
-				
-				plugin.log.info("Clicked on world option:" + world.getName());
 			}
 			else if ( z == StagingWorldGenerator.gameModeOptionZ )
 			{
-				plugin.log.info("Clicked on game mode option #" + (x-7)/2);
+				int num = StagingWorldGenerator.getGameModeOptionNumFromX(x);
+				plugin.log.info("Clicked on game mode option #" + num);
+				/*
+				// update all the color blocks
+				for ( int i=0; i<plugin.getGameMode().options.size(); i++ )
+					stagingWorld.getBlockAt(StagingWorldGenerator.getGameModeOptionX(i), 3, z-1).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+				*/
 			}
 		}
 		
@@ -552,6 +498,7 @@ public class WorldManager
 		{
 			Block button = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 2, StagingWorldGenerator.startButtonZ);
 			Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 3, StagingWorldGenerator.startButtonZ);
+			Block back = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 2, StagingWorldGenerator.startButtonZ);
 			
 			if ( show )
 			{
@@ -564,11 +511,15 @@ public class WorldManager
 				s.setLine(1, "Push to");
 				s.setLine(2, "start the game");
 				s.update();
+				
+				back.setType(Material.WOOL);
+				back.setData(StagingWorldGenerator.colorStartButton);
 			}
 			else
 			{
 				button.setType(Material.AIR);
 				sign.setType(Material.AIR);
+				back.setType(Material.SMOOTH_BRICK);
 			}
 		}
 		
@@ -579,6 +530,9 @@ public class WorldManager
 			
 			Block sOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 3, StagingWorldGenerator.overrideButtonZ);
 			Block sCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 3, StagingWorldGenerator.cancelButtonZ);
+			
+			Block backOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 2, StagingWorldGenerator.overrideButtonZ);
+			Block backCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 2, StagingWorldGenerator.cancelButtonZ);
 			
 			if ( show )
 			{
@@ -603,6 +557,12 @@ public class WorldManager
 				s.setLine(2, "cancel this");
 				s.setLine(3, "game mode");
 				s.update();
+				
+				backOverride.setType(Material.WOOL);
+				backOverride.setData(StagingWorldGenerator.colorOverrideButton);
+				
+				backCancel.setType(Material.WOOL);
+				backCancel.setData(StagingWorldGenerator.colorCancelButton);
 			}
 			else
 			{
@@ -610,6 +570,8 @@ public class WorldManager
 				bCancel.setType(Material.AIR);
 				sOverride.setType(Material.AIR);
 				sCancel.setType(Material.AIR);
+				backOverride.setType(Material.SMOOTH_BRICK);
+				backCancel.setType(Material.SMOOTH_BRICK);
 			}
 		}
 		
