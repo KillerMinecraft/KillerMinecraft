@@ -100,6 +100,9 @@ public class EventListener implements Listener
 		}
 		else if ( nowInKiller )
 			playerJoined(event.getPlayer());
+		
+		if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
+			event.getPlayer().teleport(plugin.worldManager.getStagingWorldSpawnPoint()); // place them manually, to avoid needing a big hole in the roof
     }
     
     // prevent spectators picking up anything
@@ -397,14 +400,17 @@ public class EventListener implements Listener
 	public void onPlayerJoin(PlayerJoinEvent event)
     {
     	if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
-    	{// put them right where we want them. So as to avoid needing a big hole in the roof.
+    	{
     		final String playerName = event.getPlayer().getName();
     		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
     			public void run()
     			{
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
-    					player.teleport(plugin.worldManager.getStagingWorldSpawnPoint());
+    					if ( plugin.getGameState().usesGameWorlds )
+    						plugin.playerManager.putPlayerInWorld(player, plugin.worldManager.mainWorld);
+    					else
+    						player.teleport(plugin.worldManager.getStagingWorldSpawnPoint()); // place them manually, to avoid needing a big hole in the roof
     			}
     		});
     	}
@@ -422,7 +428,7 @@ public class EventListener implements Listener
 	
 	private void playerJoined(Player player)
 	{
-		// if I log into the holding world (cos I logged out there), move me back to the main world's spawn and clear me out
+		// if I log into the staging world (cos I logged out there), move me back to the main world's spawn and clear me out
 		if ( player.getWorld() == plugin.worldManager.stagingWorld && plugin.getGameState().usesGameWorlds && plugin.worldManager.mainWorld != null )
 		{
 			player.getInventory().clear();

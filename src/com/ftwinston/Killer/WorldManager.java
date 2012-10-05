@@ -507,7 +507,6 @@ public class WorldManager
 			{
 				if ( z == StagingWorldGenerator.startButtonZ )
 				{
-					plugin.log.info("Clicked force start button");
 					if ( plugin.getOnlinePlayers().size() >= plugin.getGameMode().absMinPlayers() )
 						plugin.setGameState(GameState.worldGeneration);
 					else
@@ -515,16 +514,12 @@ public class WorldManager
 				}
 				else if ( z == StagingWorldGenerator.overrideButtonZ )
 				{
-					plugin.log.info("Clicked override button");
 					plugin.setGameState(GameState.worldGeneration);
 				}
 				else if ( z == StagingWorldGenerator.cancelButtonZ )
 				{
-					plugin.log.info("Clicked cancel button");
 					plugin.setGameState(GameState.stagingWorldReady);
 				}
-				else
-					plugin.log.info("Clicked unrecognised button at z=" + z + ". Start button is at z=" + StagingWorldGenerator.startButtonZ + ".");
 			}
 			else if ( x == StagingWorldGenerator.gameModeButtonX )
 			{
@@ -535,7 +530,6 @@ public class WorldManager
 						plugin.setGameState(GameState.stagingWorldReady);
 				}
 				
-				plugin.log.info("Clicked on game mode: " + gameMode.getName());
 				// ... update game mode option buttons?
 			}
 			else if ( z == StagingWorldGenerator.worldOptionZ )
@@ -599,8 +593,8 @@ public class WorldManager
 				sOverride.setData((byte)0x4);
 				Sign s = (Sign)sOverride.getState();
 				s.setLine(1, "Push to");
-				s.setLine(2, "confirm the");
-				s.setLine(3, "game mode");
+				s.setLine(2, "start the");
+				s.setLine(3, "game anyway");
 				s.update();
 				
 				sCancel.setType(Material.WALL_SIGN);

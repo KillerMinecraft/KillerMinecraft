@@ -171,18 +171,10 @@ public class PlayerManager
 		plugin.getServer().getScheduler().cancelTask(spectatorFollowProcess);
 	}
 	
-	public void putPlayersInStagingWorld()
+	public void putPlayersInWorld(World world)
 	{
 		for ( Player player : plugin.getOnlinePlayers() )
-			putPlayerInWorld(player, plugin.worldManager.stagingWorld);
-		
-		reset(true);
-	}
-	
-	public void putPlayersInGameWorld()
-	{
-		for ( Player player : plugin.getOnlinePlayers() )
-			putPlayerInWorld(player, plugin.worldManager.mainWorld);	
+			putPlayerInWorld(player, world);	
 	}
 	
 	public void startGame()
