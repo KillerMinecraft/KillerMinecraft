@@ -362,8 +362,59 @@ public class Killer extends JavaPlugin
 			return true;
 		}
 		else if (cmd.getName().equalsIgnoreCase("killer"))
-		{
-			if ( sender instanceof Player && !((Player)sender).isOp() )
+		{	
+			Player player;
+			if ( sender instanceof Player )
+				player = (Player)sender;
+			else
+				player = null;
+			
+			// players, op or otherwise, can use /killer join and /killer quit,
+			// ONLY IF the staging world isn't the server default.
+			if ( !stagingWorldIsServerDefault )
+			{
+				if ( args[0].equalsIgnoreCase("join") )
+				{
+					if ( player == null )
+					{
+						sender.sendMessage("Only players can run this command");
+						return true;
+					}
+					if ( isGameWorld(player.getWorld()) )
+					{
+						sender.sendMessage("You are already part of the Killer game, you can't join again!");
+						return true;
+					}
+					
+					playerManager.movePlayerIntoKillerGame(player);
+					return true;
+				}
+				else if ( args[0].equalsIgnoreCase("quit") )
+				{
+					if ( player == null )
+					{
+						sender.sendMessage("Only players can run this command");
+						return true;
+					}
+					if ( !isGameWorld(player.getWorld()) )
+					{
+						sender.sendMessage("You are not part of the Killer game, so you can't quit!");
+						return true;
+					}
+					
+					playerManager.movePlayerOutOfKillerGame(player);
+					return true;
+				}
+				else if ( player != null && !player.isOp() )
+				{
+					sender.sendMessage("Invalid command: Use /killer join to enter the game, and /killer quit to leave it");
+					return true;
+				}
+			}
+		
+			// op players and non-players can use the others
+		
+			if ( player != null && !player.isOp() )
 			{
 				sender.sendMessage("You must be a server op to run this command");
 				return true;
@@ -371,7 +422,10 @@ public class Killer extends JavaPlugin
 			
 			if ( args.length == 0 )
 			{
-				sender.sendMessage("Usage: /killer mode, /killer restart, /killer end, /killer add, /killer clear, /killer reallocate");
+				if ( !stagingWorldIsServerDefault && player != null )
+					sender.sendMessage("Usage: /killer join, /killer quit, /killer restart, /killer end, /killer add, /killer clear, /killer reallocate");
+				else
+					sender.sendMessage("Usage: /killer restart, /killer end, /killer add, /killer clear, /killer reallocate");
 				return true;
 			}
 			

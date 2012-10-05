@@ -1,5 +1,6 @@
 package com.ftwinston.Killer;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -45,6 +46,25 @@ public class PlayerManager
 		transparentBlocks.add(new Byte((byte)Material.AIR.getId()));
 		transparentBlocks.add(new Byte((byte)Material.WATER.getId()));
 		transparentBlocks.add(new Byte((byte)Material.STATIONARY_WATER.getId()));
+	}
+	
+	public Map<String, Location> previousLocations = new HashMap<String, Location>();
+	public void movePlayerOutOfKillerGame(Player player)
+	{
+		Location exitPoint = previousLocations.get(player.getName());
+		if ( exitPoint != null )
+		{
+			plugin.broadcastMessage(player.getName() + " quit the game");
+			player.teleport(exitPoint);
+		}
+		else
+			player.sendMessage("Cannot quit killer, because there is no exit point stored for you! Leave this world via other commands, if the server has them.");
+	}
+	
+	public void movePlayerIntoKillerGame(Player player)
+	{
+		previousLocations.put(player.getName(), player.getLocation());
+		player.teleport(plugin.worldManager.getStagingWorldSpawnPoint());
 	}
 	
 	private void startCheckAutoAssignKiller()

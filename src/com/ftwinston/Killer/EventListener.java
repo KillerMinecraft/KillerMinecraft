@@ -103,7 +103,10 @@ public class EventListener implements Listener
 					plugin.playerManager.checkPlayerCompassTarget(player);
 			}
 			else
-				playerQuit(event.getPlayer());
+			{
+				playerQuit(event.getPlayer(), false);
+				plugin.playerManager.previousLocations.remove(event.getPlayer().getName()); // they left Killer, so forget where they should be put on leaving
+			}
 		}
 		else if ( nowInKiller )
 			playerJoined(event.getPlayer());
@@ -454,7 +457,7 @@ public class EventListener implements Listener
     public void onPlayerQuit(PlayerQuitEvent event)
     {
 		if ( plugin.isGameWorld(event.getPlayer().getWorld()) )
-			playerQuit(event.getPlayer());
+			playerQuit(event.getPlayer(), true);
 	}
 	
 	private void playerJoined(Player player)
@@ -470,12 +473,12 @@ public class EventListener implements Listener
     	plugin.playerManager.playerJoined(player);
     }
     
-	private void playerQuit(Player player)
+	private void playerQuit(Player player, boolean actuallyLeftServer)
 	{
-		// the quit message should be sent to the scoreboard of anyone who this player was invisible to
-		for ( Player online : plugin.getOnlinePlayers() )
-			if ( !online.canSee(player) )
-				plugin.playerManager.sendForScoreboard(online, player, false);
+		if ( actuallyLeftServer ) // the quit message should be sent to the scoreboard of anyone who this player was invisible to
+			for ( Player online : plugin.getOnlinePlayers() )
+				if ( !online.canSee(player) )
+					plugin.playerManager.sendForScoreboard(online, player, false);
 		
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName(), true), 600);
     }
