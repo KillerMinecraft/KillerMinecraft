@@ -8,10 +8,8 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
-import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.generator.BlockPopulator;
 
 public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
@@ -21,7 +19,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	int endX, endZ, worldEndX, optionsEndX, gameModeEndZ;
 	boolean gameModeSelectionClosedOff, worldSelectionClosedOff, gameModeOptionsClosedOff;
 	
-	public StagingWorldGenerator(boolean forceChangeEnvironment)
+	public StagingWorldGenerator()
 	{
         maxGameModeOptions = 0;
         for ( GameMode mode : GameMode.gameModes )
@@ -32,7 +30,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			Settings.allowRandomWorlds = true; // If no custom worlds (are left), always allow random worlds
 		
 		// now set up helper values for where the various "extensible" things end
-		endX = Math.max(Math.max(WorldOption.options.size(), maxGameModeOptions) * 2 + 8, 20);
+		endX = Math.max(Math.max(WorldOption.options.size(), maxGameModeOptions) * 2 + 8, 14);
 		endZ = Math.max(GameMode.gameModes.size() * 3 + 12, 22);
 						
 		startButtonX = endX - 1;
@@ -50,14 +48,12 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		gameModeSelectionClosedOff = GameMode.gameModes.size() < 2 ;
 		worldSelectionClosedOff = WorldOption.options.size() < 2;
 		gameModeOptionsClosedOff = maxGameModeOptions < 2;
-		
-		mustChangeEnvironment = forceChangeEnvironment;
 	}
 	
 	public static int startButtonX, startButtonZ, overrideButtonZ, cancelButtonZ, gameModeButtonX, worldOptionZ, gameModeOptionZ;
 	
 	public static byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
-		colorStartButton = 1 /* orange */, colorOverrideButton = 14 /* red */, colorCancelButton = 13 /* green */;
+		colorStartButton = 1 /* orange */, colorOverrideButton = 1 /* red */, colorCancelButton = 9 /* green */;
 	
 	public static int getGameModeZ(int num) { return 8 + num * 3; }
 	public static int getWorldOptionX(int num) { return 7 + num * 2; }
@@ -78,21 +74,14 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
         return x >= 0 && z >= 0 && x <= endX / 16 && z <= endZ / 16;
     }
     
-	private boolean mustChangeEnvironment = true;
 	public byte[][] generateBlockSections(World world, Random random, int cx, int cz, BiomeGrid biomes)
 	{
-		if ( mustChangeEnvironment )
-		{
-			CraftWorld cw = (CraftWorld)world;
-			cw.setEnvironment(Environment.THE_END);
-			mustChangeEnvironment = false;
-		}
 		return new byte[1][];
 	}
 	
 	public Location getFixedSpawnLocation(World world, Random random)
 	{
-		Location loc = new Location(world, 8.5, 2, startButtonZ + 0.5);
+		Location loc = new Location(world, 8.5, 34, startButtonZ + 0.5);
 		loc.setYaw(0); // if 0 actually works, this isn't needed. But we want them to face -x, at any rate
 		return loc;
 	}
@@ -141,7 +130,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int x = 4; x < gen.worldEndX; x++ )
 				for ( int z = 0; z < 5; z++ )
 				{
-					b = getBlockAbs(chunk, x, 1, z);
+					b = getBlockAbs(chunk, x, 33, z);
 					if ( b != null )
 						b.setType(mainFloor);
 				}
@@ -150,14 +139,14 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int x = 4; x < gen.worldEndX; x++ )
 				for ( int z = 0; z < 5; z++ )
 				{
-					b = getBlockAbs(chunk, x, 7, z);
+					b = getBlockAbs(chunk, x, 39, z);
 					if ( b != null )
 						b.setType(ceiling);
 				}
 			
 			// west wall
 			for ( int z = 1; z < 5; z++ )
-				for ( int y = 2; y < 7; y++ )
+				for ( int y = 34; y < 39; y++ )
 				{
 					b = getBlockAbs(chunk, 4, y, z);
 					if ( b != null )
@@ -166,7 +155,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// east wall
 			for ( int z = 1; z < 5; z++ )
-				for ( int y = 2; y < 7; y++ )
+				for ( int y = 34; y < 39; y++ )
 				{
 					b = getBlockAbs(chunk, gen.worldEndX, y, z);
 					if ( b != null )
@@ -176,7 +165,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			// south wall, if should be closed off
 			if ( gen.worldSelectionClosedOff )
 				for ( int x = 5; x < gen.worldEndX; x++ )
-					for ( int y = 2; y < 7; y++ )
+					for ( int y = 34; y < 39; y++ )
 					{
 						b = getBlockAbs(chunk, x, y, 4);
 						if ( b != null )
@@ -185,7 +174,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// north wall
 			for ( int x = 4; x < gen.worldEndX; x++ )
-				for ( int y = 2; y < 7; y++ )
+				for ( int y = 34; y < 39; y++ )
 				{
 					b = getBlockAbs(chunk, x, y, 0);
 					if ( b != null )
@@ -196,14 +185,14 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int num=0; num < WorldOption.options.size(); num++ )
 			{
 				int worldX = getWorldOptionX(num);
-				b = getBlockAbs(chunk, worldX, 2, 1);
+				b = getBlockAbs(chunk, worldX, 34, 1);
 				if ( b != null )
 				{
 					b.setType(button);
 					b.setData((byte)0x3);
 				}
 				
-				b = getBlockAbs(chunk, worldX, 3, 1);
+				b = getBlockAbs(chunk, worldX, 35, 1);
 				if ( b != null )
 				{
 					b.setType(sign);
@@ -228,7 +217,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					s.update();
 				}
 				
-				b = getBlockAbs(chunk, worldX, 3, 0);
+				b = getBlockAbs(chunk, worldX, 35, 0);
 				if ( b != null )
 				{
 					b.setType(wool);
@@ -245,7 +234,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int x = 0; x < 5; x++ )
 				for ( int z = 4; z < gen.gameModeEndZ; z++ )
 				{
-					b = getBlockAbs(chunk, x, 1, z);
+					b = getBlockAbs(chunk, x, 33, z);
 					if ( b != null )
 						b.setType(mainFloor);
 				}
@@ -254,14 +243,14 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int x = 0; x < 5; x++ )
 				for ( int z = 4; z < gen.gameModeEndZ; z++ )
 				{
-					b = getBlockAbs(chunk, x, 7, z);
+					b = getBlockAbs(chunk, x, 39, z);
 					if ( b != null )
 						b.setType(ceiling);
 				}
 			
 			// north wall
 			for ( int x = 1; x < 5; x++ )
-				for ( int y = 2; y < 7; y++ )
+				for ( int y = 34; y < 39; y++ )
 				{
 					b = getBlockAbs(chunk, x, y, 4);
 					if ( b != null )
@@ -270,7 +259,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// south wall
 			for ( int x = 1; x < 5; x++ )
-				for ( int y = 2; y < 7; y++ )
+				for ( int y = 34; y < 39; y++ )
 				{
 					b = getBlockAbs(chunk, x, y, gen.gameModeEndZ);
 					if ( b != null )
@@ -280,7 +269,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			// east wall, if should be closed off
 			if ( gen.gameModeSelectionClosedOff )
 				for ( int z = 4; z < gen.gameModeEndZ; z++ )
-					for ( int y = 2; y < 7; y++ )
+					for ( int y = 34; y < 39; y++ )
 					{
 						b = getBlockAbs(chunk, 5, y, z);
 						if ( b != null )
@@ -289,7 +278,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// west wall
 			for ( int z = 4; z < gen.gameModeEndZ; z++ )
-				for ( int y = 2; y < 7; y++ )
+				for ( int y = 34; y < 39; y++ )
 				{
 					b = getBlockAbs(chunk, 0, y, z);
 					if ( b != null )
@@ -300,7 +289,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int num=0; num < GameMode.gameModes.size(); num++ )
 			{
 				int modeZ = getGameModeZ(num);
-				b = getBlockAbs(chunk, 1, 3, modeZ);
+				b = getBlockAbs(chunk, 1, 35, modeZ);
 				if ( b != null )
 				{
 					b.setType(button);
@@ -308,7 +297,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				}
 				
 				GameMode gameMode = GameMode.get(num);
-				b = getBlockAbs(chunk, 1, 4, modeZ);
+				b = getBlockAbs(chunk, 1, 36, modeZ);
 				if ( b != null )
 				{
 					b.setType(sign);
@@ -333,7 +322,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					s.update();
 				}
 				
-				b = getBlockAbs(chunk, 0, 3, modeZ);
+				b = getBlockAbs(chunk, 0, 35, modeZ);
 				if ( b != null )
 				{
 					b.setType(wool);
@@ -341,7 +330,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				}
 				
 				// now the game mode DESCRIPTION signs
-				b = getBlockAbs(chunk, 1, 4, modeZ-1);
+				b = getBlockAbs(chunk, 1, 36, modeZ-1);
 				if ( b != null )
 				{
 					b.setType(sign);
@@ -356,7 +345,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					s.update();
 				}
 				
-				b = getBlockAbs(chunk, 1, 3, modeZ-1);
+				b = getBlockAbs(chunk, 1, 35, modeZ-1);
 				if ( b != null )
 				{
 					b.setType(sign);
@@ -371,7 +360,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					s.update();
 				}
 				
-				b = getBlockAbs(chunk, 1, 2, modeZ-1);
+				b = getBlockAbs(chunk, 1, 34, modeZ-1);
 				if ( b != null )
 				{
 					b.setType(sign);
@@ -396,7 +385,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int x=5; x<=gen.endX; x++ )
 				for ( int z=5; z<gen.endZ - 4; z++ )
 				{
-					b = getBlockAbs(chunk, x, 7, z);
+					b = getBlockAbs(chunk, x, 39, z);
 					if ( b != null )
 						b.setType(ceiling);
 				}
@@ -405,7 +394,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int x=5; x<gen.endX; x++ )
 				for ( int z=5; z<7; z++ )
 				{
-					b = getBlockAbs(chunk, x, 1, z);
+					b = getBlockAbs(chunk, x, 33, z);
 					if ( b != null )
 						b.setType(mainFloor);
 				}
@@ -414,7 +403,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int x=5; x<10; x++ )
 				for ( int z=7; z<gen.endZ - 6; z++ )
 				{
-					b = getBlockAbs(chunk, x, 1, z);
+					b = getBlockAbs(chunk, x, 33, z);
 					if ( b != null )
 						b.setType(mainFloor);
 				}
@@ -423,7 +412,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int x=5; x<gen.endX; x++ )
 				for ( int z=gen.endZ - 6; z<gen.endZ - 4; z++ )
 				{
-					b = getBlockAbs(chunk, x, 1, z);
+					b = getBlockAbs(chunk, x, 33, z);
 					if ( b != null )
 						b.setType(mainFloor);
 				}
@@ -431,7 +420,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			// half steps on north
 			for ( int x=10; x<gen.endX; x++ )
 			{
-				b = getBlockAbs(chunk, x, 1, 7);
+				b = getBlockAbs(chunk, x, 33, 7);
 				if ( b != null )
 				{
 					b.setType(slab);
@@ -442,7 +431,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			// half steps on west
 			for ( int z=8; z<gen.endZ - 7; z++ )
 			{
-				b = getBlockAbs(chunk, 10, 1, z);
+				b = getBlockAbs(chunk, 10, 33, z);
 				if ( b != null )
 				{
 					b.setType(slab);
@@ -453,7 +442,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			// half-steps on south
 			for ( int x=10; x<gen.endX; x++ )
 			{
-				b = getBlockAbs(chunk, x, 1, gen.endZ - 7);
+				b = getBlockAbs(chunk, x, 33, gen.endZ - 7);
 				if ( b != null )
 				{
 					b.setType(slab);
@@ -465,14 +454,14 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int x = 11; x <= gen.endX; x ++ )
 				for ( int z = 8; z < gen.endZ - 6; z++ )
 				{
-					b = getBlockAbs(chunk, x, 0, z);
+					b = getBlockAbs(chunk, x, 32, z);
 					if ( b != null )
 						b.setType(loweredFloor);
 				}
 			
 			// any extra wall required on the north
 			for ( int x = gen.worldEndX + 1; x < gen.endX; x ++ )
-				for ( int y = 2; y < 7; y++ )
+				for ( int y = 34; y < 39; y++ )
 				{
 					b = getBlockAbs(chunk, x, y, 4);
 					if ( b != null )
@@ -481,7 +470,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// any extra wall required on the south
 			for ( int x = gen.optionsEndX + 1; x < gen.endX; x ++ )
-				for ( int y = 2; y < 7; y++ )
+				for ( int y = 34; y < 39; y++ )
 				{
 					b = getBlockAbs(chunk, x, y, gen.endZ - 4);
 					if ( b != null )
@@ -490,7 +479,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		
 			// east wall
 			for ( int z = 4; z < gen.endZ - 4; z++ )
-				for ( int y = 1; y < 7; y++ )
+				for ( int y = 33; y < 39; y++ )
 				{
 					b = getBlockAbs(chunk, gen.endX, y, z);
 					if ( b != null )
@@ -505,7 +494,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int x = 4; x < gen.optionsEndX; x++ )
 				for ( int z = gen.endZ - 4; z <= gen.endZ; z++ )
 				{
-					b = getBlockAbs(chunk, x, 1, z);
+					b = getBlockAbs(chunk, x, 33, z);
 					if ( b != null )
 						b.setType(mainFloor);
 				}
@@ -514,14 +503,14 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int x = 4; x < gen.optionsEndX; x++ )
 				for ( int z = gen.endZ - 4; z <= gen.endZ; z++ )
 				{
-					b = getBlockAbs(chunk, x, 7, z);
+					b = getBlockAbs(chunk, x, 39, z);
 					if ( b != null )
 						b.setType(ceiling);
 				}
 			
 			// west wall
 			for ( int z = gen.endZ - 4; z <= gen.endZ; z++ )
-				for ( int y = 2; y < 7; y++ )
+				for ( int y = 34; y < 39; y++ )
 				{
 					b = getBlockAbs(chunk, 4, y, z);
 					if ( b != null )
@@ -530,7 +519,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// east wall
 			for ( int z = gen.endZ - 4; z <= gen.endZ; z++ )
-				for ( int y = 2; y < 7; y++ )
+				for ( int y = 34; y < 39; y++ )
 				{
 					b = getBlockAbs(chunk, gen.optionsEndX, y, z);
 					if ( b != null )
@@ -540,7 +529,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			// north wall, if should be closed off
 			if ( gen.gameModeOptionsClosedOff )
 				for ( int x = 5; x < gen.optionsEndX; x++ )
-					for ( int y = 2; y < 7; y++ )
+					for ( int y = 34; y < 39; y++ )
 					{
 						b = getBlockAbs(chunk, x, y, gen.endZ - 4);
 						if ( b != null )
@@ -549,7 +538,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// south wall
 			for ( int x = 4; x < gen.optionsEndX; x++ )
-				for ( int y = 2; y < 7; y++ )
+				for ( int y = 34; y < 39; y++ )
 				{
 					b = getBlockAbs(chunk, x, y, gen.endZ);
 					if ( b != null )
@@ -560,14 +549,14 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int num=0; num < gen.maxGameModeOptions; num++ )
 			{
 				int optionX = getGameModeOptionX(num);
-				b = getBlockAbs(chunk, optionX, 2, gen.endZ - 1);
+				b = getBlockAbs(chunk, optionX, 34, gen.endZ - 1);
 				if ( b != null )
 				{
 					b.setType(button);
 					b.setData((byte)0x4);
 				}
 				
-				b = getBlockAbs(chunk, optionX, 3, gen.endZ - 1);
+				b = getBlockAbs(chunk, optionX, 35, gen.endZ - 1);
 				if ( b != null )
 				{
 					b.setType(sign);
@@ -578,7 +567,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					s.update();
 				}
 				
-				b = getBlockAbs(chunk, optionX, 3, gen.endZ);
+				b = getBlockAbs(chunk, optionX, 35, gen.endZ);
 				if ( b != null )
 				{
 					b.setType(wool);

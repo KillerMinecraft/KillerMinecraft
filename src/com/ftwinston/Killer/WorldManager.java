@@ -41,11 +41,6 @@ public class WorldManager
 			
 			seedGen = new Random();
 			bindRegionFiles();
-
-			// try to find the main world, based on the config-provided name
-/*			mainWorld = getWorld(Settings.killerWorldName, Environment.NORMAL, true);
-			netherWorld = getWorld(Settings.killerWorldName + "_nether", Environment.NETHER, true);
-			endWorld = getWorld(Settings.killerWorldName + "_the_end", Environment.THE_END, false);*/
 		}
 		
 		public void onDisable()
@@ -165,7 +160,7 @@ public class WorldManager
 					}
 					catch ( IOException ex )
 					{
-					}
+					}			
 				}
 	        });
 		}
@@ -206,9 +201,9 @@ public class WorldManager
 				@Override
 				public void run() {
 			        WorldCreator wc = new WorldCreator(name);
-		    		StagingWorldGenerator gen = new StagingWorldGenerator(false);
+		    		StagingWorldGenerator gen = new StagingWorldGenerator();
 			        wc.generator(gen);
-					wc.environment(Environment.THE_END);
+					wc.environment(Environment.NORMAL);
 					World newWorld = CreateWorld(wc, true);
 					
 					stagingWorldCreated(newWorld);
@@ -227,7 +222,7 @@ public class WorldManager
 		
 		public Location getStagingWorldSpawnPoint()
 		{
-			return new Location(stagingWorld, 8.5, 2, StagingWorldGenerator.startButtonZ + 0.5, 90, 0);
+			return new Location(stagingWorld, 8.5, 34, StagingWorldGenerator.startButtonZ + 0.5, 90, 0);
 		}
 		
 		public World CreateWorld(WorldCreator wc, boolean loadChunks)
@@ -457,7 +452,7 @@ public class WorldManager
 				
 				// update all the color blocks
 				for ( int i=0; i<GameMode.gameModes.size(); i++ )
-					stagingWorld.getBlockAt(x-1, 3, StagingWorldGenerator.getGameModeZ(i)).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+					stagingWorld.getBlockAt(x-1, 35, StagingWorldGenerator.getGameModeZ(i)).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
 				
 				GameMode gameMode = GameMode.get(num);
 				if ( plugin.setGameMode(gameMode) )
@@ -472,7 +467,7 @@ public class WorldManager
 				
 				// update all the color blocks
 				for ( int i=0; i<WorldOption.options.size(); i++ )
-					stagingWorld.getBlockAt(StagingWorldGenerator.getWorldOptionX(i), 3, z-1).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+					stagingWorld.getBlockAt(StagingWorldGenerator.getWorldOptionX(i), 35, z-1).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
 				
 				WorldOption world = WorldOption.get(num);
 				if ( plugin.setWorldOption(world) )	
@@ -488,16 +483,16 @@ public class WorldManager
 				/*
 				// update all the color blocks
 				for ( int i=0; i<plugin.getGameMode().options.size(); i++ )
-					stagingWorld.getBlockAt(StagingWorldGenerator.getGameModeOptionX(i), 3, z-1).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+					stagingWorld.getBlockAt(StagingWorldGenerator.getGameModeOptionX(i), 35, z-1).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
 				*/
 			}
 		}
 		
 		public void showStartButton(boolean show)
 		{
-			Block button = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 2, StagingWorldGenerator.startButtonZ);
-			Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 3, StagingWorldGenerator.startButtonZ);
-			Block back = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 2, StagingWorldGenerator.startButtonZ);
+			Block button = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 34, StagingWorldGenerator.startButtonZ);
+			Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 35, StagingWorldGenerator.startButtonZ);
+			Block back = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 34, StagingWorldGenerator.startButtonZ);
 			
 			if ( show )
 			{
@@ -524,14 +519,14 @@ public class WorldManager
 		
 		public void showConfirmButtons(boolean show)
 		{
-			Block bOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 2, StagingWorldGenerator.overrideButtonZ);
-			Block bCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 2, StagingWorldGenerator.cancelButtonZ);
+			Block bOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 34, StagingWorldGenerator.overrideButtonZ);
+			Block bCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 34, StagingWorldGenerator.cancelButtonZ);
 			
-			Block sOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 3, StagingWorldGenerator.overrideButtonZ);
-			Block sCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 3, StagingWorldGenerator.cancelButtonZ);
+			Block sOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 35, StagingWorldGenerator.overrideButtonZ);
+			Block sCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 35, StagingWorldGenerator.cancelButtonZ);
 			
-			Block backOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 2, StagingWorldGenerator.overrideButtonZ);
-			Block backCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 2, StagingWorldGenerator.cancelButtonZ);
+			Block backOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 34, StagingWorldGenerator.overrideButtonZ);
+			Block backCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 34, StagingWorldGenerator.cancelButtonZ);
 			
 			if ( show )
 			{
