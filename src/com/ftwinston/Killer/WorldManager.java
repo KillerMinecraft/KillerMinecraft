@@ -227,9 +227,8 @@ public class WorldManager
 		
 		public Location getStagingWorldSpawnPoint()
 		{
-			return new Location(stagingWorld, 8.5, 2, StagingWorldGenerator.startButtonZ + 0.5);
+			return new Location(stagingWorld, 8.5, 2, StagingWorldGenerator.startButtonZ + 0.5, 90, 0);
 		}
-		
 		
 		public World CreateWorld(WorldCreator wc, boolean loadChunks)
 		{

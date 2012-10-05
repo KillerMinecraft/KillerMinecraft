@@ -62,6 +62,11 @@ public class EventListener implements Listener
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
+		
+		if ( plugin.getGameState().usesGameWorlds )
+			event.setRespawnLocation(plugin.worldManager.mainWorld.getSpawnLocation());
+		else
+			event.setRespawnLocation(plugin.worldManager.getStagingWorldSpawnPoint());
 	
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     	{
