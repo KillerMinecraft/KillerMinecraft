@@ -118,7 +118,7 @@ public class EventListener implements Listener
 	@EventHandler
 	public void onPlayerPortal(PlayerPortalEvent event)
 	{// we're kinda doing the dirty work in making nether portals work, here
-		World fromWorld = event.getTo().getWorld();
+		World fromWorld = event.getFrom().getWorld();
 		World toWorld;
 		double blockRatio;
 		
