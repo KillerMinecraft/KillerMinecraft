@@ -86,4 +86,5 @@ public abstract class WorldOption
 	protected Killer plugin;
 	
 	public abstract void create();
+	public abstract boolean isFixedWorld();
 }

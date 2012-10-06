@@ -19,6 +19,8 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 		super(name);
 	}
 	
+	public boolean isFixedWorld() { return true; }
+	
 	public void create()
 	{		
 		File sourceDir = new File(plugin.getServer().getWorldContainer() + File.separator + name);

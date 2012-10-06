@@ -9,8 +9,10 @@ public class DefaultWorld extends com.ftwinston.Killer.WorldOption
 {
 	public DefaultWorld()
 	{
-		super("Normal (Random)");
+		super("Normal");
 	}
+	
+	public boolean isFixedWorld() { return false; }
 	
 	public void create()
 	{

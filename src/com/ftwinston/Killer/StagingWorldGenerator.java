@@ -198,9 +198,14 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(sign);
 					b.setData((byte)0x3);
 					Sign s = (Sign)b.getState();
-					s.setLine(0, "§fWorld:");
+					WorldOption option = WorldOption.get(num);
 					
-					String name = WorldOption.get(num).getName().replace('_', ' ');
+					if ( option.isFixedWorld() )
+						s.setLine(0, "§fCustom world:");
+					else
+						s.setLine(0, "§fRandom world:");
+					
+					String name = option.getName().replace('_', ' ');
 					if ( name.length() > 12 )
 					{
 						String[] words = name.split(" ");
@@ -213,7 +218,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						}
 					}
 					else
-						s.setLine(1, "§f" + name);
+						s.setLine(2, "§f" + name);
 					s.update();
 				}
 				
