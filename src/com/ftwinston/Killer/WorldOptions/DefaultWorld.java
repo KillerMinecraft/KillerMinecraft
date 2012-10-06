@@ -7,9 +7,9 @@ import com.ftwinston.Killer.Settings;
 
 public class DefaultWorld extends com.ftwinston.Killer.WorldOption
 {
-	public DefaultWorld(String name)
+	public DefaultWorld()
 	{
-		super(name);
+		super("Normal (Random)");
 	}
 	
 	public void create()

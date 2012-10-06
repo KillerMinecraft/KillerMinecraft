@@ -31,7 +31,7 @@ public abstract class WorldOption
 		
 		if ( Settings.allowRandomWorlds )
 		{
-			options.add(new DefaultWorld("Default Normal"));
+			options.add(new DefaultWorld());
 		}
 		
 		for ( String name : Settings.customWorldNames )
