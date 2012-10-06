@@ -522,8 +522,9 @@ public class WorldManager
 			Block bOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 34, StagingWorldGenerator.overrideButtonZ);
 			Block bCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 34, StagingWorldGenerator.cancelButtonZ);
 			
-			Block sOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 35, StagingWorldGenerator.overrideButtonZ);
-			Block sCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 35, StagingWorldGenerator.cancelButtonZ);
+			Block sOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 34, StagingWorldGenerator.overrideButtonZ+1);
+			Block sCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 34, StagingWorldGenerator.cancelButtonZ-1);
+			Block sInfo = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 35, StagingWorldGenerator.startButtonZ);
 			
 			Block backOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 34, StagingWorldGenerator.overrideButtonZ);
 			Block backCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 34, StagingWorldGenerator.cancelButtonZ);
@@ -543,13 +544,23 @@ public class WorldManager
 				s.setLine(2, "start the");
 				s.setLine(3, "game anyway");
 				s.update();
-				
+
+				sCancel.setData((byte)0x4); // because it still has the "data" value from the start button, which is different 
 				sCancel.setType(Material.WALL_SIGN);
 				sCancel.setData((byte)0x4);
 				s = (Sign)sCancel.getState();
 				s.setLine(1, "Push to");
 				s.setLine(2, "cancel this");
 				s.setLine(3, "game mode");
+				s.update();
+				
+				sInfo.setType(Material.WALL_SIGN);
+				sInfo.setData((byte)0x4);
+				s = (Sign)sInfo.getState();
+				s.setLine(0, "This mode needs");
+				s.setLine(1, "at least " + plugin.getGameMode().absMinPlayers());
+				s.setLine(2, "players. You");
+				s.setLine(3, "only have " + plugin.getOnlinePlayers().size() + ".");
 				s.update();
 				
 				backOverride.setType(Material.WOOL);
@@ -564,6 +575,7 @@ public class WorldManager
 				bCancel.setType(Material.AIR);
 				sOverride.setType(Material.AIR);
 				sCancel.setType(Material.AIR);
+				sInfo.setType(Material.AIR);
 				backOverride.setType(Material.SMOOTH_BRICK);
 				backCancel.setType(Material.SMOOTH_BRICK);
 			}

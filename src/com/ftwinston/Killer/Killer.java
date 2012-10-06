@@ -86,12 +86,11 @@ public class Killer extends JavaPlugin
 		}
 		else if ( newState == GameState.stagingWorldReady )
 		{
-			worldManager.showStartButton(true);
 			worldManager.showConfirmButtons(false);
+			worldManager.showStartButton(true);
 		}
 		else if ( newState == GameState.stagingWorldConfirm )
 		{
-			broadcastMessage(getGameMode().getName() + " requires at least " + getGameMode().absMinPlayers() + " players.\nYou only have " + getOnlinePlayers().size() + ".\nIf you want to start anyway, push the confirm button.");
 			worldManager.showStartButton(false);
 			worldManager.showConfirmButtons(true);
 		}
