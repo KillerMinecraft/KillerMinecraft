@@ -53,7 +53,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	public static int startButtonX, startButtonZ, overrideButtonZ, cancelButtonZ, gameModeButtonX, worldOptionZ, gameModeOptionZ;
 	
 	public static byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
-		colorStartButton = 1 /* orange */, colorOverrideButton = 1 /* red */, colorCancelButton = 9 /* green */;
+		colorStartButton = 4 /* yellow */, colorOverrideButton = 1 /* red */, colorCancelButton = 9 /* green */;
 	
 	public static int getGameModeZ(int num) { return 8 + num * 3; }
 	public static int getWorldOptionX(int num) { return 7 + num * 2; }
