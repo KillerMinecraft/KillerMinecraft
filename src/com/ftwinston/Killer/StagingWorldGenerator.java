@@ -200,7 +200,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					Sign s = (Sign)b.getState();
 					s.setLine(0, "§fWorld:");
 					
-					String name = WorldOption.get(num).getName();
+					String name = WorldOption.get(num).getName().replace('_', ' ');
 					if ( name.length() > 12 )
 					{
 						String[] words = name.split(" ");
