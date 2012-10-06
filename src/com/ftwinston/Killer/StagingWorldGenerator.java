@@ -185,14 +185,14 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int num=0; num < WorldOption.options.size(); num++ )
 			{
 				int worldX = getWorldOptionX(num);
-				b = getBlockAbs(chunk, worldX, 34, 1);
+				b = getBlockAbs(chunk, worldX, 35, 1);
 				if ( b != null )
 				{
 					b.setType(button);
 					b.setData((byte)0x3);
 				}
 				
-				b = getBlockAbs(chunk, worldX, 35, 1);
+				b = getBlockAbs(chunk, worldX, 36, 1);
 				if ( b != null )
 				{
 					b.setType(sign);
@@ -549,14 +549,14 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			for ( int num=0; num < gen.maxGameModeOptions; num++ )
 			{
 				int optionX = getGameModeOptionX(num);
-				b = getBlockAbs(chunk, optionX, 34, gen.endZ - 1);
+				b = getBlockAbs(chunk, optionX, 35, gen.endZ - 1);
 				if ( b != null )
 				{
 					b.setType(button);
 					b.setData((byte)0x4);
 				}
 				
-				b = getBlockAbs(chunk, optionX, 35, gen.endZ - 1);
+				b = getBlockAbs(chunk, optionX, 36, gen.endZ - 1);
 				if ( b != null )
 				{
 					b.setType(sign);

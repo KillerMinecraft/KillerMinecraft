@@ -540,18 +540,17 @@ public class WorldManager
 				sOverride.setType(Material.WALL_SIGN);
 				sOverride.setData((byte)0x4);
 				Sign s = (Sign)sOverride.getState();
-				s.setLine(1, "Push to");
-				s.setLine(2, "start the");
-				s.setLine(3, "game anyway");
+				s.setLine(1, "Push to start");
+				s.setLine(2, "the game anyway");
 				s.update();
 
 				sCancel.setData((byte)0x4); // because it still has the "data" value from the start button, which is different 
 				sCancel.setType(Material.WALL_SIGN);
 				sCancel.setData((byte)0x4);
 				s = (Sign)sCancel.getState();
-				s.setLine(1, "Push to");
-				s.setLine(2, "cancel this");
-				s.setLine(3, "game mode");
+				s.setLine(1, "Push to cancel");
+				s.setLine(2, "and choose");
+				s.setLine(3, "something else");
 				s.update();
 				
 				sInfo.setType(Material.WALL_SIGN);
