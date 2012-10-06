@@ -14,7 +14,11 @@ public class DefaultWorld extends com.ftwinston.Killer.WorldOption
 	
 	public void create()
 	{
-		plugin.worldManager.mainWorld = plugin.getServer().createWorld(new WorldCreator(Settings.killerWorldName).environment(Environment.NORMAL));
+		WorldCreator wc = new WorldCreator(Settings.killerWorldName).environment(Environment.NORMAL);
+		wc.seed(getSeed());
+		plugin.worldManager.mainWorld = plugin.getServer().createWorld(wc);
+		
+		// don't use the custom seed for the nether... ?
 		plugin.worldManager.netherWorld = plugin.getServer().createWorld(new WorldCreator(Settings.killerWorldName + "_nether").environment(Environment.NETHER));
 	}
 }

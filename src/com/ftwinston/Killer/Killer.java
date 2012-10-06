@@ -455,6 +455,22 @@ public class Killer extends JavaPlugin
 				
 				endGame(sender);
 			}
+			else if ( args[0].equalsIgnoreCase("seed") )
+			{
+				if ( args.length < 2 )
+				{
+					WorldOption.setCustomSeed(null);
+					broadcastMessage(sender.getName() + " cleared the seed");
+					return true;
+				}
+
+				String seed = args[1];
+				for ( int i=2; i<args.length; i++ )
+					seed += " " + args[i];
+				
+				WorldOption.setCustomSeed(seed);
+				broadcastMessage(sender.getName() + " set the seed to: " + seed);
+			}		
 			else
 				sender.sendMessage("Invalid parameter: " + args[0] + " - type /killer to list allowed parameters");
 			
