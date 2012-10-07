@@ -198,11 +198,17 @@ public class Killer extends JavaPlugin
 		getServer().addRecipe(dispenser);
 		allRecipes.add(dispenser);
 		
+		// eye of ender recipe for use in finding nether fortresses. Replacing blaze powder with spider eye!
+		ShapelessRecipe recipe = new ShapelessRecipe(new ItemStack(Material.EYE_OF_ENDER, 1));
+		recipe.addIngredient(Material.ENDER_PEARL);
+		recipe.addIngredient(Material.SPIDER_EYE);
+		getServer().addRecipe(recipe);
+		allRecipes.add(recipe);
 		
 		short zero = 0;
 		
-		ShapelessRecipe recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGGS, 1, zero, (byte)EntityType.SPIDER.getTypeId()));
-		recipe.addIngredient(Material.FEATHER);
+		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGGS, 1, zero, (byte)EntityType.SPIDER.getTypeId()));
+		recipe.addIngredient(Material.STRING);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		allRecipes.add(recipe);
@@ -220,14 +226,7 @@ public class Killer extends JavaPlugin
 		allRecipes.add(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SKELETON.getTypeId()));
-		//recipe.addIngredient(3, Material.INK_SACK, 15);
 		recipe.addIngredient(Material.BONE);
-		recipe.addIngredient(Material.IRON_INGOT);
-		getServer().addRecipe(recipe);
-		allRecipes.add(recipe);
-		
-		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.ENDERMAN.getTypeId()));
-		recipe.addIngredient(Material.ENDER_PEARL);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		allRecipes.add(recipe);
