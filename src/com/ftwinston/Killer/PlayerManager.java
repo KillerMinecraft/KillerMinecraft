@@ -428,6 +428,12 @@ public class PlayerManager
 		Player player = plugin.getServer().getPlayerExact(playerName);
 		Info info = playerInfo.get(playerName);
 		
+		if ( plugin.getOnlinePlayers().size() == 0 )
+		{// no one still playing, so end the game
+			plugin.endGame(null);
+			return;
+		}
+		
 		if ( player == null || !player.isOnline() )
 		{
 			if ( info != null )
@@ -445,11 +451,6 @@ public class PlayerManager
 			return;
 		}
 		
-		if ( plugin.getOnlinePlayers().size() == 0 )
-		{// no one still playing, so end the game
-			plugin.endGame(null);
-			return;
-		}
 		
 		if ( numKillersAssigned() == 0 )
 		{// game hasn't started yet, just respawn them normally
