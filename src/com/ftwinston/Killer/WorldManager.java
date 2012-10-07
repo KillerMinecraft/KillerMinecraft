@@ -12,7 +12,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import net.minecraft.server.ChunkPosition;
+import net.minecraft.server.ChunkProviderHell;
+import net.minecraft.server.ChunkProviderServer;
+import net.minecraft.server.IChunkProvider;
 import net.minecraft.server.RegionFile;
+import net.minecraft.server.WorldGenNether;
+import net.minecraft.server.WorldServer;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -23,6 +29,8 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.generator.NetherChunkGenerator;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -591,5 +599,53 @@ public class WorldManager
 			// run whatever task was passed in
 			if ( runWhenDone != null )
 				runWhenDone.run();
+		}
+		
+		public Location getNearestNetherFortress(int x, int y, int z)
+		{
+			if ( netherWorld == null )
+				return null;
+			
+			WorldServer world = ((CraftWorld)netherWorld).getHandle();
+			ChunkProviderServer cps = (ChunkProviderServer)world.F();
+			
+			IChunkProvider chunkProvider;
+			try
+	        {
+	        	Field field = net.minecraft.server.ChunkProviderServer.class.getDeclaredField("chunkProvider");
+	        	field.setAccessible(true);
+	        	chunkProvider = (IChunkProvider)field.get(cps);
+	        	field.setAccessible(false);
+			}
+	        catch (Throwable t)
+	        {
+				return null;
+			}
+			
+			if ( chunkProvider == null )
+			{
+				return null;
+			}
+			
+			NetherChunkGenerator ncg = (NetherChunkGenerator)chunkProvider;
+			ChunkProviderHell hellCP;
+			try
+	        {
+	        	Field field = org.bukkit.craftbukkit.generator.NormalChunkGenerator.class.getDeclaredField("provider");
+	        	field.setAccessible(true);
+	        	hellCP = (ChunkProviderHell)field.get(ncg);
+	        	field.setAccessible(false);
+			}
+	        catch (Throwable t)
+	        {
+				return null;
+			}
+			
+			WorldGenNether fortressGenerator = (WorldGenNether)hellCP.c;
+			ChunkPosition pos = fortressGenerator.getNearestGeneratedFeature(world, x, y, z);
+			if ( pos == null )
+				return null; // this just means there isn't one nearby
+			
+			return new Location(netherWorld, pos.x, pos.y, pos.z);
 		}
 }

@@ -468,6 +468,19 @@ public class Killer extends JavaPlugin
 				
 				WorldOption.setCustomSeed(seed);
 				broadcastMessage(sender.getName() + " set the seed to: " + seed);
+			}	
+			else if ( args[0].equalsIgnoreCase("seek") )
+			{
+				if ( player == null )
+					return true;
+				
+				Location loc = player.getLocation();
+				loc = worldManager.getNearestNetherFortress(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+				
+				if ( loc == null )
+					player.sendMessage("No nether fortresses nearby");
+				else
+					player.sendMessage("Nearest nether fortress is at " + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
 			}
 			else
 				sender.sendMessage("Invalid parameter: " + args[0] + " - type /killer to list allowed parameters");
