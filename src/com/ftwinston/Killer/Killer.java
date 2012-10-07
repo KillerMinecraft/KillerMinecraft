@@ -140,9 +140,7 @@ public class Killer extends JavaPlugin
 	private WorldOption worldOption = null;
 	public WorldOption getWorldOption() { return worldOption; }
 	public boolean setWorldOption(WorldOption w) { worldOption = w; return gameMode != null && worldOption != null; }
-	
-	private boolean restarting;
-	
+		
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
 		return new StagingWorldGenerator();
@@ -151,7 +149,6 @@ public class Killer extends JavaPlugin
 	public void onEnable()
 	{
         instance = this;
-        restarting = false;
         
         Settings.setup(this);
         GameMode.setup(this);
@@ -430,30 +427,31 @@ public class Killer extends JavaPlugin
 			
 			if ( args[0].equalsIgnoreCase("add") )
 			{
-				playerManager.assignKillers(sender);
+				if ( getGameState().usesGameWorlds )
+					playerManager.assignKillers(sender);
 			}
 			else if ( args[0].equalsIgnoreCase("clear") )
 			{
-				playerManager.clearKillers(sender);
+				if ( getGameState().usesGameWorlds )
+					playerManager.clearKillers(sender);
 			}
 			else if ( args[0].equalsIgnoreCase("reallocate") )
 			{
-				playerManager.clearKillers(sender);
-				playerManager.assignKillers(sender);
+				if ( getGameState().usesGameWorlds )
+				{
+					playerManager.clearKillers(sender);
+					playerManager.assignKillers(sender);
+				}
 			}
 			else if ( args[0].equalsIgnoreCase("restart") )
 			{
-				if ( restarting )
-					return true;
-				
-				restartGame(sender);
+				if ( getGameState().usesGameWorlds )
+					restartGame(sender);
 			}
 			else if ( args[0].equalsIgnoreCase("end") )
 			{
-				if ( restarting )
-					return true;
-				
-				endGame(sender);
+				if ( getGameState().usesGameWorlds )
+					endGame(sender);
 			}
 			else if ( args[0].equalsIgnoreCase("seed") )
 			{
@@ -470,7 +468,7 @@ public class Killer extends JavaPlugin
 				
 				WorldOption.setCustomSeed(seed);
 				broadcastMessage(sender.getName() + " set the seed to: " + seed);
-			}		
+			}
 			else
 				sender.sendMessage("Invalid parameter: " + args[0] + " - type /killer to list allowed parameters");
 			
@@ -574,10 +572,6 @@ public class Killer extends JavaPlugin
 	
 	public void endGame(CommandSender actionedBy)
 	{
-		if ( restarting )
-			return;
-
-		restarting = true;
 		if ( actionedBy != null )
 			broadcastMessage(actionedBy.getName() + " ended the game. You've been moved to the staging world to allow you to set up a new one...");
 		else
@@ -588,9 +582,6 @@ public class Killer extends JavaPlugin
 	
 	public void restartGame(CommandSender actionedBy)
 	{
-		if ( restarting )
-			return;
-		
 		if ( actionedBy != null )
 			broadcastMessage(actionedBy.getName() + " is restarting the game...");
 		else
