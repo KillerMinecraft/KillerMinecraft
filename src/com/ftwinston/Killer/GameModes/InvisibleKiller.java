@@ -160,7 +160,7 @@ public class InvisibleKiller extends GameMode
 	public boolean immediateKillerAssignment() { return true; }
 	
 	@Override
-	public int getNumHelpMessages(boolean forKiller) { return 6; }
+	public int getNumHelpMessages(boolean forKiller) { return 8; }
 	
 	@Override
 	public String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete)
@@ -198,6 +198,16 @@ public class InvisibleKiller extends GameMode
 				
 				message += " to the plinth near the spawn.";
 				return message;
+				
+			case 5:
+				return "Eyes of ender will help you find fortresses in the nether (to get blaze rods).\nThey can be crafted from an ender pearl and a spider eye.";
+			
+			case 6:
+				return "Several monster eggs can be crafted by combining one of their dropped items with an iron ingot.";
+
+			case 7:
+				return "Dispensers can be crafted using a sapling instead of a bow. These work well with monster eggs.";
+				
 			default:
 				return "";
 		}

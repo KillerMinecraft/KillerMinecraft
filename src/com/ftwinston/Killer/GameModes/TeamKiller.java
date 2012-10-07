@@ -71,7 +71,7 @@ public class TeamKiller extends GameMode
 	public boolean immediateKillerAssignment() { return true; }
 	
 	@Override
-	public int getNumHelpMessages(boolean forKiller) { return 3; }
+	public int getNumHelpMessages(boolean forKiller) { return 6; }
 	
 	@Override
 	public String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete)
@@ -97,8 +97,19 @@ public class TeamKiller extends GameMode
 				
 				message += " to the plinth near the spawn, or to kill the other team.";
 				return message;
+			
 			case 2:
 				return "If a team are all killed, the other team wins.";
+				
+			case 3:
+				return "Eyes of ender will help you find fortresses in the nether (to get blaze rods).\nThey can be crafted from an ender pearl and a spider eye.";
+			
+			case 4:
+				return "Several monster eggs can be crafted by combining one of their dropped items with an iron ingot.";
+
+			case 5:
+				return "Dispensers can be crafted using a sapling instead of a bow. These work well with monster eggs.";
+				
 			default:
 				return "";
 		}
