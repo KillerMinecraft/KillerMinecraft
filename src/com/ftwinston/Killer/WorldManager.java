@@ -15,6 +15,8 @@ import java.util.Random;
 import net.minecraft.server.ChunkPosition;
 import net.minecraft.server.ChunkProviderHell;
 import net.minecraft.server.ChunkProviderServer;
+import net.minecraft.server.EntityEnderSignal;
+import net.minecraft.server.EntityHuman;
 import net.minecraft.server.IChunkProvider;
 import net.minecraft.server.RegionFile;
 import net.minecraft.server.WorldGenNether;
@@ -30,6 +32,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.generator.NetherChunkGenerator;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -601,10 +604,10 @@ public class WorldManager
 				runWhenDone.run();
 		}
 		
-		public Location getNearestNetherFortress(int x, int y, int z)
+		public boolean seekNearestNetherFortress(Player player)
 		{
 			if ( netherWorld == null )
-				return null;
+				return false;
 			
 			WorldServer world = ((CraftWorld)netherWorld).getHandle();
 			ChunkProviderServer cps = (ChunkProviderServer)world.F();
@@ -619,13 +622,11 @@ public class WorldManager
 			}
 	        catch (Throwable t)
 	        {
-				return null;
+				return false;
 			}
 			
 			if ( chunkProvider == null )
-			{
-				return null;
-			}
+				return false;
 			
 			NetherChunkGenerator ncg = (NetherChunkGenerator)chunkProvider;
 			ChunkProviderHell hellCP;
@@ -638,14 +639,24 @@ public class WorldManager
 			}
 	        catch (Throwable t)
 	        {
-				return null;
+				return false;
 			}
 			
-			WorldGenNether fortressGenerator = (WorldGenNether)hellCP.c;
-			ChunkPosition pos = fortressGenerator.getNearestGeneratedFeature(world, x, y, z);
-			if ( pos == null )
-				return null; // this just means there isn't one nearby
+			Location playerLoc = player.getLocation();
 			
-			return new Location(netherWorld, pos.x, pos.y, pos.z);
+			WorldGenNether fortressGenerator = (WorldGenNether)hellCP.c;
+			ChunkPosition pos = fortressGenerator.getNearestGeneratedFeature(world, playerLoc.getBlockX(), playerLoc.getBlockY(), playerLoc.getBlockZ());
+			if ( pos == null )
+				return false; // this just means there isn't one nearby
+			
+			EntityEnderSignal entityendersignal = new EntityEnderSignal(world, playerLoc.getX(), playerLoc.getY() + player.getEyeHeight(), playerLoc.getZ());
+
+            entityendersignal.a((double) pos.x, pos.y, (double) pos.z);
+            world.addEntity(entityendersignal);
+            world.makeSound(((CraftPlayer)player).getHandle(), "random.bow", 0.5F, 0.4F /*/ (d.nextFloat() * 0.4F + 0.8F)*/);
+            world.a((EntityHuman) null, 1002, playerLoc.getBlockX(), playerLoc.getBlockY(), playerLoc.getBlockZ(), 0);
+			
+            //player.sendMessage("Nearest nether fortress is at " + pos.x + ", " + pos.y + ", " + pos.z);
+			return true;
 		}
 }

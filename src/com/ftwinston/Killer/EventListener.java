@@ -293,6 +293,17 @@ public class EventListener implements Listener
     		
     		return;
     	}
+    	
+    	if ( event.getPlayer().getWorld() == plugin.worldManager.netherWorld && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
+    	{
+			if ( !plugin.worldManager.seekNearestNetherFortress(event.getPlayer()) )
+				event.getPlayer().sendMessage("No nether fortresses nearby");
+			else
+				event.getPlayer().getItemInHand().setAmount(event.getPlayer().getItemInHand().getAmount() - 1);				
+    		
+    		event.setCancelled(true);
+    		return;
+    	}
 
     	if(event.isCancelled())
     		return;
