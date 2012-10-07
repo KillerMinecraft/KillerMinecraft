@@ -649,7 +649,7 @@ public class WorldManager
 			if ( pos == null )
 				return false; // this just means there isn't one nearby
 			
-			EntityEnderSignal entityendersignal = new EntityEnderSignal(world, playerLoc.getX(), playerLoc.getY() + player.getEyeHeight(), playerLoc.getZ());
+			EntityEnderSignal entityendersignal = new EntityEnderSignal(world, playerLoc.getX(), playerLoc.getY() + player.getEyeHeight() - 0.2, playerLoc.getZ());
 
             entityendersignal.a((double) pos.x, pos.y, (double) pos.z);
             world.addEntity(entityendersignal);
