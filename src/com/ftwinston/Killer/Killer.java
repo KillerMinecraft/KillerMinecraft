@@ -418,9 +418,9 @@ public class Killer extends JavaPlugin
 			if ( args.length == 0 )
 			{
 				if ( !stagingWorldIsServerDefault && player != null )
-					sender.sendMessage("Usage: /killer join, /killer quit, /killer restart, /killer end, /killer add, /killer clear, /killer reallocate");
+					sender.sendMessage("Usage: /killer join, /killer quit, /killer restart, /killer end, /killer add, /killer clear");
 				else
-					sender.sendMessage("Usage: /killer restart, /killer end, /killer add, /killer clear, /killer reallocate");
+					sender.sendMessage("Usage: /killer restart, /killer end, /killer add, /killer clear");
 				return true;
 			}
 			
@@ -433,14 +433,6 @@ public class Killer extends JavaPlugin
 			{
 				if ( getGameState().usesGameWorlds )
 					playerManager.clearKillers(sender);
-			}
-			else if ( args[0].equalsIgnoreCase("reallocate") )
-			{
-				if ( getGameState().usesGameWorlds )
-				{
-					playerManager.clearKillers(sender);
-					playerManager.assignKillers(sender);
-				}
 			}
 			else if ( args[0].equalsIgnoreCase("restart") )
 			{
