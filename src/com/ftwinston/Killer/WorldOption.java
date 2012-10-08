@@ -45,17 +45,6 @@ public abstract class WorldOption
 		if ( options.size() == 1 )
 			killer.setWorldOption(options.get(0));
 	}
-
-	private static String customSeed = null;
-	public static void setCustomSeed(String seed)
-	{
-		customSeed = seed;
-	}
-	
-	protected long getSeed()
-	{
-		return WorldManager.getSeedFromString(customSeed);
-	}
 	
 	protected WorldOption(String name)
 	{

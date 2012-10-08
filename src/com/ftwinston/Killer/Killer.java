@@ -449,22 +449,6 @@ public class Killer extends JavaPlugin
 				if ( getGameState().usesGameWorlds )
 					endGame(sender);
 			}
-			else if ( firstParam.equals("seed") )
-			{
-				if ( args.length < 2 )
-				{
-					WorldOption.setCustomSeed(null);
-					broadcastMessage(sender.getName() + " cleared the seed");
-					return true;
-				}
-
-				String seed = args[1];
-				for ( int i=2; i<args.length; i++ )
-					seed += " " + args[i];
-				
-				WorldOption.setCustomSeed(seed);
-				broadcastMessage(sender.getName() + " set the seed to: " + seed);
-			}
 			else if ( firstParam.equals("world") )
 			{
 				if ( args.length < 3 )
