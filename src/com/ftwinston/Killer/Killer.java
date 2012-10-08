@@ -368,39 +368,43 @@ public class Killer extends JavaPlugin
 			// ONLY IF the staging world isn't the server default.
 			if ( !stagingWorldIsServerDefault )
 			{
-				if ( args[0].equalsIgnoreCase("join") )
+				if ( args.length > 0 )
 				{
-					if ( player == null )
+					String firstParam = args[0].toLowerCase();
+					if ( firstParam.equals("join") )
 					{
-						sender.sendMessage("Only players can run this command");
+						if ( player == null )
+						{
+							sender.sendMessage("Only players can run this command");
+							return true;
+						}
+						if ( isGameWorld(player.getWorld()) )
+						{
+							sender.sendMessage("You are already part of the Killer game, you can't join again!");
+							return true;
+						}
+						
+						playerManager.movePlayerIntoKillerGame(player);
 						return true;
 					}
-					if ( isGameWorld(player.getWorld()) )
+					else if ( firstParam.equals("quit") )
 					{
-						sender.sendMessage("You are already part of the Killer game, you can't join again!");
+						if ( player == null )
+						{
+							sender.sendMessage("Only players can run this command");
+							return true;
+						}
+						if ( !isGameWorld(player.getWorld()) )
+						{
+							sender.sendMessage("You are not part of the Killer game, so you can't quit!");
+							return true;
+						}
+						
+						playerManager.movePlayerOutOfKillerGame(player);
 						return true;
 					}
-					
-					playerManager.movePlayerIntoKillerGame(player);
-					return true;
 				}
-				else if ( args[0].equalsIgnoreCase("quit") )
-				{
-					if ( player == null )
-					{
-						sender.sendMessage("Only players can run this command");
-						return true;
-					}
-					if ( !isGameWorld(player.getWorld()) )
-					{
-						sender.sendMessage("You are not part of the Killer game, so you can't quit!");
-						return true;
-					}
-					
-					playerManager.movePlayerOutOfKillerGame(player);
-					return true;
-				}
-				else if ( player != null && !player.isOp() )
+				if ( player != null && !player.isOp() )
 				{
 					sender.sendMessage("Invalid command: Use /killer join to enter the game, and /killer quit to leave it");
 					return true;
@@ -424,27 +428,28 @@ public class Killer extends JavaPlugin
 				return true;
 			}
 			
-			if ( args[0].equalsIgnoreCase("add") )
+			String firstParam = args[0].toLowerCase();
+			if ( firstParam.equals("add") )
 			{
 				if ( getGameState().usesGameWorlds )
 					playerManager.assignKillers(sender);
 			}
-			else if ( args[0].equalsIgnoreCase("clear") )
+			else if ( firstParam.equals("clear") )
 			{
 				if ( getGameState().usesGameWorlds )
 					playerManager.clearKillers(sender);
 			}
-			else if ( args[0].equalsIgnoreCase("restart") )
+			else if ( firstParam.equals("restart") )
 			{
 				if ( getGameState().usesGameWorlds )
 					restartGame(sender);
 			}
-			else if ( args[0].equalsIgnoreCase("end") )
+			else if ( firstParam.equals("end") )
 			{
 				if ( getGameState().usesGameWorlds )
 					endGame(sender);
 			}
-			else if ( args[0].equalsIgnoreCase("seed") )
+			else if ( firstParam.equals("seed") )
 			{
 				if ( args.length < 2 )
 				{
