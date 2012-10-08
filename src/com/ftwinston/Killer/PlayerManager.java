@@ -482,9 +482,9 @@ public class PlayerManager
 		if ( winningItem != null )
 		{
 			if ( friendliesWon )
-				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(false, numFriendlies > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(false, numFriendlies > 1) + (numFriendlies > 1 ? "s win! " : " wins");
+				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(false, numFriendlies > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(false, numFriendlies > 1) + (numFriendlies > 1 ? " win! " : " wins");
 			else
-				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(true, numKillersAssigned() > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(true, numKillersAssigned() > 1) + (numKillersAssigned() > 1 ? "s win! " : " wins");
+				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(true, numKillersAssigned() > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(true, numKillersAssigned() > 1) + (numKillersAssigned() > 1 ? " win! " : " wins");
 		}
 		else if ( numKillersAssigned() == 0 || numFriendlies == 0 ) // some mode might not assign specific killers, or have everyone as a killer. In this case, we only care about the winning player
 		{
