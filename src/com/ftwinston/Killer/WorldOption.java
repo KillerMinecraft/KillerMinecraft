@@ -3,7 +3,6 @@ package com.ftwinston.Killer;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import com.ftwinston.Killer.WorldOptions.CopyExistingWorld;
 import com.ftwinston.Killer.WorldOptions.DefaultWorld;
@@ -54,22 +53,8 @@ public abstract class WorldOption
 	}
 	
 	protected long getSeed()
-	{// copied from how bukkit handles string seeds
-		String s = customSeed;
-        long k = (new Random()).nextLong();
-
-        if ( s != null && s.length() > 0) {
-            try {
-                long l = Long.parseLong(s);
-
-                if (l != 0L) {
-                    k = l;
-                }
-            } catch (NumberFormatException numberformatexception) {
-                k = (long) s.hashCode();
-            }
-        }
-        return k;
+	{
+		return WorldManager.getSeedFromString(customSeed);
 	}
 	
 	protected WorldOption(String name)

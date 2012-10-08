@@ -75,11 +75,10 @@ public class Settings
 		}
 
 		plugin.getConfig().addDefault("customWorlds", new ArrayList<String>());
-		customWorldNames = Killer.instance.getConfig().getStringList("customWorlds");
+		customWorldNames = plugin.getConfig().getStringList("customWorlds");
 		
 		winningItems = readMaterialList(plugin, "winningItems", Arrays.asList(Material.BLAZE_ROD.getId(), Material.GHAST_TEAR.getId()), Material.BLAZE_ROD);		
 		startingItems = readMaterialList(plugin, "startingItems", new ArrayList<Integer>(), Material.STONE_PICKAXE);
-		
 		
 		plugin.saveConfig();
 	}
@@ -114,5 +113,12 @@ public class Settings
 		}
 		
 		return retVal;
+	}
+	
+	public static void addCustomWorld(String name)
+	{
+		//customWorldNames.add(name); // only do this if we update the staging world without restarting the server
+		Killer.instance.getConfig().getStringList("customWorlds").add(name);
+		Killer.instance.saveConfig();
 	}
 }

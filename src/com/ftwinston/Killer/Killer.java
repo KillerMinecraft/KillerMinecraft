@@ -422,9 +422,9 @@ public class Killer extends JavaPlugin
 			if ( args.length == 0 )
 			{
 				if ( !stagingWorldIsServerDefault && player != null )
-					sender.sendMessage("Usage: /killer join, /killer quit, /killer restart, /killer end, /killer add, /killer clear");
+					sender.sendMessage("Usage: /killer join, /killer quit, /killer restart, /killer end, /killer add, /killer clear, /killer world");
 				else
-					sender.sendMessage("Usage: /killer restart, /killer end, /killer add, /killer clear");
+					sender.sendMessage("Usage: /killer restart, /killer end, /killer add, /killer clear, /killer world");
 				return true;
 			}
 			
@@ -464,6 +464,30 @@ public class Killer extends JavaPlugin
 				
 				WorldOption.setCustomSeed(seed);
 				broadcastMessage(sender.getName() + " set the seed to: " + seed);
+			}
+			else if ( firstParam.equals("world") )
+			{
+				if ( args.length < 3 )
+				{
+					sender.sendMessage("Usage: /killer world <name> <seed>\nUse underlines instead of spaces in the name.");
+					return true;
+				}
+			
+				String name = args[1];
+				String seed = args[2];
+				for ( int i=3; i<args.length; i++ )
+					seed += " " + args[i];
+				
+				if ( getServer().getWorld(name) != null )
+				{
+					sender.sendMessage("Error: already got a world named '" + name + "'");
+					return true;
+				}
+				
+				sender.sendMessage("Generating world '" + name + "' using seed: '" + seed + "'");
+				getServer().broadcastMessage(sender.getName() + " is generating a custom world - expect a lag spike!");
+				worldManager.generateCustomWorld(name, seed);
+				return true;
 			}
 			else
 				sender.sendMessage("Invalid parameter: " + args[0] + " - type /killer to list allowed parameters");

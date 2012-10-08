@@ -293,6 +293,25 @@ public class WorldManager
 			}
 		}
 		
+		private boolean deleteWorld(String worldName)
+		{
+			clearWorldReference(worldName);
+			boolean allGood = true;
+			
+			File folder = new File(plugin.getServer().getWorldContainer() + File.separator + worldName);
+			try
+			{
+				if ( folder.exists() && !delete(folder) )
+					allGood = false;
+			}
+			catch ( Exception e )
+			{
+				plugin.log.info("An error occurred when deleting the " + worldName + " world: " + e.getMessage());
+			}
+			
+			return allGood;
+		}
+			
 		@SuppressWarnings("rawtypes")
 		private boolean clearWorldReference(String worldName)
 		{
@@ -359,7 +378,6 @@ public class WorldManager
 		{
 			plugin.log.info("Clearing out old worlds...");
 			
-			
 			if ( mainWorld != null )
 				forceUnloadWorld(mainWorld, stagingWorld);
 			
@@ -401,24 +419,6 @@ public class WorldManager
 	    			}
 		    		else
 		    			plugin.log.warning("Failed to delete some world information!");
-	    	}
-	    	
-	    	private boolean deleteWorld(String worldName)
-	    	{
-	    		clearWorldReference(worldName);
-	    		boolean allGood = true;
-				
-	    		try
-				{
-	    			if ( !delete(new File(plugin.getServer().getWorldContainer() + File.separator + worldName)) )
-	    				allGood = false;
-				}
-				catch ( Exception e )
-				{
-					plugin.log.info("An error occurred when deleting the " + worldName + " world: " + e.getMessage());
-				}
-	    		
-	    		return allGood;
 	    	}
 	    }
 		
@@ -658,5 +658,46 @@ public class WorldManager
 			
             //player.sendMessage("Nearest nether fortress is at " + pos.x + ", " + pos.y + ", " + pos.z);
 			return true;
+		}
+		
+		public static long getSeedFromString(String str)
+		{// copied from how bukkit handles string seeds
+			long k = (new Random()).nextLong();
+
+			if ( str != null && str.length() > 0)
+			{
+				try
+				{
+					long l = Long.parseLong(str);
+
+					if (l != 0L)
+						k = l;
+				} catch (NumberFormatException numberformatexception)
+				{
+					k = (long) str.hashCode();
+				}
+			}
+			return k;
+		}
+		
+		public void generateCustomWorld(String name, String seed)
+		{
+			// ensure world folder doesn't already exist (we checked before calling this that there isn't an active world with this name)
+			deleteWorld(name); 
+		
+			long lSeed = getSeedFromString(seed);
+			// create the world
+			WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL);
+			wc.seed(lSeed);
+			World world = plugin.getServer().createWorld(wc);
+			
+			// unload the world - but don't delete
+			forceUnloadWorld(world, stagingWorld);
+			clearWorldReference(name);
+			
+			// now add it to the config
+			Settings.addCustomWorld(name);
+			
+			// ... and update the staging world? We'll have to restart, otherwise
 		}
 }
