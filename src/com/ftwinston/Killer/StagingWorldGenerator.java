@@ -201,24 +201,24 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					WorldOption option = WorldOption.get(num);
 					
 					if ( option.isFixedWorld() )
-						s.setLine(0, "§fCustom world:");
+						s.setLine(0, "§1Custom world:");
 					else
-						s.setLine(0, "§fRandom world:");
+						s.setLine(0, "§1Random world:");
 					
 					String name = option.getName().replace('_', ' ');
 					if ( name.length() > 12 )
 					{
 						String[] words = name.split(" ");
-						s.setLine(1, "§f" + words[0]);
+						s.setLine(1, "§1" + words[0]);
 						if ( words.length > 1)
 						{
-							s.setLine(2, "§f" + words[1]);
+							s.setLine(2, "§1" + words[1]);
 							if ( words.length > 2)
-								s.setLine(3, "§f" + words[2]);
+								s.setLine(3, "§1" + words[2]);
 						}
 					}
 					else
-						s.setLine(2, "§f" + name);
+						s.setLine(2, "§1" + name);
 					s.update();
 				}
 				
@@ -308,22 +308,22 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(sign);
 					b.setData((byte)0x5);
 					Sign s = (Sign)b.getState();
-					s.setLine(0, "§fGame mode:");
+					s.setLine(0, "§1Game mode:");
 					
 					String name = gameMode.getName();
 					if ( name.length() > 12 )
 					{
 						String[] words = name.split(" ");
-						s.setLine(1, "§f" + words[0]);
+						s.setLine(1, "§1" + words[0]);
 						if ( words.length > 1)
 						{
-							s.setLine(2, "§f" + words[1]);
+							s.setLine(2, "§1" + words[1]);
 							if ( words.length > 2)
-								s.setLine(3, "§f" + words[2]);
+								s.setLine(3, "§1" + words[2]);
 						}
 					}
 					else
-						s.setLine(1, "§f" + name);
+						s.setLine(1, "§1" + name);
 					s.update();
 				}
 				
@@ -567,8 +567,8 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(sign);
 					b.setData((byte)0x2);
 					Sign s = (Sign)b.getState();
-					s.setLine(1, "§fOption:");
-					s.setLine(2, "§f???");
+					s.setLine(1, "§1Option:");
+					s.setLine(2, "§1???");
 					s.update();
 				}
 				
