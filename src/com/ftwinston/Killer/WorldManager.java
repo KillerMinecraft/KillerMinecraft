@@ -171,7 +171,7 @@ public class WorldManager
 					}
 					catch ( IOException ex )
 					{
-					}			
+					}
 				}
 	        });
 		}

@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import net.minecraft.server.Packet201PlayerInfo;
+import net.minecraft.server.Packet205ClientCommand;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -738,8 +739,11 @@ public class PlayerManager
 	
 	public void putPlayerInWorld(Player player, World world)
 	{	
-		if ( player.isDead() && player.getWorld() == world )
+		if ( player.isDead() )
+		{
+			forceRespawn(player);
 			return;
+		}
 		
 		Location spawn = world.getSpawnLocation();
 		
@@ -783,7 +787,19 @@ public class PlayerManager
 		player.teleport(spawn);
 	}
 	
-    public void checkPlayerCompassTarget(Player player)
+    private void forceRespawn(final Player player)
+    {
+    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+            @Override
+            public void run() {
+                Packet205ClientCommand packet = new Packet205ClientCommand();
+                packet.a = 1;
+                ((CraftPlayer) player).getHandle().netServerHandler.a(packet);
+            }
+        }, 1);
+	}
+
+	public void checkPlayerCompassTarget(Player player)
     {
     	if ( plugin.getGameMode().usesPlinth() && player.getWorld().getEnvironment() == Environment.NORMAL && !plugin.getGameMode().compassPointsAtTarget() )
 		{
