@@ -8,8 +8,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 
-import jline.internal.Log;
-
 import net.minecraft.server.Packet201PlayerInfo;
 
 import org.bukkit.ChatColor;
@@ -475,7 +473,6 @@ public class PlayerManager
 	
 	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)
 	{
-		Log.warn("gameFinished called...");
 		String message = null;
 		int numFriendlies = playerInfo.size() - numKillersAssigned();
 		
