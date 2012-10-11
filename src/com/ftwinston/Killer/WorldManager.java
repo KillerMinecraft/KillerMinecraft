@@ -644,22 +644,7 @@ public class WorldManager
 					b.setData((byte)0x2);
 					Sign s = (Sign)b.getState();
 					s.setLine(0, "Option:");
-
-					String name = option.getKey();
-					if ( name.length() > 15 )
-					{
-						String[] words = name.split(" ");
-						s.setLine(1, words[0]);
-						if ( words.length > 1)
-						{
-							s.setLine(2, words[1]);
-							if ( words.length > 2)
-								s.setLine(3, words[2]);
-						}
-					}
-					else
-						s.setLine(1, name);
-					
+					StagingWorldGenerator.fitTextOnSign(s, option.getKey());
 					s.update();
 				}
 				

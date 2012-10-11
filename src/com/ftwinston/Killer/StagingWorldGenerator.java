@@ -200,25 +200,8 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					Sign s = (Sign)b.getState();
 					WorldOption option = WorldOption.get(num);
 					
-					if ( option.isFixedWorld() )
-						s.setLine(0, "Custom world:");
-					else
-						s.setLine(0, "Random world:");
-					
-					String name = option.getName().replace('_', ' ');
-					if ( name.length() > 15 )
-					{
-						String[] words = name.split(" ");
-						s.setLine(1, words[0]);
-						if ( words.length > 1)
-						{
-							s.setLine(2, words[1]);
-							if ( words.length > 2)
-								s.setLine(3, words[2]);
-						}
-					}
-					else
-						s.setLine(2, name);
+					s.setLine(0, option.isFixedWorld() ? "Custom world:" : "Random world:");
+					StagingWorldGenerator.fitTextOnSign(s, option.getName().replace('_', ' '));
 					s.update();
 				}
 				
@@ -549,6 +532,46 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					if ( b != null )
 						b.setType(walls);
 				}
+		}
+	}
+
+	public static void fitTextOnSign(Sign s, String text)
+	{
+		if ( text.length() <= 15 )
+		{
+			s.setLine(2, text);
+			return;
+		}
+		
+		String[] words = text.split(" ");
+		String[] lines = new String[3];
+		int lineNum = -1;
+		
+		for ( String word : words )
+		{
+			// see if this word fits onto the current line. If not, move to the next line and place it there
+			if ( lineNum == -1 || lines[lineNum].length() + 1 + word.length() > 15 )
+			{
+				lineNum++;
+				if ( lineNum >= 3 )
+					break;
+				lines[lineNum] = word;
+			}
+			else
+				lines[lineNum] += " " + word;
+		}
+		
+		if ( lines[2] != null )
+		{
+			s.setLine(1, lines[0]);
+			s.setLine(2, lines[1]);
+			s.setLine(3, lines[2]);
+		}
+		else
+		{
+			s.setLine(2, lines[0]);
+			if ( lines[1] != null )
+				s.setLine(3, lines[1]);
 		}
 	}
 }
