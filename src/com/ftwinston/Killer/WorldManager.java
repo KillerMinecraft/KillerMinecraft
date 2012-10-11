@@ -493,17 +493,17 @@ public class WorldManager
 			{
 				int num = StagingWorldGenerator.getGameModeOptionNumFromX(x);
 				
-				Map.Entry<String, Boolean> option = plugin.getGameMode().getOptionEntry(num);
+				GameMode.Option option = plugin.getGameMode().getOptions().get(num);
 				if ( option == null )
 					return;
 
 				// toggle the option
-				option.setValue(new Boolean(!option.getValue().booleanValue()));
+				option.setEnabled(!option.isEnabled());
 				
 				// update the selected option's color block only
 				Block wool = stagingWorld.getBlockAt(x, 35, z + 1);
 				if (wool.getType() == Material.WOOL)
-					wool.setData(option.getValue() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+					wool.setData(option.isEnabled() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
 			}
 		}
 		
@@ -627,7 +627,7 @@ public class WorldManager
 			}
 			
 			int num = 0;
-			for ( Map.Entry<String, Boolean> option : mode.getOptions().entrySet() )			
+			for ( GameMode.Option option : mode.getOptions() )			
 			{
 				int optionX = StagingWorldGenerator.getGameModeOptionX(num);
 				Block b = stagingWorld.getBlockAt(optionX, 35, StagingWorldGenerator.gameModeOptionZ);
@@ -644,7 +644,7 @@ public class WorldManager
 					b.setData((byte)0x2);
 					Sign s = (Sign)b.getState();
 					s.setLine(0, "Option:");
-					StagingWorldGenerator.fitTextOnSign(s, option.getKey());
+					StagingWorldGenerator.fitTextOnSign(s, option.getName());
 					s.update();
 				}
 				
@@ -652,7 +652,7 @@ public class WorldManager
 				if ( b != null )
 				{
 					b.setType(Material.WOOL);
-					b.setData(option.getValue() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+					b.setData(option.isEnabled() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
 				}
 				
 				num++;

@@ -2,12 +2,9 @@ package com.ftwinston.Killer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
-import java.util.Set;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -277,19 +274,22 @@ public abstract class GameMode
 	public void playerEmptiedBucket(PlayerBucketEmptyEvent event) { }
 	public void playerPickedUpItem(PlayerPickupItemEvent event) { }
 	
-	private Map<String, Boolean> options = new LinkedHashMap<String, Boolean>();
-	public Map<String, Boolean> getOptions() { return options; }
-
-	public Entry<String, Boolean> getOptionEntry(int num)
+	class Option
 	{
-		Set<Map.Entry<String, Boolean>> entries = options.entrySet();
-		int i = 0;
-		for ( Entry<String, Boolean> entry : entries )
+		public Option(String name, boolean enabledByDefault)
 		{
-			if ( i == num )
-				return entry;
-			i++;
+			this.name = name;
+			this.enabled = enabledByDefault;
 		}
-		return null;
+		
+		private String name;
+		public String getName() { return name; }
+		
+		private boolean enabled;
+		public boolean isEnabled() { return enabled; }
+		public void setEnabled(boolean enabled) { this.enabled = enabled; }
 	}
+	
+	private List<Option> options = new ArrayList<Option>();
+	public List<Option> getOptions() { return options; }
 }
