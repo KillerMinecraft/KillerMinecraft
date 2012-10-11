@@ -201,24 +201,24 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					WorldOption option = WorldOption.get(num);
 					
 					if ( option.isFixedWorld() )
-						s.setLine(0, "§1Custom world:");
+						s.setLine(0, "Custom world:");
 					else
-						s.setLine(0, "§1Random world:");
+						s.setLine(0, "Random world:");
 					
 					String name = option.getName().replace('_', ' ');
-					if ( name.length() > 12 )
+					if ( name.length() > 15 )
 					{
 						String[] words = name.split(" ");
-						s.setLine(1, "§1" + words[0]);
+						s.setLine(1, words[0]);
 						if ( words.length > 1)
 						{
-							s.setLine(2, "§1" + words[1]);
+							s.setLine(2, words[1]);
 							if ( words.length > 2)
-								s.setLine(3, "§1" + words[2]);
+								s.setLine(3, words[2]);
 						}
 					}
 					else
-						s.setLine(2, "§1" + name);
+						s.setLine(2, name);
 					s.update();
 				}
 				
@@ -567,8 +567,8 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(sign);
 					b.setData((byte)0x2);
 					Sign s = (Sign)b.getState();
-					s.setLine(1, "§1Option:");
-					s.setLine(2, "§1???");
+					s.setLine(1, "?1Option:");
+					s.setLine(2, "?1???");
 					s.update();
 				}
 				
