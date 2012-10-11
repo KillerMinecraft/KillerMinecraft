@@ -14,7 +14,7 @@ import org.bukkit.generator.BlockPopulator;
 
 public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 {
-	private int maxGameModeOptions;
+	public static int maxGameModeOptions;
 	
 	int endX, endZ, worldEndX, optionsEndX, gameModeEndZ;
 	boolean gameModeSelectionClosedOff, worldSelectionClosedOff, gameModeOptionsClosedOff;
@@ -47,7 +47,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		
 		gameModeSelectionClosedOff = GameMode.gameModes.size() < 2 ;
 		worldSelectionClosedOff = WorldOption.options.size() < 2;
-		gameModeOptionsClosedOff = maxGameModeOptions < 2;
+		gameModeOptionsClosedOff = true; // always closed off initially, until a game mode is chosen
 	}
 	
 	public static int startButtonX, startButtonZ, overrideButtonZ, cancelButtonZ, gameModeButtonX, worldOptionZ, gameModeOptionZ;
@@ -549,36 +549,6 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					if ( b != null )
 						b.setType(walls);
 				}
-			
-			// now all the buttons/signs etc IN the south wall
-			for ( int num=0; num < gen.maxGameModeOptions; num++ )
-			{
-				int optionX = getGameModeOptionX(num);
-				b = getBlockAbs(chunk, optionX, 35, gen.endZ - 1);
-				if ( b != null )
-				{
-					b.setType(button);
-					b.setData((byte)0x4);
-				}
-				
-				b = getBlockAbs(chunk, optionX, 36, gen.endZ - 1);
-				if ( b != null )
-				{
-					b.setType(sign);
-					b.setData((byte)0x2);
-					Sign s = (Sign)b.getState();
-					s.setLine(1, "?1Option:");
-					s.setLine(2, "?1???");
-					s.update();
-				}
-				
-				b = getBlockAbs(chunk, optionX, 35, gen.endZ);
-				if ( b != null )
-				{
-					b.setType(wool);
-					b.setData(colorOptionOff);
-				}
-			}
 		}
 	}
 }

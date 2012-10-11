@@ -460,17 +460,19 @@ public class WorldManager
 			else if ( x == StagingWorldGenerator.gameModeButtonX )
 			{
 				int num = StagingWorldGenerator.getGameModeNumFromZ(z);
+				GameMode gameMode = GameMode.get(num);
+				
+				if ( plugin.getGameMode() == gameMode )
+					return; // no change
 				
 				// update all the color blocks
 				for ( int i=0; i<GameMode.gameModes.size(); i++ )
 					stagingWorld.getBlockAt(x-1, 35, StagingWorldGenerator.getGameModeZ(i)).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
 				
-				GameMode gameMode = GameMode.get(num);
-				if ( plugin.setGameMode(gameMode) )
-				{
-					if ( plugin.getGameState() != GameState.stagingWorldReady )
-						plugin.setGameState(GameState.stagingWorldReady);
-				}
+				if ( plugin.setGameMode(gameMode) && plugin.getGameState() != GameState.stagingWorldReady )
+					plugin.setGameState(GameState.stagingWorldReady);
+
+				showGameOptions(gameMode);
 			}
 			else if ( z == StagingWorldGenerator.worldOptionZ )
 			{
@@ -490,12 +492,18 @@ public class WorldManager
 			else if ( z == StagingWorldGenerator.gameModeOptionZ )
 			{
 				int num = StagingWorldGenerator.getGameModeOptionNumFromX(x);
-				plugin.log.info("Clicked on game mode option #" + num);
-				/*
-				// update all the color blocks
-				for ( int i=0; i<plugin.getGameMode().options.size(); i++ )
-					stagingWorld.getBlockAt(StagingWorldGenerator.getGameModeOptionX(i), 35, z-1).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
-				*/
+				
+				Map.Entry<String, Boolean> option = plugin.getGameMode().getOptionEntry(num);
+				if ( option == null )
+					return;
+
+				// toggle the option
+				option.setValue(new Boolean(!option.getValue().booleanValue()));
+				
+				// update the selected option's color block only
+				Block wool = stagingWorld.getBlockAt(x, 35, z + 1);
+				if (wool.getType() == Material.WOOL)
+					wool.setData(option.getValue() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
 			}
 		}
 		
@@ -588,6 +596,81 @@ public class WorldManager
 				sInfo.setType(Material.AIR);
 				backOverride.setType(Material.SMOOTH_BRICK);
 				backCancel.setType(Material.SMOOTH_BRICK);
+			}
+		}
+		
+		public void showGameOptions(GameMode mode)
+		{
+			// remove all signs, buttons & colored wool blocks from the south wall, and the "sealed off" wall
+			for ( int x = 5; x < StagingWorldGenerator.maxGameModeOptions * 2 + 8; x++ )
+			{
+				Block b;
+				if ( mode.getOptions().size() > 0 )
+					for ( int y = 34; y < 39; y++ )
+					{
+						b = stagingWorld.getBlockAt(x, y, StagingWorldGenerator.gameModeOptionZ - 3);
+						if ( b != null )
+							b.setType(Material.AIR);
+					}
+				
+				b = stagingWorld.getBlockAt(x, 35, StagingWorldGenerator.gameModeOptionZ);
+				if ( b != null )
+					b.setType(Material.AIR);
+				
+				b = stagingWorld.getBlockAt(x, 36, StagingWorldGenerator.gameModeOptionZ);
+				if ( b != null )
+					b.setType(Material.AIR);
+						
+				b = stagingWorld.getBlockAt(x, 35, StagingWorldGenerator.gameModeOptionZ + 1);
+				if ( b != null )
+					b.setType(Material.SMOOTH_BRICK);
+			}
+			
+			int num = 0;
+			for ( Map.Entry<String, Boolean> option : mode.getOptions().entrySet() )			
+			{
+				int optionX = StagingWorldGenerator.getGameModeOptionX(num);
+				Block b = stagingWorld.getBlockAt(optionX, 35, StagingWorldGenerator.gameModeOptionZ);
+				if ( b != null )
+				{
+					b.setType(Material.STONE_BUTTON);
+					b.setData((byte)0x4);
+				}
+				
+				b = stagingWorld.getBlockAt(optionX, 36, StagingWorldGenerator.gameModeOptionZ);
+				if ( b != null )
+				{
+					b.setType(Material.WALL_SIGN);
+					b.setData((byte)0x2);
+					Sign s = (Sign)b.getState();
+					s.setLine(0, "Option:");
+
+					String name = option.getKey();
+					if ( name.length() > 15 )
+					{
+						String[] words = name.split(" ");
+						s.setLine(1, words[0]);
+						if ( words.length > 1)
+						{
+							s.setLine(2, words[1]);
+							if ( words.length > 2)
+								s.setLine(3, words[2]);
+						}
+					}
+					else
+						s.setLine(1, name);
+					
+					s.update();
+				}
+				
+				b = stagingWorld.getBlockAt(optionX, 35, StagingWorldGenerator.gameModeOptionZ + 1);
+				if ( b != null )
+				{
+					b.setType(Material.WOOL);
+					b.setData(option.getValue() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+				}
+				
+				num++;
 			}
 		}
 		
