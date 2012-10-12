@@ -48,10 +48,6 @@ public class InvisibleKiller extends GameMode
 	@Override
 	public int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers)
 	{
-		// if we're not set to auto-reassign the killer once one has been assigned at all, even if they're no longer alive / connected, don't do so
-		if ( !Settings.autoReassignKiller && numKillers > 0 )
-			return 0;
-		
 		// for now, one living killer at a time is plenty
 		return numAliveKillers > 0 ? 0 : 1;
 	}

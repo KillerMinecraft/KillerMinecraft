@@ -15,7 +15,6 @@ public class Settings
 	allowModeTeamKiller,
 	allowModeContractKiller,
 	autoAssignKiller, // probably want to keep this
-	autoReassignKiller, // only relevant for mystery killer, i think. Game mode setting, on by default? Or config.
 	restartDayWhenFirstPlayerJoins, // don't want to keep this. Worlds are being created at start time anyway
 	lateJoinersStartAsSpectator,
 	banOnDeath,
@@ -46,7 +45,6 @@ public class Settings
 		allowModeContractKiller = readBoolean(plugin, "allowModeContractKiller", true);
 		
 		autoAssignKiller = readBoolean(plugin, "autoAssign", false);
-		autoReassignKiller = readBoolean(plugin, "autoReassign", false);
 		restartDayWhenFirstPlayerJoins = readBoolean(plugin, "restartDay", true);
 		lateJoinersStartAsSpectator = readBoolean(plugin, "lateJoinersStartAsSpectator", false);
 		banOnDeath = readBoolean(plugin, "banOnDeath", false);

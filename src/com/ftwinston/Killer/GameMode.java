@@ -36,9 +36,16 @@ public abstract class GameMode
 		{
 			g = new MysteryKiller();
 			g.plugin = killer;
-			//g.options.put("Assign sooner", false);
-			//g.options.put("Multiple killers", false);
 			gameModes.add(g);
+			
+			g.options.add(g.new Option("Don't assign killer until the second day", true));
+			MysteryKiller.dontAssignKillerUntilSecondDay = g.options.size();
+			
+			g.options.add(g.new Option("Allocate new killer if old ones die", true));
+			MysteryKiller.autoReallocateKillers = g.options.size();
+			
+			g.options.add(g.new Option("Assign multiple killers if lots of people play", false));
+			MysteryKiller.allowMultipleKillers = g.options.size();
 		}
 		
 		if ( Settings.allowModeInvisibleKiller )
@@ -274,7 +281,7 @@ public abstract class GameMode
 	public void playerEmptiedBucket(PlayerBucketEmptyEvent event) { }
 	public void playerPickedUpItem(PlayerPickupItemEvent event) { }
 	
-	class Option
+	protected class Option
 	{
 		public Option(String name, boolean enabledByDefault)
 		{
@@ -290,6 +297,6 @@ public abstract class GameMode
 		public void setEnabled(boolean enabled) { this.enabled = enabled; }
 	}
 	
-	private List<Option> options = new ArrayList<Option>();
+	protected List<Option> options = new ArrayList<Option>();
 	public List<Option> getOptions() { return options; }
 }
