@@ -9,11 +9,15 @@ import com.ftwinston.Killer.Settings;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.Material;
 
 public class TeamKiller extends GameMode
-{	
+{
+	public static int friendlyFire;
+	
 	@Override
 	public String getName() { return "Team Killer"; }
 	
@@ -239,5 +243,19 @@ public class TeamKiller extends GameMode
 		// if only friendlies are left alive, the friendlies won
 		else if ( !killersAlive && friendliesAlive )
 			pm.gameFinished(false, true, null, null);
+	}
+	
+	@Override
+	public boolean playerDamaged(Player victim, Entity attacker, DamageCause cause, int amount)
+	{	
+		if ( options.get(friendlyFire).isEnabled() )
+			return true;
+		
+		if ( !(attacker instanceof Player) )
+			return true; // we only care about damage by players
+
+		PlayerManager pm = plugin.playerManager;
+		Player attackerPlayer = (Player)attacker;
+		return pm.isKiller(victim.getName()) != pm.isKiller(attackerPlayer.getName());
 	}
 }

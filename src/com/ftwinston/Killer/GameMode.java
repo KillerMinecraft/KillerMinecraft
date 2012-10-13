@@ -67,8 +67,10 @@ public abstract class GameMode
 		{
 			g = new TeamKiller();
 			g.plugin = killer;
-			//g.options.put("Friendly fire", true);
 			gameModes.add(g);
+
+			g.options.add(g.new Option("Players can hurt teammates", true));
+			TeamKiller.friendlyFire = g.options.size();
 		}
 		
 		if ( Settings.allowModeContractKiller )
