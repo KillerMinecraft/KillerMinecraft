@@ -13,9 +13,12 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
@@ -24,6 +27,8 @@ import org.bukkit.potion.PotionType;
 
 public class InvisibleKiller extends GameMode
 {
+	public static int decloakWhenWeaponDrawn, killerDistanceMessages;
+	
 	@Override
 	public String getName() { return "Invisible Killer"; }
 	
@@ -68,6 +73,10 @@ public class InvisibleKiller extends GameMode
 	public void gameStarted()
 	{
 		inRangeLastTime.clear();
+		
+		if ( !options.get(killerDistanceMessages).isEnabled() )
+			return; // don't start the range message process
+			
 		updateRangeMessageProcessID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			public void run()
 			{
@@ -165,18 +174,41 @@ public class InvisibleKiller extends GameMode
 		{
 			case 0:
 				if ( forKiller )
-					return "You have been chosen to be the killer, and must kill everyone else. You are invisible, but they know who you are.";
+					return "You have been chosen to be the killer, and must kill everyone else.\nYou are invisible, but they know who you are.";
 				else if ( isAllocationComplete )
-					return "A player has been chosen to be the killer, and must kill everyone else. They are invisible!";
+					return "A player has been chosen to be the killer, and must kill everyone else.\nThey are invisible!";
 				else
-					return "A player will soon be chosen to be the killer. They will be invisible, and you'll be told who it is.";
+					return "A player will soon be chosen to be the killer.\nThey will be invisible, and you'll be told who it is.";
 			case 1:
 				if ( forKiller )
 					return "You will briefly become visible when damaged.\nYou cannot be hit while invisible, except by ranged weapons.";
 				else
 					return "The killer will briefly become visible when damaged.\nThey cannot be hit while invisible, except by ranged weapons.";
 			case 2:
-				return "The killer's compass points at the nearest player. The other players are told how far away the killer is.";
+				String msg;
+				if ( forKiller )
+				{
+					if ( options.get(decloakWhenWeaponDrawn).isEnabled() )
+						msg = "You will be decloaked when wielding a sword or bow.\n";
+					else
+						msg = "";
+					msg += "Your compass points at the nearest player.";
+					
+					if ( options.get(killerDistanceMessages).isEnabled() )
+						msg += "\nThe other players are told how far away you are.";
+				}
+				else	
+				{
+					if ( options.get(decloakWhenWeaponDrawn).isEnabled() )
+						msg = "The killer will be decloaked when wielding a sword or bow.\n";
+					else
+						msg = "";
+					msg += "The killer's compass points at the nearest player.";
+					
+					if ( options.get(killerDistanceMessages).isEnabled() )
+						msg += "\nThe other players are told how far away the killer is.";
+				}
+				return msg;
 			case 3:
 				return "The other players get infinity bows and splash damage potions.";
 			case 4:
@@ -298,7 +330,9 @@ public class InvisibleKiller extends GameMode
 		Potion pot = new Potion(PotionType.INSTANT_DAMAGE);
 		pot.setLevel(1);
 		pot.splash();
-		stack = pot.toItemStack(Math.max(2, 64 / (pm.numSurvivors() - 1)));
+		
+		// if decloakWhenWeaponDrawn is enabled, give fewer splash potions
+		stack = pot.toItemStack(Math.max(2, (int)((options.get(decloakWhenWeaponDrawn).isEnabled() ? 32f : 64f) / (pm.numSurvivors() - 1))));
 		inv.addItem(stack);
 	}
 	
@@ -403,9 +437,143 @@ public class InvisibleKiller extends GameMode
 			if ( player == null || !player.isOnline() )
 				return; // player has reconnected, so don't kill them
 			
-    		plugin.playerManager.makePlayerInvisibleToAll(player);
-			player.sendMessage("You are now invisible again");
+			ItemStack heldItem = player.getItemInHand();
+			if ( heldItem != null && isWeapon(heldItem.getType()) )
+			{
+				player.sendMessage("You will be invisible when you put your weapon away");
+			}
+			else
+			{
+				plugin.playerManager.makePlayerInvisibleToAll(player);
+				player.sendMessage("You are now invisible again");
+			}
 			restoreMessageProcessID = -1;
     	}
+    }
+    
+    @Override
+	public void playerItemSwitch(Player player, int prevSlot, int newSlot)
+    {
+		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
+			return;
+
+		if ( !plugin.playerManager.isKiller(player.getName()) )
+			return;
+		
+		ItemStack prevItem = player.getInventory().getItem(prevSlot);
+		ItemStack newItem = player.getInventory().getItem(newSlot);
+		
+		boolean prevIsWeapon = prevItem != null && isWeapon(prevItem.getType());
+		boolean newIsWeapon = newItem != null && isWeapon(newItem.getType());
+		
+		if ( prevIsWeapon == newIsWeapon || restoreMessageProcessID != -1 ) // if they're already visible because of damage, change nothing
+			return;
+		
+		if ( newIsWeapon )
+		{
+			plugin.playerManager.makePlayerVisibleToAll(player);
+			player.sendMessage(ChatColor.RED + "You can be seen!");
+		}
+		else if ( !newIsWeapon )
+		{
+			plugin.playerManager.makePlayerInvisibleToAll(player);
+			player.sendMessage("You are now invisible again");	
+		}
+    }
+
+    @Override
+	public void playerDroppedItem(final Player player, Item item)
+    {
+		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
+			return;
+		
+		if ( !isWeapon(item.getItemStack().getType()) )
+			return;
+		
+		if ( !plugin.playerManager.isKiller(player.getName()) )
+			return;
+		
+		// if they currently have nothing in their hand, assume they just dropped this weapon
+		if ( player.getItemInHand() != null )
+			return;
+		
+		if ( restoreMessageProcessID == -1&& isWeapon(player.getItemInHand().getType()) )
+		{
+			plugin.playerManager.makePlayerInvisibleToAll(player);
+			player.sendMessage("You are now invisible again");	
+		}
+    }
+
+	@Override
+	public void playerPickedUpItem(PlayerPickupItemEvent event)
+	{
+		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
+			return;
+		
+		if ( !isWeapon(event.getItem().getItemStack().getType()) )
+			return;
+		
+		if ( !plugin.playerManager.isKiller(event.getPlayer().getName()) )
+			return;
+		
+		final Player player = event.getPlayer();
+		
+		// wait a bit, for the item to actually get INTO their inventory. Then make them visible, if its in their hand
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+			@Override
+			public void run()
+			{
+				ItemStack item = player.getItemInHand(); 
+				if ( restoreMessageProcessID == -1 && item != null && isWeapon(item.getType()) )
+				{
+					plugin.playerManager.makePlayerVisibleToAll(player);
+					player.sendMessage(ChatColor.RED + "You can be seen!");
+				}
+			}
+		}, 10); // hopefully long enough for pickup
+	}
+	
+	@Override
+	public void playerInventoryClick(final Player player, InventoryClickEvent event)
+	{
+		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
+			return;
+		
+		if ( !plugin.playerManager.isKiller(player.getName()) )
+			return;
+		
+		// rather than work out all the click crap, let's just see if it changes
+		ItemStack item = player.getItemInHand();
+		final boolean weaponBefore = item != null && isWeapon(item.getType());
+		
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+			@Override
+			public void run()
+			{
+				ItemStack item = player.getItemInHand(); 
+				if ( item == null )
+					return;
+				
+				boolean weaponAfter = isWeapon(item.getType());
+				if ( weaponBefore == weaponAfter || restoreMessageProcessID != -1)
+					return;
+				
+				if ( weaponAfter )
+				{
+					plugin.playerManager.makePlayerVisibleToAll(player);
+					player.sendMessage(ChatColor.RED + "You can be seen!");
+				}
+				else if ( !weaponAfter )
+				{
+					plugin.playerManager.makePlayerInvisibleToAll(player);
+					player.sendMessage("You are now invisible again");	
+				}
+			}
+		}, 1);
+	}
+	
+    private boolean isWeapon(Material mat)
+    {
+    	return mat == Material.BOW || mat == Material.IRON_SWORD || mat == Material.STONE_SWORD || mat == Material.DIAMOND_SWORD || mat == Material.GOLD_SWORD;
     }
 }

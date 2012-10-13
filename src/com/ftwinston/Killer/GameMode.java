@@ -10,8 +10,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 
@@ -37,23 +39,28 @@ public abstract class GameMode
 			g = new MysteryKiller();
 			g.plugin = killer;
 			gameModes.add(g);
-			
-			g.options.add(g.new Option("Don't assign killer until the second day", true));
+
 			MysteryKiller.dontAssignKillerUntilSecondDay = g.options.size();
-			
-			g.options.add(g.new Option("Allocate new killer if old ones die", true));
+			g.options.add(g.new Option("Don't assign killer until the second day", true));
+
 			MysteryKiller.autoReallocateKillers = g.options.size();
-			
-			g.options.add(g.new Option("Assign multiple killers if lots of people play", false));
+			g.options.add(g.new Option("Allocate new killer if old ones die", true));
+
 			MysteryKiller.allowMultipleKillers = g.options.size();
+			g.options.add(g.new Option("Assign multiple killers if lots of people play", false));
 		}
 		
 		if ( Settings.allowModeInvisibleKiller )
 		{
 			g = new InvisibleKiller();
 			g.plugin = killer;
-			//g.options.put("Decloak when sword drawn", false);
 			gameModes.add(g);
+
+			InvisibleKiller.killerDistanceMessages = g.options.size();
+			g.options.add(g.new Option("Tell players how far away the killer is", true));
+
+			InvisibleKiller.decloakWhenWeaponDrawn = g.options.size();
+			g.options.add(g.new Option("Killer decloaks when sword or bow is drawn", false));
 		}
 		
 		if ( Settings.allowModeCrazyKiller )
@@ -69,8 +76,8 @@ public abstract class GameMode
 			g.plugin = killer;
 			gameModes.add(g);
 
-			g.options.add(g.new Option("Players can hurt teammates", true));
 			TeamKiller.friendlyFire = g.options.size();
+			g.options.add(g.new Option("Players can hurt teammates", true));
 		}
 		
 		if ( Settings.allowModeContractKiller )
@@ -282,6 +289,9 @@ public abstract class GameMode
 	public boolean playerDamaged(Player victim, Entity attacker, DamageCause cause, int amount) { return true; }
 	public void playerEmptiedBucket(PlayerBucketEmptyEvent event) { }
 	public void playerPickedUpItem(PlayerPickupItemEvent event) { }
+	public void playerDroppedItem(Player player, Item item) { }
+	public void playerInventoryClick(Player player, InventoryClickEvent event) { }
+	public void playerItemSwitch(Player player, int prevSlot, int newSlot) { }
 	
 	protected class Option
 	{

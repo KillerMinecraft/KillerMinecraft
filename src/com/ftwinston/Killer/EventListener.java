@@ -26,6 +26,7 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -244,6 +245,8 @@ public class EventListener implements Listener
     		else
     			plugin.playerManager.setFollowTarget(event.getPlayer(), null);
     	}
+    	else
+			plugin.getGameMode().playerItemSwitch(event.getPlayer(), event.getPreviousSlot(), event.getNewSlot());
     }
     
     @EventHandler
@@ -331,6 +334,25 @@ public class EventListener implements Listener
     	// spectators can't drop items
     	if ( plugin.playerManager.isSpectator(event.getPlayer().getName()) )
     		event.setCancelled(true);
+    	else
+    		plugin.getGameMode().playerDroppedItem(event.getPlayer(), event.getItemDrop());
+    }
+    
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event)
+    {
+    	if ( !plugin.isGameWorld(event.getWhoClicked().getWorld()) )
+			return;
+    	
+    	Player player = (Player)event.getWhoClicked();
+    	if ( player == null )
+    		return;
+    	
+    	// spectators can't rearrange their inventory
+    	if ( plugin.playerManager.isSpectator(player.getName()) )
+    		event.setCancelled(true);
+    	else
+    		plugin.getGameMode().playerInventoryClick(player, event);
     }
     
     @EventHandler
