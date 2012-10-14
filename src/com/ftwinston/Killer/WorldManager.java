@@ -370,6 +370,7 @@ public class WorldManager
 			}
 			
 			String worldName = world.getName();
+			((CraftWorld)world).getHandle().players.clear(); // hack to ensure that world unloading doesn't fail
 			if ( !plugin.getServer().unloadWorld(world, false) )
 				plugin.log.warning("Error unloading world: " + worldName);
 		}
