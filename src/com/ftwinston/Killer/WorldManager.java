@@ -22,6 +22,7 @@ import net.minecraft.server.RegionFile;
 import net.minecraft.server.WorldGenNether;
 import net.minecraft.server.WorldServer;
 
+import org.bukkit.Difficulty;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -660,17 +661,26 @@ public class WorldManager
 			}
 		}
 		
-		public void generateWorlds(WorldOption generator, Runnable runWhenDone)
+		public void generateWorlds(WorldOption generator, final Runnable runWhenDone)
 		{
 			plugin.broadcastMessage("Preparing new worlds...");
-			generator.create();
-			
-	        if ( plugin.getGameMode().usesPlinth() ) // create a plinth in the main world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
-	        	plugin.plinthPressurePlateLocation = createPlinth(mainWorld);
-	        
-			// run whatever task was passed in
-			if ( runWhenDone != null )
-				runWhenDone.run();
+			generator.create(new Runnable() {
+				@Override
+				public void run()
+				{
+					// ensure those worlds are set to Hard difficulty
+					plugin.worldManager.mainWorld.setDifficulty(Difficulty.HARD);
+					plugin.worldManager.netherWorld.setDifficulty(Difficulty.HARD);
+					
+					
+			        if ( plugin.getGameMode().usesPlinth() ) // create a plinth in the main world. Always done with the same offset, so if the world already has a plinth, it should just get overwritten.
+			        	plugin.plinthPressurePlateLocation = createPlinth(mainWorld);
+			        
+					// run whatever task was passed in
+					if ( runWhenDone != null )
+						runWhenDone.run();
+				}
+			});
 		}
 		
 		public boolean seekNearestNetherFortress(Player player)

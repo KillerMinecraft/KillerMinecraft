@@ -21,35 +21,51 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 	
 	public boolean isFixedWorld() { return true; }
 	
-	public void create()
-	{		
-		File sourceDir = new File(plugin.getServer().getWorldContainer() + File.separator + name);
-		File targetDir = new File(plugin.getServer().getWorldContainer() + File.separator + Settings.killerWorldName);
-		
-		try
-		{
-			copyFolder(sourceDir, targetDir);
-		}
-		catch (IOException ex)
-		{
-			plugin.log.warning("An error occurred copying the " + name + " world");
-		}
-		
-		sourceDir = new File(plugin.getServer().getWorldContainer() + File.separator + name + "_nether");
-		targetDir = new File(plugin.getServer().getWorldContainer() + File.separator + Settings.killerWorldName + "_nether");
-		
-		if ( sourceDir.exists() && sourceDir.isDirectory() )
-			try
+	public void create(final Runnable runWhenDone)
+	{	
+		plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new Runnable() {
+			
+			@Override
+			public void run()
 			{
-				copyFolder(sourceDir, targetDir);
+				File sourceDir = new File(plugin.getServer().getWorldContainer() + File.separator + name);
+				File targetDir = new File(plugin.getServer().getWorldContainer() + File.separator + Settings.killerWorldName);
+				
+				try
+				{
+					copyFolder(sourceDir, targetDir);
+				}
+				catch (IOException ex)
+				{
+					plugin.log.warning("An error occurred copying the " + name + " world");
+				}
+				
+				sourceDir = new File(plugin.getServer().getWorldContainer() + File.separator + name + "_nether");
+				targetDir = new File(plugin.getServer().getWorldContainer() + File.separator + Settings.killerWorldName + "_nether");
+				
+				if ( sourceDir.exists() && sourceDir.isDirectory() )
+					try
+					{
+						copyFolder(sourceDir, targetDir);
+					}
+					catch (IOException ex)
+					{
+						plugin.log.warning("An error occurred copying the " + name + "_nether world");
+					}
+				
+				// now run a synchronous delayed task, to actually load/create worlds for these folders
+				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+					
+					@Override
+					public void run()
+					{
+						plugin.worldManager.mainWorld = plugin.getServer().createWorld(new WorldCreator(Settings.killerWorldName).environment(Environment.NORMAL));
+						plugin.worldManager.netherWorld = plugin.getServer().createWorld(new WorldCreator(Settings.killerWorldName + "_nether").environment(Environment.NETHER));
+						runWhenDone.run();						
+					}
+				});
 			}
-			catch (IOException ex)
-			{
-				plugin.log.warning("An error occurred copying the " + name + "_nether world");
-			}
-		
-		plugin.worldManager.mainWorld = plugin.getServer().createWorld(new WorldCreator(Settings.killerWorldName).environment(Environment.NORMAL));
-		plugin.worldManager.netherWorld = plugin.getServer().createWorld(new WorldCreator(Settings.killerWorldName + "_nether").environment(Environment.NETHER));
+		});
 	}
 	
 	private void copyFolder(File source, File dest) throws IOException

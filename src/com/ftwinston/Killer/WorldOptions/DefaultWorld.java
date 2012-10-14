@@ -14,11 +14,13 @@ public class DefaultWorld extends com.ftwinston.Killer.WorldOption
 	
 	public boolean isFixedWorld() { return false; }
 	
-	public void create()
+	public void create(Runnable runWhenDone)
 	{
 		WorldCreator wc = new WorldCreator(Settings.killerWorldName).environment(Environment.NORMAL);
 		plugin.worldManager.mainWorld = plugin.getServer().createWorld(wc);
 		
 		plugin.worldManager.netherWorld = plugin.getServer().createWorld(new WorldCreator(Settings.killerWorldName + "_nether").environment(Environment.NETHER));
+		
+		runWhenDone.run();
 	}
 }
