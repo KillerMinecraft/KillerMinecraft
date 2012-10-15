@@ -43,6 +43,7 @@ public class Killer extends JavaPlugin
 	public enum GameState
 	{
 		stagingWorldSetup(false, false, true), // in staging world, players need to choose mode/world
+		worldDeletion(false, false, true), // in staging world, hide start buttons, delete old world, then show start button again
 		stagingWorldReady(false, false, true), // in staging world, players need to push start
 		stagingWorldConfirm(false, false, true), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
 		worldGeneration(false, false, false), // in staging world, game worlds are being generated
@@ -66,23 +67,33 @@ public class Killer extends JavaPlugin
 		GameState prevState = gameState;
 		gameState = newState;
 		
-		if ( !newState.usesGameWorlds && prevState.usesGameWorlds )
+		if ( newState == GameState.stagingWorldSetup )
+		{
+			worldManager.showStartButton(false);
+			worldManager.showConfirmButtons(false);
+		}
+		else if ( newState == GameState.worldDeletion )
 		{
 			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 			if ( statsManager.isTracking )
 				statsManager.gameFinished(getGameMode(), playerManager.numSurvivors(), 3, 0);
 			
 			getGameMode().gameFinished();
+
+			// don't show the start buttons until the old world finishes deleting
+			worldManager.showStartButton(false);
+			worldManager.showConfirmButtons(false);
+			worldManager.showWaitForDeletion();
 			
 			playerManager.putPlayersInWorld(worldManager.stagingWorld);
 			playerManager.reset(true);
-			worldManager.deleteWorlds();
-		}
-		
-		if ( newState == GameState.stagingWorldSetup )
-		{
-			worldManager.showStartButton(false);
-			worldManager.showConfirmButtons(false);
+			worldManager.deleteWorlds(new Runnable() {
+				
+				@Override
+				public void run() { // we need this to set the state to stagingWorldReady when done
+					worldManager.showStartButton(true);
+				}
+			});
 		}
 		else if ( newState == GameState.stagingWorldReady )
 		{
@@ -96,6 +107,8 @@ public class Killer extends JavaPlugin
 		}
 		else if( newState == GameState.worldGeneration )
 		{
+			worldManager.showConfirmButtons(false);
+			worldManager.showStartButton(false);
 			worldManager.generateWorlds(worldOption, new Runnable() {
 				@Override
 				public void run() {
@@ -175,7 +188,7 @@ public class Killer extends JavaPlugin
 		}
 
 		// remove existing Killer worlds
-		worldManager.deleteWorlds();
+		worldManager.deleteWorlds(null);
 		
         // disable spawn protection
         getServer().setSpawnRadius(0);
@@ -581,7 +594,7 @@ public class Killer extends JavaPlugin
 		else
 			broadcastMessage("The game has ended. You've been moved to the staging world to allow you to set up a new one...");
 		
-		setGameState(GameState.stagingWorldReady); // stagingWorldReady cos the options from last time will still be selected
+		setGameState(GameState.worldDeletion); // stagingWorldReady cos the options from last time will still be selected
 	}
 	
 	public void restartGame(CommandSender actionedBy)

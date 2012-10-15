@@ -376,7 +376,7 @@ public class WorldManager
 				plugin.log.warning("Error unloading world: " + worldName);
 		}
 
-		public void deleteWorlds()
+		public void deleteWorlds(Runnable runWhenDone)
 		{
 			plugin.log.info("Clearing out old worlds...");
 			
@@ -389,22 +389,24 @@ public class WorldManager
 			mainWorld = netherWorld = null;
 			
 			// now we want to try to delete the world folders
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new WorldDeleter(Settings.killerWorldName, Settings.killerWorldName + "_nether"), 80);
+			plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new WorldDeleter(runWhenDone, Settings.killerWorldName, Settings.killerWorldName + "_nether"), 80);
 		}
 		
 		private class WorldDeleter implements Runnable
 	    {
+			Runnable runWhenDone;
 	    	String world1, world2;
 	    	
 	    	static final long retryDelay = 30;
 	    	static final int maxRetries = 5;
 	    	int attempt;
 	    	
-	    	public WorldDeleter(String name1, String name2)
+	    	public WorldDeleter(Runnable runWhenDone, String name1, String name2)
 	    	{
 	    		attempt = 0;
 	    		world1 = name1;
 	    		world2 = name2;
+	    		this.runWhenDone = runWhenDone;
     		}
 	    	
 	    	public void run()
@@ -421,6 +423,9 @@ public class WorldManager
 	    			}
 		    		else
 		    			plugin.log.warning("Failed to delete some world information!");
+	    		
+	    		if ( runWhenDone != null )
+	    			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
 	    	}
 	    }
 		
@@ -471,7 +476,7 @@ public class WorldManager
 				for ( int i=0; i<GameMode.gameModes.size(); i++ )
 					stagingWorld.getBlockAt(x-1, 35, StagingWorldGenerator.getGameModeZ(i)).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
 				
-				if ( plugin.setGameMode(gameMode) && plugin.getGameState() != GameState.stagingWorldReady )
+				if ( plugin.setGameMode(gameMode) && plugin.getGameState() == GameState.stagingWorldSetup )
 					plugin.setGameState(GameState.stagingWorldReady);
 
 				showGameOptions(gameMode);
@@ -487,7 +492,7 @@ public class WorldManager
 				WorldOption world = WorldOption.get(num);
 				if ( plugin.setWorldOption(world) )	
 				{
-					if ( plugin.getGameState() != GameState.stagingWorldReady )
+					if ( plugin.getGameState() == GameState.stagingWorldSetup )
 						plugin.setGameState(GameState.stagingWorldReady);
 				}
 			}
@@ -599,6 +604,20 @@ public class WorldManager
 				backOverride.setType(Material.SMOOTH_BRICK);
 				backCancel.setType(Material.SMOOTH_BRICK);
 			}
+		}
+		
+		public void showWaitForDeletion()
+		{
+			Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 35, StagingWorldGenerator.startButtonZ);
+				
+			sign.setType(Material.WALL_SIGN);
+			sign.setData((byte)0x4);
+			Sign s = (Sign)sign.getState();
+			s.setLine(0, "Please wait for");
+			s.setLine(1, "the last game's");
+			s.setLine(2, "worlds to be");
+			s.setLine(3, "deleted...");
+			s.update();
 		}
 		
 		public void showGameOptions(GameMode mode)
