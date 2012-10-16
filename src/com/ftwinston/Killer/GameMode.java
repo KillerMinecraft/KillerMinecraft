@@ -311,4 +311,14 @@ public abstract class GameMode
 	
 	protected List<Option> options = new ArrayList<Option>();
 	public List<Option> getOptions() { return options; }
+	
+	public boolean toggleOption(int num)
+	{
+		Option option = getOptions().get(num);
+		if ( option == null )
+			return false;
+
+		option.setEnabled(!option.isEnabled());
+		return option.isEnabled();
+	}
 }

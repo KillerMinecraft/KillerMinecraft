@@ -258,4 +258,33 @@ public class TeamKiller extends GameMode
 		Player attackerPlayer = (Player)attacker;
 		return pm.isKiller(victim.getName()) != pm.isKiller(attackerPlayer.getName());
 	}
+	
+	@Override
+	public boolean toggleOption(int num)
+	{
+		boolean retVal = super.toggleOption(num);
+		/*
+		// if we have "number of teams" options
+		int numTeamOptions = 4;
+		if ( retVal )
+		{// turned on, turn the others off
+			for ( int i=0; i<numTeamOptions; i++ )
+				if ( i != num )
+					options.get(i).setEnabled(false);
+		}
+		else
+		{// turned off; if all are off, turn this one back on
+			boolean allOff = true;
+			for ( int i=0; i<numTeamOptions; i++ )
+				if ( options.get(i).isEnabled() )
+				{
+					allOff = false;
+					break;
+				}
+			if ( allOff )
+				options.get(num).setEnabled(true);
+		}
+		*/
+		return retVal;
+	}
 }

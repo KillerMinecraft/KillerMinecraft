@@ -499,18 +499,16 @@ public class WorldManager
 			else if ( z == StagingWorldGenerator.gameModeOptionZ )
 			{
 				int num = StagingWorldGenerator.getGameModeOptionNumFromX(x);
+				plugin.getGameMode().toggleOption(num);
+				List<GameMode.Option> options = plugin.getGameMode().getOptions();
 				
-				GameMode.Option option = plugin.getGameMode().getOptions().get(num);
-				if ( option == null )
-					return;
-
-				// toggle the option
-				option.setEnabled(!option.isEnabled());
-				
-				// update the selected option's color block only
-				Block wool = stagingWorld.getBlockAt(x, 35, z + 1);
-				if (wool.getType() == Material.WOOL)
-					wool.setData(option.isEnabled() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+				// update all the color blocks
+				for ( int i=0; i<options.size(); i++ )
+				{
+					Block wool = stagingWorld.getBlockAt(StagingWorldGenerator.getGameModeOptionX(i), 35, z+1);
+					if ( wool != null && wool.getType() == Material.WOOL )
+						wool.setData(options.get(i).isEnabled() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+				}
 			}
 		}
 		
