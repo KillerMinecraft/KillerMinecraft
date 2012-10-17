@@ -107,11 +107,12 @@ public abstract class GameMode
 	public abstract boolean usesPlinth();
 	public abstract int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers);
 	
-	public abstract String describePlayer(boolean killer, boolean plural);
-	public abstract boolean immediateKillerAssignment();
-	public abstract boolean informOfKillerAssignment(PlayerManager pm);
-	public abstract boolean informOfKillerIdentity();
-	public abstract boolean revealKillersIdentityAtEnd();
+	public abstract int getNumTeams();
+	public abstract String describePlayer(int team, boolean plural);
+	public abstract boolean immediateTeamAssignment();
+	public abstract boolean informOfTeamAssignment(PlayerManager pm);
+	public abstract boolean teamAllocationIsSecret();
+	public abstract boolean revealTeamIdentityAtEnd(int team);
 	
 	public void sendGameModeHelpMessage(PlayerManager pm)
 	{
@@ -125,33 +126,34 @@ public abstract class GameMode
 		if ( info.nextHelpMessage == -1 )
 			return;
 		
-		boolean isAllocationComplete = pm.numKillersAssigned() > 0; // todo: replace with proper value, once we have a game state variable
+		boolean isAllocationComplete = pm.numPlayersOnTeam(1) > 0; // todo: replace with proper value, once we have a game state variable
 		
-		String message = getHelpMessage(info.nextHelpMessage, info.isKiller(), isAllocationComplete);
+		String message = getHelpMessage(info.nextHelpMessage, info.getTeam(), isAllocationComplete);
+		if ( message == null )
+		{
+			info.nextHelpMessage = -1; 
+			return;
+		}
+		
 		if ( info.nextHelpMessage == 0 )
 			message = getName() + "\n" + message; // put the game mode name on the front of the first message
 		player.sendMessage(message);
-		
-		if ( info.nextHelpMessage == getNumHelpMessages(info.isKiller()) - 1 )
-			info.nextHelpMessage = -1;
-		else
-			info.nextHelpMessage ++;
+		info.nextHelpMessage ++;
 	}
 	
 	public abstract String[] getSignDescription();
 	
-	public abstract int getNumHelpMessages(boolean forKiller);
-	public abstract String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete);
+	public abstract String getHelpMessage(int num, int team, boolean isAllocationComplete);
 	
 	public void gameStarted() { }
 	public void gameFinished() { }
 	
-	public boolean assignKillers(int numKillers, CommandSender sender, PlayerManager pm)
+	public boolean assignTeams(int numKillers, CommandSender sender, PlayerManager pm)
 	{
 		int availablePlayers = 0;
 		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
 		{
-			if ( !entry.getValue().isAlive() || entry.getValue().isKiller() )
+			if ( !entry.getValue().isAlive() || entry.getValue().getTeam() == 1 )
 				continue; // spectators and already-assigned killers don't count towards the minimum
 			
 			Player player = plugin.getServer().getPlayerExact(entry.getKey());
@@ -164,12 +166,12 @@ public abstract class GameMode
 			String message = "Insufficient players to assign a killer. A minimum of " + absMinPlayers() + " players are required.";
 			if ( sender != null )
 				sender.sendMessage(message);
-			if ( informOfKillerAssignment(pm) )
+			if ( informOfTeamAssignment(pm) )
 				plugin.broadcastMessage(message);
 			return false;
 		}
 		
-		if ( informOfKillerAssignment(pm) && !informOfKillerIdentity() )
+		if ( informOfTeamAssignment(pm) && teamAllocationIsSecret() )
 		{
 			String message;
 			if ( numKillers > 1 )
@@ -184,7 +186,7 @@ public abstract class GameMode
 				message += " by " + sender.getName();
 			message += " - nobody but the";
 			
-			if ( numKillers > 1 || pm.numKillersAssigned() > 0 )
+			if ( numKillers > 1 || pm.numPlayersOnTeam(1) > 0 )
 				message += " killers";
 			else
 				message += " killer";
@@ -225,7 +227,7 @@ public abstract class GameMode
 		int num = 0, nextIndex = 0;
 		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
 		{
-			if ( !entry.getValue().isAlive() || entry.getValue().isKiller() )
+			if ( !entry.getValue().isAlive() || entry.getValue().getTeam() == 1 )
 				continue;
 			
 			Player player = plugin.getServer().getPlayerExact(entry.getKey());
@@ -234,28 +236,28 @@ public abstract class GameMode
 
 			if ( nextIndex < numKillers && num == killerIndices[nextIndex] )
 			{
-				entry.getValue().setKiller(true);
+				entry.getValue().setTeam(1);
 				
 				// don't show this in team killer mode, but do show it in mystery killer, even when assigning a new killer midgame and not telling everyone else
-				if ( informOfKillerAssignment(pm) || !informOfKillerIdentity() )
+				if ( informOfTeamAssignment(pm) || teamAllocationIsSecret() )
 				{
 					String message = ChatColor.RED + "You are ";
-					message += numKillers > 1 || pm.numKillersAssigned() > 1 ? "now a" : "the";
+					message += numKillers > 1 || pm.numPlayersOnTeam(1) > 1 ? "now a" : "the";
 					message += " killer!";
 					
-					if ( !informOfKillerAssignment(pm) && !informOfKillerIdentity() )
+					if ( !informOfTeamAssignment(pm) && teamAllocationIsSecret() )
 						message += ChatColor.WHITE + " No one else has been told a new killer was assigned.";
 						
 					player.sendMessage(message);
 				}
-				if ( informOfKillerIdentity() )
+				if ( !teamAllocationIsSecret() )
 				{
-					if ( informOfKillerAssignment(pm) )
+					if ( informOfTeamAssignment(pm) )
 						plugin.broadcastMessage(player.getName() + " is the killer!");
 					pm.colorPlayerName(player, ChatColor.RED);
 				}
 				
-				prepareKiller(player, pm, true);
+				preparePlayer(player, pm, 1, true);
 				
 				nextIndex ++;
 				
@@ -263,14 +265,14 @@ public abstract class GameMode
 				if ( sender != null )
 					plugin.statsManager.killerAddedByAdmin();
 			}
-			else if ( !pm.isKiller(player.getName()) )
+			else if ( pm.getTeam(player.getName()) != 1 )
 			{
-				prepareFriendly(player, pm, true);
+				preparePlayer(player, pm, 0, true);
 				
-				if ( informOfKillerIdentity() )
+				if ( !teamAllocationIsSecret() )
 					pm.colorPlayerName(player, ChatColor.BLUE);
-				else if ( informOfKillerAssignment(pm) )
-					player.sendMessage(ChatColor.YELLOW + "You are not " + ( numKillers > 1 || pm.numKillersAssigned() > 1 ? "a" : "the") + " killer.");
+				else if ( informOfTeamAssignment(pm) )
+					player.sendMessage(ChatColor.YELLOW + "You are not " + ( numKillers > 1 || pm.numPlayersOnTeam(1) > 1 ? "a" : "the") + " killer.");
 			}
 			
 			num++;
@@ -281,8 +283,7 @@ public abstract class GameMode
 	public abstract void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info);
 	public void playerKilled(Player player, PlayerManager pm, PlayerManager.Info info) { }
 	
-	public abstract void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer);
-	public abstract void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer);
+	public abstract void preparePlayer(Player player, PlayerManager pm, int teamNum, boolean isNewPlayer);
 	
 	public abstract void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth);
 	

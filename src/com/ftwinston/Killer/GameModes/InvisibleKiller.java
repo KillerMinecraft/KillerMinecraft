@@ -37,6 +37,9 @@ public class InvisibleKiller extends GameMode
 
 	@Override
 	public int absMinPlayers() { return 2; }
+	
+	@Override
+	public int getNumTeams() { return 2; }
 
 	@Override
 	public boolean killersCompassPointsAtFriendlies() { return true; }
@@ -58,9 +61,9 @@ public class InvisibleKiller extends GameMode
 	}
 	
 	@Override
-	public String describePlayer(boolean killer, boolean plural)
+	public String describePlayer(int team, boolean plural)
 	{
-		if ( killer )
+		if ( team == 1 )
 			return plural ? "killers" : "killer";
 		else
 			return plural ? "friendly players" : "friendly player";
@@ -88,10 +91,10 @@ public class InvisibleKiller extends GameMode
 							continue;
 						
 						double bestRangeSq = maxKillerDetectionRangeSq + 1;
-						if ( entry.getValue().isKiller() ) 
+						if ( entry.getValue().getTeam() == 1 ) 
 						{
 							for ( Map.Entry<String, Info> entry2 : plugin.playerManager.getPlayerInfo() )
-								if ( entry2.getValue().isAlive() && !entry2.getValue().isKiller() )
+								if ( entry2.getValue().isAlive() && entry2.getValue().getTeam() != entry.getValue().getTeam() )
 								{
 									Player target = plugin.getServer().getPlayerExact(entry2.getKey());
 									if ( target == null || !target.isOnline() || target.getWorld() != looker.getWorld() )
@@ -105,7 +108,7 @@ public class InvisibleKiller extends GameMode
 						else
 						{
 							for ( Map.Entry<String, Info> entry2 : plugin.playerManager.getPlayerInfo() )
-								if ( entry2.getValue().isAlive() && entry2.getValue().isKiller() )
+								if ( entry2.getValue().isAlive() && entry2.getValue().getTeam() == 1 )
 								{
 									Player target = plugin.getServer().getPlayerExact(entry2.getKey());
 									if ( target == null || !target.isOnline() || target.getWorld() != looker.getWorld() )
@@ -120,15 +123,15 @@ public class InvisibleKiller extends GameMode
 						if ( bestRangeSq < maxKillerDetectionRangeSq )
 						{
 							int bestRange = (int)(Math.sqrt(bestRangeSq) + 0.5); // round to nearest integer
-							if ( entry.getValue().isKiller() )
+							if ( entry.getValue().getTeam() == 1 )
 								looker.sendMessage("Range to nearest player: " + bestRange + " metres");
 							else
-								looker.sendMessage((entry.getValue().isKiller() ? "Player " : ChatColor.RED + "Killer detected!") + " Range: " + bestRange + " metres");
+								looker.sendMessage(ChatColor.RED + "Killer detected! Range: " + bestRange + " metres");
 							inRangeLastTime.put(looker.getName(), true);
 						}
 						else if ( inRangeLastTime.containsKey(looker.getName()) && inRangeLastTime.get(looker.getName()) )
 						{
-							if ( entry.getValue().isKiller() )
+							if ( entry.getValue().getTeam() == 1 )
 								looker.sendMessage("All players are out of range");
 							else
 								looker.sendMessage("No killer detected");
@@ -153,40 +156,37 @@ public class InvisibleKiller extends GameMode
 	
 	
 	@Override
-	public boolean informOfKillerAssignment(PlayerManager pm) { return true; }
+	public boolean informOfTeamAssignment(PlayerManager pm) { return true; }
 	
 	@Override
-	public boolean informOfKillerIdentity() { return true; }
+	public boolean teamAllocationIsSecret() { return false; }
 	
 	@Override
-	public boolean revealKillersIdentityAtEnd() { return false; }
+	public boolean revealTeamIdentityAtEnd(int team) { return false; }
 	
 	@Override
-	public boolean immediateKillerAssignment() { return true; }
+	public boolean immediateTeamAssignment() { return true; }
 	
 	@Override
-	public int getNumHelpMessages(boolean forKiller) { return 8; }
-	
-	@Override
-	public String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete)
+	public String getHelpMessage(int num, int team, boolean isAllocationComplete)
 	{
 		switch ( num )
 		{
 			case 0:
-				if ( forKiller )
+				if ( team == 1 )
 					return "You have been chosen to be the killer, and must kill everyone else.\nYou are invisible, but they know who you are.";
 				else if ( isAllocationComplete )
 					return "A player has been chosen to be the killer, and must kill everyone else.\nThey are invisible!";
 				else
 					return "A player will soon be chosen to be the killer.\nThey will be invisible, and you'll be told who it is.";
 			case 1:
-				if ( forKiller )
+				if ( team == 1 )
 					return "You will briefly become visible when damaged.\nYou cannot be hit while invisible, except by ranged weapons.";
 				else
 					return "The killer will briefly become visible when damaged.\nThey cannot be hit while invisible, except by ranged weapons.";
 			case 2:
 				String msg;
-				if ( forKiller )
+				if ( team == 1 )
 				{
 					if ( options.get(decloakWhenWeaponDrawn).isEnabled() )
 						msg = "You will be decloaked when wielding a sword or bow.\n";
@@ -237,7 +237,7 @@ public class InvisibleKiller extends GameMode
 				return "Dispensers can be crafted using a sapling instead of a bow. These work well with monster eggs.";
 				
 			default:
-				return "";
+				return null;
 		}
 	}
 	
@@ -265,15 +265,15 @@ public class InvisibleKiller extends GameMode
 	{
 		// hide all killers from this player!
 		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-			if ( entry.getValue().isKiller() && entry.getValue().isAlive() && !entry.getKey().equals(player.getName()) )
+			if ( entry.getValue().getTeam() == 1 && entry.getValue().isAlive() && !entry.getKey().equals(player.getName()) )
 			{
 				Player killer = plugin.getServer().getPlayerExact(entry.getKey());
 				if ( killer != null && killer.isOnline() )
 					pm.hidePlayer(player, killer);
 			}
 		
-		if ( info.isKiller() ) // inform them that they're still a killer
-			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (pm.numKillersAssigned() > 1 ? "a" : "the" ) + " killer, and you are invisible!");
+		if ( info.getTeam() == 1 ) // inform them that they're still a killer
+			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (pm.numPlayersOnTeam(1) > 1 ? "a" : "the" ) + " killer, and you are invisible!");
 		else if ( isNewPlayer || !info.isAlive() ) // this is a new player, tell them the rules & state of the game
 			player.sendMessage("Welcome to Killer Minecraft!");
 		else
@@ -281,59 +281,60 @@ public class InvisibleKiller extends GameMode
 	}
 	
 	@Override
-	public void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer)
+	public void preparePlayer(Player player, PlayerManager pm, int team, boolean isNewPlayer)
 	{
-		pm.makePlayerInvisibleToAll(player);
-		player.sendMessage("You are invisible. Other players will see a message telling them how far away you are every 10 seconds. You will see a message with the distance to the nearest player at the same time.");
-		
-		if ( !isNewPlayer )
-			return; // don't teleport or give new items on rejoining
+		if ( team == 1 )
+		{
+			pm.makePlayerInvisibleToAll(player);
+			player.sendMessage("You are invisible. Other players will see a message telling them how far away you are every 10 seconds. You will see a message with the distance to the nearest player at the same time.");
 			
-		PlayerInventory inv = player.getInventory();
-		inv.addItem(new ItemStack(Material.COMPASS, 1));
-		inv.addItem(new ItemStack(Material.COOKED_BEEF, 10));
-		
-		// teleport the killer a little bit away from the other players, to stop them being potion-stomped
-		Random r = new Random();
-		Location loc = player.getLocation();
-		
-		if ( r.nextBoolean() )
-			loc.setX(loc.getX() + 16 + r.nextDouble() * 10);
+			if ( !isNewPlayer )
+				return; // don't teleport or give new items on rejoining
+				
+			PlayerInventory inv = player.getInventory();
+			inv.addItem(new ItemStack(Material.COMPASS, 1));
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 10));
+			
+			// teleport the killer a little bit away from the other players, to stop them being potion-stomped
+			Random r = new Random();
+			Location loc = player.getLocation();
+			
+			if ( r.nextBoolean() )
+				loc.setX(loc.getX() + 16 + r.nextDouble() * 10);
+			else
+				loc.setX(loc.getX() - 16 - r.nextDouble() * 10);
+				
+			if ( r.nextBoolean() )
+				loc.setZ(loc.getZ() + 16 + r.nextDouble() * 10);
+			else
+				loc.setZ(loc.getZ() - 16 - r.nextDouble() * 10);
+			
+			loc.setY(loc.getWorld().getHighestBlockYAt(loc) + 1);
+			player.teleport(loc);
+		}
 		else
-			loc.setX(loc.getX() - 16 - r.nextDouble() * 10);
+		{
+			player.sendMessage("Use the /team command to chat without the killer seeing your messages");
+		
+			PlayerInventory inv = player.getInventory();
 			
-		if ( r.nextBoolean() )
-			loc.setZ(loc.getZ() + 16 + r.nextDouble() * 10);
-		else
-			loc.setZ(loc.getZ() - 16 - r.nextDouble() * 10);
-		
-		loc.setY(loc.getWorld().getHighestBlockYAt(loc) + 1);
-		player.teleport(loc);
-	}
-	
-	@Override
-	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer)
-	{
-		player.sendMessage("Use the /team command to chat without the killer seeing your messages");
-	
-		PlayerInventory inv = player.getInventory();
-		
-		if ( !isNewPlayer )
-			return; // don't give items on rejoining
+			if ( !isNewPlayer )
+				return; // don't give items on rejoining
+				
+			ItemStack stack = new ItemStack(Material.BOW, 1);
+			stack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
+			inv.addItem(stack);
+			inv.addItem(new ItemStack(Material.ARROW, 1)); // you need 1 arrow for the infinity bow, iirc
 			
-		ItemStack stack = new ItemStack(Material.BOW, 1);
-		stack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
-		inv.addItem(stack);
-		inv.addItem(new ItemStack(Material.ARROW, 1)); // you need 1 arrow for the infinity bow, iirc
-		
-		// give some splash potions of damage
-		Potion pot = new Potion(PotionType.INSTANT_DAMAGE);
-		pot.setLevel(1);
-		pot.splash();
-		
-		// if decloakWhenWeaponDrawn is enabled, give fewer splash potions
-		stack = pot.toItemStack(Math.max(2, (int)((options.get(decloakWhenWeaponDrawn).isEnabled() ? 32f : 64f) / (pm.numSurvivors() - 1))));
-		inv.addItem(stack);
+			// give some splash potions of damage
+			Potion pot = new Potion(PotionType.INSTANT_DAMAGE);
+			pot.setLevel(1);
+			pot.splash();
+			
+			// if decloakWhenWeaponDrawn is enabled, give fewer splash potions
+			stack = pot.toItemStack(Math.max(2, (int)((options.get(decloakWhenWeaponDrawn).isEnabled() ? 32f : 64f) / (pm.numSurvivors() - 1))));
+			inv.addItem(stack);
+		}
 	}
 	
 	@Override
@@ -356,7 +357,7 @@ public class InvisibleKiller extends GameMode
 		boolean killersAlive = false, friendliesAlive = false;
 		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
 			if ( entry.getValue().isAlive() )
-				if ( entry.getValue().isKiller() )
+				if ( entry.getValue().getTeam() == 1 )
 					killersAlive = true;
 				else
 					friendliesAlive = true;
@@ -374,7 +375,7 @@ public class InvisibleKiller extends GameMode
 	{
 		// disable buckets for killer (within 5 blocks of other players)
 		String killerName = event.getPlayer().getName();
-		if ( !plugin.playerManager.isKiller(killerName) )
+		if ( plugin.playerManager.getTeam(killerName) != 1 )
 			return;
 		
 		Location target = event.getBlockClicked().getLocation();
@@ -404,7 +405,7 @@ public class InvisibleKiller extends GameMode
 	@Override
 	public boolean playerDamaged(Player victim, Entity attacker, DamageCause cause, int amount)
 	{
-		if ( !plugin.playerManager.isKiller(victim.getName()) )
+		if ( plugin.playerManager.getTeam(victim.getName()) != 1 )
 			return true;
 		
 		if ( restoreMessageProcessID != -1 )
@@ -457,7 +458,7 @@ public class InvisibleKiller extends GameMode
 		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
 			return;
 
-		if ( !plugin.playerManager.isKiller(player.getName()) )
+		if ( plugin.playerManager.getTeam(player.getName()) != 1 )
 			return;
 		
 		ItemStack prevItem = player.getInventory().getItem(prevSlot);
@@ -490,7 +491,7 @@ public class InvisibleKiller extends GameMode
 		if ( !isWeapon(item.getItemStack().getType()) )
 			return;
 		
-		if ( !plugin.playerManager.isKiller(player.getName()) )
+		if ( plugin.playerManager.getTeam(player.getName()) != 1 )
 			return;
 		
 		// if they currently have nothing in their hand, assume they just dropped this weapon
@@ -513,7 +514,7 @@ public class InvisibleKiller extends GameMode
 		if ( !isWeapon(event.getItem().getItemStack().getType()) )
 			return;
 		
-		if ( !plugin.playerManager.isKiller(event.getPlayer().getName()) )
+		if ( plugin.playerManager.getTeam(event.getPlayer().getName()) != 1 )
 			return;
 		
 		final Player player = event.getPlayer();
@@ -539,7 +540,7 @@ public class InvisibleKiller extends GameMode
 		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
 			return;
 		
-		if ( !plugin.playerManager.isKiller(player.getName()) )
+		if ( plugin.playerManager.getTeam(player.getName()) != 1 )
 			return;
 		
 		// rather than work out all the click crap, let's just see if it changes

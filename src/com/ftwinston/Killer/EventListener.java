@@ -78,7 +78,7 @@ public class EventListener implements Listener
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
     				{
-    					plugin.playerManager.setAlive(player, plugin.playerManager.numKillersAssigned() == 0);
+    					plugin.playerManager.setAlive(player, plugin.playerManager.numPlayersOnTeam(1) == 0);
     					plugin.playerManager.checkPlayerCompassTarget(player);
     				}
     			}
@@ -553,7 +553,7 @@ public class EventListener implements Listener
 				if ( player != null && player.isOnline() )
 					return; // player has reconnected, so don't kill them
 				
-				if ( plugin.playerManager.numKillersAssigned() > 0 && plugin.playerManager.isAlive(name) )
+				if ( plugin.playerManager.numPlayersOnTeam(1) > 0 && plugin.playerManager.isAlive(name) )
 					plugin.statsManager.playerQuit();
 			}
     		plugin.playerManager.playerKilled(name);

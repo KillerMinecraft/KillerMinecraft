@@ -28,6 +28,9 @@ public class ContractKiller extends GameMode
 
 	@Override
 	public int absMinPlayers() { return 4; }
+	
+	@Override
+	public int getNumTeams() { return 1; }
 
 	@Override
 	public boolean killersCompassPointsAtFriendlies() { return false; }
@@ -62,7 +65,7 @@ public class ContractKiller extends GameMode
 			String message = "Insufficient players to assign a killer. A minimum of " + absMinPlayers() + " players are required.";
 			if ( sender != null )
 				sender.sendMessage(message);
-			if ( informOfKillerAssignment(pm) )
+			if ( informOfTeamAssignment(pm) )
 				plugin.broadcastMessage(message);
 			return false;
 		}
@@ -77,13 +80,13 @@ public class ContractKiller extends GameMode
 		{
 			Map.Entry<String, Info> current = players.remove(r.nextInt(players.size())); 
 			prevOne.getValue().target = current.getKey();
-			prevOne.getValue().setKiller(true);
+			prevOne.getValue().setTeam(1); // ack... this should surely be 0
 			
 			Player hunterPlayer = plugin.getServer().getPlayerExact(prevOne.getKey());
 			if ( hunterPlayer != null && hunterPlayer.isOnline() )
 			{
 				hunterPlayer.sendMessage("Your target is: " +  ChatColor.YELLOW + current.getKey() + ChatColor.RESET + "!");
-				prepareKiller(hunterPlayer, pm, true);
+				preparePlayer(hunterPlayer, pm, 1, true);
 			}
 			prevOne = current;
 			
@@ -93,13 +96,13 @@ public class ContractKiller extends GameMode
 		}
 		
 		prevOne.getValue().target = firstOne.getKey();
-		prevOne.getValue().setKiller(true);
+		prevOne.getValue().setTeam(1);
 		
 		Player hunterPlayer = plugin.getServer().getPlayerExact(prevOne.getKey());
 		if ( hunterPlayer != null && hunterPlayer.isOnline() )
 		{
 			hunterPlayer.sendMessage("Your target is: " +  ChatColor.YELLOW + firstOne.getKey() + ChatColor.RESET + "!");
-			prepareKiller(hunterPlayer, pm, true);
+			preparePlayer(hunterPlayer, pm, 1, true);
 		}
 		
 		plugin.statsManager.killerAdded();
@@ -113,7 +116,7 @@ public class ContractKiller extends GameMode
 	}
 	
 	@Override
-	public String describePlayer(boolean killer, boolean plural)
+	public String describePlayer(int team, boolean plural)
 	{
 		return plural ? "players" : "player";
 	}
@@ -125,22 +128,19 @@ public class ContractKiller extends GameMode
 	}
 	
 	@Override
-	public boolean informOfKillerAssignment(PlayerManager pm) { return false; }
+	public boolean informOfTeamAssignment(PlayerManager pm) { return false; }
 	
 	@Override
-	public boolean informOfKillerIdentity() { return false; }
+	public boolean teamAllocationIsSecret() { return true; }
 	
 	@Override
-	public boolean revealKillersIdentityAtEnd() { return false; }
+	public boolean revealTeamIdentityAtEnd(int team) { return false; }
 	
 	@Override
-	public boolean immediateKillerAssignment() { return true; }
+	public boolean immediateTeamAssignment() { return true; }
 	
 	@Override
-	public int getNumHelpMessages(boolean forKiller) { return 7; }
-	
-	@Override
-	public String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete)
+	public String getHelpMessage(int num, int team, boolean isAllocationComplete)
 	{
 		switch ( num )
 		{
@@ -169,7 +169,7 @@ public class ContractKiller extends GameMode
 				return "Dispensers can be crafted using a sapling instead of a bow. These work well with monster eggs.";
 			
 			default:
-				return "";
+				return null;
 		}
 	}
 	
@@ -199,18 +199,18 @@ public class ContractKiller extends GameMode
 		{
 			player.sendMessage("Welcome to Killer Minecraft!");
 					
-			if ( !info.isAlive() || pm.numKillersAssigned() == 0 )
+			if ( !info.isAlive() || pm.numPlayersOnTeam(1) == 0 )
 				return;
 				
 			// pick a player to be this player's hunter. This player's victim will be the hunter's victim.
 			int numCandidates = 0;
 			for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-				if ( entry.getValue().isAlive() && entry.getValue().isKiller() )
+				if ( entry.getValue().isAlive() && entry.getValue().getTeam() == 1 )
 					numCandidates ++;
 			
 			int hunterIndex = r.nextInt(numCandidates), i = 0;
 			for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-				if ( entry.getValue().isAlive() && entry.getValue().isKiller() )
+				if ( entry.getValue().isAlive() && entry.getValue().getTeam() == 1 )
 					if ( i == hunterIndex )
 					{
 						info.target = entry.getValue().target;
@@ -226,7 +226,7 @@ public class ContractKiller extends GameMode
 			
 			// tell them who their target is
 			player.sendMessage("Your target is: " +  ChatColor.YELLOW + info.target + ChatColor.RESET + "!");
-			info.setKiller(true); // everyone's a killer in their own way
+			info.setTeam(1); // everyone's a killer in their own way
 		}
 		else
 		{
@@ -346,7 +346,7 @@ public class ContractKiller extends GameMode
 	}
 		
 	@Override
-	public void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer)
+	public void preparePlayer(Player player, PlayerManager pm, int team, boolean isNewPlayer)
 	{
 		if ( !isNewPlayer )
 			return; // don't give items when rejoining
@@ -354,9 +354,6 @@ public class ContractKiller extends GameMode
 		PlayerInventory inv = player.getInventory();
 		inv.addItem(new ItemStack(Material.COMPASS, 1));
 	}
-	
-	@Override
-	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer) { }
 	
 	@Override
 	public void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth)

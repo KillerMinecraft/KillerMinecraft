@@ -26,6 +26,9 @@ public class CrazyKiller extends GameMode
 
 	@Override
 	public int absMinPlayers() { return 2; }
+	
+	@Override
+	public int getNumTeams() { return 2; }
 
 	@Override
 	public boolean killersCompassPointsAtFriendlies() { return true; }
@@ -47,53 +50,50 @@ public class CrazyKiller extends GameMode
 	}
 	
 	@Override
-	public String describePlayer(boolean killer, boolean plural)
+	public String describePlayer(int team, boolean plural)
 	{
-		if ( killer )
+		if ( team == 1 )
 			return plural ? "killers" : "killer";
 		else
 			return plural ? "friendly players" : "friendly player";
 	}
 	
 	@Override
-	public boolean informOfKillerAssignment(PlayerManager pm) { return true; }
+	public boolean informOfTeamAssignment(PlayerManager pm) { return true; }
 	
 	@Override
-	public boolean informOfKillerIdentity() { return true; }
+	public boolean teamAllocationIsSecret() { return false; }
 	
 	@Override
-	public boolean revealKillersIdentityAtEnd() { return false; }
+	public boolean revealTeamIdentityAtEnd(int team) { return false; }
 	
 	@Override
-	public boolean immediateKillerAssignment() { return true; }
+	public boolean immediateTeamAssignment() { return true; }
 	
 	@Override
-	public int getNumHelpMessages(boolean forKiller) { return 9; }
-	
-	@Override
-	public String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete)
+	public String getHelpMessage(int num, int team, boolean isAllocationComplete)
 	{
 		switch ( num )
 		{
 			case 0:
-				if ( forKiller )
+				if ( team == 1 )
 					return "You have been chosen to be the killer, and must kill everyone else. They know who you are.";
 				else if ( isAllocationComplete )
 					return "A player has been chosen to be the killer, and must kill everyone else.";
 				else
 					return "A player will soon be chosen to be the killer. You'll be told who it is, and they will be teleported away from the other players.";
 			case 1:
-				if ( forKiller )
+				if ( team == 1 )
 					return "Every dirt block you pick up will turn into TNT, so have fun with that.";
 				else
 					return "Every dirt block the killer picks up will turn into TNT, so beware.";
 			case 2:
-				if ( forKiller )
+				if ( team == 1 )
 					return "The other players each start with a sword, so avoid a direct fight.";
 				else
 					return "The killer doesn't start iwth a sword, but all the other players do.";
 			case 3:
-				if ( forKiller )
+				if ( team == 1 )
 					return "Your compass will point at the nearest player.";
 				else
 					return "The killer starts with a compass, which points at the nearest player.";
@@ -112,7 +112,7 @@ public class CrazyKiller extends GameMode
 				message += " to the plinth near the spawn.";
 				return message;
 			case 5:
-				if ( forKiller )
+				if ( team == 1 )
 					return "You can make buttons and pressure plates with the stone you started with.\nTry to avoid blowing yourself up!";
 				else
 					return "The killer starts with enough stone and redstone to make plenty buttons, wires and pressure plates.";
@@ -153,8 +153,8 @@ public class CrazyKiller extends GameMode
 	@Override
 	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
 	{
-		if ( info.isKiller() ) // inform them that they're still a killer
-			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (pm.numKillersAssigned() > 1 ? "a" : "the" ) + " killer."); 
+		if ( info.getTeam() == 1 ) // inform them that they're still a killer
+			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (pm.numPlayersOnTeam(1) > 1 ? "a" : "the" ) + " killer."); 
 		else if ( isNewPlayer || !info.isAlive() ) // this is a new player
 			player.sendMessage("Welcome to Killer Minecraft!");
 		else
@@ -162,51 +162,52 @@ public class CrazyKiller extends GameMode
 	}
 	
 	@Override
-	public void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer)
+	public void preparePlayer(Player player, PlayerManager pm, int team, boolean isNewPlayer)
 	{
-		player.sendMessage("Every dirt block you pick up will turn into TNT...");
-		
-		if ( !isNewPlayer )
-			return; // don't teleport or give new items on rejoining
-		
-		PlayerInventory inv = player.getInventory();
-		inv.addItem(new ItemStack(Material.COMPASS, 1));
-		inv.addItem(new ItemStack(Material.COOKED_BEEF, 10));
-		
-		inv.addItem(new ItemStack(Material.REDSTONE, 64));
-		inv.addItem(new ItemStack(Material.STONE, 64));
-		
-		// you don't START with piles of TNT, however
-		inv.addItem(new ItemStack(Material.TNT, 4));
-		
-		// teleport the killer a little bit away from the other players, to stop them being immediately stabbed
-		Random r = new Random();
-		Location loc = player.getLocation();
-		
-		if ( r.nextBoolean() )
-			loc.setX(loc.getX() + 32 + r.nextDouble() * 20);
-		else
-			loc.setX(loc.getX() - 32 - r.nextDouble() * 20);
+		if ( team == 1 )
+		{
+			player.sendMessage("Every dirt block you pick up will turn into TNT...");
 			
-		if ( r.nextBoolean() )
-			loc.setZ(loc.getZ() + 32 + r.nextDouble() * 20);
-		else
-			loc.setZ(loc.getZ() - 32 - r.nextDouble() * 20);
-		
-		loc.setY(loc.getWorld().getHighestBlockYAt(loc) + 1);
-		player.teleport(loc);
-	}
-	
-	@Override
-	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer)
-	{
-		player.sendMessage("Use the /team command to chat without the killer seeing your messages");
-	
-		if ( !isNewPlayer )
-			return; // don't give items on rejoining
+			if ( !isNewPlayer )
+				return; // don't teleport or give new items on rejoining
 			
-		PlayerInventory inv = player.getInventory();
-		inv.addItem(new ItemStack(Material.IRON_SWORD, 1));
+			PlayerInventory inv = player.getInventory();
+			inv.addItem(new ItemStack(Material.COMPASS, 1));
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 10));
+			
+			inv.addItem(new ItemStack(Material.REDSTONE, 64));
+			inv.addItem(new ItemStack(Material.STONE, 64));
+			
+			// you don't START with piles of TNT, however
+			inv.addItem(new ItemStack(Material.TNT, 4));
+			
+			// teleport the killer a little bit away from the other players, to stop them being immediately stabbed
+			Random r = new Random();
+			Location loc = player.getLocation();
+			
+			if ( r.nextBoolean() )
+				loc.setX(loc.getX() + 32 + r.nextDouble() * 20);
+			else
+				loc.setX(loc.getX() - 32 - r.nextDouble() * 20);
+				
+			if ( r.nextBoolean() )
+				loc.setZ(loc.getZ() + 32 + r.nextDouble() * 20);
+			else
+				loc.setZ(loc.getZ() - 32 - r.nextDouble() * 20);
+			
+			loc.setY(loc.getWorld().getHighestBlockYAt(loc) + 1);
+			player.teleport(loc);
+		}
+		else
+		{
+			player.sendMessage("Use the /team command to chat without the killer seeing your messages");
+		
+			if ( !isNewPlayer )
+				return; // don't give items on rejoining
+				
+			PlayerInventory inv = player.getInventory();
+			inv.addItem(new ItemStack(Material.IRON_SWORD, 1));
+		}
 	}
 	
 	@Override
@@ -229,7 +230,7 @@ public class CrazyKiller extends GameMode
 		boolean killersAlive = false, friendliesAlive = false;
 		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
 			if ( entry.getValue().isAlive() )
-				if ( entry.getValue().isKiller() )
+				if ( entry.getValue().getTeam() == 1 )
 					killersAlive = true;
 				else
 					friendliesAlive = true;
@@ -245,7 +246,7 @@ public class CrazyKiller extends GameMode
 	@Override
 	public void playerPickedUpItem(PlayerPickupItemEvent event)
 	{
-		if ( event.getItem().getItemStack().getType() == Material.DIRT && plugin.playerManager.isKiller(event.getPlayer().getName()) )
+		if ( event.getItem().getItemStack().getType() == Material.DIRT && plugin.playerManager.getTeam(event.getPlayer().getName()) == 1 )
 			event.getItem().getItemStack().setType(Material.TNT);
 	}
 }

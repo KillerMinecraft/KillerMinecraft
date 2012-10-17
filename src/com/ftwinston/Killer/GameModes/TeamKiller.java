@@ -28,6 +28,9 @@ public class TeamKiller extends GameMode
 	public int absMinPlayers() { return 2; }
 
 	@Override
+	public int getNumTeams() { return 2; } // this should be changeable 
+
+	@Override
 	public boolean killersCompassPointsAtFriendlies() { return false; }
 
 	@Override
@@ -54,31 +57,37 @@ public class TeamKiller extends GameMode
 	}
 	
 	@Override
-	public String describePlayer(boolean killer, boolean plural)
+	public String describePlayer(int team, boolean plural)
 	{
-		if ( killer )
-			return "red team";
-		else
+		switch ( team )
+		{
+		case 0:
 			return "blue team";
+		case 1:
+			return "red team";
+		case 2:
+			return "yellow team";
+		case 3:
+			return "green team";
+		default:
+			return plural ? "players" : "player";
+		}
 	}
 	
 	@Override
-	public boolean informOfKillerAssignment(PlayerManager pm) { return false; }
+	public boolean informOfTeamAssignment(PlayerManager pm) { return false; }
 	
 	@Override
-	public boolean informOfKillerIdentity() { return true; }
+	public boolean teamAllocationIsSecret() { return false; }
 	
 	@Override
-	public boolean revealKillersIdentityAtEnd() { return false; }
+	public boolean revealTeamIdentityAtEnd(int team) { return false; }
 	
 	@Override
-	public boolean immediateKillerAssignment() { return true; }
+	public boolean immediateTeamAssignment() { return true; }
 	
 	@Override
-	public int getNumHelpMessages(boolean forKiller) { return 6; }
-	
-	@Override
-	public String getHelpMessage(int num, boolean forKiller, boolean isAllocationComplete)
+	public String getHelpMessage(int num, int team, boolean isAllocationComplete)
 	{
 		switch ( num )
 		{
@@ -115,7 +124,7 @@ public class TeamKiller extends GameMode
 				return "Dispensers can be crafted using a sapling instead of a bow. These work well with monster eggs.";
 				
 			default:
-				return "";
+				return null;
 		}
 	}
 	
@@ -145,12 +154,12 @@ public class TeamKiller extends GameMode
 		{
 			player.sendMessage("Welcome to Killer Minecraft!");
 			
-			if ( pm.numKillersAssigned() > 0 && info.isAlive() )
+			if ( pm.numPlayersOnTeam(1) > 0 && info.isAlive() )
 			{
 				// add them to whichever team has fewest players
 				int numFriendlies = 0, numKillers = 0;
 				for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-					if ( entry.getValue().isKiller() )
+					if ( entry.getValue().getTeam() == 1 )
 						numKillers++;
 					else
 						numFriendlies++;
@@ -166,11 +175,14 @@ public class TeamKiller extends GameMode
 				
 				if ( killer )
 				{
-					info.setKiller(true);
+					info.setTeam(1);
 					plugin.broadcastMessage(player.getName() + " is on the " + ChatColor.RED + "red" + ChatColor.RESET + " team.");
 				}
 				else
+				{
+					info.setTeam(0);
 					plugin.broadcastMessage(player.getName() + " is on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team.");
+				}
 			}
 		}
 		else
@@ -180,35 +192,36 @@ public class TeamKiller extends GameMode
 	private final int teamSeparationOffset = 25;
 	
 	@Override
-	public void prepareKiller(Player player, PlayerManager pm, boolean isNewPlayer)
+	public void preparePlayer(Player player, PlayerManager pm, int team, boolean isNewPlayer)
 	{
-		player.sendMessage("You are on the " + ChatColor.RED + "red" + ChatColor.RESET + " team. Use the /team command to chat without the other team seeing your messages.");
-		
-		if ( !isNewPlayer )
-			return; // don't do the teleport thing when reconnecting
+		if ( team == 0 )
+		{
+			player.sendMessage("You are on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team. Use the /team command to chat without the other team seeing your messages.");
 			
-		Location moveTo = player.getWorld().getSpawnLocation();
-		moveTo.setZ(moveTo.getZ() + teamSeparationOffset + r.nextDouble() * 6);
-		moveTo.setX(moveTo.getX() + r.nextDouble() * 6);
-		moveTo.setY(moveTo.getWorld().getHighestBlockYAt(moveTo) + 1);
-		
-		player.teleport(moveTo);
-	}
-	
-	@Override
-	public void prepareFriendly(Player player, PlayerManager pm, boolean isNewPlayer)
-	{
-		player.sendMessage("You are on the " + ChatColor.BLUE + "blue" + ChatColor.RESET + " team. Use the /team command to chat without the other team seeing your messages.");
-		
-		if ( !isNewPlayer )
-			return; // don't do the teleport thing when reconnecting
+			if ( !isNewPlayer )
+				return; // don't do the teleport thing when reconnecting
+				
+			Location moveTo = player.getWorld().getSpawnLocation();
+			moveTo.setZ(moveTo.getZ() - teamSeparationOffset - r.nextDouble() * 6);
+			moveTo.setX(moveTo.getX() + r.nextDouble() * 6);
+			moveTo.setY(moveTo.getWorld().getHighestBlockYAt(moveTo) + 1);
 			
-		Location moveTo = player.getWorld().getSpawnLocation();
-		moveTo.setZ(moveTo.getZ() - teamSeparationOffset - r.nextDouble() * 6);
-		moveTo.setX(moveTo.getX() + r.nextDouble() * 6);
-		moveTo.setY(moveTo.getWorld().getHighestBlockYAt(moveTo) + 1);
-		
-		player.teleport(moveTo);
+			player.teleport(moveTo);		
+		}
+		else if ( team == 1 )
+		{
+			player.sendMessage("You are on the " + ChatColor.RED + "red" + ChatColor.RESET + " team. Use the /team command to chat without the other team seeing your messages.");
+			
+			if ( !isNewPlayer )
+				return; // don't do the teleport thing when reconnecting
+				
+			Location moveTo = player.getWorld().getSpawnLocation();
+			moveTo.setZ(moveTo.getZ() + teamSeparationOffset + r.nextDouble() * 6);
+			moveTo.setX(moveTo.getX() + r.nextDouble() * 6);
+			moveTo.setY(moveTo.getWorld().getHighestBlockYAt(moveTo) + 1);
+			
+			player.teleport(moveTo);
+		}
 	}
 	
 	@Override
@@ -224,7 +237,7 @@ public class TeamKiller extends GameMode
 		// if someone stands on the plinth with a winning item, their team wins
 		if ( playerOnPlinth != null && itemOnPlinth != null )
 		{
-			boolean killersWin = pm.isKiller(playerOnPlinth.getName());
+			boolean killersWin = pm.getTeam(playerOnPlinth.getName()) == 1;
 			pm.gameFinished(killersWin, !killersWin, playerOnPlinth.getName(), itemOnPlinth);
 			return;
 		}
@@ -232,7 +245,7 @@ public class TeamKiller extends GameMode
 		boolean killersAlive = false, friendliesAlive = false;
 		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
 			if ( entry.getValue().isAlive() )
-				if ( entry.getValue().isKiller() )
+				if ( entry.getValue().getTeam() == 1 )
 					killersAlive = true;
 				else
 					friendliesAlive = true;
@@ -256,7 +269,7 @@ public class TeamKiller extends GameMode
 
 		PlayerManager pm = plugin.playerManager;
 		Player attackerPlayer = (Player)attacker;
-		return pm.isKiller(victim.getName()) != pm.isKiller(attackerPlayer.getName());
+		return pm.getTeam(victim.getName()) != pm.getTeam(attackerPlayer.getName());
 	}
 	
 	@Override

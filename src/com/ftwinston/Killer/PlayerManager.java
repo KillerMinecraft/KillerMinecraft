@@ -87,22 +87,23 @@ public class PlayerManager
 	
 	public class Info
 	{
-		public Info(boolean alive) { a = alive; k = false; target = null; if ( alive ) numAlive ++; }
+		public Info(boolean alive) { a = alive; t = -1; target = null; if ( alive ) numAlive ++; }
 		
-		private boolean k, a;
-		public boolean isKiller() { return k; }
+		private boolean a;
+		private int t;
+		public int getTeam() { return t; }
 		
-		public void setKiller(boolean b)
+		public void setTeam(int i)
 		{
-			if ( b )
+			if ( i != t )
 			{
-				if ( !k ) // not currently a killer, being assigned
-					numKillers ++;
+				if ( t >= 0 && t < teamCounters.length )
+					teamCounters[t] --;
+				if ( i >= 0 && i < teamCounters.length )
+					teamCounters[i] ++;
 			}
-			else if ( k ) // currently a killer, being cleared
-				numKillers --;
-		
-			k = b;
+			
+			t = i;
 		}
 		
 		// am I a survivor or a spectator?
@@ -135,9 +136,10 @@ public class PlayerManager
 	public Set<Map.Entry<String, Info>> getPlayerInfo() { return playerInfo.entrySet(); }
 	
 	// any changes are automatically tracked, so these values should always be right. Includes dead killers!
-	private int numKillers = 0, numAlive = 0;
+	private int numAlive = 0;
+	private int[] teamCounters;
 	
-	public int numKillersAssigned() { return numKillers; }
+	public int numPlayersOnTeam(int team) { return team >= 0 && team < teamCounters.length ? teamCounters[team] : 0; }
 	
 	public int numSurvivors() { return numAlive;}
 	
@@ -151,10 +153,10 @@ public class PlayerManager
 		
 		int numAliveKillers = 0;
 		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-			if ( entry.getValue().isAlive() && entry.getValue().isKiller() )
+			if ( entry.getValue().isAlive() && entry.getValue().getTeam() == 1 )
 				numAliveKillers ++;
 		
-		return plugin.getGameMode().determineNumberOfKillersToAdd(numSurvivors(), numKillersAssigned(), numAliveKillers);
+		return plugin.getGameMode().determineNumberOfKillersToAdd(numSurvivors(), numPlayersOnTeam(1), numAliveKillers);
 	}
 	
 	public void reset(boolean resetInventories)
@@ -162,7 +164,9 @@ public class PlayerManager
 		stopAssignmentCountdown();
 
 		playerInfo.clear();
-		numKillers = numAlive = 0;
+		numAlive = 0;
+		for ( int i=0; i<teamCounters.length; i++ )
+			teamCounters[i] = 0;
 		
 		if ( helpMessageProcess != -1 )
 		{
@@ -227,13 +231,13 @@ public class PlayerManager
 	    								player.setCompassTarget(targetPlayer.getLocation());
 	    						}
 		        			}
-		        			else if ( isKiller(player.getName()) )
+		        			else if ( getTeam(player.getName()) == 1 )
 		        			{
 		        				if ( plugin.getGameMode().killersCompassPointsAtFriendlies() )
 				        			player.setCompassTarget(getNearestPlayerTo(player, true));	
 		        			}
 		        			else if ( plugin.getGameMode().friendliesCompassPointsAtKiller() )
-			        			player.setCompassTarget(getNearestPlayerTo(player, false));
+			        			player.setCompassTarget(getNearestPlayerTo(player, true));
 	        	}
 	        }, 20, 10);
 	        			
@@ -261,8 +265,8 @@ public class PlayerManager
 	private boolean assignKillers(int numKillers, CommandSender sender)
 	{
 		stopAssignmentCountdown();
-		boolean startOfGame = numKillersAssigned() == 0;
-		boolean retval = plugin.getGameMode().assignKillers(numKillers, sender, this);
+		boolean startOfGame = numPlayersOnTeam(1) == 0;
+		boolean retval = plugin.getGameMode().assignTeams(numKillers, sender, this);
 		
 		if ( startOfGame )
 			plugin.getGameMode().gameStarted();
@@ -365,13 +369,10 @@ public class PlayerManager
 			{
 				setAlive(player, true);
 				
-				if ( info.isKiller() )
-					plugin.getGameMode().prepareKiller(player, this, isNewPlayer);
-				else
-					plugin.getGameMode().prepareFriendly(player, this, isNewPlayer);
+				plugin.getGameMode().preparePlayer(player, this, info.getTeam(), isNewPlayer);
 				
-				if ( plugin.getGameMode().informOfKillerIdentity() )
-					colorPlayerName(player, info.isKiller() ? ChatColor.RED : ChatColor.BLUE);
+				if ( !plugin.getGameMode().teamAllocationIsSecret() )
+					colorPlayerName(player, info.getTeam() == 1 ? ChatColor.RED : ChatColor.BLUE);
 			}
 			else
 			{
@@ -382,7 +383,7 @@ public class PlayerManager
 		if ( isNewPlayer );
 			plugin.getGameMode().sendGameModeHelpMessage(this, player);
 			
-		if ( numKillersAssigned() == 0 )
+		if ( numPlayersOnTeam(1) == 0 )
 		{
 			checkImmediateKillerAssignment();
 			
@@ -396,7 +397,7 @@ public class PlayerManager
 	int countdownProcessID = -1;
 	public void checkImmediateKillerAssignment()
 	{
-		if ( countdownProcessID == -1 && plugin.getGameMode().immediateKillerAssignment() )
+		if ( countdownProcessID == -1 && plugin.getGameMode().immediateTeamAssignment() )
 			if ( numSurvivors() >= plugin.getGameMode().absMinPlayers() )
 			{
 				plugin.broadcastMessage("Allocation in 30 seconds...");
@@ -438,7 +439,7 @@ public class PlayerManager
 			if ( info != null )
 			{
 				info.setAlive(false);
-				if ( numKillersAssigned() > 0 )
+				if ( numPlayersOnTeam(1) > 0 )
 				{
 					if ( Settings.banOnDeath )
 						player.setBanned(true);
@@ -451,13 +452,13 @@ public class PlayerManager
 		}
 		
 		
-		if ( numKillersAssigned() == 0 )
+		if ( numPlayersOnTeam(1) == 0 )
 		{// game hasn't started yet, just respawn them normally
 			setAlive(player, true);
 			return;
 		}
 		
-		if ( plugin.getGameMode().informOfKillerIdentity() )
+		if ( !plugin.getGameMode().teamAllocationIsSecret() )
 			plugin.playerManager.clearPlayerNameColor(player);
 		
 		setAlive(player, false);
@@ -475,16 +476,16 @@ public class PlayerManager
 	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)
 	{
 		String message = null;
-		int numFriendlies = playerInfo.size() - numKillersAssigned();
+		int numFriendlies = playerInfo.size() - numPlayersOnTeam(1);
 		
 		if ( winningItem != null )
 		{
 			if ( friendliesWon )
-				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(false, numFriendlies > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(false, numFriendlies > 1) + (numFriendlies > 1 ? " win! " : " wins");
+				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(0, numFriendlies > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(0, numFriendlies > 1) + (numFriendlies > 1 ? " win! " : " wins");
 			else
-				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(true, numKillersAssigned() > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(true, numKillersAssigned() > 1) + (numKillersAssigned() > 1 ? " win! " : " wins");
+				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(1, numPlayersOnTeam(1) > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(1, numPlayersOnTeam(1) > 1) + (numPlayersOnTeam(1) > 1 ? " win! " : " wins");
 		}
-		else if ( numKillersAssigned() == 0 || numFriendlies == 0 ) // some mode might not assign specific killers, or have everyone as a killer. In this case, we only care about the winning player
+		else if ( numPlayersOnTeam(1) == 0 || numFriendlies == 0 ) // some mode might not assign specific killers, or have everyone as a killer. In this case, we only care about the winning player
 		{
 			if ( numSurvivors() == 1 )
 			{
@@ -503,12 +504,12 @@ public class PlayerManager
 		else if ( killerWon )
 		{
 			if ( numFriendlies > 1 )
-				message = "All of the " + plugin.getGameMode().describePlayer(false, true) + " have";
+				message = "All of the " + plugin.getGameMode().describePlayer(0, true) + " have";
 			else
-				message = "The " + plugin.getGameMode().describePlayer(false, false) + " has";
-			message += " died, the " + plugin.getGameMode().describePlayer(true, numKillersAssigned() > 1);
+				message = "The " + plugin.getGameMode().describePlayer(0, false) + " has";
+			message += " died, the " + plugin.getGameMode().describePlayer(1, numPlayersOnTeam(1) > 1);
 			
-			if ( numKillersAssigned() > 1 )
+			if ( numPlayersOnTeam(1) > 1 )
 			{
 				message += " win!";
 
@@ -520,12 +521,12 @@ public class PlayerManager
 		}
 		else if ( friendliesWon )
 		{
-			if ( numKillersAssigned() > 1 )
-				message =  "All of the " + plugin.getGameMode().describePlayer(true, true) + " have";
+			if ( numPlayersOnTeam(1) > 1 )
+				message =  "All of the " + plugin.getGameMode().describePlayer(1, true) + " have";
 			else
-				message = "The " + plugin.getGameMode().describePlayer(true, false) + " has";
+				message = "The " + plugin.getGameMode().describePlayer(1, false) + " has";
 		
-			message += " been killed, the " + plugin.getGameMode().describePlayer(false, numFriendlies > 1);
+			message += " been killed, the " + plugin.getGameMode().describePlayer(0, numFriendlies > 1);
 
 			if ( numFriendlies > 1 )
 			{
@@ -564,17 +565,17 @@ public class PlayerManager
 	{
 		String message;
 		
-		if ( numKillersAssigned() > 0 )
+		if ( numPlayersOnTeam(1) > 0 )
 		{
-			if ( plugin.getGameMode().revealKillersIdentityAtEnd() )
+			if ( plugin.getGameMode().revealTeamIdentityAtEnd(1) )
 			{
 				message = ChatColor.RED + (sender == null ? "Revealed: " : "Revealed by " + sender.getName() + ": ");
-				if ( numKillersAssigned() == 1 )
+				if ( numPlayersOnTeam(1) == 1 )
 				{
 					for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-						if ( entry.getValue().isKiller() )
+						if ( entry.getValue().getTeam() == 1 )
 						{
-							entry.getValue().setKiller(false);
+							entry.getValue().setTeam(0);
 							message += entry.getKey() + " was the killer!";
 							break;
 						}
@@ -585,10 +586,10 @@ public class PlayerManager
 					
 					int i = 0;
 					for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-						if ( entry.getValue().isKiller() )
+						if ( entry.getValue().getTeam() == 1 )
 						{
 							if ( i > 0 )
-								message += i == numKillersAssigned()-1 ? " and " : ", ";
+								message += i == numPlayersOnTeam(1)-1 ? " and " : ", ";
 							message += entry.getKey();
 							i++;
 						}
@@ -599,7 +600,7 @@ public class PlayerManager
 			}
 			
 			for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-				entry.getValue().setKiller(false);
+				entry.getValue().setTeam(0);
 			
 			// this game was "aborted"
 			if ( plugin.statsManager.isTracking )
@@ -632,10 +633,10 @@ public class PlayerManager
 		return info != null && info.isAlive();
 	}
 
-	public boolean isKiller(String player)
+	public int getTeam(String player)
 	{
 		Info info = playerInfo.get(player);
-		return info != null && info.isKiller();
+		return info == null ? 0 : info.getTeam();
 	}
 
 	public void setAlive(Player player, boolean bAlive)
@@ -803,7 +804,7 @@ public class PlayerManager
     {
     	if ( plugin.getGameMode().usesPlinth() && player.getWorld().getEnvironment() == Environment.NORMAL && !plugin.getGameMode().compassPointsAtTarget() )
 		{
-			if ( isKiller(player.getName()) )
+			if ( getTeam(player.getName()) == 1 )
 			{
 				if ( !plugin.getGameMode().killersCompassPointsAtFriendlies() )
 					player.setCompassTarget(plugin.getPlinthLocation());
@@ -813,17 +814,18 @@ public class PlayerManager
 		}
     }
 
-	public Location getNearestPlayerTo(Player player, boolean findFriendlies)
+	public Location getNearestPlayerTo(Player player, boolean ignoreTeammates)
 	{
 		Location nearest = null;
 		double nearestDistSq = Double.MAX_VALUE;
 		World playerWorld = player.getWorld();
+		int playerTeam = getTeam(player.getName());
 		for ( Player other : plugin.getOnlinePlayers() )
 		{
 			if ( other == player || other.getWorld() != playerWorld || !isAlive(other.getName()))
 				continue;
 			
-			if ( findFriendlies == isKiller(other.getName()) )
+			if ( ignoreTeammates && getTeam(other.getName()) == playerTeam )
 				continue;
 				
 			double distSq = other.getLocation().distanceSquared(player.getLocation());

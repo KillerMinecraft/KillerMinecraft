@@ -317,13 +317,13 @@ public class Killer extends JavaPlugin
 		}
 		else if (cmd.getName().equalsIgnoreCase("team"))
 		{
-			if ( !getGameMode().informOfKillerIdentity() )
+			if ( getGameMode().teamAllocationIsSecret() )
 			{
 				sender.sendMessage("Team chat is not available in " + getGameMode().getName() + " mode");
 				return true;
 			}
 			
-			if ( playerManager.numKillersAssigned() == 0 || !(sender instanceof Player) )
+			if ( playerManager.numPlayersOnTeam(1) == 0 || !(sender instanceof Player) )
 				return true;
 			
 			if ( args.length == 0 )
@@ -350,7 +350,7 @@ public class Killer extends JavaPlugin
 			getServer().getConsoleSender().sendMessage(message);
 			
 			for (Player recipient : event.getRecipients())
-                if ( playerManager.isKiller(recipient.getName()) == info.isKiller() )
+                if ( playerManager.getTeam(recipient.getName()) == info.getTeam() )
 					recipient.sendMessage(message);
 			
 			return true;
