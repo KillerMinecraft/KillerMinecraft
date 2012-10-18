@@ -9,10 +9,10 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -50,7 +50,7 @@ public class EventListener implements Listener
 		plugin = instance;
     }
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onWorldInit(WorldInitEvent event)
     {
     	if ( plugin.stagingWorldIsServerDefault && event.getWorld().getName().equalsIgnoreCase(Settings.stagingWorldName) )
@@ -58,14 +58,14 @@ public class EventListener implements Listener
     }
     
     // when you die a spectator, be made able to fly again when you respawn
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerRespawn(PlayerRespawnEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
 		
 		if ( plugin.getGameState().usesGameWorlds )
-			event.setRespawnLocation(plugin.worldManager.mainWorld.getSpawnLocation());
+			event.setRespawnLocation(plugin.getGameMode().getSpawnLocation(event.getPlayer()));
 		else
 			event.setRespawnLocation(plugin.worldManager.getStagingWorldSpawnPoint());
 	
@@ -78,8 +78,10 @@ public class EventListener implements Listener
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
     				{
-    					plugin.playerManager.setAlive(player, plugin.playerManager.numPlayersOnTeam(1) == 0);
-    					plugin.playerManager.checkPlayerCompassTarget(player);
+    					boolean alive = plugin.getGameMode().isAllowedToRespawn(player);
+    					plugin.playerManager.setAlive(player, alive);
+    					if ( alive )
+    						player.setCompassTarget(plugin.getGameMode().getCompassTarget(player));
     				}
     			}
     		});
@@ -87,7 +89,7 @@ public class EventListener implements Listener
     }
     
     // spectators moving between worlds
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void OnPlayerChangedWorld(PlayerChangedWorldEvent event)
     {
 		boolean wasInKiller = plugin.isGameWorld(event.getFrom());
@@ -101,7 +103,7 @@ public class EventListener implements Listener
 				if(PlayerManager.instance.isSpectator(player.getName()))
 					PlayerManager.instance.setAlive(player, false);
 				else
-					plugin.playerManager.checkPlayerCompassTarget(player);
+					player.setCompassTarget(plugin.getGameMode().getCompassTarget(player));
 			}
 			else
 			{
@@ -116,7 +118,7 @@ public class EventListener implements Listener
 			event.getPlayer().teleport(plugin.worldManager.getStagingWorldSpawnPoint()); // place them manually, to avoid needing a big hole in the roof
     }
     
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerPortal(PlayerPortalEvent event)
 	{// we're kinda doing the dirty work in making nether portals work, here
 		World fromWorld = event.getFrom().getWorld();
@@ -141,7 +143,7 @@ public class EventListener implements Listener
 	}
 	
     // prevent spectators picking up anything
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerPickupItem(PlayerPickupItemEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -149,12 +151,10 @@ public class EventListener implements Listener
 
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     		event.setCancelled(true);
-    	else
-    		plugin.getGameMode().playerPickedUpItem(event);
     }
     
     // prevent spectators breaking anything, prevent anyone breaking the plinth
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -162,13 +162,13 @@ public class EventListener implements Listener
 
     	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName())
     	  || event.getPlayer().getWorld() == plugin.worldManager.stagingWorld
-    	  || isOnPlinth(event.getBlock().getLocation())
+    	  || plugin.getGameMode().isLocationProtected(event.getBlock().getLocation())
     	  )
     		event.setCancelled(true);
     }
     
     // prevent anyone placing blocks over the plinth
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPlace(BlockPlaceEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -176,33 +176,33 @@ public class EventListener implements Listener
 
     	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName())
     	  || event.getPlayer().getWorld() == plugin.worldManager.stagingWorld
-    	  || isOnPlinth(event.getBlock().getLocation())
+    	  || plugin.getGameMode().isLocationProtected(event.getBlock().getLocation())
     	  )
     		event.setCancelled(true);
     }
     
     // prevent lava/water from flowing onto the plinth
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void BlockFromTo(BlockFromToEvent event)
     {
 		if ( !plugin.isGameWorld(event.getToBlock().getLocation().getWorld()) )
 			return;
 		
-        if ( isOnPlinth(event.getToBlock().getLocation()) )
+        if ( plugin.getGameMode().isLocationProtected(event.getToBlock().getLocation()) )
             event.setCancelled(true);
     }
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPistonExtend(BlockPistonExtendEvent event)
     {
 		if ( !plugin.isGameWorld(event.getBlock().getLocation().getWorld()) )
 			return;
 		
-    	if ( isOnPlinth(event.getBlock().getLocation()) )
+    	if ( plugin.getGameMode().isLocationProtected(event.getBlock().getLocation()) )
     		event.setCancelled(true);
     }
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityExplode(EntityExplodeEvent event)
     {
 		if ( !plugin.isGameWorld(event.getEntity().getWorld()) )
@@ -212,14 +212,14 @@ public class EventListener implements Listener
 
 		// remove any plinth blocks from the list, stop them being destroyed
     	for ( int i=0; i<blocks.size(); i++ )
-    		if ( isOnPlinth(blocks.get(i).getLocation()) )
+    		if ( plugin.getGameMode().isLocationProtected(blocks.get(i).getLocation()) )
     		{
     			blocks.remove(i);
     			i--;
     		}
     }
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerItemSwitch(PlayerItemHeldEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -239,17 +239,16 @@ public class EventListener implements Listener
     		else if ( item.getType() == Settings.followModeItem )
     		{
     			event.getPlayer().sendMessage("Follow mode: click to cycle target");
-    			plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNearestFollowTarget(event.getPlayer()));
-				plugin.playerManager.checkFollowTarget(event.getPlayer());
+    			String target = plugin.playerManager.getNearestFollowTarget(event.getPlayer());
+    			plugin.playerManager.setFollowTarget(event.getPlayer(), target);
+				plugin.playerManager.checkFollowTarget(event.getPlayer(), target);
     		}
     		else
     			plugin.playerManager.setFollowTarget(event.getPlayer(), null);
     	}
-    	else
-			plugin.getGameMode().playerItemSwitch(event.getPlayer(), event.getPreviousSlot(), event.getNewSlot());
     }
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -282,14 +281,16 @@ public class EventListener implements Listener
         		
     			if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
         		{
-    				plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNextFollowTarget(event.getPlayer(), info.target, true));
-    				plugin.playerManager.checkFollowTarget(event.getPlayer());
+    				String target = plugin.playerManager.getNextFollowTarget(event.getPlayer(), info.target, true);
+    				plugin.playerManager.setFollowTarget(event.getPlayer(), target);
+    				plugin.playerManager.checkFollowTarget(event.getPlayer(), target);
     				event.getPlayer().sendMessage("Following " + info.target);
         		}
     			else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
         		{
-    				plugin.playerManager.setFollowTarget(event.getPlayer(), plugin.playerManager.getNextFollowTarget(event.getPlayer(), info.target, false));
-    				plugin.playerManager.checkFollowTarget(event.getPlayer());
+    				String target = plugin.playerManager.getNextFollowTarget(event.getPlayer(), info.target, false);
+    				plugin.playerManager.setFollowTarget(event.getPlayer(), target);
+    				plugin.playerManager.checkFollowTarget(event.getPlayer(), target);
     				event.getPlayer().sendMessage("Following " + info.target);
         		}
     		}
@@ -311,21 +312,11 @@ public class EventListener implements Listener
     	if(event.isCancelled())
     		return;
 
-	  	if(event.getClickedBlock().getType() == Material.STONE_PLATE)
-	  	{
-	        if ( isOnPlinth(event.getClickedBlock().getLocation()) )
-	        {// does the player have one of the winning items in their inventory?	        	
-	        	for ( Material material : Settings.winningItems )
-		        	if ( event.getPlayer().getInventory().contains(material) )
-					{
-		        		plugin.getGameMode().checkForEndOfGame(plugin.playerManager, event.getPlayer(), material);
-						return;
-					}
-	        }
-	  	}
+	  	if(event.getClickedBlock().getType() == Material.STONE_PLATE && plugin.getGameMode().isOnPlinth(event.getClickedBlock().getLocation()))
+			plugin.getGameMode().playerActivatedPlinth(event.getPlayer());
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onItemDrop(PlayerDropItemEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -334,11 +325,9 @@ public class EventListener implements Listener
     	// spectators can't drop items
     	if ( plugin.playerManager.isSpectator(event.getPlayer().getName()) )
     		event.setCancelled(true);
-    	else
-    		plugin.getGameMode().playerDroppedItem(event.getPlayer(), event.getItemDrop());
     }
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryClick(InventoryClickEvent event)
     {
     	if ( !plugin.isGameWorld(event.getWhoClicked().getWorld()) )
@@ -348,14 +337,12 @@ public class EventListener implements Listener
     	if ( player == null )
     		return;
     	
-    	// spectators can't rearrange their inventory
+    	// spectators can't rearrange their inventory ... is that a bit mean?
     	if ( plugin.playerManager.isSpectator(player.getName()) )
     		event.setCancelled(true);
-    	else
-    		plugin.getGameMode().playerInventoryClick(player, event);
     }
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamage(EntityDamageEvent event)
     {
 		if ( !plugin.isGameWorld(event.getEntity().getWorld()) )
@@ -373,44 +360,24 @@ public class EventListener implements Listener
         if ( event.isCancelled() || event.getEntity() == null || !(event.getEntity() instanceof Player))
         	return;
         
-        Entity attacker = null;
         Player victim = (Player)event.getEntity();
         
-        if ( event instanceof EntityDamageByEntityEvent )
-        {
-        	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
-        	if ( damager != null )
-        		if ( damager instanceof Player )
-        			attacker = damager;
-        		else if ( damager instanceof Arrow )
-    			{
-        			Arrow arrow = (Arrow)damager;
-        			if ( arrow.getShooter() instanceof Player )
-        				attacker = (Player)arrow.getShooter();
-				}
-        }
-
-    	if(PlayerManager.instance.isSpectator(victim.getName()))
+		if(PlayerManager.instance.isSpectator(victim.getName()))
     		event.setCancelled(true);
-		else if ( !plugin.getGameMode().playerDamaged(victim, attacker, event.getCause(), event.getDamage()) )
-			event.setCancelled(true);
 	}
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
 		
 		Block affected = event.getBlockClicked().getRelative(event.getBlockFace());
-		if ( isOnPlinth(affected.getLocation()) )
+		if ( plugin.getGameMode().isLocationProtected(affected.getLocation()) )
 			event.setCancelled(true);
-			
-		if ( !event.isCancelled() )
-			plugin.getGameMode().playerEmptiedBucket(event);
     }
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onCraftItem(CraftItemEvent event)
     {
     	// killer recipes can only be crafter in killer worlds, or we could screw up the rest of the server
@@ -418,14 +385,14 @@ public class EventListener implements Listener
     		event.setCancelled(true);
     }
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityTarget(EntityTargetEvent event)
     {
     	if( event.getTarget() != null && event.getTarget() instanceof Player && PlayerManager.instance.isSpectator(((Player)event.getTarget()).getName()))
     		event.setCancelled(true);
     }
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerChat(AsyncPlayerChatEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -463,7 +430,7 @@ public class EventListener implements Listener
     			event.getRecipients().remove(recipient);
     }
 	
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerJoin(PlayerJoinEvent event)
     {
     	if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
@@ -486,7 +453,7 @@ public class EventListener implements Listener
 			playerJoined(event.getPlayer());
 	}
 	
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerQuit(PlayerQuitEvent event)
     {
 		if ( plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -509,14 +476,14 @@ public class EventListener implements Listener
 	private void playerQuit(Player player, boolean actuallyLeftServer)
 	{
 		if ( actuallyLeftServer ) // the quit message should be sent to the scoreboard of anyone who this player was invisible to
-			for ( Player online : plugin.getOnlinePlayers() )
+			for ( Player online : plugin.getGameMode().getOnlinePlayers() )
 				if ( !online.canSee(player) )
 					plugin.playerManager.sendForScoreboard(online, player, false);
 		
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName(), true), 600);
     }
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDeath(EntityDeathEvent event)
     {
     	if (!(event instanceof PlayerDeathEvent) || !plugin.isGameWorld(event.getEntity().getWorld()) )
@@ -528,7 +495,7 @@ public class EventListener implements Listener
 		if ( player == null )
 			return;
 		
-		if ( plugin.getGameMode().discreteDeathMessages() )
+		if ( plugin.getGameMode().useDiscreetDeathMessages() )
 			pEvent.setDeathMessage(ChatColor.RED + player.getName() + " died");	
 		
 		// the only reason this is delayed is to avoid banning the player before they properly die, if we're banning players on death
@@ -553,20 +520,10 @@ public class EventListener implements Listener
 				if ( player != null && player.isOnline() )
 					return; // player has reconnected, so don't kill them
 				
-				if ( plugin.playerManager.numPlayersOnTeam(1) > 0 && plugin.playerManager.isAlive(name) )
+				if ( plugin.playerManager.isAlive(name) )
 					plugin.statsManager.playerQuit();
 			}
     		plugin.playerManager.playerKilled(name);
     	}
     }
-	
-	private boolean isOnPlinth(Location loc)
-	{
-		Location plinthLoc = plugin.getPlinthLocation();
-		return  plinthLoc != null && loc.getWorld() == plinthLoc.getWorld()
-	            && loc.getX() >= plinthLoc.getBlockX() - 1
-	            && loc.getX() <= plinthLoc.getBlockX() + 1
-	            && loc.getZ() >= plinthLoc.getBlockZ() - 1
-	            && loc.getZ() <= plinthLoc.getBlockZ() + 1;
-	}
 }

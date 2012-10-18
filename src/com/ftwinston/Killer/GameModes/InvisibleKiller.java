@@ -1,23 +1,24 @@
 package com.ftwinston.Killer.GameModes;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import com.ftwinston.Killer.GameMode;
-import com.ftwinston.Killer.PlayerManager;
-import com.ftwinston.Killer.PlayerManager.Info;
 import com.ftwinston.Killer.Settings;
+import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ItemStack;
@@ -27,57 +28,49 @@ import org.bukkit.potion.PotionType;
 
 public class InvisibleKiller extends GameMode
 {
-	public static int decloakWhenWeaponDrawn, killerDistanceMessages;
+	public static final int decloakWhenWeaponDrawn = 0, killerDistanceMessages = 1;
 	
 	@Override
 	public String getName() { return "Invisible Killer"; }
 	
 	@Override
-	public int getModeNumber() { return 2; }
-
-	@Override
-	public int absMinPlayers() { return 2; }
+	public int getMinPlayers() { return 2; }
 	
 	@Override
-	public int getNumTeams() { return 2; }
-
-	@Override
-	public boolean killersCompassPointsAtFriendlies() { return true; }
-
-	@Override
-	public boolean friendliesCompassPointsAtKiller() { return false; }
-
-	@Override
-	public boolean discreteDeathMessages() { return false; }
-
-	@Override
-	public boolean usesPlinth() { return true; }
-
-	@Override
-	public void assignTeams(Player[] players)
+	public Option[] setupOptions()
 	{
-		// put all players on team 0, then pick one, put them on team 1
-		for ( Player player : players )
-			plugin.playerManager.setTeam(player, 0);
+		Option[] options =
+		{
+			new Option("Tell players how far away the killer is", true),
+			new Option("Killer decloaks when sword or bow is drawn", false)
+		};
 		
-		Player[] killers = plugin.playerManager.selectRandomPlayersFromTeam(1, 0, true);
-		for ( Player player : killers )
-			plugin.playerManager.setTeam(player, 1);
-				
-		// and now prepare players
-		for ( Player player : players )
-			preparePlayer(player, plugin.playerManager, playerTeamFeckUmm, isNewPlayer)
+		return options;
 	}
 	
 	@Override
-	public int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers)
+	public String[] getSignDescription()
 	{
-		// for now, one living killer at a time is plenty
-		return numAliveKillers > 0 ? 0 : 1;
+		return new String[] {
+			"A player is",
+			"chosen to kill",
+			"the rest. They",
+			"are invisible!",
+			
+			"They become",
+			"visible when",
+			"damaged.",
+			"",
+			
+			"The others must",
+			"kill them, or",
+			"get a blaze rod",
+			"to the spawn."
+		};
 	}
 	
 	@Override
-	public String describePlayer(int team, boolean plural)
+	public String describeTeam(int team, boolean plural)
 	{
 		if ( team == 1 )
 			return plural ? "killers" : "killer";
@@ -85,113 +78,15 @@ public class InvisibleKiller extends GameMode
 			return plural ? "friendly players" : "friendly player";
 	}
 	
-	private static final double maxKillerDetectionRangeSq = 50 * 50;
-	private Map<String, Boolean> inRangeLastTime = new LinkedHashMap<String, Boolean>();
-	
 	@Override
-	public void gameStarted()
-	{
-		inRangeLastTime.clear();
-		
-		if ( !options.get(killerDistanceMessages).isEnabled() )
-			return; // don't start the range message process
-			
-		updateRangeMessageProcessID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-			public void run()
-			{
-				for ( Map.Entry<String, Info> entry : plugin.playerManager.getPlayerInfo() )
-					if ( entry.getValue().isAlive() )
-					{
-						Player looker = plugin.getServer().getPlayerExact(entry.getKey());
-						if ( looker == null || !looker.isOnline() )
-							continue;
-						
-						double bestRangeSq = maxKillerDetectionRangeSq + 1;
-						if ( entry.getValue().getTeam() == 1 ) 
-						{
-							for ( Map.Entry<String, Info> entry2 : plugin.playerManager.getPlayerInfo() )
-								if ( entry2.getValue().isAlive() && entry2.getValue().getTeam() != entry.getValue().getTeam() )
-								{
-									Player target = plugin.getServer().getPlayerExact(entry2.getKey());
-									if ( target == null || !target.isOnline() || target.getWorld() != looker.getWorld() )
-										continue;
-									
-									double rangeSq = target.getLocation().distanceSquared(looker.getLocation());
-									if ( rangeSq < bestRangeSq )
-										bestRangeSq = rangeSq;
-								}
-						}
-						else
-						{
-							for ( Map.Entry<String, Info> entry2 : plugin.playerManager.getPlayerInfo() )
-								if ( entry2.getValue().isAlive() && entry2.getValue().getTeam() == 1 )
-								{
-									Player target = plugin.getServer().getPlayerExact(entry2.getKey());
-									if ( target == null || !target.isOnline() || target.getWorld() != looker.getWorld() )
-										continue;
-									
-									double rangeSq = target.getLocation().distanceSquared(looker.getLocation());
-									if ( rangeSq < bestRangeSq )
-										bestRangeSq = rangeSq;
-								}
-						}
-						
-						if ( bestRangeSq < maxKillerDetectionRangeSq )
-						{
-							int bestRange = (int)(Math.sqrt(bestRangeSq) + 0.5); // round to nearest integer
-							if ( entry.getValue().getTeam() == 1 )
-								looker.sendMessage("Range to nearest player: " + bestRange + " metres");
-							else
-								looker.sendMessage(ChatColor.RED + "Killer detected! Range: " + bestRange + " metres");
-							inRangeLastTime.put(looker.getName(), true);
-						}
-						else if ( inRangeLastTime.containsKey(looker.getName()) && inRangeLastTime.get(looker.getName()) )
-						{
-							if ( entry.getValue().getTeam() == 1 )
-								looker.sendMessage("All players are out of range");
-							else
-								looker.sendMessage("No killer detected");
-							inRangeLastTime.put(looker.getName(), false);
-						}
-					}
-			}
-		}, 50, 200);
-	}
-	
-	@Override
-	public void gameFinished()
-	{
-		if ( updateRangeMessageProcessID != -1 )
-		{
-			plugin.getServer().getScheduler().cancelTask(updateRangeMessageProcessID);
-			updateRangeMessageProcessID = -1;
-		}
-		
-		inRangeLastTime.clear();
-	}
-	
-	
-	@Override
-	public boolean informOfTeamAssignment(PlayerManager pm) { return true; }
-	
-	@Override
-	public boolean teamAllocationIsSecret() { return false; }
-	
-	@Override
-	public boolean revealTeamIdentityAtEnd(int team) { return false; }
-	
-	@Override
-	public boolean immediateTeamAssignment() { return true; }
-	
-	@Override
-	public String getHelpMessage(int num, int team, boolean isAllocationComplete)
+	public String getHelpMessage(int num, int team)
 	{
 		switch ( num )
 		{
 			case 0:
 				if ( team == 1 )
 					return "You have been chosen to be the killer, and must kill everyone else.\nYou are invisible, but they know who you are.";
-				else if ( isAllocationComplete )
+				else if ( countPlayersOnTeam(1, false) > 0 )
 					return "A player has been chosen to be the killer, and must kill everyone else.\nThey are invisible!";
 				else
 					return "A player will soon be chosen to be the killer.\nThey will be invisible, and you'll be told who it is.";
@@ -230,14 +125,14 @@ public class InvisibleKiller extends GameMode
 			case 4:
 				String message = "To win, the other players must kill the killer, or bring a ";
 			
-				message += plugin.tidyItemName(Settings.winningItems[0]);
+				message += tidyItemName(Settings.winningItems[0]);
 				
 				if ( Settings.winningItems.length > 1 )
 				{
 					for ( int i=1; i<Settings.winningItems.length-1; i++)
-						message += ", a " + plugin.tidyItemName(Settings.winningItems[i]);
+						message += ", a " + tidyItemName(Settings.winningItems[i]);
 					
-					message += " or a " + plugin.tidyItemName(Settings.winningItems[Settings.winningItems.length-1]);
+					message += " or a " + tidyItemName(Settings.winningItems[Settings.winningItems.length-1]);
 				}
 				
 				message += " to the plinth near the spawn.";
@@ -258,153 +153,261 @@ public class InvisibleKiller extends GameMode
 	}
 	
 	@Override
-	public String[] getSignDescription()
+	public boolean teamAllocationIsSecret() { return false; }
+	
+	@Override
+	public boolean usesNether() { return true; }
+	
+	@Override
+	public void worldGenerationComplete(World main, World nether)
 	{
-		return new String[] {
-			"A player is",
-			"chosen to kill",
-			"the rest. They",
-			"are invisible!",
-			"Players receive",
-			"alerts when the",
-			"killer is near.",
-			"The others must",
-			"kill them, or",
-			"get a blaze rod",
-			"and bring it to",
-			"the spawn point"
-		};
+		generatePlinth(main);
+	}
+	
+	@Override
+	public boolean isLocationProtected(Location l)
+	{
+		return isOnPlinth(l); // no protection, except for the plinth
+	}
+	
+	@Override
+	public boolean isAllowedToRespawn(Player player) { return false; }
+	
+	@Override
+	public boolean lateJoinersMustSpectate() { return false; }
+	
+	@Override
+	public boolean useDiscreetDeathMessages() { return false; }
+	
+	@Override
+	public Location getSpawnLocation(Player player)
+	{
+		return WorldManager.instance.mainWorld.getSpawnLocation(); // todo: improve this
+	}
+	
+	private static final double maxKillerDetectionRangeSq = 50 * 50;
+	private Map<String, Boolean> inRangeLastTime = new LinkedHashMap<String, Boolean>();
+	
+	@Override
+	public void gameStarted()
+	{	
+		restoreMessageProcessID = updateRangeMessageProcessID = -1;
+	
+		// pick one player, put them on team 1, and teleport them away
+		final List<Player> players = getOnlinePlayers(true);
+		Player killer = selectRandom(players);
+		if ( killer == null )
+		{
+			broadcastMessage("Unable to find a player to allocate as the killer");
+			return;
+		}
+		
+		setTeam(killer, 1);
+		
+		
+		// give the killer their items, teleport them a distance away
+		killer.sendMessage(ChatColor.RED + "You are the killer!\n" + ChatColor.RESET + "You are invisible.");
+		setPlayerVisibility(killer, false);
+		
+		if ( options.get(killerDistanceMessages).isEnabled() )
+		{
+			killer.sendMessage("Other players will see a message telling them how far away you are every 10 seconds. You will see a message with the distance to the nearest player at the same time.");
+		}
+			
+		PlayerInventory inv = killer.getInventory();
+		inv.addItem(new ItemStack(Material.COMPASS, 1));
+		inv.addItem(new ItemStack(Material.COOKED_BEEF, 10));
+		
+		// teleport the killer a little bit away from the other players
+		Location loc = killer.getLocation();
+		switch ( random.nextInt(4) )
+		{
+			case 0:
+				loc = randomizeLocation(loc, 16, 32, 0, 0, -32, 32); break;
+			case 1:
+				loc = randomizeLocation(loc, -32, -16, 0, 0, -32, 32); break;
+			case 2:
+				loc = randomizeLocation(loc, -32, 32, 0, 0, 16, 32); break;
+			case 3:
+				loc = randomizeLocation(loc, -32, 32, 0, 0, -32, -16); break;
+		}
+		loc = getSafeSpawnLocationNear(loc);
+		killer.teleport(loc);
+		
+		int numFriendlyPlayers = players.size() - 1;
+		
+		// then setup everyone else
+		for ( Player player : players )
+			if ( player != killer )
+			{
+				setTeam(player, 0);
+				
+				player.sendMessage(ChatColor.RED + killer.getName() + " is the killer!\n" + ChatColor.RESET + "Use the /team command to chat without them seeing your messages");
+				
+				giveFriendlyPlayerItems(player.getInventory(), numFriendlyPlayers);
+			}
+		
+		// send the message to dead players also
+		for ( Player player : getOnlinePlayers(false) )
+		{
+			setTeam(player, 0);
+			player.sendMessage(ChatColor.RED + killer.getName() + " is the killer!");
+		}
+		
+		// start our scheduled process
+		inRangeLastTime.clear();
+		
+		if ( !options.get(killerDistanceMessages).isEnabled() )
+			return; // don't start the range message process
+			
+		updateRangeMessageProcessID = getPlugin().getServer().getScheduler().scheduleSyncRepeatingTask(getPlugin(), new Runnable() {
+			public void run()
+			{
+				for ( Player looker : getOnlinePlayers(true) )
+				{
+					if ( looker == null || !looker.isOnline() )
+						continue;
+					
+					double bestRangeSq = maxKillerDetectionRangeSq + 1;
+					int lookerTeam = getTeam(looker);
+					int targetTeam = lookerTeam == 1 ? 0 : 1;
+					
+					for ( Player target : getOnlinePlayers(targetTeam, true) )
+					{
+						if ( target.getWorld() != looker.getWorld() )
+							continue;
+						
+						double rangeSq = target.getLocation().distanceSquared(looker.getLocation());
+						if ( rangeSq < bestRangeSq )
+							bestRangeSq = rangeSq;
+					}
+					
+					if ( bestRangeSq < maxKillerDetectionRangeSq )
+					{
+						int bestRange = (int)(Math.sqrt(bestRangeSq) + 0.5); // round to nearest integer
+						if ( lookerTeam == 1 )
+							looker.sendMessage("Range to nearest player: " + bestRange + " metres");
+						else
+							looker.sendMessage(ChatColor.RED + "Killer detected! Range: " + bestRange + " metres");
+						inRangeLastTime.put(looker.getName(), true);
+					}
+					else if ( inRangeLastTime.containsKey(looker.getName()) && inRangeLastTime.get(looker.getName()) )
+					{
+						if ( lookerTeam == 1 )
+							looker.sendMessage("All players are out of range");
+						else
+							looker.sendMessage("No killer detected");
+						inRangeLastTime.put(looker.getName(), false);
+					}
+				}
+			}
+		}, 50, 200);
+	}
+	
+	@Override
+	public void gameFinished(int winningTeam)
+	{
+		// stop our scheduled processes
+		if ( updateRangeMessageProcessID != -1 )
+		{
+			getPlugin().getServer().getScheduler().cancelTask(updateRangeMessageProcessID);
+			updateRangeMessageProcessID = -1;
+		}
+		
+		if ( restoreMessageProcessID != -1 )
+		{
+			getPlugin().getServer().getScheduler().cancelTask(restoreMessageProcessID);
+			restoreMessageProcessID = -1;
+		}
+		
+		inRangeLastTime.clear();
+	}
+	
+	private void giveFriendlyPlayerItems(PlayerInventory inv, int numFriendlyPlayers)
+	{	
+		ItemStack stack = new ItemStack(Material.BOW, 1);
+		stack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
+		inv.addItem(stack);
+		inv.addItem(new ItemStack(Material.ARROW, 1)); // you need 1 arrow for the infinity bow
+		
+		// give some splash potions of damage
+		Potion pot = new Potion(PotionType.INSTANT_DAMAGE);
+		pot.setLevel(1);
+		pot.splash();
+		
+		// if decloakWhenWeaponDrawn is enabled, give fewer splash potions
+		stack = pot.toItemStack(Math.max(2, (int)((options.get(decloakWhenWeaponDrawn).isEnabled() ? 32f : 64f) / (numFriendlyPlayers - 1))));
+		inv.addItem(stack);
+	}
+	
+	@Override
+	public void playerJoinedLate(Player player, boolean isNewPlayer)
+	{
+		// hide all killers from this player!
+		for ( Player killer : getOnlinePlayers(1, true) )
+			if ( killer != player )
+				hidePlayer(killer, player);
+	
+		if ( isNewPlayer )
+		{
+			setTeam(player, 0);
+			giveFriendlyPlayerItems(player.getInventory(), countPlayersOnTeam(0, false));
+		}
+	}
+	
+	@Override
+	public void playerKilledOrQuit(Player player)
+	{
+		int team = getTeam(player);
+		int numSurvivorsOnTeam = getOnlinePlayers(team, true).size();
+		
+		if ( numSurvivorsOnTeam > 0 )
+			return; // this players still has living allies, so this doesn't end the game
+		
+		int numSurvivorsTotal = getOnlinePlayers(true).size();
+		if ( numSurvivorsTotal == 0 )
+			finishGame(-1); // draw, nobody wins
+		else if ( team == 1 )
+			finishGame(0); // killer died, friendlies win
+		else
+			finishGame(1); // friendlies died, killer wins
+	}
+	
+	@Override
+	public Location getCompassTarget(Player player)
+	{
+		if ( getTeam(player) == 1 )
+			return getNearestPlayerTo(player, true); // points in a random direction if no players are found
+		
+		return null;
 	}
 
 	@Override
-	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
+	public void playerActivatedPlinth(Player player)
 	{
-		// hide all killers from this player!
-		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-			if ( entry.getValue().getTeam() == 1 && entry.getValue().isAlive() && !entry.getKey().equals(player.getName()) )
+		// see if the player's inventory contains a winning item
+		PlayerInventory inv = player.getInventory();
+		
+		for ( Material material : Settings.winningItems )
+			if ( inv.contains(material) )
 			{
-				Player killer = plugin.getServer().getPlayerExact(entry.getKey());
-				if ( killer != null && killer.isOnline() )
-					pm.hidePlayer(player, killer);
+				broadcastMessage(player.getName() + " brought a " + tidyItemName(material) + " to the plinth!");
+				finishGame(0); // winning item brought to the plinth, friendlies win
+				break;
 			}
-		
-		if ( info.getTeam() == 1 ) // inform them that they're still a killer
-			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (pm.numPlayersOnTeam(1) > 1 ? "a" : "the" ) + " killer, and you are invisible!");
-		else if ( isNewPlayer || !info.isAlive() ) // this is a new player, tell them the rules & state of the game
-			player.sendMessage("Welcome to Killer Minecraft!");
-		else
-			player.sendMessage("Welcome back. You are not the killer, and you're still alive.");
 	}
 	
-	@Override
-	public void preparePlayer(Player player, PlayerManager pm, int team, boolean isNewPlayer)
-	{
-		if ( team == 1 )
-		{
-			pm.makePlayerInvisibleToAll(player);
-			player.sendMessage("You are invisible. Other players will see a message telling them how far away you are every 10 seconds. You will see a message with the distance to the nearest player at the same time.");
-			
-			if ( !isNewPlayer )
-				return; // don't teleport or give new items on rejoining
-				
-			PlayerInventory inv = player.getInventory();
-			inv.addItem(new ItemStack(Material.COMPASS, 1));
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 10));
-			
-			// teleport the killer a little bit away from the other players, to stop them being potion-stomped
-			Random r = new Random();
-			Location loc = player.getLocation();
-			
-			if ( r.nextBoolean() )
-				loc.setX(loc.getX() + 16 + r.nextDouble() * 10);
-			else
-				loc.setX(loc.getX() - 16 - r.nextDouble() * 10);
-				
-			if ( r.nextBoolean() )
-				loc.setZ(loc.getZ() + 16 + r.nextDouble() * 10);
-			else
-				loc.setZ(loc.getZ() - 16 - r.nextDouble() * 10);
-			
-			loc.setY(loc.getWorld().getHighestBlockYAt(loc) + 1);
-			player.teleport(loc);
-		}
-		else
-		{
-			player.sendMessage("Use the /team command to chat without the killer seeing your messages");
-		
-			PlayerInventory inv = player.getInventory();
-			
-			if ( !isNewPlayer )
-				return; // don't give items on rejoining
-				
-			ItemStack stack = new ItemStack(Material.BOW, 1);
-			stack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
-			inv.addItem(stack);
-			inv.addItem(new ItemStack(Material.ARROW, 1)); // you need 1 arrow for the infinity bow, iirc
-			
-			// give some splash potions of damage
-			Potion pot = new Potion(PotionType.INSTANT_DAMAGE);
-			pot.setLevel(1);
-			pot.splash();
-			
-			// if decloakWhenWeaponDrawn is enabled, give fewer splash potions
-			stack = pot.toItemStack(Math.max(2, (int)((options.get(decloakWhenWeaponDrawn).isEnabled() ? 32f : 64f) / (pm.numSurvivors() - 1))));
-			inv.addItem(stack);
-		}
-	}
-	
-	@Override
-	public void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth)
-	{
-		// if there's no one alive at all, game was drawn
-		if (pm.numSurvivors() == 0 )
-		{
-			pm.gameFinished(false, false, null, null);
-			return;
-		}
-		
-		// if someone stands on the plinth with a winning item, the friendlies win
-		if ( playerOnPlinth != null && itemOnPlinth != null )
-		{
-			pm.gameFinished(false, true, playerOnPlinth.getName(), itemOnPlinth);
-			return;
-		}
-		
-		boolean killersAlive = false, friendliesAlive = false;
-		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-			if ( entry.getValue().isAlive() )
-				if ( entry.getValue().getTeam() == 1 )
-					killersAlive = true;
-				else
-					friendliesAlive = true;
-		
-		// if only killers are left alive, the killer won
-		if ( killersAlive && !friendliesAlive )
-			pm.gameFinished(true, false, null, null);
-		// if only friendlies are left alive, the friendlies won
-		else if ( !killersAlive && friendliesAlive )
-			pm.gameFinished(false, true, null, null);
-	}
-	
-	@Override
+	@EventHandler(ignoreCancelled = true)
 	public void playerEmptiedBucket(PlayerBucketEmptyEvent event)
 	{
-		// disable buckets for killer (within 5 blocks of other players)
-		String killerName = event.getPlayer().getName();
-		if ( plugin.playerManager.getTeam(killerName) != 1 )
+		if ( shouldIgnoreEvent(event.getPlayer()) || getTeam(event.getPlayer()) != 1 )
 			return;
 		
+		// disable buckets for killer (within 5 blocks of other players)
 		Location target = event.getBlockClicked().getLocation();
 		
-		for ( Map.Entry<String, Info> entry : plugin.playerManager.getPlayerInfo() )
+		for ( Player player : getOnlinePlayers(0, true) )
 		{
-			if ( entry.getKey().equals(killerName) )
-				continue; // doesn't matter if it's near yourself, it obviously will be
-			
-			Player player = plugin.getServer().getPlayerExact(entry.getKey());
-			if ( player == null || !player.isOnline() )
-				continue;
-			
 			if ( target.getWorld() != player.getWorld() )
 				continue;
 			
@@ -417,28 +420,31 @@ public class InvisibleKiller extends GameMode
 			}
 		}
 	}
-	
-	@Override
-	public boolean playerDamaged(Player victim, Entity attacker, DamageCause cause, int amount)
+
+	private int restoreMessageProcessID = -1, updateRangeMessageProcessID = -1;
+
+	@EventHandler(ignoreCancelled = true)
+	public void entityDamaged(EntityDamageEvent event)
 	{
-		if ( plugin.playerManager.getTeam(victim.getName()) != 1 )
-			return true;
+		if ( shouldIgnoreEvent(event.getEntity()) )
+			return;
+		
+		Player victim = (Player)event.getEntity();
+		if ( victim == null || getTeam(victim) != 1 )
+			return;
 		
 		if ( restoreMessageProcessID != -1 )
 		{// the "cooldown" must be reset
-			plugin.getServer().getScheduler().cancelTask(restoreMessageProcessID);
+			getPlugin().getServer().getScheduler().cancelTask(restoreMessageProcessID);
 		}
 		else
 		{// make them visible for a period of time
-			plugin.playerManager.makePlayerVisibleToAll(victim);
+			setPlayerVisibility(victim, true);
 			victim.sendMessage(ChatColor.RED + "You can be seen!");
 		}
 		
-		restoreMessageProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new RestoreInvisibility(victim.getName()), 100L); // 5 seconds
-		return true;
+		restoreMessageProcessID = getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), new RestoreInvisibility(victim.getName()), 100L); // 5 seconds
 	}
-	
-	private int restoreMessageProcessID = -1, updateRangeMessageProcessID = -1;
 	
     class RestoreInvisibility implements Runnable
     {
@@ -450,9 +456,9 @@ public class InvisibleKiller extends GameMode
     	
     	public void run()
     	{
-			Player player = plugin.getServer().getPlayerExact(name);
-			if ( player == null || !player.isOnline() )
-				return; // player has reconnected, so don't kill them
+			Player player = getPlugin().getServer().getPlayerExact(name);
+			if ( player == null || !player.isOnline() && !isAlive(player) )
+				return; // only if the player is still in the game
 			
 			ItemStack heldItem = player.getItemInHand();
 			if ( heldItem != null && isWeapon(heldItem.getType()) )
@@ -461,24 +467,25 @@ public class InvisibleKiller extends GameMode
 			}
 			else
 			{
-				plugin.playerManager.makePlayerInvisibleToAll(player);
+				setPlayerVisibility(player, false);
 				player.sendMessage("You are now invisible again");
 			}
 			restoreMessageProcessID = -1;
     	}
     }
     
-    @Override
-	public void playerItemSwitch(Player player, int prevSlot, int newSlot)
+	@EventHandler(ignoreCancelled = true)
+	public void playerItemSwitch(PlayerItemHeldEvent event)
     {
 		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
 			return;
 
-		if ( plugin.playerManager.getTeam(player.getName()) != 1 )
+		if ( shouldIgnoreEvent(event.getPlayer()) || getTeam(event.getPlayer()) != 1 )
 			return;
 		
-		ItemStack prevItem = player.getInventory().getItem(prevSlot);
-		ItemStack newItem = player.getInventory().getItem(newSlot);
+		Player player = event.getPlayer();
+		ItemStack prevItem = player.getInventory().getItem(event.getPreviousSlot());
+		ItemStack newItem = player.getInventory().getItem(event.getNewSlot());
 		
 		boolean prevIsWeapon = prevItem != null && isWeapon(prevItem.getType());
 		boolean newIsWeapon = newItem != null && isWeapon(newItem.getType());
@@ -488,82 +495,91 @@ public class InvisibleKiller extends GameMode
 		
 		if ( newIsWeapon )
 		{
-			plugin.playerManager.makePlayerVisibleToAll(player);
+			setPlayerVisibility(player, true);
 			player.sendMessage(ChatColor.RED + "You can be seen!");
 		}
 		else if ( !newIsWeapon )
 		{
-			plugin.playerManager.makePlayerInvisibleToAll(player);
+			setPlayerVisibility(player, false);
 			player.sendMessage("You are now invisible again");	
 		}
     }
 
-    @Override
-	public void playerDroppedItem(final Player player, Item item)
-    {
+	@EventHandler(ignoreCancelled = true)
+	public void playerDroppedItem(PlayerDropItemEvent event)
+	{
+		if ( shouldIgnoreEvent(event.getPlayer()) )
+			return;
+		
 		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
 			return;
 		
-		if ( !isWeapon(item.getItemStack().getType()) )
-			return;
+		Player player = event.getPlayer();
 		
-		if ( plugin.playerManager.getTeam(player.getName()) != 1 )
+		if ( getTeam(player) != 1 )
 			return;
 		
 		// if they currently have nothing in their hand, assume they just dropped this weapon
 		if ( player.getItemInHand() != null )
 			return;
 		
-		if ( restoreMessageProcessID == -1&& isWeapon(player.getItemInHand().getType()) )
+		if ( restoreMessageProcessID == -1 && isWeapon(player.getItemInHand().getType()) )
 		{
-			plugin.playerManager.makePlayerInvisibleToAll(player);
+			setPlayerVisibility(player, false);
 			player.sendMessage("You are now invisible again");	
 		}
     }
 
-	@Override
+	@EventHandler(ignoreCancelled = true)
 	public void playerPickedUpItem(PlayerPickupItemEvent event)
 	{
-		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
+		if ( shouldIgnoreEvent(event.getPlayer()) || !options.get(decloakWhenWeaponDrawn).isEnabled() )
 			return;
 		
 		if ( !isWeapon(event.getItem().getItemStack().getType()) )
 			return;
 		
-		if ( plugin.playerManager.getTeam(event.getPlayer().getName()) != 1 )
+		if ( getTeam(event.getPlayer()) != 1 )
 			return;
 		
 		final Player player = event.getPlayer();
 		
 		// wait a bit, for the item to actually get INTO their inventory. Then make them visible, if its in their hand
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+		getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), new Runnable() {
 			@Override
 			public void run()
 			{
 				ItemStack item = player.getItemInHand(); 
 				if ( restoreMessageProcessID == -1 && item != null && isWeapon(item.getType()) )
 				{
-					plugin.playerManager.makePlayerVisibleToAll(player);
+					setPlayerVisibility(player, true);
 					player.sendMessage(ChatColor.RED + "You can be seen!");
 				}
 			}
 		}, 10); // hopefully long enough for pickup
 	}
-	
-	@Override
-	public void playerInventoryClick(final Player player, InventoryClickEvent event)
+
+	@EventHandler(ignoreCancelled = true)
+	public void playerInventoryClick(InventoryClickEvent event)
 	{
+		if ( shouldIgnoreEvent(event.getWhoClicked()) )
+			return;
+	
 		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
 			return;
-		
-		if ( plugin.playerManager.getTeam(player.getName()) != 1 )
+			
+		final Player player = (Player)event.getWhoClicked();
+    	if ( player == null )
+    		return;
+	
+		if ( getTeam(player) != 1 )
 			return;
 		
 		// rather than work out all the click crap, let's just see if it changes
 		ItemStack item = player.getItemInHand();
 		final boolean weaponBefore = item != null && isWeapon(item.getType());
 		
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+		getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), new Runnable() {
 			@Override
 			public void run()
 			{
@@ -577,12 +593,12 @@ public class InvisibleKiller extends GameMode
 				
 				if ( weaponAfter )
 				{
-					plugin.playerManager.makePlayerVisibleToAll(player);
+					setPlayerVisibility(player, true);
 					player.sendMessage(ChatColor.RED + "You can be seen!");
 				}
 				else if ( !weaponAfter )
 				{
-					plugin.playerManager.makePlayerInvisibleToAll(player);
+					setPlayerVisibility(player, false);
 					player.sendMessage("You are now invisible again");	
 				}
 			}

@@ -1,151 +1,76 @@
 package com.ftwinston.Killer.GameModes;
 
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import com.ftwinston.Killer.GameMode;
-import com.ftwinston.Killer.PlayerManager;
-import com.ftwinston.Killer.PlayerManager.Info;
+import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.Material;
 
 public class ContractKiller extends GameMode
 {
+	static final long allocationDelayTicks = 600L; // 30 seconds
+	
+	public static final int playersStartFarApart = 0;
+
 	@Override
 	public String getName() { return "Contract Killer"; }
+
+	@Override
+	public int getMinPlayers() { return 4; }
 	
 	@Override
-	public int getModeNumber() { return 5; }
-
-	@Override
-	public int absMinPlayers() { return 4; }
-	
-	@Override
-	public int getNumTeams() { return 1; }
-
-	@Override
-	public boolean killersCompassPointsAtFriendlies() { return false; }
-
-	@Override
-	public boolean friendliesCompassPointsAtKiller() { return false; }
-
-	@Override
-	public boolean compassPointsAtTarget() { return true; }
-	
-	@Override
-	public boolean discreteDeathMessages() { return false; }
-
-	@Override
-	public boolean usesPlinth() { return false; }
-
-	@Override
-	public int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers)
+	public Option[] setupOptions()
 	{
-		return numAlive - numAliveKillers;
-	}
-	
-	public boolean assignKillers(int numKillers, CommandSender sender, PlayerManager pm)
-	{
-		List<Map.Entry<String, Info>> players = new LinkedList<Map.Entry<String, Info>>();
-		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-			if ( entry.getValue().isAlive() )
-				players.add(entry);
-		
-		if ( players.size() < absMinPlayers() )
-		{
-			String message = "Insufficient players to assign a killer. A minimum of " + absMinPlayers() + " players are required.";
-			if ( sender != null )
-				sender.sendMessage(message);
-			if ( informOfTeamAssignment(pm) )
-				plugin.broadcastMessage(message);
-			return false;
-		}
-		
-		if ( !plugin.statsManager.isTracking )
-			plugin.statsManager.gameStarted(pm.numSurvivors());
-		
-		Map.Entry<String, Info> firstOne = players.remove(r.nextInt(players.size()));
-		Map.Entry<String, Info> prevOne = firstOne;
-		
-		while ( players.size() > 0 )
-		{
-			Map.Entry<String, Info> current = players.remove(r.nextInt(players.size())); 
-			prevOne.getValue().target = current.getKey();
-			prevOne.getValue().setTeam(1); // ack... this should surely be 0
-			
-			Player hunterPlayer = plugin.getServer().getPlayerExact(prevOne.getKey());
-			if ( hunterPlayer != null && hunterPlayer.isOnline() )
-			{
-				hunterPlayer.sendMessage("Your target is: " +  ChatColor.YELLOW + current.getKey() + ChatColor.RESET + "!");
-				preparePlayer(hunterPlayer, pm, 1, true);
-			}
-			prevOne = current;
-			
-			plugin.statsManager.killerAdded();
-			if ( sender != null )
-				plugin.statsManager.killerAddedByAdmin();
-		}
-		
-		prevOne.getValue().target = firstOne.getKey();
-		prevOne.getValue().setTeam(1);
-		
-		Player hunterPlayer = plugin.getServer().getPlayerExact(prevOne.getKey());
-		if ( hunterPlayer != null && hunterPlayer.isOnline() )
-		{
-			hunterPlayer.sendMessage("Your target is: " +  ChatColor.YELLOW + firstOne.getKey() + ChatColor.RESET + "!");
-			preparePlayer(hunterPlayer, pm, 1, true);
-		}
-		
-		plugin.statsManager.killerAdded();
-		if ( sender != null )
-			plugin.statsManager.killerAddedByAdmin();
-		
-
-		plugin.broadcastMessage("All players have been allocated a target to kill");
-
-		return true;
+		Option[] options = {
+			new Option("Players start spread out, quite far apart", false)
+		};
+		return options;
 	}
 	
 	@Override
-	public String describePlayer(int team, boolean plural)
+	public String[] getSignDescription()
+	{
+		return new String[] {
+			"Each player is",
+			"given a target,",
+			"to kill without",
+			"anyone seeing.",
+			
+			"You can only",
+			"kill your own",
+			"target, or your",
+			"hunter.",
+			
+			"You take your",
+			"victim's target",
+			"when they die.",
+			""
+		};
+	}
+	
+	@Override
+	public String describeTeam(int team, boolean plural)
 	{
 		return plural ? "players" : "player";
 	}
 	
 	@Override
-	public void gameFinished()
-	{
-		victimWarningTimes.clear();
-	}
-	
-	@Override
-	public boolean informOfTeamAssignment(PlayerManager pm) { return false; }
-	
-	@Override
-	public boolean teamAllocationIsSecret() { return true; }
-	
-	@Override
-	public boolean revealTeamIdentityAtEnd(int team) { return false; }
-	
-	@Override
-	public boolean immediateTeamAssignment() { return true; }
-	
-	@Override
-	public String getHelpMessage(int num, int team, boolean isAllocationComplete)
+	public String getHelpMessage(int num, int team)
 	{
 		switch ( num )
 		{
 			case 0:
-				if ( isAllocationComplete )
+				if ( allocationComplete )
 					return "Every player has been assigned a target to kill, which they must do without being seen by anyone else.";
 				else
 					return "Every player will soon be assigned a target to kill, which they must do without being seen by anyone else.";
@@ -174,145 +99,317 @@ public class ContractKiller extends GameMode
 	}
 	
 	@Override
-	public String[] getSignDescription()
+	public boolean teamAllocationIsSecret() { return true; }
+	
+	@Override
+	public boolean usesNether() { return false; }
+	
+	@Override
+	public void worldGenerationComplete(World main, World nether)
 	{
-		return new String[] {
-			"Each player is",
-			"given a target,",
-			"who they must",
-			"kill without",
-			"being seen. You",
-			"can only kill",
-			"your target or",
-			"your hunter.",
-			"You take your",
-			"victim's target",
-			"when they die.",
-			""
-		};
+		nextPlayerNumber = 1; // ensure that the player placement logic starts over again
+		// this could arguably be in gameStarted, IF that's called before getSpawnLocation ... but idk if it is.
 	}
 	
 	@Override
-	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
+	public boolean isLocationProtected(Location l) { return false; }
+	
+	@Override
+	public boolean isAllowedToRespawn(Player player) { return false; }
+	
+	@Override
+	public boolean lateJoinersMustSpectate() { return false; }
+	
+	@Override
+	public boolean useDiscreetDeathMessages() { return false; }
+	
+	@Override
+	public Location getSpawnLocation(Player player)
 	{
-		if ( isNewPlayer ) // this is a new player, and the game's started ... so fit them into the victim list
+		Location worldSpawn = WorldManager.instance.mainWorld.getSpawnLocation();
+		
+		if ( !options.get(playersStartFarApart).isEnabled() )
 		{
-			player.sendMessage("Welcome to Killer Minecraft!");
-					
-			if ( !info.isAlive() || pm.numPlayersOnTeam(1) == 0 )
-				return;
+			Location spawnPoint = randomizeLocation(worldSpawn, -10, 10, 0, 0, -10, 10);
+			return getSafeSpawnLocationNear(spawnPoint);
+		}
+		
+		// ok, we're going to spawn one player in each chunk, moving in a spiral outward from the center.
+		// This shape is called an Ulam spiral, and it might be a bit crazy to use this, but there you go.
+		
+		int x = 0, z = 0;
+		int side = 0, number = 0, sideLength = 0;
+		int dir = 0; // 0 = +x, 1 = +z, 2 = -x, 3 = -z
+		
+		int playerNumber = nextPlayerNumber ++;
+		
+		while ( true )
+		{
+			side++;
+			for (int k = 0; k < sideLength; k++)
+			{
+				// move forward
+				switch ( dir )
+				{
+					case 0:
+						x++; break;
+					case 1:
+						z++; break;
+					case 2:
+						x--; break;
+					case 3:
+						z--; break;
+				}
+				number++;
 				
-			// pick a player to be this player's hunter. This player's victim will be the hunter's victim.
-			int numCandidates = 0;
-			for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-				if ( entry.getValue().isAlive() && entry.getValue().getTeam() == 1 )
-					numCandidates ++;
+				if ( number == playerNumber )
+					return getSafeSpawnLocationNear(worldSpawn.add(x * 16, 0, z * 16));
+			}
 			
-			int hunterIndex = r.nextInt(numCandidates), i = 0;
-			for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-				if ( entry.getValue().isAlive() && entry.getValue().getTeam() == 1 )
-					if ( i == hunterIndex )
-					{
-						info.target = entry.getValue().target;
-						entry.getValue().target = player.getName();
-						
-						Player hunterPlayer = plugin.getServer().getPlayerExact(entry.getKey());
-						if ( hunterPlayer != null && hunterPlayer.isOnline() )
-							hunterPlayer.sendMessage("Your target has changed, and is now: " +  ChatColor.YELLOW + info.target + ChatColor.RESET + "!");
-						break;
-					}
-					else
-						i++;
+			// turn left
+			if ( dir >= 3 )
+				dir = 0;
+			else
+				dir++;
+				
+			if (side % 2 == 0)
+				sideLength++;
+		}
+	}
+	
+	boolean allocationComplete = false;
+	int nextPlayerNumber = 1;
+	int allocationProcessID = -1;
+	
+	@Override
+	public void gameStarted()
+	{
+		allocationComplete = false;
+		
+		// allocation doesn't happen right away, there's 30 seconds of "scrabbling" first
+		allocationProcessID = getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), new Runnable() {
+			public void run()
+			{
+				allocateTargets();
+				allocationProcessID = -1;
+			}
+		}, allocationDelayTicks);
+	}
+	
+	private void allocateTargets()
+	{
+		// give everyone a target, make them be someone else's target
+		List<Player> players = getOnlinePlayers(true);
+		
+		if ( players.size() < getMinPlayers() )
+		{
+			broadcastMessage("Cannot start game: insufficient players to assign targets. A minimum of " + getMinPlayers() + " players are required.");
+			return;
+		}
+		
+		Player firstOne = players.remove(random.nextInt(players.size()));
+		Player prevOne = firstOne;
+		
+		while ( players.size() > 0 )
+		{
 			
-			// tell them who their target is
-			player.sendMessage("Your target is: " +  ChatColor.YELLOW + info.target + ChatColor.RESET + "!");
-			info.setTeam(1); // everyone's a killer in their own way
+			Player current = players.remove(random.nextInt(players.size()));
+			setTargetOf(prevOne, current);
+			
+			prevOne.sendMessage("Your target is: " +  ChatColor.YELLOW + current.getName() + ChatColor.RESET + "!");
+			prevOne.getInventory().addItem(new ItemStack(Material.COMPASS, 1));
+			prevOne = current;
+		}
+		
+		setTargetOf(prevOne, firstOne);
+		prevOne.sendMessage("Your target is: " +  ChatColor.YELLOW + firstOne.getName() + ChatColor.RESET + "!");
+		prevOne.getInventory().addItem(new ItemStack(Material.COMPASS, 1));
+		
+		broadcastMessage("All players have been allocated a target to kill");
+		allocationComplete = true;
+	}
+	
+	@Override
+	public void gameFinished(int winningTeam)
+	{
+		allocationComplete = false;
+		victimWarningTimes.clear();
+		nextPlayerNumber = 1;
+		
+		if ( allocationProcessID != -1 )
+		{
+			getPlugin().getServer().getScheduler().cancelTask(allocationProcessID);
+			allocationProcessID = -1;
+		}
+	}
+	
+	@Override
+	public void playerJoinedLate(Player player, boolean isNewPlayer)
+	{
+		if ( !isNewPlayer )
+		{
+			Player target = getTargetOf(player);
+			if ( target != null )
+				player.sendMessage("Your target is: " +  ChatColor.YELLOW + target.getName() + ChatColor.RESET + "!");
+			else
+				player.sendMessage("You don't seem to have a target... sorry!");
+			return;
+		}
+		
+		List<Player> players = getOnlinePlayers(true);
+		if ( players.size() < 2 )
+			return;
+		
+		// pick a player to be this player's hunter. This player's victim will be the hunter's victim.
+		int hunterIndex = random.nextInt(players.size()-1), i = 0;
+		for ( Player hunter : players )
+			if ( hunter == player )
+				continue; // ignore self
+			else if ( i == hunterIndex )
+			{
+				Player target = getTargetOf(hunter);
+				setTargetOf(player, target);
+				setTargetOf(hunter, player);
+				
+				hunter.sendMessage("Your target has changed, and is now: " +  ChatColor.YELLOW + player.getName() + ChatColor.RESET + "!");
+				
+				player.sendMessage("Your target is: " +  ChatColor.YELLOW + target.getName() + ChatColor.RESET + "!");
+				player.getInventory().addItem(new ItemStack(Material.COMPASS, 1));
+				break;
+			}
+			else
+				i++;
+	}
+	
+	@Override
+	public void playerKilledOrQuit(Player player)
+	{
+		List<Player> survivors = getOnlinePlayers(true);
+		
+		if ( survivors.size() > 1 ) 
+		{// find this player's hunter ... change their target to this player's target
+			for ( Player survivor : survivors )
+				if ( player == getTargetOf(survivor) )
+				{
+					Player target = getTargetOf(player);
+					setTargetOf(survivor, target);
+					
+					survivor.sendMessage("Your target has changed, and is now: " +  ChatColor.YELLOW + target.getName() + ChatColor.RESET + "!");
+					break;
+				}
+		}
+		setTargetOf(player, null);
+		
+		if ( survivors.size() == 1 )
+		{
+			Player survivor = survivors.get(0);
+			broadcastMessage(survivor, survivor.getName() + " is the last man standing, and wins the game!");
+			survivor.sendMessage("You are the last man standing: you win the game!");
+		}
+		else if ( survivors.size() == 0 )
+			broadcastMessage("All players died, nobody wins!");
+		else if ( survivors.size() == 3 )
+		{
+			broadcastMessage("Three players remain: everyone is now a legitimate target!");
+			return;
 		}
 		else
-		{
-			String message = "Welcome back.";
-			
-			if ( info != null && info.isAlive() && info.target != null )
-				message += " Your target is: " +  ChatColor.YELLOW + info.target + ChatColor.RESET + "!";
-				
-			player.sendMessage(message);
-		}
+			return; // multiple people left in the game
+		
+		finishGame(-1);
+	}
+	
+	@Override
+	public Location getCompassTarget(Player player)
+	{
+		Player target = getTargetOf(player);
+		if ( target != null )
+			return target.getLocation();
+		
+		return null;
 	}
 	
 	private static final double maxObservationRangeSq = 60 * 60;
 	
-	@Override
-	public boolean playerDamaged(Player victim, Entity attacker, DamageCause cause, int amount)
+	@EventHandler(ignoreCancelled = true)
+	public void entityDamaged(EntityDamageEvent event)
 	{
-		PlayerManager pm = plugin.playerManager;
+		if ( shouldIgnoreEvent(event.getEntity()) )
+			return;
+		
+		Player victim = (Player)event.getEntity();
+		if ( victim == null )
+			return;
+		
+		Player attacker = getAttacker(event);
+		if ( attacker == null )
+			return;
+		
+		Player victimTarget = getTargetOf(victim);
+		Player attackerTarget = getTargetOf(attacker);
 
-		if ( !(attacker instanceof Player) )
-			return true; // we only care about damage by players
-		
-		Player attackerPlayer = (Player)attacker;
-		
-		String victimTarget = pm.getInfo(victim.getName()).target; 
-		String attackerTarget = pm.getInfo(attackerPlayer.getName()).target; 
-		
 		// armour is a problem. looks like its handled in EntityHuman.b(DamageSource damagesource, int i) - can replicate the code ... technically also account for enchantments
-		if ( amount >= victim.getHealth() )
-			if ( attackerTarget.equals(victim.getName()) || victimTarget.equals(attackerPlayer.getName()) )
+		if ( event.getDamage() >= victim.getHealth() )
+			if ( attackerTarget == victim || victimTarget == attacker )
 			{// this interaction was allowed ... should still check if they were observed!
-				for ( Player observer : plugin.getOnlinePlayers() )					
+				List<Player> survivors = getOnlinePlayers(true);
+				for ( Player observer : survivors )
 				{
-					 if ( observer == victim || observer == attacker || !pm.isAlive(observer.getName()) )
+					 if ( observer == victim || observer == attacker )
 						 continue;
 					 
-					 if ( pm.canSee(observer, attackerPlayer, maxObservationRangeSq) )
+					 if ( playerCanSeeOther(observer, attacker, maxObservationRangeSq) )
 					 {
-						 attackerPlayer.damage(50);
+						 attacker.damage(50);
 						 
-						 attackerPlayer.sendMessage("You were observed trying to kill " + victim.getName() + " by " + observer.getName() + ", so you've been killed instead.");
-						 victim.sendMessage(attackerPlayer.getName() + " tried to kill you, but was observed doing so by " + observer.getName() + " - so " + attackerPlayer.getName() + " has been killed instead.");
-						 observer.sendMessage("You observed " + attackerPlayer.getName() + " trying to kill " + victim.getName() + ", so " + attackerPlayer.getName() + " was killed instead.");
+						 attacker.sendMessage("You were observed trying to kill " + victim.getName() + " by " + observer.getName() + ", so you've been killed instead.");
+						 victim.sendMessage(attacker.getName() + " tried to kill you, but was observed doing so by " + observer.getName() + " - so " + attacker.getName() + " has been killed instead.");
+						 observer.sendMessage("You observed " + attacker.getName() + " trying to kill " + victim.getName() + ", so " + attacker.getName() + " was killed instead.");
 						 
-						 return false;
+						 event.setCancelled(true);
+						 return;
 					 }
 				}
 				
-				if ( victimTarget.equals(attackerPlayer.getName()) && pm.numSurvivors() > 1)
+				if ( victimTarget == attacker && survivors.size() > 1)
 					victim.sendMessage("You killed your hunter - but someone else is hunting you now!");
 			}
 			else
 			{
 				// this wasn't a valid kill target, and was a killing blow
-				attackerPlayer.damage(50);
+				attacker.damage(50);
 				
-				attackerPlayer.sendMessage(victim.getName() + " was neither your target nor your hunter, so you've been killed for trying to kill them!");
-				victim.sendMessage(attackerPlayer.getName() + " tried to kill you - they've been killed instead.");
+				attacker.sendMessage(victim.getName() + " was neither your target nor your hunter, so you've been killed for trying to kill them!");
+				victim.sendMessage(attacker.getName() + " tried to kill you - they've been killed instead.");
 				
-				return false; // cancel the damage
+				event.setCancelled(true);
+				return;
 			}
-		else if ( attackerTarget.equals(victim.getName()) )
+		else if ( attackerTarget == victim )
 		{
-			if ( shouldSendVictimMessage(victim.getName(), attackerPlayer.getName(), "H") )
-				victim.sendMessage(attackerPlayer.getName() + " is your hunter - " + ChatColor.RED + "they can kill you!");
+			if ( shouldSendVictimMessage(victim.getName(), attacker.getName(), "H") )
+				victim.sendMessage(attacker.getName() + " is your hunter - " + ChatColor.RED + "they can kill you!");
 		}
-		else if ( victimTarget.equals(attackerPlayer.getName()) )
+		else if ( victimTarget == attacker )
 		{
-			if ( shouldSendVictimMessage(victim.getName(), attackerPlayer.getName(), "V") )
-				victim.sendMessage(attackerPlayer.getName() + " is your victim - " + ChatColor.RED + "they can kill you!");
+			if ( shouldSendVictimMessage(victim.getName(), attacker.getName(), "V") )
+				victim.sendMessage(attacker.getName() + " is your victim - " + ChatColor.RED + "they can kill you!");
 		}
 		else
 		{
-			if ( shouldSendVictimMessage(victim.getName(), attackerPlayer.getName(), "-") )
-				victim.sendMessage(attackerPlayer.getName() + " is neither your hunter nor your victim - they cannot kill you, and will die if they try!");
+			if ( shouldSendVictimMessage(victim.getName(), attacker.getName(), "-") )
+				victim.sendMessage(attacker.getName() + " is neither your hunter nor your victim - they cannot kill you, and will die if they try!");
 		}
-		return true;
 	}
 	
 	private static final long victimWarningRepeatInterval = 200;
 	private Map<String, Long> victimWarningTimes = new LinkedHashMap<String, Long>();
+	
 	private boolean shouldSendVictimMessage(String victim, String attacker, String relationship)
 	{
 		// if there's a value saved for this player pair/relationship, see if it was saved within the last 10 secs - if so, don't send.
 		String key = victim + "|" + attacker + "|" + relationship;
-		long currentTime = plugin.getServer().getWorlds().get(0).getTime();
+		long currentTime = WorldManager.instance.mainWorld.getTime();
 		
 		if ( victimWarningTimes.containsKey(key) )
 		{
@@ -324,45 +421,5 @@ public class ContractKiller extends GameMode
 		// save this off, so they don't get this same message again in the next 10 secs
 		victimWarningTimes.put(key, currentTime);
 		return true;
-	}
-	
-	@Override
-	public void playerKilled(Player player, PlayerManager pm, PlayerManager.Info info)
-	{
-		if ( pm.numSurvivors() > 1 ) 
-		{
-			// find this player's hunter ... change their target to this player's target
-			for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-				if ( player.getName().equals(entry.getValue().target) )
-				{
-					entry.getValue().target = info.target;
-					Player hunterPlayer = plugin.getServer().getPlayerExact(entry.getKey());
-					if ( hunterPlayer != null && hunterPlayer.isOnline() )
-						hunterPlayer.sendMessage("Your target has changed, and is now: " +  ChatColor.YELLOW + info.target + ChatColor.RESET + "!");
-					break;
-				}
-		}	
-		info.target = null;
-	}
-		
-	@Override
-	public void preparePlayer(Player player, PlayerManager pm, int team, boolean isNewPlayer)
-	{
-		if ( !isNewPlayer )
-			return; // don't give items when rejoining
-		
-		PlayerInventory inv = player.getInventory();
-		inv.addItem(new ItemStack(Material.COMPASS, 1));
-	}
-	
-	@Override
-	public void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth)
-	{
-		// if there's no one alive at all, game was drawn
-		if (pm.numSurvivors() < 2 )
-		{
-			pm.gameFinished(pm.numSurvivors() == 1, false, null, null);
-			return;
-		}
 	}
 }

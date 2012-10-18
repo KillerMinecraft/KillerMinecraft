@@ -1,65 +1,64 @@
 package com.ftwinston.Killer.GameModes;
 
-import java.util.Map;
+import java.util.List;
 
 import com.ftwinston.Killer.GameMode;
-import com.ftwinston.Killer.PlayerManager;
-import com.ftwinston.Killer.PlayerManager.Info;
 import com.ftwinston.Killer.Settings;
+import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
-import org.bukkit.enchantments.Enchantment;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
 
 public class MysteryKiller extends GameMode
 {
-	public static int dontAssignKillerUntilSecondDay, autoReallocateKillers, allowMultipleKillers; 
+	public static final int dontAssignKillerUntilSecondDay = 0, autoReallocateKillers = 1, allowMultipleKillers = 2;
 	
 	@Override
 	public String getName() { return "Mystery Killer"; }
 
 	@Override
-	public int getModeNumber() { return 1; }
+	public int getMinPlayers() { return 3; }
 	
 	@Override
-	public int absMinPlayers() { return 3; }
-	
-	@Override
-	public int getNumTeams() { return 2; }
-
-	@Override
-	public boolean killersCompassPointsAtFriendlies() { return true; }
-
-	@Override
-	public boolean friendliesCompassPointsAtKiller() { return false; }
-
-	@Override
-	public boolean discreteDeathMessages() { return true; }
-
-	@Override
-	public boolean usesPlinth() { return true; }
-
-	@Override
-	public int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers)
+	public Option[] setupOptions()
 	{
-		// if any killers have already been assigned, and we're not meant to reallocate, don't add any more
-		if ( !options.get(autoReallocateKillers).isEnabled() && numKillers > 0 )
-			return 0;
+		Option[] options =
+		{
+			new Option("Don't assign killer until the second day", true),
+			new Option("Allocate new killer if old ones die", true),
+			new Option("Assign multiple killers if lots of people play", false)
+		};
 		
-		// if we don't allow multiple killers, only ever add 0 or 1
-		if ( !options.get(allowMultipleKillers).isEnabled() )
-			return numAliveKillers > 0 ? 0 : 1;
-
-		// 1-5 players should have 1 killer. 6-11 should have 2. 12-17 should have 3. 18-23 should have 4. 
-		int targetNumKillers = numAlive / 6 + 1;
-		return targetNumKillers - numAliveKillers;
+		return options;
 	}
 	
 	@Override
-	public String describePlayer(int team, boolean plural)
+	public String[] getSignDescription()
+	{
+		return new String[] {
+			"A player is",
+			"chosen to kill",
+			"the rest. Other",
+			"players aren't",
+			
+			"told who is the",
+			"killer! Death",
+			"messages are a",
+			"bit more vague.",
+
+			"The others must",
+			"get a blaze rod",
+			"and bring it to",
+			"the spawn point"
+		};
+	}
+	
+	@Override
+	public String describeTeam(int team, boolean plural)
 	{
 		if ( team == 1 )
 			return plural ? "killers" : "killer";
@@ -68,19 +67,7 @@ public class MysteryKiller extends GameMode
 	}
 	
 	@Override
-	public boolean informOfTeamAssignment(PlayerManager pm) { return pm.numPlayersOnTeam(1) == 0; }
-	
-	@Override
-	public boolean teamAllocationIsSecret() { return true; }
-	
-	@Override
-	public boolean immediateTeamAssignment() { return !options.get(dontAssignKillerUntilSecondDay).isEnabled(); }
-	
-	@Override
-	public boolean revealTeamIdentityAtEnd(int team) { return team == 1; }
-	
-	@Override
-	public String getHelpMessage(int num, int team, boolean isAllocationComplete)
+	public String getHelpMessage(int num, int team)
 	{
 		switch ( num )
 		{
@@ -92,10 +79,10 @@ public class MysteryKiller extends GameMode
 					else
 						return "You have been chosen to try and kill everyone else.\nNo one else has been told who was chosen.";
 				}
-				else if ( isAllocationComplete )
+				else if ( countPlayersOnTeam(1, false) > 0 )
 				{
 					if ( options.get(allowMultipleKillers).isEnabled() )
-						return "At least one player has been chosen to try and kill everyone else.\nIf there are more than 5 players in the game, multiple players will be chosen.\nNo one else has been told who they are.";
+						return "(At least) one player has been chosen to try and kill everyone else.\nIf there are more than 5 players in the game, multiple players will be chosen.\nNo one else has been told who they are.";
 					else
 						return "One player has been chosen to try and kill everyone else. No one else has been told who it is.";
 				}
@@ -104,14 +91,14 @@ public class MysteryKiller extends GameMode
 					if ( options.get(dontAssignKillerUntilSecondDay).isEnabled() )
 					{
 						if ( options.get(allowMultipleKillers).isEnabled() )
-							return "At the start of the next game day, at least one player will be chosen to try and kill everyone else.\nIf there are more than 5 players in the game, multiple players will be chosen.\nNo one else will be told who they are.";
+							return "At the start of the next game day, (at least) one player will be chosen to try and kill everyone else.\nIf there are more than 5 players in the game, multiple players will be chosen.\nNo one else will be told who they are.";
 						else
 							return "At the start of the next game day, one player will be chosen to try and kill everyone else.\nNo one else will be told who it is.";
 					}
 					else
 					{
 						if ( options.get(allowMultipleKillers).isEnabled() )
-							return "At least one player will shortly be chosen to try and kill everyone else.\nIf there are more than 5 players in the game, multiple players will be chosen.\nNo one else will be told who they are.";
+							return "(At least) one player will shortly be chosen to try and kill everyone else.\nIf there are more than 5 players in the game, multiple players will be chosen.\nNo one else will be told who they are.";
 						else
 							return "One player will shortly be chosen to try and kill everyone else.\nNo one else will be told who it is.";
 					}
@@ -134,14 +121,14 @@ public class MysteryKiller extends GameMode
 			case 2:
 				String message = "To win, the other players must bring a ";
 				
-				message += plugin.tidyItemName(Settings.winningItems[0]);
+				message += tidyItemName(Settings.winningItems[0]);
 				
 				if ( Settings.winningItems.length > 1 )
 				{
 					for ( int i=1; i<Settings.winningItems.length-1; i++)
-						message += ", a " + plugin.tidyItemName(Settings.winningItems[i]);
+						message += ", a " + tidyItemName(Settings.winningItems[i]);
 					
-					message += " or a " + plugin.tidyItemName(Settings.winningItems[Settings.winningItems.length-1]);
+					message += " or a " + tidyItemName(Settings.winningItems[Settings.winningItems.length-1]);
 				}
 				
 				message += " to the plinth near the spawn.";
@@ -183,29 +170,174 @@ public class MysteryKiller extends GameMode
 				return "Dispensers can be crafted using a sapling instead of a bow. These work well with monster eggs.";
 				
 			default:
-				return "";
+				return null;
 		}
 	}
 	
 	@Override
-	public String[] getSignDescription()
+	public boolean teamAllocationIsSecret() { return true; }
+	
+	@Override
+	public boolean usesNether() { return true; }
+	
+	@Override
+	public void worldGenerationComplete(World main, World nether)
 	{
-		return new String[] {
-			"A player is",
-			"chosen to kill",
-			"the rest. Other",
-			"players aren't",
-			"told who is the",
-			"killer! Death",
-			"messages are a",
-			"bit more vague.",
-			"The others must",
-			"get a blaze rod",
-			"and bring it to",
-			"the spawn point"
-		};
+		generatePlinth(main);
+	}
+	
+	@Override
+	public boolean isLocationProtected(Location l)
+	{
+		return isOnPlinth(l); // no protection, except for the plinth
+	}
+	
+	@Override
+	public boolean isAllowedToRespawn(Player player) { return false; }
+	
+	@Override
+	public boolean lateJoinersMustSpectate() { return false; }
+	
+	@Override
+	public boolean useDiscreetDeathMessages() { return true; }
+	
+	@Override
+	public Location getSpawnLocation(Player player)
+	{
+		return getSafeSpawnLocationNear(WorldManager.instance.mainWorld.getSpawnLocation());
+	}
+	
+	int allocationProcessID = -1;
+	
+	@Override
+	public void gameStarted()
+	{
+		List<Player> players = getOnlinePlayers(true);
+		for ( Player player : players )
+			setTeam(player, 0);
+		
+		if ( options.get(dontAssignKillerUntilSecondDay).isEnabled() )
+		{
+			// check based on the time of day
+			// ...
+		}
+		else // allocate in 30 seconds
+			allocationProcessID = getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), new Runnable() {
+				public void run()
+				{
+					allocateKiller();
+					allocationProcessID = -1;
+				}
+			}, 600L);
+	}
+	
+	private void allocateKiller()
+	{
+		// pick one player, put them on team 1
+		List<Player> players = getOnlinePlayers(true);		
+		Player killer = selectRandom(players);
+		if ( killer == null )
+		{
+			broadcastMessage("Unable to find a player to allocate as the killer");
+			return;
+		}
+		
+
+		setTeam(killer, 1);
+		
+		
+		// give the killer their items, teleport them a distance away
+		killer.sendMessage(ChatColor.RED + "You are the killer!\n" + ChatColor.RESET + "Try to kill your allies without them working out who's after them.");
+		
+		
+	}
+	
+	@Override
+	public void gameFinished(int winningTeam)
+	{
+		if ( allocationProcessID != -1 )
+		{
+			getPlugin().getServer().getScheduler().cancelTask(allocationProcessID);
+			allocationProcessID = -1;
+		}
+	}
+	
+	@Override
+	public void playerJoinedLate(Player player, boolean isNewPlayer)
+	{
+		if ( isNewPlayer )
+			setTeam(player, 0);
+	}
+	
+	@Override
+	public void playerKilledOrQuit(Player player)
+	{
+		int numFriendlies = getOnlinePlayers(0, true).size();
+		if ( numFriendlies != 0 )
+			return;
+		
+		if ( getOnlinePlayers(1, true).size() > 0 )
+		{
+			finishGame(1); // killers win
+		}
+		else
+		{
+			finishGame(-1); // nobody wins
+		}
+	}
+	
+	@Override
+	public Location getCompassTarget(Player player)
+	{
+		if ( getTeam(player) == 1 )
+			return getNearestPlayerTo(player, true); // points in a random direction if no players are found
+		
+		return null;
 	}
 
+	@Override
+	public void playerActivatedPlinth(Player player)
+	{
+		// see if the player's inventory contains a winning item
+		PlayerInventory inv = player.getInventory();
+		
+		for ( Material material : Settings.winningItems )
+			if ( inv.contains(material) )
+			{
+				broadcastMessage(player.getName() + " brought a " + tidyItemName(material) + " to the plinth!");
+				finishGame(0); // winning item brought to the plinth, friendlies win
+				break;
+			}
+	}
+/*
+	@Override
+	public int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers)
+	{
+		// if any killers have already been assigned, and we're not meant to reallocate, don't add any more
+		if ( !options.get(autoReallocateKillers).isEnabled() && numKillers > 0 )
+			return 0;
+		
+		// if we don't allow multiple killers, only ever add 0 or 1
+		if ( !options.get(allowMultipleKillers).isEnabled() )
+			return numAliveKillers > 0 ? 0 : 1;
+
+		// 1-5 players should have 1 killer. 6-11 should have 2. 12-17 should have 3. 18-23 should have 4. 
+		int targetNumKillers = numAlive / 6 + 1;
+		return targetNumKillers - numAliveKillers;
+	}
+	
+	@Override
+	public boolean informOfTeamAssignment(PlayerManager pm) { return pm.numPlayersOnTeam(1) == 0; }
+	
+	@Override
+	public boolean teamAllocationIsSecret() { return true; }
+	
+	@Override
+	public boolean immediateTeamAssignment() { return !options.get(dontAssignKillerUntilSecondDay).isEnabled(); }
+	
+	@Override
+	public boolean revealTeamIdentityAtEnd(int team) { return team == 1; }
+	
 	@Override
 	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
 	{
@@ -402,4 +534,5 @@ public class MysteryKiller extends GameMode
 					}
 				}
 	}
+*/
 }

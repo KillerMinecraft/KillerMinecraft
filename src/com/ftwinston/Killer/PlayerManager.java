@@ -3,7 +3,6 @@ package com.ftwinston.Killer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -20,7 +19,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
-import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -54,7 +52,7 @@ public class PlayerManager
 		Location exitPoint = previousLocations.get(player.getName());
 		if ( exitPoint != null )
 		{
-			plugin.broadcastMessage(player.getName() + " quit the game");
+			plugin.getGameMode().broadcastMessage(player.getName() + " quit the game");
 			player.teleport(exitPoint);
 		}
 		else
@@ -69,7 +67,7 @@ public class PlayerManager
 	
 	public class Info
 	{
-		public Info(boolean alive) { a = alive; t = -1; target = null; if ( alive ) numAlive ++; }
+		public Info(boolean alive) { a = alive; t = -1; target = null; /*if ( alive ) numAlive ++;*/ }
 		
 		private boolean a;
 		private int t;
@@ -77,13 +75,13 @@ public class PlayerManager
 		
 		public void setTeam(int i)
 		{
-			if ( i != t )
+			/*if ( i != t )
 			{
 				if ( t >= 0 && t < teamCounters.length )
 					teamCounters[t] --;
 				if ( i >= 0 && i < teamCounters.length )
 					teamCounters[i] ++;
-			}
+			}*/
 			
 			t = i;
 		}
@@ -96,12 +94,12 @@ public class PlayerManager
 			if ( b )
 			{
 				nextHelpMessage = 0;
-				if ( !a ) // not currently alive, being assigned
-					numAlive ++;
+				//if ( !a ) // not currently alive, being assigned
+					//numAlive ++;
 			}
 			else if ( a ) // currently alive, being cleared
 			{
-				numAlive --;
+				//numAlive --;
 				nextHelpMessage = -1;
 			}
 		
@@ -117,29 +115,20 @@ public class PlayerManager
 	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();
 	public Set<Map.Entry<String, Info>> getPlayerInfo() { return playerInfo.entrySet(); }
 	
-
 	// do we want to keep this, or will we continue to save the numbers instead?
-	public int countPlayersOnTeam(int team)
+	public int countPlayersOnTeam(int team, boolean onlyLivingPlayers)
 	{
 		int num = 0;
 		for ( Info info : playerInfo.values() )
 			if ( info.getTeam() == team )
-				num++;
+				if ( onlyLivingPlayers )
+				{
+					if ( info.isAlive() )
+						num++;
+				}
+				else
+					num++;
 		return num;
-	}
-	
-	public Player[] selectRandomPlayersFromTeam(int num, int team, boolean aliveOnly)
-	{
-		LinkedList<Player> candidates = new LinkedList<Player>();
-		for ( Map.Entry<String, Info> info : playerInfo.entrySet() )
-			if ( info.getValue().getTeam() == team && (!aliveOnly || info.getValue().isAlive()) )
-				candidates.add(plugin.getServer().getPlayerExact(info.getKey()));
-		
-		Player[] players = new Player[Math.min(num, candidates.size())];
-		for ( int i=0; i<players.length; i++ )
-			players[i] = candidates.remove(random.nextInt(candidates.size()));
-		
-		return players;
 	}
 	
 	public void setTeam(Player player, int teamNum)
@@ -148,59 +137,11 @@ public class PlayerManager
 		if ( info != null )
 			info.setTeam(teamNum);
 	}
-			
-	private void startCheckAutoAssignKiller()
-	{
-		if ( !Settings.autoAssignKiller )
-			return;
-		
-		killerAssignProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-			long lastRun = 0;
-			public void run()
-			{
-				long time = plugin.worldManager.mainWorld.getTime();
-			
-				if ( time < lastRun ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
-					assignKillers(null);
-				
-				lastRun = time;
-			}
-		}, 600L, 100L); // initial wait: 30s, then check every 5s (still won't try to assign unless it detects a new day starting)
-	}
-	
-	
-	// any changes are automatically tracked, so these values should always be right. Includes dead killers!
-	private int numAlive = 0;
-	private int[] teamCounters;
-	
-	public int numPlayersOnTeam(int team) { return team >= 0 && team < teamCounters.length ? teamCounters[team] : 0; }
-	
-	public int numSurvivors() { return numAlive;}
-	
-	public int numSpectators() { return playerInfo.size() - numAlive; }
-	
-	public int determineNumberOfKillersToAdd()
-	{
-		// if we don't have enough players for a game, we don't want to assign a killer
-		if ( numSurvivors() < plugin.getGameMode().absMinPlayers() )
-			return 0;
-		
-		int numAliveKillers = 0;
-		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-			if ( entry.getValue().isAlive() && entry.getValue().getTeam() == 1 )
-				numAliveKillers ++;
-		
-		return plugin.getGameMode().determineNumberOfKillersToAdd(numSurvivors(), numPlayersOnTeam(1), numAliveKillers);
-	}
-	
+
 	public void reset(boolean resetInventories)
 	{
-		stopAssignmentCountdown();
-
 		playerInfo.clear();
-		numAlive = 0;
-		for ( int i=0; i<teamCounters.length; i++ )
-			teamCounters[i] = 0;
+		//numAlive = 0;
 		
 		if ( helpMessageProcess != -1 )
 		{
@@ -208,7 +149,7 @@ public class PlayerManager
 			helpMessageProcess = -1;
 		}
 		
-		for ( Player player : plugin.getOnlinePlayers() )
+		for ( Player player : plugin.getGameMode().getOnlinePlayers() )
 		{
 			resetPlayer(player, resetInventories);
 			setAlive(player, true);
@@ -230,64 +171,46 @@ public class PlayerManager
 	
 	public void putPlayersInWorld(World world)
 	{
-		for ( Player player : plugin.getOnlinePlayers() )
+		for ( Player player : plugin.getGameMode().getOnlinePlayers() )
 			putPlayerInWorld(player, world);	
 	}
 	
 	public void startGame()
 	{
 		reset(true);
-		checkImmediateKillerAssignment();
 		
 		// start sending out help messages explaining the game rules
 		helpMessageProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			public void run()
 			{
-				plugin.getGameMode().sendGameModeHelpMessage(plugin.playerManager);
+				plugin.getGameMode().sendGameModeHelpMessage();
 			}
 		}, 0, 550L); // send every 25 seconds
 		
-		startCheckAutoAssignKiller();
-		
-		if ( plugin.getGameMode().killersCompassPointsAtFriendlies() || plugin.getGameMode().friendliesCompassPointsAtKiller() || plugin.getGameMode().compassPointsAtTarget() )
-			compassProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-	        	public void run()
-	        	{
-		        	for ( Player player : plugin.getOnlinePlayers() )
-		        		if ( isAlive(player.getName()) && player.getInventory().contains(Material.COMPASS) )
-		        			if ( plugin.getGameMode().compassPointsAtTarget() )
-		        			{
-	    						String targetName = getInfo(player.getName()).target;
-	    						if ( targetName != null )
-	    						{
-	    							Player targetPlayer = plugin.getServer().getPlayerExact(targetName);
-	    							if ( targetPlayer != null && targetPlayer.isOnline() && targetPlayer.getWorld() == player.getWorld() )
-	    								player.setCompassTarget(targetPlayer.getLocation());
-	    						}
-		        			}
-		        			else if ( getTeam(player.getName()) == 1 )
-		        			{
-		        				if ( plugin.getGameMode().killersCompassPointsAtFriendlies() )
-				        			player.setCompassTarget(getNearestPlayerTo(player, true));	
-		        			}
-		        			else if ( plugin.getGameMode().friendliesCompassPointsAtKiller() )
-			        			player.setCompassTarget(getNearestPlayerTo(player, true));
-	        	}
-	        }, 20, 10);
+		compassProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+        	public void run()
+        	{
+	        	for ( Player player : plugin.getGameMode().getOnlinePlayers(true) )
+	        		if ( player.getInventory().contains(Material.COMPASS) )
+	        		{// does this need a null check on the target?
+	        			player.setCompassTarget(plugin.getGameMode().getCompassTarget(player));
+	        		}
+        	}
+        }, 20, 10);
 	        			
 		spectatorFollowProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
         	public void run()
         	{
-	        	for ( Player player : plugin.getOnlinePlayers() )
+	        	for ( Player player : plugin.getGameMode().getOnlinePlayers(false) )
 	        	{
 	        		PlayerManager.Info info = getInfo(player.getName());
-	        		if ( !info.isAlive() && info.target != null )
-	        			checkFollowTarget(player);
+	        		if (info.target != null )
+	        			checkFollowTarget(player, info.target);
 	        	}
         	}
         }, 40, 40);
 	}
-	
+/*	
 	public boolean assignKillers(CommandSender sender)
 	{
 		int numToAdd = determineNumberOfKillersToAdd();
@@ -307,7 +230,7 @@ public class PlayerManager
 		
 		return retval;
 	}
-	
+*/
 	public void colorPlayerName(Player player, ChatColor color)
 	{
 		String oldListName = player.getPlayerListName();
@@ -321,7 +244,7 @@ public class PlayerManager
 		player.setPlayerListName(color + name);
 		
 		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
-		for ( Player online : plugin.getOnlinePlayers() )
+		for ( Player online : plugin.getGameMode().getOnlinePlayers() )
 			if ( !online.canSee(player) )
 			{
 				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999));
@@ -337,7 +260,7 @@ public class PlayerManager
 		player.setPlayerListName(ChatColor.stripColor(player.getPlayerListName()));
 		
 		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
-		for ( Player online : plugin.getOnlinePlayers() )
+		for ( Player online : plugin.getGameMode().getOnlinePlayers() )
 			if ( !online.canSee(player) )
 			{
 				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999));
@@ -345,6 +268,7 @@ public class PlayerManager
 			}
 	}
 
+	// this needs stuff removed from it, and cleaned up in general
 	public void playerJoined(Player player)
 	{
 		Info info = playerInfo.get(player.getName());
@@ -382,7 +306,7 @@ public class PlayerManager
 					hidePlayer(player, other);
 			}
 
-		plugin.getGameMode().playerJoined(player, this, isNewPlayer, info);
+		plugin.getGameMode().playerJoinedLate(player, isNewPlayer);
 		
 		if ( !info.isAlive() )
 		{
@@ -393,7 +317,7 @@ public class PlayerManager
 			setAlive(player, false);
 			
 			// send this player to everyone else's scoreboards, because they're now invisible, and won't show otherwise
-			for ( Player online : plugin.getOnlinePlayers() )
+			for ( Player online : plugin.getGameMode().getOnlinePlayers() )
 				if ( online != player && !online.canSee(player) )
 					sendForScoreboard(online, player, true);
 		}
@@ -402,8 +326,6 @@ public class PlayerManager
 			if ( info.isAlive() )
 			{
 				setAlive(player, true);
-				
-				plugin.getGameMode().preparePlayer(player, this, info.getTeam(), isNewPlayer);
 				
 				if ( !plugin.getGameMode().teamAllocationIsSecret() )
 					colorPlayerName(player, info.getTeam() == 1 ? ChatColor.RED : ChatColor.BLUE);
@@ -415,45 +337,12 @@ public class PlayerManager
 			}
 		}
 		if ( isNewPlayer );
-			plugin.getGameMode().sendGameModeHelpMessage(this, player);
+			plugin.getGameMode().sendGameModeHelpMessage(player);
 			
-		if ( numPlayersOnTeam(1) == 0 )
-		{
-			checkImmediateKillerAssignment();
-			
-			if ( Settings.restartDayWhenFirstPlayerJoins && plugin.getOnlinePlayers().size() == 1 )
-				plugin.worldManager.mainWorld.setTime(0);
+		if ( player.getInventory().contains(Material.COMPASS) )
+		{// does this need a null check on the target?
+			player.setCompassTarget(plugin.getGameMode().getCompassTarget(player));
 		}
-		else
-			checkPlayerCompassTarget(player);
-	}
-	
-	int countdownProcessID = -1;
-	public void checkImmediateKillerAssignment()
-	{
-		if ( countdownProcessID == -1 && plugin.getGameMode().immediateTeamAssignment() )
-			if ( numSurvivors() >= plugin.getGameMode().absMinPlayers() )
-			{
-				plugin.broadcastMessage("Allocation in 30 seconds...");
-				countdownProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-					@Override
-					public void run()
-					{
-						assignKillers(null);
-					}
-				}, 600L);
-			}
-			else
-				plugin.broadcastMessage(ChatColor.RED + "Insufficient players to start game - " + plugin.getGameMode().getName() + " requires at least " + plugin.getGameMode().absMinPlayers() + " players");
-	}
-	
-	public void stopAssignmentCountdown()
-	{
-		if ( countdownProcessID == -1 )
-			return;
-		
-		plugin.getServer().getScheduler().cancelTask(countdownProcessID);
-		countdownProcessID = -1;
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time
@@ -462,32 +351,28 @@ public class PlayerManager
 		Player player = plugin.getServer().getPlayerExact(playerName);
 		Info info = playerInfo.get(playerName);
 		
-		if ( plugin.getOnlinePlayers().size() == 0 )
+		if ( plugin.getGameMode().getOnlinePlayers().size() == 0 )
 		{// no one still playing, so end the game
 			plugin.endGame(null);
 			return;
 		}
+		
+		if ( player != null )
+			plugin.getGameMode().playerKilledOrQuit(player);
 		
 		if ( player == null || !player.isOnline() )
 		{
 			if ( info != null )
 			{
 				info.setAlive(false);
-				if ( numPlayersOnTeam(1) > 0 )
-				{
-					if ( Settings.banOnDeath )
-						player.setBanned(true);
-
-					plugin.getGameMode().playerKilled(player, this, info);
-					plugin.getGameMode().checkForEndOfGame(this, null, null);
-				}
+				if ( Settings.banOnDeath )
+					player.setBanned(true);
 			}
 			return;
 		}
-		
-		
-		if ( numPlayersOnTeam(1) == 0 )
-		{// game hasn't started yet, just respawn them normally
+
+		if ( plugin.getGameMode().isAllowedToRespawn(player) )
+		{
 			setAlive(player, true);
 			return;
 		}
@@ -502,22 +387,19 @@ public class PlayerManager
 			player.setBanned(true);
 			player.kickPlayer("You died, and are now banned until the end of the game");
 		}
-		
-		plugin.getGameMode().playerKilled(player, this, info);
-		plugin.getGameMode().checkForEndOfGame(this, null, null);
 	}
-	
+	// need to rework the end of the game
 	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)
 	{
-		String message = null;
+/*		String message = null;
 		int numFriendlies = playerInfo.size() - numPlayersOnTeam(1);
 		
 		if ( winningItem != null )
 		{
 			if ( friendliesWon )
-				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(0, numFriendlies > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(0, numFriendlies > 1) + (numFriendlies > 1 ? " win! " : " wins");
+				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describeTeam(0, numFriendlies > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(0, numFriendlies > 1) + (numFriendlies > 1 ? " win! " : " wins");
 			else
-				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describePlayer(1, numPlayersOnTeam(1) > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(1, numPlayersOnTeam(1) > 1) + (numPlayersOnTeam(1) > 1 ? " win! " : " wins");
+				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describeTeam(1, numPlayersOnTeam(1) > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(1, numPlayersOnTeam(1) > 1) + (numPlayersOnTeam(1) > 1 ? " win! " : " wins");
 		}
 		else if ( numPlayersOnTeam(1) == 0 || numFriendlies == 0 ) // some mode might not assign specific killers, or have everyone as a killer. In this case, we only care about the winning player
 		{
@@ -538,10 +420,10 @@ public class PlayerManager
 		else if ( killerWon )
 		{
 			if ( numFriendlies > 1 )
-				message = "All of the " + plugin.getGameMode().describePlayer(0, true) + " have";
+				message = "All of the " + plugin.getGameMode().describeTeam(0, true) + " have";
 			else
-				message = "The " + plugin.getGameMode().describePlayer(0, false) + " has";
-			message += " died, the " + plugin.getGameMode().describePlayer(1, numPlayersOnTeam(1) > 1);
+				message = "The " + plugin.getGameMode().describeTeam(0, false) + " has";
+			message += " died, the " + plugin.getGameMode().describeTeam(1, numPlayersOnTeam(1) > 1);
 			
 			if ( numPlayersOnTeam(1) > 1 )
 			{
@@ -556,11 +438,11 @@ public class PlayerManager
 		else if ( friendliesWon )
 		{
 			if ( numPlayersOnTeam(1) > 1 )
-				message =  "All of the " + plugin.getGameMode().describePlayer(1, true) + " have";
+				message =  "All of the " + plugin.getGameMode().describeTeam(1, true) + " have";
 			else
-				message = "The " + plugin.getGameMode().describePlayer(1, false) + " has";
+				message = "The " + plugin.getGameMode().describeTeam(1, false) + " has";
 		
-			message += " been killed, the " + plugin.getGameMode().describePlayer(0, numFriendlies > 1);
+			message += " been killed, the " + plugin.getGameMode().describeTeam(0, numFriendlies > 1);
 
 			if ( numFriendlies > 1 )
 			{
@@ -577,10 +459,10 @@ public class PlayerManager
 		
 		plugin.statsManager.gameFinished(plugin.getGameMode(), numSurvivors(), killerWon ? 1 : (friendliesWon ? 2 : 0), winningItem == null ? 0 : winningItem.getId());
 		
-		plugin.broadcastMessage(ChatColor.YELLOW + message);
+		plugin.getGameMode().broadcastMessage(ChatColor.YELLOW + message);
 		clearKillers(null);
-
-		if ( winningItem != null || plugin.voteManager.isInVote() || plugin.getOnlinePlayers().size() == 0 )
+*/
+		if ( winningItem != null || plugin.voteManager.isInVote() || plugin.getGameMode().getOnlinePlayers().size() == 0 )
 		{	// plinth victory or other scenario where we don't want a vote, end the game in 10 secs
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 	
@@ -594,7 +476,7 @@ public class PlayerManager
 		else
 			plugin.roundFinished();
 	}
-	
+	/*
 	public void clearKillers(CommandSender sender)
 	{
 		String message;
@@ -630,7 +512,7 @@ public class PlayerManager
 					
 					message += "!";
 				}
-				plugin.broadcastMessage(message);
+				plugin.getGameMode().broadcastMessage(message);
 			}
 			
 			for ( Map.Entry<String, Info> entry : getPlayerInfo() )
@@ -644,12 +526,12 @@ public class PlayerManager
 		{
 			message = "No killers are currently assigned!";
 			if ( sender == null )
-				plugin.broadcastMessage(message);
+				plugin.getGameMode().broadcastMessage(message);
 			else
 				sender.sendMessage(message);
 		}	
 	}
-	
+	*/
 	public Info getInfo(String player)
 	{
 		return playerInfo.get(player);
@@ -729,14 +611,14 @@ public class PlayerManager
 	
 	public void makePlayerInvisibleToAll(Player player)
 	{
-		for(Player p : plugin.getOnlinePlayers())
+		for(Player p : plugin.getGameMode().getOnlinePlayers())
 			if (p != player && p.canSee(player))
 				hidePlayer(p, player);
 	}
 	
 	public void makePlayerVisibleToAll(Player player)
 	{
-		for(Player p : plugin.getOnlinePlayers())
+		for(Player p : plugin.getGameMode().getOnlinePlayers())
 			if (p != player && !p.canSee(player))
 				p.showPlayer(player);
 	}
@@ -833,52 +715,6 @@ public class PlayerManager
             }
         }, 1);
 	}
-
-	public void checkPlayerCompassTarget(Player player)
-    {
-    	if ( plugin.getGameMode().usesPlinth() && player.getWorld().getEnvironment() == Environment.NORMAL && !plugin.getGameMode().compassPointsAtTarget() )
-		{
-			if ( getTeam(player.getName()) == 1 )
-			{
-				if ( !plugin.getGameMode().killersCompassPointsAtFriendlies() )
-					player.setCompassTarget(plugin.getPlinthLocation());
-			}
-			else if ( !plugin.getGameMode().friendliesCompassPointsAtKiller() )
-				player.setCompassTarget(plugin.getPlinthLocation());
-		}
-    }
-
-	public Location getNearestPlayerTo(Player player, boolean ignoreTeammates)
-	{
-		Location nearest = null;
-		double nearestDistSq = Double.MAX_VALUE;
-		World playerWorld = player.getWorld();
-		int playerTeam = getTeam(player.getName());
-		for ( Player other : plugin.getOnlinePlayers() )
-		{
-			if ( other == player || other.getWorld() != playerWorld || !isAlive(other.getName()))
-				continue;
-			
-			if ( ignoreTeammates && getTeam(other.getName()) == playerTeam )
-				continue;
-				
-			double distSq = other.getLocation().distanceSquared(player.getLocation());
-			if ( distSq < nearestDistSq )
-			{
-				nearestDistSq = distSq;
-				nearest = other.getLocation();
-			}
-		}
-		
-		// if there's no player to point at, point in a random direction
-		if ( nearest == null )
-		{
-			nearest = player.getLocation();
-			nearest.setX(nearest.getX() + random.nextDouble() * 32 - 16);
-			nearest.setZ(nearest.getZ() + random.nextDouble() * 32 - 16);
-		}
-		return nearest;
-	}
 	
 	public String getFollowTarget(Player player)
 	{
@@ -897,15 +733,8 @@ public class PlayerManager
 	private final double maxFollowSpectateRangeSq = 40 * 40, maxAcceptableOffsetDot = 0.65, farEnoughSpectateRangeSq = 35 * 35;
 	private final int maxSpectatePositionAttempts = 5, idealFollowSpectateRange = 20;
 	
-	public void checkFollowTarget(Player player)
-	{
-		Info info = playerInfo.get(player.getName());
-		
-		if ( info == null || info.target == null )
-			return; // don't have a target, don't want to get moved to it
-		
-		String targetName = info.target;
-		
+	public void checkFollowTarget(Player player, String targetName)
+	{		
 		Player target = plugin.getServer().getPlayerExact(targetName);
 		if ( !isAlive(targetName) || target == null || !target.isOnline() || !plugin.isGameWorld(target.getWorld()) )
 		{
@@ -926,9 +755,9 @@ public class PlayerManager
 			moveToSee(player, target);
 	}
 	
-	public boolean canSee(Player player, Player target, double maxDistanceSq)
+	public boolean canSee(Player looker, Player target, double maxDistanceSq)
 	{
-		Location specLoc = player.getEyeLocation();
+		Location specLoc = looker.getEyeLocation();
 		Location targetLoc = target.getEyeLocation();
 		
 		// check they're in the same world

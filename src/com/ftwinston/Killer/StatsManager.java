@@ -43,7 +43,7 @@ public class StatsManager
 		final URL statsPage;
 		try
 		{
-			statsPage = new URL("http://killer.ftwinston.com/?m=" + mode.getModeNumber() + "&d=" + duration + "&v=" + version + "&o=" + outcome + "&i=" + winningItemID + "&ns=" + numPlayersStart + "&ne=" + numPlayers + "&nl=" + numPlayersLateJoin + "&nq=" + numPlayersQuit + "&nk=" + numKillers + "&na=" + numKillersAdminAdded);
+			statsPage = new URL("http://killer.ftwinston.com/?m=" + getNumberForMode(mode) + "&d=" + duration + "&v=" + version + "&o=" + outcome + "&i=" + winningItemID + "&ns=" + numPlayersStart + "&ne=" + numPlayers + "&nl=" + numPlayersLateJoin + "&nq=" + numPlayersQuit + "&nk=" + numKillers + "&na=" + numKillersAdminAdded);
 		}
 		catch ( MalformedURLException ex )
 		{
@@ -67,6 +67,22 @@ public class StatsManager
 				}
 			}
 		});
+	}
+	
+	private int getNumberForMode(GameMode mode)
+	{
+		if ( mode.getName().equals("Mystery Killer") )
+			return 1;
+		if ( mode.getName().equals("Invisible Killer") )
+			return 2;
+		if ( mode.getName().equals("Crazy Killer") )
+			return 3;
+		if ( mode.getName().equals("Team Killer") )
+			return 4;
+		if ( mode.getName().equals("Contract Killer") )
+			return 5;
+		
+		return 0; // error
 	}
 	
 	public void playerJoinedLate()

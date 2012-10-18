@@ -26,6 +26,7 @@ import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.util.LazyPlayerSet;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.ItemStack;
@@ -76,9 +77,10 @@ public class Killer extends JavaPlugin
 		{
 			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 			if ( statsManager.isTracking )
-				statsManager.gameFinished(getGameMode(), playerManager.numSurvivors(), 3, 0);
+				statsManager.gameFinished(getGameMode(), getGameMode().getOnlinePlayers(true).size(), 3, 0);
 			
-			getGameMode().gameFinished();
+			getGameMode().finishGame(-1); // feck, we shouldn't be passing in an invalid team here
+			HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
 
 			// don't show the start buttons until the old world finishes deleting
 			worldManager.showStartButton(false);
@@ -120,14 +122,16 @@ public class Killer extends JavaPlugin
 		{
 			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 			if ( statsManager.isTracking )
-				statsManager.gameFinished(getGameMode(), playerManager.numSurvivors(), 3, 0);
+				statsManager.gameFinished(getGameMode(), getGameMode().getOnlinePlayers(true).size(), 3, 0);
 			
 			if ( prevState.usesGameWorlds )
 			{
-				getGameMode().gameFinished();
+				getGameMode().finishGame(-1); // feck, shouldn't be 
 				worldManager.removeAllItems(worldManager.mainWorld);
 				worldManager.mainWorld.setTime(0);				
 			}
+			else
+				getServer().getPluginManager().registerEvents(getGameMode(), this);
 
 			playerManager.putPlayersInWorld(worldManager.mainWorld);			
 			playerManager.startGame();
@@ -153,7 +157,7 @@ public class Killer extends JavaPlugin
 	private WorldOption worldOption = null;
 	public WorldOption getWorldOption() { return worldOption; }
 	public boolean setWorldOption(WorldOption w) { worldOption = w; return gameMode != null && worldOption != null; }
-		
+	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
 		return new StagingWorldGenerator();
@@ -286,8 +290,9 @@ public class Killer extends JavaPlugin
 			{
 				if ( playerManager.getFollowTarget(player) == null )
 				{
-					playerManager.setFollowTarget(player, playerManager.getNearestFollowTarget(player));
-					playerManager.checkFollowTarget(player);
+					String target = playerManager.getNearestFollowTarget(player);
+					playerManager.setFollowTarget(player, target);
+					playerManager.checkFollowTarget(player, target);
 					sender.sendMessage("Follow mode enabled. Type " + ChatColor.YELLOW + "/spec follow" + ChatColor.RESET + " again to exist follow mode. Type /spec <player name> to follow another player.");
 				}
 				else
@@ -323,7 +328,7 @@ public class Killer extends JavaPlugin
 				return true;
 			}
 			
-			if ( playerManager.numPlayersOnTeam(1) == 0 || !(sender instanceof Player) )
+			if ( !(sender instanceof Player) )
 				return true;
 			
 			if ( args.length == 0 )
@@ -366,7 +371,7 @@ public class Killer extends JavaPlugin
 			if ( info.nextHelpMessage == -1 )
 				info.nextHelpMessage = 0;
 			
-			getGameMode().sendGameModeHelpMessage(playerManager, player);
+			getGameMode().sendGameModeHelpMessage(player);
 			return true;
 		}
 		else if (cmd.getName().equalsIgnoreCase("killer"))
@@ -435,24 +440,14 @@ public class Killer extends JavaPlugin
 			if ( args.length == 0 )
 			{
 				if ( !stagingWorldIsServerDefault && player != null )
-					sender.sendMessage("Usage: /killer join, /killer quit, /killer restart, /killer end, /killer add, /killer clear, /killer world");
+					sender.sendMessage("Usage: /killer join, /killer quit, /killer restart, /killer end, /killer world");
 				else
-					sender.sendMessage("Usage: /killer restart, /killer end, /killer add, /killer clear, /killer world");
+					sender.sendMessage("Usage: /killer restart, /killer end, /killer world");
 				return true;
 			}
 			
 			String firstParam = args[0].toLowerCase();
-			if ( firstParam.equals("add") )
-			{
-				if ( getGameState().usesGameWorlds )
-					playerManager.assignKillers(sender);
-			}
-			else if ( firstParam.equals("clear") )
-			{
-				if ( getGameState().usesGameWorlds )
-					playerManager.clearKillers(sender);
-			}
-			else if ( firstParam.equals("restart") )
+			if ( firstParam.equals("restart") )
 			{
 				if ( getGameState().usesGameWorlds )
 					restartGame(sender);
@@ -542,21 +537,6 @@ public class Killer extends JavaPlugin
 		return world == worldManager.mainWorld || world == worldManager.netherWorld || world == worldManager.stagingWorld;
 	}
 	
-	public List<Player> getOnlinePlayers()
-	{
-		ArrayList<Player> players = new ArrayList<Player>();
-		for ( Player player : getServer().getOnlinePlayers() )
-			if ( isGameWorld(player.getWorld()) )
-				players.add(player);
-		return players;
-	}
-	
-	public void broadcastMessage(String message)
-	{
-		for ( Player player : getOnlinePlayers() )
-			player.sendMessage(message);
-	}
-	
 	public Location getPlinthLocation()
 	{
 		return plinthPressurePlateLocation;
@@ -590,9 +570,9 @@ public class Killer extends JavaPlugin
 	public void endGame(CommandSender actionedBy)
 	{
 		if ( actionedBy != null )
-			broadcastMessage(actionedBy.getName() + " ended the game. You've been moved to the staging world to allow you to set up a new one...");
+			getGameMode().broadcastMessage(actionedBy.getName() + " ended the game. You've been moved to the staging world to allow you to set up a new one...");
 		else
-			broadcastMessage("The game has ended. You've been moved to the staging world to allow you to set up a new one...");
+			getGameMode().broadcastMessage("The game has ended. You've been moved to the staging world to allow you to set up a new one...");
 		
 		setGameState(GameState.worldDeletion); // stagingWorldReady cos the options from last time will still be selected
 	}
@@ -600,15 +580,10 @@ public class Killer extends JavaPlugin
 	public void restartGame(CommandSender actionedBy)
 	{
 		if ( actionedBy != null )
-			broadcastMessage(actionedBy.getName() + " is restarting the game...");
+			getGameMode().broadcastMessage(actionedBy.getName() + " is restarting the game...");
 		else
-			broadcastMessage("Game is restarting...");
+			getGameMode().broadcastMessage("Game is restarting...");
 		
 		setGameState(GameState.beforeAssignment);
-	}
-
-	public String tidyItemName(Material m)
-	{
-		return m.name().toLowerCase().replace('_', ' ');
 	}
 }

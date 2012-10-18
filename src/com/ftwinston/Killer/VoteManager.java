@@ -44,12 +44,12 @@ public class VoteManager
 	public void startVote(String question, Player initiatedBy, Runnable runOnYes, Runnable runOnNo, Runnable runOnDraw)
 	{
 		playersWhoCanVote.clear();
-		for ( Player player : plugin.getOnlinePlayers())
+		for ( Player player : plugin.getGameMode().getOnlinePlayers())
 			playersWhoCanVote.add(player.getName());
 		numYesVotes = numNoVotes = 0;
 		inVote = true;
 		
-		plugin.broadcastMessage(ChatColor.YELLOW + (initiatedBy == null ? "Vote started: " : initiatedBy.getName() + " started a vote: ") + ChatColor.RESET + question + ChatColor.YELLOW + "\nSay " + ChatColor.GREEN + "Y" + ChatColor.YELLOW + " to vote yes, or " + ChatColor.RED + "N" + ChatColor.YELLOW + " to vote no.");
+		plugin.getGameMode().broadcastMessage(ChatColor.YELLOW + (initiatedBy == null ? "Vote started: " : initiatedBy.getName() + " started a vote: ") + ChatColor.RESET + question + ChatColor.YELLOW + "\nSay " + ChatColor.GREEN + "Y" + ChatColor.YELLOW + " to vote yes, or " + ChatColor.RED + "N" + ChatColor.YELLOW + " to vote no.");
 		
 		voteResult = new VoteResult(runOnYes, runOnNo, runOnDraw);
 		voteResultProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, voteResult, voteDuration);
@@ -70,19 +70,19 @@ public class VoteManager
 		{
 			if ( numYesVotes > numNoVotes )
 			{
-				plugin.broadcastMessage(ChatColor.YELLOW +"Vote succeeded (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
+				plugin.getGameMode().broadcastMessage(ChatColor.YELLOW +"Vote succeeded (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
 				if ( runOnYes != null )
 					runOnYes.run();
 			}
 			else if ( numNoVotes > numYesVotes )
 			{
-				plugin.broadcastMessage(ChatColor.YELLOW + "Vote failed (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
+				plugin.getGameMode().broadcastMessage(ChatColor.YELLOW + "Vote failed (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
 				if ( runOnNo != null )
 					runOnNo.run();
 			}
 			else
 			{
-				plugin.broadcastMessage(ChatColor.YELLOW + "Vote drawn (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
+				plugin.getGameMode().broadcastMessage(ChatColor.YELLOW + "Vote drawn (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
 				if ( runOnDraw != null )
 					runOnDraw.run();
 			}
@@ -144,123 +144,36 @@ public class VoteManager
 				return Prompt.END_OF_CONVERSATION;
 			}
 		};
-		/*
-		final NumericPrompt gameModePrompt = new NumericPrompt() {
-        	public String getPromptText(ConversationContext context)
+		
+        final NumericPrompt initialPrompt = new NumericPrompt() {
+        	
+			public String getPromptText(ConversationContext context)
 			{
-				String message = "The current game mode is " + ChatColor.YELLOW + plugin.getGameMode().getName() + ChatColor.RESET + ", and the next game mode will be " + ChatColor.YELLOW + plugin.getNextGameMode().getName() + ChatColor.RESET + ".\nWhat do you want to set the next game mode to?";
-				
-				int i = 1;
-				for (GameMode mode : GameMode.gameModes)
-				{
-					if ( plugin.getNextGameMode() == mode )
-						continue;
-					
-					message += "\n" + ChatColor.GOLD + i + "." + ChatColor.RESET + mode.getName();
-					i++;
-				}
-				
-				message += "\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
-				return message;
+				return "What do you want to start a vote on? Say the number to choose:\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " Restart game\n" + ChatColor.GOLD + "2." + ChatColor.RESET + " End game\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
 			}
 			
 			protected Prompt acceptValidatedInput(ConversationContext context, Number val)
 			{
 				Player player = context.getForWhom() instanceof Player ? (Player)context.getForWhom() : null;
-			
+				
 				if ( isInVote() )
 					return cantVotePrompt;
 				
 				int choice = val.intValue();
 				
-				int i = 1;
-				for (final GameMode mode : GameMode.gameModes)
-				{
-					if ( plugin.getNextGameMode() == mode )
-						continue;
-						
-					if ( i != choice )
-					{
-						i++;
-						continue;
-					}
-				
-					startVote("Set the next game mode to " + mode.getName() + "?", player, new Runnable() {
-						public void run()
-						{
-							plugin.setNextGameMode(mode, null);
-						}
-					}, null, null);
-					break;
-				}
-
-				return Prompt.END_OF_CONVERSATION;
-			}
-        };
-		*/
-        final NumericPrompt restartPrompt = new NumericPrompt() {
-        	public String getPromptText(ConversationContext context)
-			{
-				return "How do you want to restart?\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " In the same world\n" + ChatColor.GOLD + "3." + ChatColor.RESET + " In a new world\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
-			}
-			
-			protected Prompt acceptValidatedInput(ConversationContext context, Number val)
-			{
-				Player player = context.getForWhom() instanceof Player ? (Player)context.getForWhom() : null;
-			
-				if ( isInVote() )
-					return cantVotePrompt;
-				
-				else if ( val.intValue() == 1 )
-					startVote("End this game, and start a new game in the same world?", player, new Runnable() {
+				if ( choice == 1 )
+					startVote("Restart the current game?", player, new Runnable() {
 						public void run()
 						{
 							plugin.restartGame(null);
 						}
 					}, null, null);
 				
-				else if ( val.intValue() == 2 )
-					startVote("End this game, and configure a new one?", player, new Runnable() {
+				else if ( choice == 2 )
+					startVote("End the current game?", player, new Runnable() {
 						public void run()
 						{
 							plugin.endGame(null);
-						}
-					}, null, null);
-				
-				return Prompt.END_OF_CONVERSATION;
-			}
-        };
-        
-        final NumericPrompt initialPrompt = new NumericPrompt() {
-        	
-			public String getPromptText(ConversationContext context)
-			{
-				return "What do you want to start a vote on? Say the number to choose:\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " Restart game\n" + ChatColor.GOLD + "2." + ChatColor.RESET + " Clear killer\n" + ChatColor.GOLD + "3." + ChatColor.RESET + " Reallocate killer\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
-			}
-			
-			protected Prompt acceptValidatedInput(ConversationContext context, Number val)
-			{
-				Player player = context.getForWhom() instanceof Player ? (Player)context.getForWhom() : null;
-				
-				int choice = val.intValue();
-				
-				if ( choice == 1 )
-					return restartPrompt;
-				
-				else if ( choice == 2 )
-					startVote("Clear the killer, so that there isn't one assigned?", player, new Runnable() {
-						public void run()
-						{
-							plugin.playerManager.clearKillers(null);
-						}
-					}, null, null);
-					
-				else if ( choice == 3 )
-					startVote("Clear the killer, and assign a new one?", player, new Runnable() {
-						public void run()
-						{
-							plugin.playerManager.clearKillers(null);
-							plugin.playerManager.assignKillers(null);
 						}
 					}, null, null);
 				

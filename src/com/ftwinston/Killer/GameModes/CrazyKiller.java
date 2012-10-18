@@ -1,16 +1,16 @@
 package com.ftwinston.Killer.GameModes;
 
-import java.util.Map;
-import java.util.Random;
+import java.util.List;
 
 import com.ftwinston.Killer.GameMode;
-import com.ftwinston.Killer.PlayerManager;
-import com.ftwinston.Killer.PlayerManager.Info;
 import com.ftwinston.Killer.Settings;
+import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ItemStack;
@@ -18,39 +18,43 @@ import org.bukkit.Material;
 
 public class CrazyKiller extends GameMode
 {
+	static final long allocationDelayTicks = 600L; // 30 seconds
+
 	@Override
 	public String getName() { return "Crazy Killer"; }
 	
 	@Override
-	public int getModeNumber() { return 3; }
-
-	@Override
-	public int absMinPlayers() { return 2; }
+	public int getMinPlayers() { return 2; }
 	
 	@Override
-	public int getNumTeams() { return 2; }
-
-	@Override
-	public boolean killersCompassPointsAtFriendlies() { return true; }
-
-	@Override
-	public boolean friendliesCompassPointsAtKiller() { return false; }
-
-	@Override
-	public boolean discreteDeathMessages() { return false; }
-
-	@Override
-	public boolean usesPlinth() { return true; }
-
-	@Override
-	public int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers)
+	public Option[] setupOptions()
 	{
-		// for now, one living killer at a time is plenty
-		return numAliveKillers > 0 ? 0 : 1;
+		return new Option[0]; // at present, this mode has no options
 	}
 	
 	@Override
-	public String describePlayer(int team, boolean plural)
+	public String[] getSignDescription()
+	{
+		return new String[] {
+			"One player is",
+			"chosen to kill",
+			"the rest. They",
+			"are the Killer.",
+			
+			"Dirt turns into",
+			"TNT when they",
+			"pick it up.",
+			"",
+			
+			"The others must",
+			"kill them, or",
+			"get a blaze rod",
+			"to the spawn."
+		};
+	}
+	
+	@Override
+	public String describeTeam(int team, boolean plural)
 	{
 		if ( team == 1 )
 			return plural ? "killers" : "killer";
@@ -59,26 +63,14 @@ public class CrazyKiller extends GameMode
 	}
 	
 	@Override
-	public boolean informOfTeamAssignment(PlayerManager pm) { return true; }
-	
-	@Override
-	public boolean teamAllocationIsSecret() { return false; }
-	
-	@Override
-	public boolean revealTeamIdentityAtEnd(int team) { return false; }
-	
-	@Override
-	public boolean immediateTeamAssignment() { return true; }
-	
-	@Override
-	public String getHelpMessage(int num, int team, boolean isAllocationComplete)
+	public String getHelpMessage(int num, int team)
 	{
 		switch ( num )
 		{
 			case 0:
 				if ( team == 1 )
 					return "You have been chosen to be the killer, and must kill everyone else. They know who you are.";
-				else if ( isAllocationComplete )
+				else if ( countPlayersOnTeam(1, false) > 0 )
 					return "A player has been chosen to be the killer, and must kill everyone else.";
 				else
 					return "A player will soon be chosen to be the killer. You'll be told who it is, and they will be teleported away from the other players.";
@@ -99,14 +91,14 @@ public class CrazyKiller extends GameMode
 					return "The killer starts with a compass, which points at the nearest player.";
 			case 4:
 				String message = "The other players win if the killer dies, or if they bring a ";			
-				message += plugin.tidyItemName(Settings.winningItems[0]);
+				message += tidyItemName(Settings.winningItems[0]);
 				
 				if ( Settings.winningItems.length > 1 )
 				{
 					for ( int i=1; i<Settings.winningItems.length-1; i++)
-						message += ", a " + plugin.tidyItemName(Settings.winningItems[i]);
+						message += ", a " + tidyItemName(Settings.winningItems[i]);
 					
-					message += " or a " + plugin.tidyItemName(Settings.winningItems[Settings.winningItems.length-1]);
+					message += " or a " + tidyItemName(Settings.winningItems[Settings.winningItems.length-1]);
 				}
 				
 				message += " to the plinth near the spawn.";
@@ -127,126 +119,193 @@ public class CrazyKiller extends GameMode
 				return "Dispensers can be crafted using a sapling instead of a bow. These work well with monster eggs.";
 			
 			default:
-				return "";
+				return null;
 		}
 	}
 	
 	@Override
-	public String[] getSignDescription()
+	public boolean teamAllocationIsSecret() { return false; }
+	
+	@Override
+	public boolean usesNether() { return true; }
+	
+	@Override
+	public void worldGenerationComplete(World main, World nether)
 	{
-		return new String[] {
-			"A player is",
-			"chosen to kill",
-			"the rest. They",
-			"pick up TNT",
-			"instead of dirt",
-			"and start with",
-			"some redstone.",
-			"The others must",
-			"kill them, or",
-			"get a blaze rod",
-			"and bring it to",
-			"the spawn point"
-		};
+		generatePlinth(main);
+	}
+	
+	@Override
+	public boolean isLocationProtected(Location l)
+	{
+		return isOnPlinth(l); // no protection, except for the plinth
+	}
+	
+	@Override
+	public boolean isAllowedToRespawn(Player player) { return false; }
+	
+	@Override
+	public boolean lateJoinersMustSpectate() { return false; }
+	
+	@Override
+	public boolean useDiscreetDeathMessages() { return false; }
+	
+	@Override
+	public Location getSpawnLocation(Player player)
+	{
+		return WorldManager.instance.mainWorld.getSpawnLocation(); // todo: improve this
+	}
+	
+	int allocationProcessID = -1;
+	
+	@Override
+	public void gameStarted()
+	{
+		// put everyone on team 0.
+		for ( Player player : getOnlinePlayers() )
+			setTeam(player, 0);
+		
+		// allocation doesn't happen right away, there's 30 seconds of "scrabbling" first
+		allocationProcessID = getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), new Runnable() {
+			public void run()
+			{
+				doAllocation();
+				allocationProcessID = -1;
+			}
+		}, allocationDelayTicks);
+	}
+	
+	private void doAllocation()
+	{
+		// pick one player, put them on team 1, and teleport them away
+		final List<Player> players = getOnlinePlayers(true);
+		Player killer = selectRandom(players);
+		if ( killer == null )
+		{
+			broadcastMessage("Unable to find a player to allocate as the killer");
+			return;
+		}
+		
+		setTeam(killer, 1);
+		
+		
+		// give the killer their items, teleport them a distance away
+		killer.sendMessage(ChatColor.RED + "You are the killer!\n" + ChatColor.RESET + "Every dirt block you pick up will turn into TNT...");
+		
+		PlayerInventory inv = killer.getInventory();
+		inv.addItem(new ItemStack(Material.COMPASS, 1));
+		inv.addItem(new ItemStack(Material.COOKED_BEEF, 10));
+		
+		inv.addItem(new ItemStack(Material.REDSTONE, 64));
+		inv.addItem(new ItemStack(Material.STONE, 64));
+		
+		inv.addItem(new ItemStack(Material.TNT, 4));
+		
+		// teleport the killer a little bit away from the other players
+		Location loc = killer.getLocation();
+		switch ( random.nextInt(4) )
+		{
+			case 0:
+				loc = randomizeLocation(loc, 16, 32, 0, 0, -32, 32); break;
+			case 1:
+				loc = randomizeLocation(loc, -32, -16, 0, 0, -32, 32); break;
+			case 2:
+				loc = randomizeLocation(loc, -32, 32, 0, 0, 16, 32); break;
+			case 3:
+				loc = randomizeLocation(loc, -32, 32, 0, 0, -32, -16); break;
+		}
+		loc = getSafeSpawnLocationNear(loc);
+		killer.teleport(loc);
+		
+		
+		// then setup everyone else
+		for ( Player player : players )
+			if ( player != killer )
+			{
+				player.sendMessage(ChatColor.RED + killer.getName() + " is the killer!\n" + ChatColor.RESET + "Use the /team command to chat without them seeing your messages");
+		
+				inv = player.getInventory();
+				inv.addItem(new ItemStack(Material.IRON_SWORD, 1));
+			}
+		
+		
+		// send the message to dead players also
+		for ( Player player : getOnlinePlayers(false) )
+			player.sendMessage(ChatColor.RED + killer.getName() + " is the killer!");
+	}
+	
+	@Override
+	public void gameFinished(int winningTeam)
+	{
+		if ( allocationProcessID != -1 )
+		{
+			getPlugin().getServer().getScheduler().cancelTask(allocationProcessID);
+			allocationProcessID = -1;
+		}
+	}
+	
+	@Override
+	public void playerJoinedLate(Player player, boolean isNewPlayer)
+	{
+		// give this player a sword, ensure they're on team 0, and set them on their way
+		if ( isNewPlayer )
+		{
+			PlayerInventory inv = player.getInventory();
+			inv.addItem(new ItemStack(Material.IRON_SWORD, 1));
+			
+			setTeam(player, 0);
+		}
+	}
+	
+	@Override
+	public void playerKilledOrQuit(Player player)
+	{
+		int team = getTeam(player);
+		int numSurvivorsOnTeam = getOnlinePlayers(team, true).size();
+		
+		if ( numSurvivorsOnTeam > 0 )
+			return; // this players still has living allies, so this doesn't end the game
+		
+		int numSurvivorsTotal = getOnlinePlayers(true).size();
+		if ( numSurvivorsTotal == 0 )
+			finishGame(-1); // draw, nobody wins
+		else if ( team == 1 )
+			finishGame(0); // killer died, friendlies win
+		else
+			finishGame(1); // friendlies died, killer wins
+	}
+	
+	@Override
+	public Location getCompassTarget(Player player)
+	{
+		if ( getTeam(player) == 1 )
+			return getNearestPlayerTo(player, true); // points in a random direction if no players are found
+		
+		return null;
 	}
 
 	@Override
-	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
+	public void playerActivatedPlinth(Player player)
 	{
-		if ( info.getTeam() == 1 ) // inform them that they're still a killer
-			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (pm.numPlayersOnTeam(1) > 1 ? "a" : "the" ) + " killer."); 
-		else if ( isNewPlayer || !info.isAlive() ) // this is a new player
-			player.sendMessage("Welcome to Killer Minecraft!");
-		else
-			player.sendMessage("Welcome back. You are not the killer, and you're still alive.");
+		// see if the player's inventory contains a winning item
+		PlayerInventory inv = player.getInventory();
+		
+		for ( Material material : Settings.winningItems )
+			if ( inv.contains(material) )
+			{
+				broadcastMessage(player.getName() + " brought a " + tidyItemName(material) + " to the plinth!");
+				finishGame(0); // winning item brought to the plinth, friendlies win
+				break;
+			}
 	}
 	
-	@Override
-	public void preparePlayer(Player player, PlayerManager pm, int team, boolean isNewPlayer)
-	{
-		if ( team == 1 )
-		{
-			player.sendMessage("Every dirt block you pick up will turn into TNT...");
-			
-			if ( !isNewPlayer )
-				return; // don't teleport or give new items on rejoining
-			
-			PlayerInventory inv = player.getInventory();
-			inv.addItem(new ItemStack(Material.COMPASS, 1));
-			inv.addItem(new ItemStack(Material.COOKED_BEEF, 10));
-			
-			inv.addItem(new ItemStack(Material.REDSTONE, 64));
-			inv.addItem(new ItemStack(Material.STONE, 64));
-			
-			// you don't START with piles of TNT, however
-			inv.addItem(new ItemStack(Material.TNT, 4));
-			
-			// teleport the killer a little bit away from the other players, to stop them being immediately stabbed
-			Random r = new Random();
-			Location loc = player.getLocation();
-			
-			if ( r.nextBoolean() )
-				loc.setX(loc.getX() + 32 + r.nextDouble() * 20);
-			else
-				loc.setX(loc.getX() - 32 - r.nextDouble() * 20);
-				
-			if ( r.nextBoolean() )
-				loc.setZ(loc.getZ() + 32 + r.nextDouble() * 20);
-			else
-				loc.setZ(loc.getZ() - 32 - r.nextDouble() * 20);
-			
-			loc.setY(loc.getWorld().getHighestBlockYAt(loc) + 1);
-			player.teleport(loc);
-		}
-		else
-		{
-			player.sendMessage("Use the /team command to chat without the killer seeing your messages");
-		
-			if ( !isNewPlayer )
-				return; // don't give items on rejoining
-				
-			PlayerInventory inv = player.getInventory();
-			inv.addItem(new ItemStack(Material.IRON_SWORD, 1));
-		}
-	}
-	
-	@Override
-	public void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth)
-	{
-		// if there's no one alive at all, game was drawn
-		if (pm.numSurvivors() == 0 )
-		{
-			pm.gameFinished(false, false, null, null);
-			return;
-		}
-		
-		// if someone stands on the plinth with a winning item, the friendlies win
-		if ( playerOnPlinth != null && itemOnPlinth != null )
-		{
-			pm.gameFinished(false, true, playerOnPlinth.getName(), itemOnPlinth);
-			return;
-		}
-		
-		boolean killersAlive = false, friendliesAlive = false;
-		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-			if ( entry.getValue().isAlive() )
-				if ( entry.getValue().getTeam() == 1 )
-					killersAlive = true;
-				else
-					friendliesAlive = true;
-		
-		// if only killers are left alive, the killer won
-		if ( killersAlive && !friendliesAlive )
-			pm.gameFinished(true, false, null, null);
-		// if only friendlies are left alive, the friendlies won
-		else if ( !killersAlive && friendliesAlive )
-			pm.gameFinished(false, true, null, null);
-	}
-	
-	@Override
+	@EventHandler(ignoreCancelled = true)
 	public void playerPickedUpItem(PlayerPickupItemEvent event)
 	{
-		if ( event.getItem().getItemStack().getType() == Material.DIRT && plugin.playerManager.getTeam(event.getPlayer().getName()) == 1 )
+		if ( shouldIgnoreEvent(event.getPlayer()) )
+			return;
+		
+		if ( event.getItem().getItemStack().getType() == Material.DIRT && getTeam(event.getPlayer()) == 1 )
 			event.getItem().getItemStack().setType(Material.TNT);
 	}
 }
