@@ -7,10 +7,14 @@ import java.util.Map;
 import java.util.Random;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -105,13 +109,15 @@ public abstract class GameMode
 	public boolean compassPointsAtTarget() { return false; }
 	public abstract boolean discreteDeathMessages();
 	public abstract boolean usesPlinth();
-	public abstract int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers);
+	
+	public abstract void assignTeams();
+	public abstract boolean teamAllocationIsSecret();
 	
 	public abstract int getNumTeams();
 	public abstract String describePlayer(int team, boolean plural);
 	public abstract boolean immediateTeamAssignment();
 	public abstract boolean informOfTeamAssignment(PlayerManager pm);
-	public abstract boolean teamAllocationIsSecret();
+	
 	public abstract boolean revealTeamIdentityAtEnd(int team);
 	
 	public void sendGameModeHelpMessage(PlayerManager pm)
@@ -321,5 +327,29 @@ public abstract class GameMode
 
 		option.setEnabled(!option.isEnabled());
 		return option.isEnabled();
+	}
+	
+	// allows game modes to determine if an event is in their game world
+	protected boolean shouldIgnoreEvent(LivingEntity e)
+	{
+		return !plugin.isGameWorld(e.getWorld());
+	}
+	
+	// allows events to determine if an event is in their game world
+	protected boolean shouldIgnoreEvent(Block b)
+	{
+		return !plugin.isGameWorld(b.getWorld());
+	}
+	
+	// allows events to determine if an event is in their game world
+	protected boolean shouldIgnoreEvent(World w)
+	{
+		return !plugin.isGameWorld(w);
+	}
+	
+	// allows events to determine if an event is in their game world
+	protected boolean shouldIgnoreEvent(Location l)
+	{
+		return !plugin.isGameWorld(l.getWorld());
 	}
 }

@@ -54,6 +54,22 @@ public class InvisibleKiller extends GameMode
 	public boolean usesPlinth() { return true; }
 
 	@Override
+	public void assignTeams(Player[] players)
+	{
+		// put all players on team 0, then pick one, put them on team 1
+		for ( Player player : players )
+			plugin.playerManager.setTeam(player, 0);
+		
+		Player[] killers = plugin.playerManager.selectRandomPlayersFromTeam(1, 0, true);
+		for ( Player player : killers )
+			plugin.playerManager.setTeam(player, 1);
+				
+		// and now prepare players
+		for ( Player player : players )
+			preparePlayer(player, plugin.playerManager, playerTeamFeckUmm, isNewPlayer)
+	}
+	
+	@Override
 	public int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers)
 	{
 		// for now, one living killer at a time is plenty

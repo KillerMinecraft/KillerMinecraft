@@ -3,6 +3,7 @@ package com.ftwinston.Killer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -66,25 +67,6 @@ public class PlayerManager
 		player.teleport(plugin.worldManager.getStagingWorldSpawnPoint());
 	}
 	
-	private void startCheckAutoAssignKiller()
-	{
-		if ( !Settings.autoAssignKiller )
-			return;
-		
-		killerAssignProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-			long lastRun = 0;
-			public void run()
-			{
-				long time = plugin.worldManager.mainWorld.getTime();
-			
-				if ( time < lastRun ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
-					assignKillers(null);
-				
-				lastRun = time;
-			}
-		}, 600L, 100L); // initial wait: 30s, then check every 5s (still won't try to assign unless it detects a new day starting)
-	}
-	
 	public class Info
 	{
 		public Info(boolean alive) { a = alive; t = -1; target = null; if ( alive ) numAlive ++; }
@@ -134,6 +116,58 @@ public class PlayerManager
 	
 	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();
 	public Set<Map.Entry<String, Info>> getPlayerInfo() { return playerInfo.entrySet(); }
+	
+
+	// do we want to keep this, or will we continue to save the numbers instead?
+	public int countPlayersOnTeam(int team)
+	{
+		int num = 0;
+		for ( Info info : playerInfo.values() )
+			if ( info.getTeam() == team )
+				num++;
+		return num;
+	}
+	
+	public Player[] selectRandomPlayersFromTeam(int num, int team, boolean aliveOnly)
+	{
+		LinkedList<Player> candidates = new LinkedList<Player>();
+		for ( Map.Entry<String, Info> info : playerInfo.entrySet() )
+			if ( info.getValue().getTeam() == team && (!aliveOnly || info.getValue().isAlive()) )
+				candidates.add(plugin.getServer().getPlayerExact(info.getKey()));
+		
+		Player[] players = new Player[Math.min(num, candidates.size())];
+		for ( int i=0; i<players.length; i++ )
+			players[i] = candidates.remove(random.nextInt(candidates.size()));
+		
+		return players;
+	}
+	
+	public void setTeam(Player player, int teamNum)
+	{
+		Info info = playerInfo.get(player.getName());
+		if ( info != null )
+			info.setTeam(teamNum);
+	}
+			
+	private void startCheckAutoAssignKiller()
+	{
+		if ( !Settings.autoAssignKiller )
+			return;
+		
+		killerAssignProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+			long lastRun = 0;
+			public void run()
+			{
+				long time = plugin.worldManager.mainWorld.getTime();
+			
+				if ( time < lastRun ) // time of day has gone backwards! Must be a new day! See if we need to add a killer
+					assignKillers(null);
+				
+				lastRun = time;
+			}
+		}, 600L, 100L); // initial wait: 30s, then check every 5s (still won't try to assign unless it detects a new day starting)
+	}
+	
 	
 	// any changes are automatically tracked, so these values should always be right. Includes dead killers!
 	private int numAlive = 0;
