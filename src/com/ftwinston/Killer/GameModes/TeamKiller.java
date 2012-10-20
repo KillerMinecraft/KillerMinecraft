@@ -46,7 +46,7 @@ public class TeamKiller extends GameMode
 	{
 		return new String[] {
 			"Players are put",
-			"into teams, which",
+			"into teams,",
 			"which must then",
 			"either kill the",
 			

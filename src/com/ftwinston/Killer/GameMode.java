@@ -123,7 +123,7 @@ public abstract class GameMode implements Listener
 	public abstract void playerKilledOrQuit(Player player);
 
 
-	public abstract Location getCompassTarget(Player player); // if compasses should follow someone / something, control that here
+	protected abstract Location getCompassTarget(Player player); // if compasses should follow someone / something, control that here
 	
 	public void playerActivatedPlinth(Player player) { }
 	
@@ -135,22 +135,22 @@ public abstract class GameMode implements Listener
 		return plugin.playerManager.countPlayersOnTeam(teamNum, onlyLivingPlayers);
 	}
 	
-	public final String tidyItemName(Material m)
+	protected final String tidyItemName(Material m)
 	{
 		return m.name().toLowerCase().replace('_', ' ');
 	}
 
-	public final int getTeam(Player player)
+	protected final int getTeam(Player player)
 	{
 		return plugin.playerManager.getTeam(player.getName());
 	}
 	
-	public final void setTeam(Player player, int teamNum)
+	protected final void setTeam(Player player, int teamNum)
 	{
 		plugin.playerManager.setTeam(player, teamNum);
 	}
 	
-	public final Player getTargetOf(Player player)
+	protected final Player getTargetOf(Player player)
 	{
 		Info info = plugin.playerManager.getInfo(player.getName());
 		if ( info.target == null )
@@ -164,7 +164,7 @@ public abstract class GameMode implements Listener
 		return null;
 	}
 	
-	public final void setTargetOf(Player player, Player target)
+	protected final void setTargetOf(Player player, Player target)
 	{
 		Info info = plugin.playerManager.getInfo(player.getName());
 		if ( target == null )
@@ -173,23 +173,19 @@ public abstract class GameMode implements Listener
 			info.target = target.getName();
 	}
 	
-	public final boolean isAlive(Player player)
+	protected final boolean isAlive(Player player)
 	{
 		return plugin.playerManager.isAlive(player.getName());
 	}
 	
-	public final boolean playerCanSeeOther(Player looker, Player target, double maxDistanceSq)
+	protected final boolean playerCanSeeOther(Player looker, Player target, double maxDistanceSq)
 	{
 		return plugin.playerManager.canSee(looker, target, maxDistanceSq);
 	}
 	
-	public final List<Player> getOnlinePlayers()
+	protected final List<Player> getOnlinePlayers()
 	{
-		ArrayList<Player> players = new ArrayList<Player>();
-		for ( Player player : plugin.getServer().getOnlinePlayers() )
-			if ( plugin.isGameWorld(player.getWorld()) )
-				players.add(player);
-		return players;
+		return plugin.getOnlinePlayers();
 	}
 	
 	protected final List<Player> getOnlinePlayers(int team)
@@ -234,13 +230,13 @@ public abstract class GameMode implements Listener
 		return players;
 	}
 	
-	public final void broadcastMessage(String message)
+	protected final void broadcastMessage(String message)
 	{
 		for ( Player player : getOnlinePlayers() )
 			player.sendMessage(message);
 	}
 	
-	public final void broadcastMessage(Player notToMe, String message)
+	protected final void broadcastMessage(Player notToMe, String message)
 	{
 		for ( Player player : getOnlinePlayers() )
 			if ( player != notToMe )

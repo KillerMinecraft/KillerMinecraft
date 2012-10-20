@@ -83,7 +83,7 @@ public class CrazyKiller extends GameMode
 				if ( team == 1 )
 					return "The other players each start with a sword, so avoid a direct fight.";
 				else
-					return "The killer doesn't start iwth a sword, but all the other players do.";
+					return "The killer doesn't start with a sword, but all the other players do.";
 			case 3:
 				if ( team == 1 )
 					return "Your compass will point at the nearest player.";

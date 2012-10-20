@@ -149,7 +149,7 @@ public class PlayerManager
 			helpMessageProcess = -1;
 		}
 		
-		for ( Player player : plugin.getGameMode().getOnlinePlayers() )
+		for ( Player player : plugin.getOnlinePlayers() )
 		{
 			resetPlayer(player, resetInventories);
 			setAlive(player, true);
@@ -171,7 +171,7 @@ public class PlayerManager
 	
 	public void putPlayersInWorld(World world)
 	{
-		for ( Player player : plugin.getGameMode().getOnlinePlayers() )
+		for ( Player player : plugin.getOnlinePlayers() )
 			putPlayerInWorld(player, world);	
 	}
 	
@@ -193,7 +193,7 @@ public class PlayerManager
 	        	for ( Player player : plugin.getGameMode().getOnlinePlayers(true) )
 	        		if ( player.getInventory().contains(Material.COMPASS) )
 	        		{// does this need a null check on the target?
-	        			player.setCompassTarget(plugin.getGameMode().getCompassTarget(player));
+	        			player.setCompassTarget(getCompassTarget(player));
 	        		}
         	}
         }, 20, 10);
@@ -244,7 +244,7 @@ public class PlayerManager
 		player.setPlayerListName(color + name);
 		
 		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
-		for ( Player online : plugin.getGameMode().getOnlinePlayers() )
+		for ( Player online : plugin.getOnlinePlayers() )
 			if ( !online.canSee(player) )
 			{
 				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999));
@@ -260,8 +260,8 @@ public class PlayerManager
 		player.setPlayerListName(ChatColor.stripColor(player.getPlayerListName()));
 		
 		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
-		for ( Player online : plugin.getGameMode().getOnlinePlayers() )
-			if ( !online.canSee(player) )
+		for ( Player online : plugin.getOnlinePlayers() )
+			if ( online != player && !online.canSee(player) )
 			{
 				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999));
 				sendForScoreboard(online, player, true);
@@ -317,7 +317,7 @@ public class PlayerManager
 			setAlive(player, false);
 			
 			// send this player to everyone else's scoreboards, because they're now invisible, and won't show otherwise
-			for ( Player online : plugin.getGameMode().getOnlinePlayers() )
+			for ( Player online : plugin.getOnlinePlayers() )
 				if ( online != player && !online.canSee(player) )
 					sendForScoreboard(online, player, true);
 		}
@@ -341,7 +341,7 @@ public class PlayerManager
 			
 		if ( player.getInventory().contains(Material.COMPASS) )
 		{// does this need a null check on the target?
-			player.setCompassTarget(plugin.getGameMode().getCompassTarget(player));
+			player.setCompassTarget(getCompassTarget(player));
 		}
 	}
 	
@@ -351,7 +351,7 @@ public class PlayerManager
 		Player player = plugin.getServer().getPlayerExact(playerName);
 		Info info = playerInfo.get(playerName);
 		
-		if ( plugin.getGameMode().getOnlinePlayers().size() == 0 )
+		if ( plugin.getOnlinePlayers().size() == 0 )
 		{// no one still playing, so end the game
 			plugin.forcedGameEnd = true;
 			plugin.getGameMode().gameFinished();
@@ -390,6 +390,16 @@ public class PlayerManager
 			player.kickPlayer("You died, and are now banned until the end of the game");
 		}
 	}
+	
+	public Location getCompassTarget(Player player)
+	{
+		Location target = plugin.getGameMode().getCompassTarget(player);
+		if ( target == null )
+			return player.getWorld().getSpawnLocation();
+		else
+			return target;
+	}
+	
 	// need to rework the end of the game
 	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)
 	{
@@ -464,7 +474,7 @@ public class PlayerManager
 		plugin.getGameMode().broadcastMessage(ChatColor.YELLOW + message);
 		clearKillers(null);
 */
-		if ( winningItem != null || plugin.voteManager.isInVote() || plugin.getGameMode().getOnlinePlayers().size() == 0 )
+		if ( winningItem != null || plugin.voteManager.isInVote() || plugin.getOnlinePlayers().size() == 0 )
 		{	// plinth victory or other scenario where we don't want a vote, end the game in 10 secs
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 	
@@ -615,14 +625,14 @@ public class PlayerManager
 	
 	public void makePlayerInvisibleToAll(Player player)
 	{
-		for(Player p : plugin.getGameMode().getOnlinePlayers())
+		for(Player p : plugin.getOnlinePlayers())
 			if (p != player && p.canSee(player))
 				hidePlayer(p, player);
 	}
 	
 	public void makePlayerVisibleToAll(Player player)
 	{
-		for(Player p : plugin.getGameMode().getOnlinePlayers())
+		for(Player p : plugin.getOnlinePlayers())
 			if (p != player && !p.canSee(player))
 				p.showPlayer(player);
 	}

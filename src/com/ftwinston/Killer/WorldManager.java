@@ -393,7 +393,7 @@ public class WorldManager
 		{
 			if ( z == StagingWorldGenerator.startButtonZ )
 			{
-				if ( plugin.getGameMode().getOnlinePlayers().size() >= plugin.getGameMode().getMinPlayers() )
+				if ( plugin.getOnlinePlayers().size() >= plugin.getGameMode().getMinPlayers() )
 					plugin.setGameState(GameState.worldGeneration);
 				else
 					plugin.setGameState(GameState.stagingWorldConfirm);
@@ -526,7 +526,7 @@ public class WorldManager
 			s.setLine(0, "This mode needs");
 			s.setLine(1, "at least " + plugin.getGameMode().getMinPlayers());
 			s.setLine(2, "players. You");
-			s.setLine(3, "only have " + plugin.getGameMode().getOnlinePlayers().size() + ".");
+			s.setLine(3, "only have " + plugin.getOnlinePlayers().size() + ".");
 			s.update();
 			
 			backOverride.setType(Material.WOOL);

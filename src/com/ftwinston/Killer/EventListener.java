@@ -81,7 +81,7 @@ public class EventListener implements Listener
     					boolean alive = plugin.getGameMode().isAllowedToRespawn(player);
     					plugin.playerManager.setAlive(player, alive);
     					if ( alive )
-    						player.setCompassTarget(plugin.getGameMode().getCompassTarget(player));
+    						player.setCompassTarget(plugin.playerManager.getCompassTarget(player));
     				}
     			}
     		});
@@ -103,7 +103,7 @@ public class EventListener implements Listener
 				if(PlayerManager.instance.isSpectator(player.getName()))
 					PlayerManager.instance.setAlive(player, false);
 				else
-					player.setCompassTarget(plugin.getGameMode().getCompassTarget(player));
+					player.setCompassTarget(plugin.playerManager.getCompassTarget(player));
 			}
 			else
 			{
@@ -476,7 +476,7 @@ public class EventListener implements Listener
 	private void playerQuit(Player player, boolean actuallyLeftServer)
 	{
 		if ( actuallyLeftServer ) // the quit message should be sent to the scoreboard of anyone who this player was invisible to
-			for ( Player online : plugin.getGameMode().getOnlinePlayers() )
+			for ( Player online : plugin.getOnlinePlayers() )
 				if ( !online.canSee(player) )
 					plugin.playerManager.sendForScoreboard(online, player, false);
 		

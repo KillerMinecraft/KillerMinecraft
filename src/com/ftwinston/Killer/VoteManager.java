@@ -44,7 +44,7 @@ public class VoteManager
 	public void startVote(String question, Player initiatedBy, Runnable runOnYes, Runnable runOnNo, Runnable runOnDraw)
 	{
 		playersWhoCanVote.clear();
-		for ( Player player : plugin.getGameMode().getOnlinePlayers())
+		for ( Player player : plugin.getOnlinePlayers())
 			playersWhoCanVote.add(player.getName());
 		numYesVotes = numNoVotes = 0;
 		inVote = true;

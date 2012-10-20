@@ -543,6 +543,15 @@ public class Killer extends JavaPlugin
 		return world == worldManager.mainWorld || world == worldManager.netherWorld || world == worldManager.stagingWorld;
 	}
 	
+	public final List<Player> getOnlinePlayers()
+	{
+		ArrayList<Player> players = new ArrayList<Player>();
+		for ( Player player : getServer().getOnlinePlayers() )
+			if ( isGameWorld(player.getWorld()) )
+				players.add(player);
+		return players;
+	}
+	
 	public Location getPlinthLocation()
 	{
 		return plinthPressurePlateLocation;
