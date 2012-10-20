@@ -107,8 +107,7 @@ public class ContractKiller extends GameMode
 	@Override
 	public void worldGenerationComplete(World main, World nether)
 	{
-		nextPlayerNumber = 1; // ensure that the player placement logic starts over again
-		// this could arguably be in gameStarted, IF that's called before getSpawnLocation ... but idk if it is.
+		
 	}
 	
 	@Override
@@ -185,6 +184,7 @@ public class ContractKiller extends GameMode
 	public void gameStarted()
 	{
 		allocationComplete = false;
+		nextPlayerNumber = 1; // ensure that the player placement logic starts over again
 		
 		// allocation doesn't happen right away, there's 30 seconds of "scrabbling" first
 		allocationProcessID = getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), new Runnable() {
@@ -230,7 +230,7 @@ public class ContractKiller extends GameMode
 	}
 	
 	@Override
-	public void gameFinished(int winningTeam)
+	public void gameFinished()
 	{
 		allocationComplete = false;
 		victimWarningTimes.clear();
@@ -316,7 +316,7 @@ public class ContractKiller extends GameMode
 		else
 			return; // multiple people left in the game
 		
-		finishGame(-1);
+		finishGame();
 	}
 	
 	@Override

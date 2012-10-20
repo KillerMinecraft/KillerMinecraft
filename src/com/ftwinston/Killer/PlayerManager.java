@@ -353,6 +353,8 @@ public class PlayerManager
 		
 		if ( plugin.getGameMode().getOnlinePlayers().size() == 0 )
 		{// no one still playing, so end the game
+			plugin.forcedGameEnd = true;
+			plugin.getGameMode().gameFinished();
 			plugin.endGame(null);
 			return;
 		}
@@ -469,12 +471,14 @@ public class PlayerManager
 				@Override
 				public void run()
 				{
-	    			plugin.endGame(null);					
+					plugin.forcedGameEnd = true; // don't start a vote or whatever, do what I say
+					plugin.getGameMode().finishGame();
+	    			plugin.endGame(null);
 				}
 	    	}, 200L);
 		}
 		else
-			plugin.roundFinished();
+			plugin.getGameMode().finishGame();
 	}
 	/*
 	public void clearKillers(CommandSender sender)

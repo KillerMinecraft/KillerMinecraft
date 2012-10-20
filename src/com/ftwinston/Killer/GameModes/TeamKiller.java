@@ -269,7 +269,7 @@ public class TeamKiller extends GameMode
 	}
 	
 	@Override
-	public void gameFinished(int winningTeam)
+	public void gameFinished()
 	{
 		// do we need to do anything here?
 	}
@@ -310,9 +310,15 @@ public class TeamKiller extends GameMode
 		}
 		
 		if ( numTeamsWithSurvivors == 1 )
-			finishGame(someTeamWithSurvivors); // only one team left standing, they win
+		{
+			broadcastMessage("The " + describeTeam(someTeamWithSurvivors, true) + " are the last team standing - they win!");
+			finishGame(); // only one team left standing, they win
+		}
 		else if ( numTeamsWithSurvivors == 0 )
-			finishGame(-1); // nobody left standing, nobody wins
+		{
+			broadcastMessage("Everybody died - nobody wins!");
+			finishGame(); // nobody left standing, nobody wins
+		}
 	}
 	
 	@Override
@@ -333,8 +339,8 @@ public class TeamKiller extends GameMode
 		for ( Material material : Settings.winningItems )
 			if ( inv.contains(material) )
 			{
-				broadcastMessage(player.getName() + " brought a " + tidyItemName(material) + " to the plinth!");
-				finishGame(getTeam(player)); // winning item brought to the plinth, that player's team win
+				broadcastMessage(player.getName() + " brought a " + tidyItemName(material) + " to the plinth! - The " + describeTeam(getTeam(player), true) + " win!");				
+				finishGame(); // winning item brought to the plinth, that player's team win
 				break;
 			}
 	}

@@ -79,7 +79,6 @@ public class Killer extends JavaPlugin
 			if ( statsManager.isTracking )
 				statsManager.gameFinished(getGameMode(), getGameMode().getOnlinePlayers(true).size(), 3, 0);
 			
-			getGameMode().finishGame(-1); // feck, we shouldn't be passing in an invalid team here
 			HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
 
 			// don't show the start buttons until the old world finishes deleting
@@ -114,6 +113,7 @@ public class Killer extends JavaPlugin
 			worldManager.generateWorlds(worldOption, new Runnable() {
 				@Override
 				public void run() {
+					getGameMode().worldGenerationComplete(worldManager.mainWorld, worldManager.netherWorld);
 					setGameState(GameState.beforeAssignment);
 				}
 			});
@@ -126,15 +126,13 @@ public class Killer extends JavaPlugin
 			
 			if ( prevState.usesGameWorlds )
 			{
-				getGameMode().finishGame(-1); // feck, shouldn't be 
 				worldManager.removeAllItems(worldManager.mainWorld);
 				worldManager.mainWorld.setTime(0);				
 			}
 			else
 				getServer().getPluginManager().registerEvents(getGameMode(), this);
 
-			playerManager.putPlayersInWorld(worldManager.mainWorld);			
-			playerManager.startGame();
+			getGameMode().startGame();
 		}
 	}
 	
@@ -450,12 +448,20 @@ public class Killer extends JavaPlugin
 			if ( firstParam.equals("restart") )
 			{
 				if ( getGameState().usesGameWorlds )
+				{
+					forcedGameEnd = true;
+					getGameMode().gameFinished();
 					restartGame(sender);
+				}
 			}
 			else if ( firstParam.equals("end") )
 			{
 				if ( getGameState().usesGameWorlds )
+				{
+					forcedGameEnd = true;
+					getGameMode().gameFinished();
 					endGame(sender);
+				}
 			}
 			else if ( firstParam.equals("world") )
 			{
@@ -542,31 +548,7 @@ public class Killer extends JavaPlugin
 		return plinthPressurePlateLocation;
 	}
 	
-	public void roundFinished()
-	{
-		if ( Settings.voteRestartAtEndOfGame )
-			voteManager.startVote("Play another game in the same world?", null, new Runnable() {
-				public void run()
-				{
-					restartGame(null);
-				}
-			}, new Runnable() {
-				public void run()
-				{
-					endGame(null);
-				}
-			}, new Runnable() {
-				public void run()
-				{
-					endGame(null);
-				}
-			});
-		else if  ( Settings.autoRestartAtEndOfGame )
-			restartGame(null);
-		else
-			endGame(null);
-	}
-	
+	boolean forcedGameEnd = false;
 	public void endGame(CommandSender actionedBy)
 	{
 		if ( actionedBy != null )

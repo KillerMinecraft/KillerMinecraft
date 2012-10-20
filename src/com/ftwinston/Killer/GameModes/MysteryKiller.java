@@ -253,7 +253,7 @@ public class MysteryKiller extends GameMode
 	}
 	
 	@Override
-	public void gameFinished(int winningTeam)
+	public void gameFinished()
 	{
 		if ( allocationProcessID != -1 )
 		{
@@ -278,11 +278,13 @@ public class MysteryKiller extends GameMode
 		
 		if ( getOnlinePlayers(1, true).size() > 0 )
 		{
-			finishGame(1); // killers win
+			broadcastMessage("All the friendly players died - the killer wins!");
+			finishGame(); // killers win
 		}
 		else
 		{
-			finishGame(-1); // nobody wins
+			broadcastMessage("Everybody died - nobody wins!");
+			finishGame(); // nobody wins
 		}
 	}
 	
@@ -304,8 +306,8 @@ public class MysteryKiller extends GameMode
 		for ( Material material : Settings.winningItems )
 			if ( inv.contains(material) )
 			{
-				broadcastMessage(player.getName() + " brought a " + tidyItemName(material) + " to the plinth!");
-				finishGame(0); // winning item brought to the plinth, friendlies win
+				broadcastMessage(player.getName() + " brought a " + tidyItemName(material) + " to the plinth - the friendly players win!");
+				finishGame(); // winning item brought to the plinth, friendlies win
 				break;
 			}
 	}

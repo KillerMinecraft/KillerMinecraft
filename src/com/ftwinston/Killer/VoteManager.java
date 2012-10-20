@@ -165,6 +165,8 @@ public class VoteManager
 					startVote("Restart the current game?", player, new Runnable() {
 						public void run()
 						{
+							plugin.forcedGameEnd = true;
+							plugin.getGameMode().gameFinished();
 							plugin.restartGame(null);
 						}
 					}, null, null);
@@ -173,6 +175,8 @@ public class VoteManager
 					startVote("End the current game?", player, new Runnable() {
 						public void run()
 						{
+							plugin.forcedGameEnd = true;
+							plugin.getGameMode().gameFinished();
 							plugin.endGame(null);
 						}
 					}, null, null);

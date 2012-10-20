@@ -114,7 +114,7 @@ public abstract class GameMode implements Listener
 
 	protected abstract void gameStarted(); // assign player teams if we do that immediately, etc
 
-	protected abstract void gameFinished(int winningTeam); // reveal anything you want to, clean up
+	protected abstract void gameFinished(); // clean up scheduled tasks, etc
 
 	public abstract boolean useDiscreetDeathMessages(); // should we tweak death messages to keep stuff secret?
 
@@ -470,24 +470,43 @@ public abstract class GameMode implements Listener
 	
 	public final void startGame()
 	{
+		plugin.forcedGameEnd = false;
+		plugin.playerManager.startGame();
 		gameStarted();
+		
+		for ( Player player : getOnlinePlayers() )
+			player.teleport(getSpawnLocation(player));
 	}
 	
-	public final void finishGame(int winningTeam)
-	{
-		if ( winningTeam == -1 )
-			broadcastMessage("Game drawn - nobody wins!");
-		else
-		{
-			boolean plural = countPlayersOnTeam(winningTeam, false) != 1;
-			broadcastMessage("The " + describeTeam(winningTeam, plural) + (plural ? "win" : "wins"));
-		}
-		
-		gameFinished(winningTeam);
+	public final void finishGame()
+	{	
+		gameFinished();
 		plinthLoc = null;
 		
-		// this should somehow interact or call the endGame method on the Killer class.
-		
+		if ( !plugin.forcedGameEnd )
+		{
+			if ( Settings.voteRestartAtEndOfGame )
+				plugin.voteManager.startVote("Play another game in the same world?", null, new Runnable() {
+					public void run()
+					{
+						plugin.restartGame(null);
+					}
+				}, new Runnable() {
+					public void run()
+					{
+						plugin.endGame(null);
+					}
+				}, new Runnable() {
+					public void run()
+					{
+						plugin.endGame(null);
+					}
+				});
+			else if  ( Settings.autoRestartAtEndOfGame )
+				plugin.restartGame(null);
+			else
+				plugin.endGame(null);
+		}
 	}
 	
 	public final String describeTeam(int teamNum)

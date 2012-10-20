@@ -235,7 +235,7 @@ public class CrazyKiller extends GameMode
 	}
 	
 	@Override
-	public void gameFinished(int winningTeam)
+	public void gameFinished()
 	{
 		if ( allocationProcessID != -1 )
 		{
@@ -268,11 +268,20 @@ public class CrazyKiller extends GameMode
 		
 		int numSurvivorsTotal = getOnlinePlayers(true).size();
 		if ( numSurvivorsTotal == 0 )
-			finishGame(-1); // draw, nobody wins
+		{
+			broadcastMessage("Everybody died - nobody wins!");
+			finishGame(); // draw, nobody wins
+		}
 		else if ( team == 1 )
-			finishGame(0); // killer died, friendlies win
+		{
+			broadcastMessage("The killer died - the friendly players win!");
+			finishGame(); // killer died, friendlies win
+		}
 		else
-			finishGame(1); // friendlies died, killer wins
+		{
+			broadcastMessage("All the friendly players died - the killer wins!");
+			finishGame(); // friendlies died, killer wins
+		}
 	}
 	
 	@Override
@@ -293,8 +302,8 @@ public class CrazyKiller extends GameMode
 		for ( Material material : Settings.winningItems )
 			if ( inv.contains(material) )
 			{
-				broadcastMessage(player.getName() + " brought a " + tidyItemName(material) + " to the plinth!");
-				finishGame(0); // winning item brought to the plinth, friendlies win
+				broadcastMessage(player.getName() + " brought a " + tidyItemName(material) + " to the plinth - the friendly players win!");
+				finishGame(); // winning item brought to the plinth, friendlies win
 				break;
 			}
 	}
