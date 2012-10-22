@@ -8,6 +8,7 @@ import java.util.Random;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -120,7 +121,7 @@ public abstract class GameMode implements Listener
 
 	public abstract void playerJoinedLate(Player player, boolean isNewPlayer);
 
-	public abstract void playerKilledOrQuit(Player player);
+	public abstract void playerKilledOrQuit(OfflinePlayer player);
 
 
 	protected abstract Location getCompassTarget(Player player); // if compasses should follow someone / something, control that here
@@ -140,17 +141,17 @@ public abstract class GameMode implements Listener
 		return m.name().toLowerCase().replace('_', ' ');
 	}
 
-	protected final int getTeam(Player player)
+	protected final int getTeam(OfflinePlayer player)
 	{
 		return plugin.playerManager.getTeam(player.getName());
 	}
 	
-	protected final void setTeam(Player player, int teamNum)
+	protected final void setTeam(OfflinePlayer player, int teamNum)
 	{
 		plugin.playerManager.setTeam(player, teamNum);
 	}
 	
-	protected final Player getTargetOf(Player player)
+	protected final Player getTargetOf(OfflinePlayer player)
 	{
 		Info info = plugin.playerManager.getInfo(player.getName());
 		if ( info.target == null )
@@ -164,7 +165,7 @@ public abstract class GameMode implements Listener
 		return null;
 	}
 	
-	protected final void setTargetOf(Player player, Player target)
+	protected final void setTargetOf(OfflinePlayer player, OfflinePlayer target)
 	{
 		Info info = plugin.playerManager.getInfo(player.getName());
 		if ( target == null )
@@ -173,7 +174,7 @@ public abstract class GameMode implements Listener
 			info.target = target.getName();
 	}
 	
-	protected final boolean isAlive(Player player)
+	protected final boolean isAlive(OfflinePlayer player)
 	{
 		return plugin.playerManager.isAlive(player.getName());
 	}

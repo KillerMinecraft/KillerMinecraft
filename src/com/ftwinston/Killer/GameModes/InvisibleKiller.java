@@ -10,6 +10,7 @@ import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -356,7 +357,7 @@ public class InvisibleKiller extends GameMode
 	}
 	
 	@Override
-	public void playerKilledOrQuit(Player player)
+	public void playerKilledOrQuit(OfflinePlayer player)
 	{
 		int team = getTeam(player);
 		int numSurvivorsOnTeam = getOnlinePlayers(team, true).size();

@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -514,16 +515,19 @@ public class EventListener implements Listener
     	
     	public void run()
     	{
+    		OfflinePlayer player = Bukkit.getServer().getPlayerExact(name);
+    		if ( player == null )
+    			player = Bukkit.getServer().getOfflinePlayer(name);
+    		
 			if ( checkDisconnected )
 			{
-				Player player = Bukkit.getServer().getPlayerExact(name);
 				if ( player != null && player.isOnline() )
-					return; // player has reconnected, so don't kill them
+					return; // player has reconnected, so don't do anything
 				
 				if ( plugin.playerManager.isAlive(name) )
 					plugin.statsManager.playerQuit();
 			}
-    		plugin.playerManager.playerKilled(name);
+    		plugin.playerManager.playerKilled(player);
     	}
     }
 }

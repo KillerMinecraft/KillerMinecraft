@@ -8,6 +8,7 @@ import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -294,7 +295,7 @@ public class TeamKiller extends GameMode
 	}
 	
 	@Override
-	public void playerKilledOrQuit(Player player)
+	public void playerKilledOrQuit(OfflinePlayer player)
 	{
 		int[] teamSizes = new int[numTeams];
 		int numTeamsWithSurvivors = 0, someTeamWithSurvivors = -1;

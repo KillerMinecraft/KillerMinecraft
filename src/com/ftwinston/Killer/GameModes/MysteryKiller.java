@@ -8,6 +8,7 @@ import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
@@ -270,7 +271,7 @@ public class MysteryKiller extends GameMode
 	}
 	
 	@Override
-	public void playerKilledOrQuit(Player player)
+	public void playerKilledOrQuit(OfflinePlayer player)
 	{
 		int numFriendlies = getOnlinePlayers(0, true).size();
 		if ( numFriendlies != 0 )

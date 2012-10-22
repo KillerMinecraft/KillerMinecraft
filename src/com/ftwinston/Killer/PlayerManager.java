@@ -131,7 +131,7 @@ public class PlayerManager
 		return num;
 	}
 	
-	public void setTeam(Player player, int teamNum)
+	public void setTeam(OfflinePlayer player, int teamNum)
 	{
 		Info info = playerInfo.get(player.getName());
 		if ( info != null )
@@ -346,10 +346,10 @@ public class PlayerManager
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time
-	public void playerKilled(String playerName)
+	public void playerKilled(OfflinePlayer player)
 	{
-		Player player = plugin.getServer().getPlayerExact(playerName);
-		Info info = playerInfo.get(playerName);
+		Info info = playerInfo.get(player.getName());
+		info.setAlive(false);
 		
 		if ( plugin.getOnlinePlayers().size() == 0 )
 		{// no one still playing, so end the game
@@ -359,35 +359,26 @@ public class PlayerManager
 			return;
 		}
 		
-		if ( player != null )
-			plugin.getGameMode().playerKilledOrQuit(player);
+		plugin.getGameMode().playerKilledOrQuit(player);
 		
-		if ( player == null || !player.isOnline() )
+		Player online = player.isOnline() ? (Player)player : null;
+		if ( online != null )
 		{
-			if ( info != null )
+			if ( plugin.getGameMode().isAllowedToRespawn(online) )
 			{
-				info.setAlive(false);
-				if ( Settings.banOnDeath )
-					player.setBanned(true);
+				setAlive(online, true);
+				return;
 			}
-			return;
-		}
-
-		if ( plugin.getGameMode().isAllowedToRespawn(player) )
-		{
-			setAlive(player, true);
-			return;
+			
+			if ( !plugin.getGameMode().teamAllocationIsSecret() )
+				plugin.playerManager.clearPlayerNameColor(online);
 		}
 		
-		if ( !plugin.getGameMode().teamAllocationIsSecret() )
-			plugin.playerManager.clearPlayerNameColor(player);
-		
-		setAlive(player, false);
-
 		if ( Settings.banOnDeath )
 		{
 			player.setBanned(true);
-			player.kickPlayer("You died, and are now banned until the end of the game");
+			if ( online != null )
+				online.kickPlayer("You died, and are now banned until the end of the game");
 		}
 	}
 	
