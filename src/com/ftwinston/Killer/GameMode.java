@@ -20,6 +20,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.ftwinston.Killer.Killer.GameState;
 import com.ftwinston.Killer.PlayerManager;
 
 import com.ftwinston.Killer.GameModes.ContractKiller;
@@ -480,29 +481,36 @@ public abstract class GameMode implements Listener
 		gameFinished();
 		plinthLoc = null;
 		
+		plugin.setGameState(GameState.finished);
+		
 		if ( !plugin.forcedGameEnd )
 		{
-			if ( Settings.voteRestartAtEndOfGame )
-				plugin.voteManager.startVote("Play another game in the same world?", null, new Runnable() {
-					public void run()
-					{
+			plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new Runnable() {
+				@Override
+				public void run() {
+					if ( Settings.voteRestartAtEndOfGame )
+						plugin.voteManager.startVote("Play another game in the same world?", null, new Runnable() {
+							public void run()
+							{
+								plugin.restartGame(null);
+							}
+						}, new Runnable() {
+							public void run()
+							{
+								plugin.endGame(null);
+							}
+						}, new Runnable() {
+							public void run()
+							{
+								plugin.endGame(null);
+							}
+						});
+					else if  ( Settings.autoRestartAtEndOfGame )
 						plugin.restartGame(null);
-					}
-				}, new Runnable() {
-					public void run()
-					{
+					else
 						plugin.endGame(null);
-					}
-				}, new Runnable() {
-					public void run()
-					{
-						plugin.endGame(null);
-					}
-				});
-			else if  ( Settings.autoRestartAtEndOfGame )
-				plugin.restartGame(null);
-			else
-				plugin.endGame(null);
+				}
+			}, 100); // add a 5 second delay
 		}
 	}
 	
