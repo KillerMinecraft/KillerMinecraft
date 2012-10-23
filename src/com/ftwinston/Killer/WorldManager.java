@@ -130,7 +130,7 @@ public class WorldManager
 			plugin.log.info("Deleting staging world, cos it already exists...");
 			
 			
-			forceUnloadWorld(world, null);
+			forceUnloadWorld(world);
 			world = null;
 			try
 			{
@@ -301,16 +301,16 @@ public class WorldManager
 		return true;
 	}
 	
-	private void forceUnloadWorld(World world, World movePlayersTo)
+	private void forceUnloadWorld(World world)
 	{
 		world.setAutoSave(false);
-		if ( movePlayersTo == null )
+		if ( world == stagingWorld )
 			for ( Player player : world.getPlayers() )
-				player.kickPlayer("World is being regenerated... and you were in it!");
+				player.kickPlayer("Staging world is being regenerated... and you were in it!");
 		else
 		{
 			for ( Player player : world.getPlayers() )
-				plugin.playerManager.putPlayerInWorld(player,  movePlayersTo);
+				plugin.playerManager.teleport(player, getStagingWorldSpawnPoint());
 		}
 		
 		String worldName = world.getName();
@@ -324,10 +324,10 @@ public class WorldManager
 		plugin.log.info("Clearing out old worlds...");
 		
 		if ( mainWorld != null )
-			forceUnloadWorld(mainWorld, stagingWorld);
+			forceUnloadWorld(mainWorld);
 		
 		if ( netherWorld != null )
-			forceUnloadWorld(netherWorld, stagingWorld);
+			forceUnloadWorld(netherWorld);
 		
 		mainWorld = netherWorld = null;
 		
@@ -727,7 +727,7 @@ public class WorldManager
 		World world = plugin.getServer().createWorld(wc);
 		
 		// unload the world - but don't delete
-		forceUnloadWorld(world, stagingWorld);
+		forceUnloadWorld(world);
 		clearWorldReference(name);
 		
 		// now add it to the config

@@ -132,11 +132,6 @@ public abstract class GameMode implements Listener
 	
 	// helper methods that exist to help out the game modes
 	
-	protected final int countPlayersOnTeam(int teamNum, boolean onlyLivingPlayers)
-	{
-		return plugin.playerManager.countPlayersOnTeam(teamNum, onlyLivingPlayers);
-	}
-	
 	protected final String tidyItemName(Material m)
 	{
 		return m.name().toLowerCase().replace('_', ' ');
@@ -222,7 +217,7 @@ public abstract class GameMode implements Listener
 	{
 		ArrayList<Player> players = new ArrayList<Player>();
 		for ( Map.Entry<String, Info> info : plugin.playerManager.getPlayerInfo() )
-			if ( info.getValue().getTeam() == team && (alive == info.getValue().isAlive()) )
+			if ( info.getValue().getTeam() == team && alive == info.getValue().isAlive() )
 			{
 				Player p = plugin.getServer().getPlayerExact(info.getKey());
 				if ( p != null && p.isOnline() )
@@ -516,7 +511,17 @@ public abstract class GameMode implements Listener
 	
 	public final String describeTeam(int teamNum)
 	{
-		return describeTeam(teamNum, countPlayersOnTeam(teamNum, false) != 1);
+		int playersOnTeam = 0;
+		
+		for ( Map.Entry<String, Info> info : plugin.playerManager.getPlayerInfo() )
+			if ( info.getValue().getTeam() == teamNum )
+			{
+				playersOnTeam ++;
+				if ( playersOnTeam > 1 )
+					break; // no need to keep going, we only care if there's one or not
+			}
+		
+		return describeTeam(teamNum, playersOnTeam != 1);
 	}
 	
 	public final void sendGameModeHelpMessage()
@@ -544,168 +549,6 @@ public abstract class GameMode implements Listener
 		info.nextHelpMessage ++;
 	}
 	
-	/*
-	public abstract int absMinPlayers();
-	public abstract boolean killersCompassPointsAtFriendlies();
-	public abstract boolean friendliesCompassPointsAtKiller();
-	public boolean compassPointsAtTarget() { return false; }
-	public abstract boolean discreteDeathMessages();
-	public abstract boolean usesPlinth();
-	
-	public abstract void assignTeams();
-	
-	public abstract int getNumTeams();
-	public abstract boolean immediateTeamAssignment();
-	public abstract boolean informOfTeamAssignment(PlayerManager pm);
-	
-	public abstract boolean revealTeamIdentityAtEnd(int team);
-	
-	public boolean assignTeams(int numKillers, CommandSender sender, PlayerManager pm)
-	{
-		int availablePlayers = 0;
-		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-		{
-			if ( !entry.getValue().isAlive() || entry.getValue().getTeam() == 1 )
-				continue; // spectators and already-assigned killers don't count towards the minimum
-			
-			Player player = plugin.getServer().getPlayerExact(entry.getKey());
-			if ( player != null && player.isOnline() )
-				availablePlayers ++; // "just disconnected" players don't count towards the minimum
-		}
-		
-		if ( availablePlayers < absMinPlayers() )
-		{
-			String message = "Insufficient players to assign a killer. A minimum of " + absMinPlayers() + " players are required.";
-			if ( sender != null )
-				sender.sendMessage(message);
-			if ( informOfTeamAssignment(pm) )
-				plugin.broadcastMessage(message);
-			return false;
-		}
-		
-		if ( informOfTeamAssignment(pm) && teamAllocationIsSecret() )
-		{
-			String message;
-			if ( numKillers > 1 )
-				message = numKillers + " killers have";
-			else
-				message = "A killer has";
-			
-			message += " been randomly assigned";
-			
-			
-			if ( sender != null )
-				message += " by " + sender.getName();
-			message += " - nobody but the";
-			
-			if ( numKillers > 1 || pm.numPlayersOnTeam(1) > 0 )
-				message += " killers";
-			else
-				message += " killer";
-			message += " knows who they are.";
-
-			plugin.broadcastMessage(message);
-		}
-	
-		if ( !plugin.statsManager.isTracking )
-			plugin.statsManager.gameStarted(pm.numSurvivors());
-		
-		
-		if ( numKillers >= availablePlayers )
-			numKillers = availablePlayers;
-		
-		int[] killerIndices = new int[numKillers];
-		for ( int i=0; i<numKillers; i++ )
-		{
-			int rand;
-			boolean ok;
-			do
-			{
-				rand = r.nextInt(availablePlayers);
-				ok = true;
-				for ( int j=0; j<i; j++ )
-					if ( rand == killerIndices[j] ) // already used this one, it's not good to use again
-					{
-						ok = false;
-						break;
-					}
-
-			} while ( !ok );
-			killerIndices[i] = rand;
-		}
-		
-		Arrays.sort(killerIndices);
-		
-		int num = 0, nextIndex = 0;
-		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-		{
-			if ( !entry.getValue().isAlive() || entry.getValue().getTeam() == 1 )
-				continue;
-			
-			Player player = plugin.getServer().getPlayerExact(entry.getKey());
-			if ( player == null || !player.isOnline() )
-				continue;
-
-			if ( nextIndex < numKillers && num == killerIndices[nextIndex] )
-			{
-				entry.getValue().setTeam(1);
-				
-				// don't show this in team killer mode, but do show it in mystery killer, even when assigning a new killer midgame and not telling everyone else
-				if ( informOfTeamAssignment(pm) || teamAllocationIsSecret() )
-				{
-					String message = ChatColor.RED + "You are ";
-					message += numKillers > 1 || pm.numPlayersOnTeam(1) > 1 ? "now a" : "the";
-					message += " killer!";
-					
-					if ( !informOfTeamAssignment(pm) && teamAllocationIsSecret() )
-						message += ChatColor.WHITE + " No one else has been told a new killer was assigned.";
-						
-					player.sendMessage(message);
-				}
-				if ( !teamAllocationIsSecret() )
-				{
-					if ( informOfTeamAssignment(pm) )
-						plugin.broadcastMessage(player.getName() + " is the killer!");
-					pm.colorPlayerName(player, ChatColor.RED);
-				}
-				
-				preparePlayer(player, pm, 1, true);
-				
-				nextIndex ++;
-				
-				plugin.statsManager.killerAdded();
-				if ( sender != null )
-					plugin.statsManager.killerAddedByAdmin();
-			}
-			else if ( pm.getTeam(player.getName()) != 1 )
-			{
-				preparePlayer(player, pm, 0, true);
-				
-				if ( !teamAllocationIsSecret() )
-					pm.colorPlayerName(player, ChatColor.BLUE);
-				else if ( informOfTeamAssignment(pm) )
-					player.sendMessage(ChatColor.YELLOW + "You are not " + ( numKillers > 1 || pm.numPlayersOnTeam(1) > 1 ? "a" : "the") + " killer.");
-			}
-			
-			num++;
-		}
-		return true;
-	}
-	
-	public abstract void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info);
-	public void playerKilledOrQuit(Player player, PlayerManager pm, PlayerManager.Info info) { }
-	
-	public abstract void preparePlayer(Player player, PlayerManager pm, int teamNum, boolean isNewPlayer);
-	
-	public abstract void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth);
-	
-	public boolean playerDamaged(Player victim, Entity attacker, DamageCause cause, int amount) { return true; }
-	public void playerEmptiedBucket(PlayerBucketEmptyEvent event) { }
-	public void playerPickedUpItem(PlayerPickupItemEvent event) { }
-	public void playerDroppedItem(Player player, Item item) { }
-	public void playerInventoryClick(Player player, InventoryClickEvent event) { }
-	public void playerItemSwitch(Player player, int prevSlot, int newSlot) { }
-	*/
 	protected class Option
 	{
 		public Option(String name, boolean enabledByDefault)

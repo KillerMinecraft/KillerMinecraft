@@ -116,7 +116,7 @@ public class EventListener implements Listener
 			playerJoined(event.getPlayer());
 		
 		if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
-			event.getPlayer().teleport(plugin.worldManager.getStagingWorldSpawnPoint()); // place them manually, to avoid needing a big hole in the roof
+			plugin.playerManager.teleport(event.getPlayer(), plugin.worldManager.getStagingWorldSpawnPoint());
     }
     
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -154,7 +154,7 @@ public class EventListener implements Listener
     		event.setCancelled(true);
     }
     
-    // prevent spectators breaking anything, prevent anyone breaking the plinth
+    // prevent spectators breaking anything, prevent anyone breaking protected locations
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event)
     {
@@ -168,7 +168,7 @@ public class EventListener implements Listener
     		event.setCancelled(true);
     }
     
-    // prevent anyone placing blocks over the plinth
+    // prevent anyone placing blocks on protected locations
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPlace(BlockPlaceEvent event)
     {
@@ -182,7 +182,7 @@ public class EventListener implements Listener
     		event.setCancelled(true);
     }
     
-    // prevent lava/water from flowing onto the plinth
+    // prevent lava/water from flowing onto protected locations
     @EventHandler(priority = EventPriority.HIGHEST)
     public void BlockFromTo(BlockFromToEvent event)
     {
@@ -193,6 +193,7 @@ public class EventListener implements Listener
             event.setCancelled(true);
     }
     
+	// prevent pistons pushing things into/out of protected locations
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPistonExtend(BlockPistonExtendEvent event)
     {
@@ -203,6 +204,7 @@ public class EventListener implements Listener
     		event.setCancelled(true);
     }
     
+	// prevent explosions from damaging protected locations
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityExplode(EntityExplodeEvent event)
     {
@@ -210,8 +212,6 @@ public class EventListener implements Listener
 			return;
 		
     	List<Block> blocks = event.blockList();
-
-		// remove any plinth blocks from the list, stop them being destroyed
     	for ( int i=0; i<blocks.size(); i++ )
     		if ( plugin.getGameMode().isLocationProtected(blocks.get(i).getLocation()) )
     		{
@@ -220,6 +220,7 @@ public class EventListener implements Listener
     		}
     }
     
+	// switching between spectator items
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerItemSwitch(PlayerItemHeldEvent event)
     {
@@ -299,6 +300,7 @@ public class EventListener implements Listener
     		return;
     	}
     	
+		// eyes of ender can be made to seek out nether fortresses
     	if ( event.getPlayer().getWorld() == plugin.worldManager.netherWorld && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
     	{
 			if ( !plugin.worldManager.seekNearestNetherFortress(event.getPlayer()) )
@@ -343,6 +345,7 @@ public class EventListener implements Listener
     		event.setCancelled(true);
     }
     
+	// spectators can't deal or receive damage
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamage(EntityDamageEvent event)
     {
@@ -367,6 +370,7 @@ public class EventListener implements Listener
     		event.setCancelled(true);
 	}
     
+	// can't empty buckets onto protected locations
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
     {
@@ -389,6 +393,10 @@ public class EventListener implements Listener
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityTarget(EntityTargetEvent event)
     {
+		if ( !plugin.isGameWorld(event.getTarget().getWorld()) )
+			return;
+		
+		// monsters shouldn't target spectators
     	if( event.getTarget() != null && event.getTarget() instanceof Player && PlayerManager.instance.isSpectator(((Player)event.getTarget()).getName()))
     		event.setCancelled(true);
     }
@@ -443,9 +451,9 @@ public class EventListener implements Listener
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
     					if ( plugin.getGameState().usesGameWorlds )
-    						plugin.playerManager.putPlayerInWorld(player, plugin.worldManager.mainWorld);
+    						plugin.playerManager.teleport(player, plugin.getGameMode().getSpawnLocation(player));
     					else
-    						player.teleport(plugin.worldManager.getStagingWorldSpawnPoint()); // place them manually, to avoid needing a big hole in the roof
+    						plugin.playerManager.teleport(player, plugin.worldManager.getStagingWorldSpawnPoint());
     			}
     		});
     	}
@@ -468,7 +476,7 @@ public class EventListener implements Listener
 		{
 			player.getInventory().clear();
 			player.setTotalExperience(0);
-			player.teleport(plugin.worldManager.mainWorld.getSpawnLocation());
+			plugin.playerManager.teleport(player, plugin.worldManager.mainWorld.getSpawnLocation());
 		}
 		
     	plugin.playerManager.playerJoined(player);

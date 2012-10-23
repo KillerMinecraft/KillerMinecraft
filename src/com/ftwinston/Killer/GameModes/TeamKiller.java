@@ -284,7 +284,7 @@ public class TeamKiller extends GameMode
 		// put this player onto one of the teams with the fewest survivors
 		int[] teamCounts = new int[numTeams];
 		for ( int i=0; i<numTeams; i++ )
-			teamCounts[i] = countPlayersOnTeam(i, true);
+			teamCounts[i] = getOnlinePlayers(i, true).size();
 		
 		int team = pickSmallestTeam(teamCounts);
 		setTeam(player, team);

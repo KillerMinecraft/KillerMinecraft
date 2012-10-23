@@ -80,7 +80,7 @@ public class MysteryKiller extends GameMode
 					else
 						return "You have been chosen to try and kill everyone else.\nNo one else has been told who was chosen.";
 				}
-				else if ( countPlayersOnTeam(1, false) > 0 )
+				else if ( getOnlinePlayers(1, false).size() > 0 )
 				{
 					if ( options.get(allowMultipleKillers).isEnabled() )
 						return "(At least) one player has been chosen to try and kill everyone else.\nIf there are more than 5 players in the game, multiple players will be chosen.\nNo one else has been told who they are.";

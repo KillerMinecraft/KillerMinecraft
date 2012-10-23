@@ -87,7 +87,7 @@ public class InvisibleKiller extends GameMode
 			case 0:
 				if ( team == 1 )
 					return "You have been chosen to be the killer, and must kill everyone else.\nYou are invisible, but they know who you are.";
-				else if ( countPlayersOnTeam(1, false) > 0 )
+				else if ( getOnlinePlayers(1, false).size() > 0 )
 					return "A player has been chosen to be the killer, and must kill everyone else.\nThey are invisible!";
 				else
 					return "A player will soon be chosen to be the killer.\nThey will be invisible, and you'll be told who it is.";
@@ -352,7 +352,7 @@ public class InvisibleKiller extends GameMode
 		if ( isNewPlayer )
 		{
 			setTeam(player, 0);
-			giveFriendlyPlayerItems(player.getInventory(), countPlayersOnTeam(0, false));
+			giveFriendlyPlayerItems(player.getInventory(), getOnlinePlayers(0, false).size());
 		}
 	}
 	

@@ -86,7 +86,9 @@ public class Killer extends JavaPlugin
 			worldManager.showConfirmButtons(false);
 			worldManager.showWaitForDeletion();
 			
-			playerManager.putPlayersInWorld(worldManager.stagingWorld);
+			for ( Player player : getOnlinePlayers() )
+				playerManager.teleport(player, worldManager.getStagingWorldSpawnPoint());
+				
 			playerManager.reset(true);
 			worldManager.deleteWorlds(new Runnable() {
 				
@@ -275,12 +277,12 @@ public class Killer extends JavaPlugin
 			Player player = (Player)sender;
 			if ( args[0].equalsIgnoreCase("main") )
 			{
-				playerManager.putPlayerInWorld(player, worldManager.mainWorld);
+				playerManager.teleport(player, getGameMode().getSpawnLocation(player));
 			}
 			else if ( args[0].equalsIgnoreCase("nether") )
 			{
 				if ( worldManager.netherWorld != null )
-					playerManager.putPlayerInWorld(player, worldManager.netherWorld);
+					playerManager.teleport(player, worldManager.netherWorld.getSpawnLocation());
 				else
 					sender.sendMessage("Nether world not found, please try again");
 			}

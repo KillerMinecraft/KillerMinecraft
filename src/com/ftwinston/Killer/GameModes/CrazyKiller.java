@@ -71,7 +71,7 @@ public class CrazyKiller extends GameMode
 			case 0:
 				if ( team == 1 )
 					return "You have been chosen to be the killer, and must kill everyone else. They know who you are.";
-				else if ( countPlayersOnTeam(1, false) > 0 )
+				else if ( getOnlinePlayers(1, false).size() > 0 )
 					return "A player has been chosen to be the killer, and must kill everyone else.";
 				else
 					return "A player will soon be chosen to be the killer. You'll be told who it is, and they will be teleported away from the other players.";

@@ -16,8 +16,6 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
-import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
@@ -53,7 +51,7 @@ public class PlayerManager
 		if ( exitPoint != null )
 		{
 			plugin.getGameMode().broadcastMessage(player.getName() + " quit the game");
-			player.teleport(exitPoint);
+			teleport(player, exitPoint);
 		}
 		else
 			player.sendMessage("Cannot quit killer, because there is no exit point stored for you! Leave this world via other commands, if the server has them.");
@@ -62,12 +60,15 @@ public class PlayerManager
 	public void movePlayerIntoKillerGame(Player player)
 	{
 		previousLocations.put(player.getName(), player.getLocation());
-		player.teleport(plugin.worldManager.getStagingWorldSpawnPoint());
+		if ( plugin.getGameState().usesGameWorlds )
+			teleport(player, plugin.getGameMode().getSpawnLocation(player));
+		else
+			teleport(player, plugin.worldManager.getStagingWorldSpawnPoint());
 	}
 	
 	public class Info
 	{
-		public Info(boolean alive) { a = alive; t = -1; target = null; /*if ( alive ) numAlive ++;*/ }
+		public Info(boolean alive) { a = alive; t = -1; target = null; }
 		
 		private boolean a;
 		private int t;
@@ -75,14 +76,6 @@ public class PlayerManager
 		
 		public void setTeam(int i)
 		{
-			/*if ( i != t )
-			{
-				if ( t >= 0 && t < teamCounters.length )
-					teamCounters[t] --;
-				if ( i >= 0 && i < teamCounters.length )
-					teamCounters[i] ++;
-			}*/
-			
 			t = i;
 		}
 		
@@ -94,12 +87,9 @@ public class PlayerManager
 			if ( b )
 			{
 				nextHelpMessage = 0;
-				//if ( !a ) // not currently alive, being assigned
-					//numAlive ++;
 			}
 			else if ( a ) // currently alive, being cleared
 			{
-				//numAlive --;
 				nextHelpMessage = -1;
 			}
 		
@@ -114,22 +104,6 @@ public class PlayerManager
 	
 	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();
 	public Set<Map.Entry<String, Info>> getPlayerInfo() { return playerInfo.entrySet(); }
-	
-	// do we want to keep this, or will we continue to save the numbers instead?
-	public int countPlayersOnTeam(int team, boolean onlyLivingPlayers)
-	{
-		int num = 0;
-		for ( Info info : playerInfo.values() )
-			if ( info.getTeam() == team )
-				if ( onlyLivingPlayers )
-				{
-					if ( info.isAlive() )
-						num++;
-				}
-				else
-					num++;
-		return num;
-	}
 	
 	public void setTeam(OfflinePlayer player, int teamNum)
 	{
@@ -169,12 +143,6 @@ public class PlayerManager
 		plugin.getServer().getScheduler().cancelTask(spectatorFollowProcess);
 	}
 	
-	public void putPlayersInWorld(World world)
-	{
-		for ( Player player : plugin.getOnlinePlayers() )
-			putPlayerInWorld(player, world);	
-	}
-	
 	public void startGame()
 	{
 		reset(true);
@@ -210,27 +178,7 @@ public class PlayerManager
         	}
         }, 40, 40);
 	}
-/*	
-	public boolean assignKillers(CommandSender sender)
-	{
-		int numToAdd = determineNumberOfKillersToAdd();
-		if ( numToAdd > 0 )  // don't inform people of any killer being added apart from the first one, unless the config is set
-			return assignKillers(numToAdd, sender);
-		return false;
-	}
 	
-	private boolean assignKillers(int numKillers, CommandSender sender)
-	{
-		stopAssignmentCountdown();
-		boolean startOfGame = numPlayersOnTeam(1) == 0;
-		boolean retval = plugin.getGameMode().assignTeams(numKillers, sender, this);
-		
-		if ( startOfGame )
-			plugin.getGameMode().gameStarted();
-		
-		return retval;
-	}
-*/
 	public void colorPlayerName(Player player, ChatColor color)
 	{
 		String oldListName = player.getPlayerListName();
@@ -268,7 +216,6 @@ public class PlayerManager
 			}
 	}
 
-	// this needs stuff removed from it, and cleaned up in general
 	public void playerJoined(Player player)
 	{
 		Info info = playerInfo.get(player.getName());
@@ -391,152 +338,6 @@ public class PlayerManager
 			return target;
 	}
 	
-	// need to rework the end of the game
-	public void gameFinished(boolean killerWon, boolean friendliesWon, String winningPlayerName, Material winningItem)
-	{
-/*		String message = null;
-		int numFriendlies = playerInfo.size() - numPlayersOnTeam(1);
-		
-		if ( winningItem != null )
-		{
-			if ( friendliesWon )
-				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describeTeam(0, numFriendlies > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(0, numFriendlies > 1) + (numFriendlies > 1 ? " win! " : " wins");
-			else
-				message = (winningPlayerName == null ? "The " + plugin.getGameMode().describeTeam(1, numPlayersOnTeam(1) > 1) : winningPlayerName) + " brought " + (winningItem == null ? "an item" : "a " + plugin.tidyItemName(winningItem)) + " to the plinth - the " + plugin.getGameMode().describePlayer(1, numPlayersOnTeam(1) > 1) + (numPlayersOnTeam(1) > 1 ? " win! " : " wins");
-		}
-		else if ( numPlayersOnTeam(1) == 0 || numFriendlies == 0 ) // some mode might not assign specific killers, or have everyone as a killer. In this case, we only care about the winning player
-		{
-			if ( numSurvivors() == 1 )
-			{
-				for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-					if ( entry.getValue().isAlive() )
-					{
-						message = "Only one player left standing, " + entry.getKey() + " wins!";
-						break;
-					}
-			}
-			else if ( numSurvivors() == 0 )
-				message = "No players survived, game drawn!";
-			else
-				return; // multiple people still alive... ? don't end the game.
-		}
-		else if ( killerWon )
-		{
-			if ( numFriendlies > 1 )
-				message = "All of the " + plugin.getGameMode().describeTeam(0, true) + " have";
-			else
-				message = "The " + plugin.getGameMode().describeTeam(0, false) + " has";
-			message += " died, the " + plugin.getGameMode().describeTeam(1, numPlayersOnTeam(1) > 1);
-			
-			if ( numPlayersOnTeam(1) > 1 )
-			{
-				message += " win!";
-
-				if ( winningPlayerName != null )
-					message += "\nWinning kill by " + winningPlayerName + ".";
-			}
-			else
-				message += " wins!";
-		}
-		else if ( friendliesWon )
-		{
-			if ( numPlayersOnTeam(1) > 1 )
-				message =  "All of the " + plugin.getGameMode().describeTeam(1, true) + " have";
-			else
-				message = "The " + plugin.getGameMode().describeTeam(1, false) + " has";
-		
-			message += " been killed, the " + plugin.getGameMode().describeTeam(0, numFriendlies > 1);
-
-			if ( numFriendlies > 1 )
-			{
-				message += " win!";
-
-				if ( winningPlayerName != null )
-					message += "\nWinning kill by " + winningPlayerName + ".";
-			}
-			else
-				message += " wins!";
-		}
-		else
-			message = "No players survived, game drawn!";
-		
-		plugin.statsManager.gameFinished(plugin.getGameMode(), numSurvivors(), killerWon ? 1 : (friendliesWon ? 2 : 0), winningItem == null ? 0 : winningItem.getId());
-		
-		plugin.getGameMode().broadcastMessage(ChatColor.YELLOW + message);
-		clearKillers(null);
-*/
-		if ( winningItem != null || plugin.voteManager.isInVote() || plugin.getOnlinePlayers().size() == 0 )
-		{	// plinth victory or other scenario where we don't want a vote, end the game in 10 secs
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-	
-				@Override
-				public void run()
-				{
-					plugin.forcedGameEnd = true; // don't start a vote or whatever, do what I say
-					plugin.getGameMode().finishGame();
-	    			plugin.endGame(null);
-				}
-	    	}, 200L);
-		}
-		else
-			plugin.getGameMode().finishGame();
-	}
-	/*
-	public void clearKillers(CommandSender sender)
-	{
-		String message;
-		
-		if ( numPlayersOnTeam(1) > 0 )
-		{
-			if ( plugin.getGameMode().revealTeamIdentityAtEnd(1) )
-			{
-				message = ChatColor.RED + (sender == null ? "Revealed: " : "Revealed by " + sender.getName() + ": ");
-				if ( numPlayersOnTeam(1) == 1 )
-				{
-					for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-						if ( entry.getValue().getTeam() == 1 )
-						{
-							entry.getValue().setTeam(0);
-							message += entry.getKey() + " was the killer!";
-							break;
-						}
-				}
-				else
-				{
-					message += "The killers were ";
-					
-					int i = 0;
-					for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-						if ( entry.getValue().getTeam() == 1 )
-						{
-							if ( i > 0 )
-								message += i == numPlayersOnTeam(1)-1 ? " and " : ", ";
-							message += entry.getKey();
-							i++;
-						}
-					
-					message += "!";
-				}
-				plugin.getGameMode().broadcastMessage(message);
-			}
-			
-			for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-				entry.getValue().setTeam(0);
-			
-			// this game was "aborted"
-			if ( plugin.statsManager.isTracking )
-				plugin.statsManager.gameFinished(plugin.getGameMode(), numSurvivors(), 3, 0);
-		}
-		else
-		{
-			message = "No killers are currently assigned!";
-			if ( sender == null )
-				plugin.getGameMode().broadcastMessage(message);
-			else
-				sender.sendMessage(message);
-		}	
-	}
-	*/
 	public Info getInfo(String player)
 	{
 		return playerInfo.get(player);
@@ -657,56 +458,6 @@ public class PlayerManager
 		}
 		
 		clearPlayerNameColor(player);
-	}
-	
-	public void putPlayerInWorld(Player player, World world)
-	{	
-		if ( player.isDead() )
-		{
-			forceRespawn(player);
-			return;
-		}
-		
-		Location spawn = world.getSpawnLocation();
-		
-		// can't use getHighestBlockYAt in the nether, because of the bedrock ceiling
-		if ( world.getEnvironment() == Environment.NETHER )
-		{
-			if ( spawn.getBlock().isEmpty() )
-			{	// while the block below spawn is empty, move down one
-				Block b = world.getBlockAt(spawn.getBlockX(), spawn.getBlockY() - 1, spawn.getBlockZ()); 
-				while ( b.isEmpty() && !b.isLiquid() )
-				{
-					spawn.setY(spawn.getY()-1);
-					b = world.getBlockAt(spawn.getBlockX(), spawn.getBlockY() - 1, spawn.getBlockZ());
-				}
-			}
-			else
-			{	// keep moving up til we have two empty blocks
-				do
-				{
-					do
-					{
-						spawn.setY(spawn.getY()+1);
-					}
-					while ( !spawn.getBlock().isEmpty() );
-				
-					// that's one empty, see if there's another (or if we're at the tom of the world)
-					if ( spawn.getBlockY() >= world.getMaxHeight() || world.getBlockAt(spawn.getBlockX(), spawn.getBlockY() + 1, spawn.getBlockZ()).isEmpty() )
-						break;
-				} while (true);
-				
-				world.setSpawnLocation(spawn.getBlockX(), spawn.getBlockY(), spawn.getBlockZ());
-			}
-		}
-		else
-		{// it's ok to use getHighestBlockYAt, so we can randomize them around a bit also
-			spawn.setX(spawn.getX() + random.nextDouble() * 6 - 3);
-			spawn.setZ(spawn.getZ() + random.nextDouble() * 6 - 3);
-			spawn.setY(world.getHighestBlockYAt(spawn) + 1);
-		}
-		
-		player.teleport(spawn);
 	}
 	
     private void forceRespawn(final Player player)
@@ -975,7 +726,6 @@ public class PlayerManager
 		return bestPos;
 	}
 	
-	
 	private final int maxSpecTeleportDist = 64, maxSpecTeleportPenetrationDist = 32;
 	private final HashSet<Byte> transparentBlocks = new HashSet<Byte>();
 	
@@ -999,5 +749,12 @@ public class PlayerManager
 		}
 		else
 			player.sendMessage("No space to teleport into!");
+	}
+
+	public void teleport(Player player, Location loc)
+	{
+		if ( player.isDead() )
+			forceRespawn(player); // stop players getting stuck at the "you are dead" screen, unable to do anything except disconnect
+		player.teleport(loc);
 	}
 }
