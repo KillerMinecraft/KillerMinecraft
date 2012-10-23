@@ -205,7 +205,8 @@ public class MysteryKiller extends GameMode
 	@Override
 	public Location getSpawnLocation(Player player)
 	{
-		return getSafeSpawnLocationNear(WorldManager.instance.mainWorld.getSpawnLocation());
+		Location spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), -8, 8, 0, 0, -8, 8);
+		return getSafeSpawnLocationNear(spawnPoint);
 	}
 	
 	int allocationProcessID = -1;

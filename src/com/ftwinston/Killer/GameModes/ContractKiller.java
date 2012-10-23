@@ -130,7 +130,7 @@ public class ContractKiller extends GameMode
 		
 		if ( !options.get(playersStartFarApart).isEnabled() )
 		{
-			Location spawnPoint = randomizeLocation(worldSpawn, -10, 10, 0, 0, -10, 10);
+			Location spawnPoint = randomizeLocation(worldSpawn, -8, 8, 0, 0, -8, 8);
 			return getSafeSpawnLocationNear(spawnPoint);
 		}
 		

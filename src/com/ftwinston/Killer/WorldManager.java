@@ -175,9 +175,16 @@ public class WorldManager
 		stagingWorld = world;
 	}
 	
+	Random spawnOffset = new Random();
 	public Location getStagingWorldSpawnPoint()
 	{
-		return new Location(stagingWorld, 8.5, 34, StagingWorldGenerator.startButtonZ + 0.5, 90, 0);
+		Location loc = new Location(stagingWorld, 8.5, 34, StagingWorldGenerator.startButtonZ + 0.5, 90, 0);
+		double offset = spawnOffset.nextGaussian() * 2;
+		if ( offset < -3 )
+			offset = -3;
+		else if ( offset > 3 )
+			offset = 3;
+		return loc.add(0, 0, offset);
 	}
 	
 	public World CreateWorld(WorldCreator wc, boolean loadChunks)

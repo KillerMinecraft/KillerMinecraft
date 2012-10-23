@@ -183,7 +183,8 @@ public class InvisibleKiller extends GameMode
 	@Override
 	public Location getSpawnLocation(Player player)
 	{
-		return WorldManager.instance.mainWorld.getSpawnLocation(); // todo: improve this
+		Location spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), -8, 8, 0, 0, -8, 8);
+		return getSafeSpawnLocationNear(spawnPoint);
 	}
 	
 	private static final double maxKillerDetectionRangeSq = 50 * 50;
