@@ -139,8 +139,7 @@ public class Killer extends JavaPlugin
 	}
 	
 	
-	List<Recipe> allRecipes = new ArrayList<Recipe>(); 
-	Location plinthPressurePlateLocation;
+	List<Recipe> allRecipes = new ArrayList<Recipe>();
 
 	public boolean stagingWorldIsServerDefault;
 	
@@ -552,11 +551,6 @@ public class Killer extends JavaPlugin
 			if ( isGameWorld(player.getWorld()) )
 				players.add(player);
 		return players;
-	}
-	
-	public Location getPlinthLocation()
-	{
-		return plinthPressurePlateLocation;
 	}
 	
 	boolean forcedGameEnd = false;
