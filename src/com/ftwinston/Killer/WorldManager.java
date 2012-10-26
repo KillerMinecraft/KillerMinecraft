@@ -628,10 +628,11 @@ public class WorldManager
 		}
 	}
 	
-	public void generateWorlds(WorldOption generator, final Runnable runWhenDone)
+	public void generateWorlds(final WorldOption generator, final Runnable runWhenDone)
 	{
 		plugin.getGameMode().broadcastMessage("Preparing new worlds...");
-		generator.create(new Runnable() {
+		
+		Runnable generationComplete = new Runnable() {
 			@Override
 			public void run()
 			{
@@ -643,7 +644,19 @@ public class WorldManager
 				if ( runWhenDone != null )
 					runWhenDone.run();
 			}
-		});
+		};
+	
+		try
+		{
+			generator.create(generationComplete);
+		}
+		catch (ArrayIndexOutOfBoundsException ex)
+		{
+			plugin.log.warning("World generation crashed: see BUKKIT-2601!");
+			plugin.getGameMode().broadcastMessage("An error occurred during world generation.\nThis is a bukkit bug we're waiting on a fix on.\nIt only happens the first time you try and generate.\nPlease try again...");
+			
+			plugin.setGameState(GameState.worldDeletion);
+		}
 	}
 	
 	public boolean seekNearestNetherFortress(Player player)

@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 import net.minecraft.server.MinecraftServer;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -87,14 +86,14 @@ public class Killer extends JavaPlugin
 			worldManager.showWaitForDeletion();
 			
 			for ( Player player : getOnlinePlayers() )
-				playerManager.teleport(player, worldManager.getStagingWorldSpawnPoint());
-				
+				if ( player.getWorld() != worldManager.stagingWorld )
+					playerManager.teleport(player, worldManager.getStagingWorldSpawnPoint());
+			
 			playerManager.reset(true);
 			worldManager.deleteWorlds(new Runnable() {
-				
 				@Override
 				public void run() { // we need this to set the state to stagingWorldReady when done
-					worldManager.showStartButton(true);
+					setGameState(GameState.stagingWorldReady);
 				}
 			});
 		}
@@ -192,7 +191,7 @@ public class Killer extends JavaPlugin
 
 		// remove existing Killer worlds
 		worldManager.deleteWorlds(null);
-		
+	
         // disable spawn protection
         getServer().setSpawnRadius(0);
 	}
