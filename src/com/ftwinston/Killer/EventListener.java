@@ -393,7 +393,7 @@ public class EventListener implements Listener
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityTarget(EntityTargetEvent event)
     {
-		if ( !plugin.isGameWorld(event.getTarget().getWorld()) )
+		if ( !plugin.isGameWorld(event.getEntity().getWorld()) )
 			return;
 		
 		// monsters shouldn't target spectators
