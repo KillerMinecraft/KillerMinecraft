@@ -61,8 +61,8 @@ public class LavaLand extends com.ftwinston.Killer.WorldOption implements Listen
 						Block b = chunk.getBlock(x,y,z);
 						if ( b.getType() == Material.STATIONARY_WATER || b.getType() == Material.WATER || b.getType() == Material.ICE )
 							b.setType(Material.OBSIDIAN);
-						//else if ( b.getType() != Material.OBSIDIAN )
-							//break;
+						else if ( b.getType() != Material.OBSIDIAN && b.getType() != Material.AIR )
+							break;
 					}
 			
 			for ( int x=0; x<16; x++ )
@@ -72,8 +72,8 @@ public class LavaLand extends com.ftwinston.Killer.WorldOption implements Listen
 						Block b = chunk.getBlock(x,y,z);
 						if ( b.getType() == Material.OBSIDIAN )
 							b.setType(Material.STATIONARY_LAVA);
-						//else
-							//break;
+						else if ( b.getType() != Material.AIR )
+							break;
 					}
 			
 			// without now looking at adjacent (GENERATED) chunks, we'd end up with the edges of ocean chunks being obsidian
@@ -88,8 +88,8 @@ public class LavaLand extends com.ftwinston.Killer.WorldOption implements Listen
 						Block b = other.getBlock(15, y, z);
 						if ( b.getType() == Material.OBSIDIAN || b.getType() == Material.STATIONARY_WATER || b.getType() == Material.WATER || b.getType() == Material.ICE )
 							b.setType(Material.STATIONARY_LAVA);
-						//else
-							//break; // reached sea bed, stop
+						else if ( b.getType() != Material.AIR )
+							break;
 					}
 			}
 			
@@ -103,8 +103,8 @@ public class LavaLand extends com.ftwinston.Killer.WorldOption implements Listen
 						Block b = other.getBlock(0, y, z);
 						if ( b.getType() == Material.OBSIDIAN || b.getType() == Material.STATIONARY_WATER || b.getType() == Material.WATER || b.getType() == Material.ICE )
 							b.setType(Material.STATIONARY_LAVA);
-						//else
-							//break; // reached sea bed, stop
+						else if ( b.getType() != Material.AIR )
+							break;
 					}
 			}
 			
@@ -118,8 +118,8 @@ public class LavaLand extends com.ftwinston.Killer.WorldOption implements Listen
 						Block b = other.getBlock(x, y, 15);
 						if ( b.getType() == Material.OBSIDIAN || b.getType() == Material.STATIONARY_WATER || b.getType() == Material.WATER || b.getType() == Material.ICE )
 							b.setType(Material.STATIONARY_LAVA);
-						//else
-							//break; // reached sea bed, stop
+						else if ( b.getType() != Material.AIR )
+							break;
 					}
 			}
 			
@@ -133,8 +133,8 @@ public class LavaLand extends com.ftwinston.Killer.WorldOption implements Listen
 						Block b = other.getBlock(x, y, 0);
 						if ( b.getType() == Material.OBSIDIAN || b.getType() == Material.STATIONARY_WATER || b.getType() == Material.WATER || b.getType() == Material.ICE )
 							b.setType(Material.STATIONARY_LAVA);
-						//else
-							//break; // reached sea bed, stop
+						else if ( b.getType() != Material.AIR )
+							break;
 					}
 			}
 		}
