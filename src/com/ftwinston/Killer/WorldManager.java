@@ -640,6 +640,10 @@ public class WorldManager
 				plugin.worldManager.mainWorld.setDifficulty(Difficulty.HARD);
 				plugin.worldManager.netherWorld.setDifficulty(Difficulty.HARD);
 				
+				// allow more animals, so players don't starve if its all wolves
+				if ( plugin.worldManager.mainWorld.getAnimalSpawnLimit() < 25 )
+					plugin.worldManager.mainWorld.setAnimalSpawnLimit(25);
+								
 				// run whatever task was passed in
 				if ( runWhenDone != null )
 					runWhenDone.run();
