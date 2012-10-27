@@ -159,7 +159,7 @@ public class WorldManager
 				StagingWorldGenerator gen = new StagingWorldGenerator();
 				wc.generator(gen);
 				wc.environment(Environment.NORMAL);
-				World newWorld = CreateWorld(wc, true);
+				World newWorld = createWorld(wc, true);
 				
 				stagingWorldCreated(newWorld);
 			}
@@ -187,7 +187,7 @@ public class WorldManager
 		return loc.add(0, 0, offset);
 	}
 	
-	public World CreateWorld(WorldCreator wc, boolean loadChunks)
+	public World createWorld(WorldCreator wc, boolean loadChunks)
 	{
 		World world = plugin.getServer().createWorld(wc);
 		
