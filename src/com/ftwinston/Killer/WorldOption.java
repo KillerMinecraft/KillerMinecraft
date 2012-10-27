@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.ftwinston.Killer.WorldOptions.CopyExistingWorld;
 import com.ftwinston.Killer.WorldOptions.DefaultWorld;
+import com.ftwinston.Killer.WorldOptions.LavaLand;
 import com.ftwinston.Killer.WorldOptions.Superflat;
 
 public abstract class WorldOption
@@ -34,6 +35,8 @@ public abstract class WorldOption
 		{
 			options.add(new DefaultWorld());
 			options.add(new Superflat());
+			
+			options.add(new LavaLand());
 		}
 		
 		for ( String name : Settings.customWorldNames )
