@@ -89,8 +89,6 @@ public class InvisibleKiller extends GameMode
 					return "You have been chosen to be the killer, and must kill everyone else.\nYou are invisible, but they know who you are.";
 				else if ( getOnlinePlayers(1, false).size() > 0 )
 					return "A player has been chosen to be the killer, and must kill everyone else.\nThey are invisible!";
-				else
-					return "A player will soon be chosen to be the killer.\nThey will be invisible, and you'll be told who it is.";
 			case 1:
 				if ( team == 1 )
 					return "You will briefly become visible when damaged.\nYou cannot be hit while invisible, except by ranged weapons.";
@@ -183,7 +181,26 @@ public class InvisibleKiller extends GameMode
 	@Override
 	public Location getSpawnLocation(Player player)
 	{
-		Location spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), -8, 8, 0, 0, -8, 8);
+		Location spawnPoint;
+		if ( getTeam(player) == 1 )
+		{
+			// the killer starts a little bit away from the other players
+			spawnPoint = WorldManager.instance.mainWorld.getSpawnLocation();
+			switch ( random.nextInt(4) )
+			{
+				case 0:
+					spawnPoint = randomizeLocation(spawnPoint, 32, 48, 0, 0, -48, 48); break;
+				case 1:
+					spawnPoint = randomizeLocation(spawnPoint, -48, -32, 0, 0, -48, 48); break;
+				case 2:
+					spawnPoint = randomizeLocation(spawnPoint, -48, 48, 0, 0, 32, 48); break;
+				case 3:
+					spawnPoint = randomizeLocation(spawnPoint, -48, 48, 0, 0, -48, -32); break;
+			}
+		}
+		else
+			spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), -8, 8, 0, 0, -8, 8);
+		
 		return getSafeSpawnLocationNear(spawnPoint);
 	}
 	
@@ -207,7 +224,7 @@ public class InvisibleKiller extends GameMode
 		setTeam(killer, 1);
 		
 		
-		// give the killer their items, teleport them a distance away
+		// give the killer their items
 		killer.sendMessage(ChatColor.RED + "You are the killer!\n" + ChatColor.RESET + "You are invisible.");
 		setPlayerVisibility(killer, false);
 		
@@ -220,21 +237,6 @@ public class InvisibleKiller extends GameMode
 		inv.addItem(new ItemStack(Material.COMPASS, 1));
 		inv.addItem(new ItemStack(Material.COOKED_BEEF, 10));
 		
-		// teleport the killer a little bit away from the other players
-		Location loc = killer.getLocation();
-		switch ( random.nextInt(4) )
-		{
-			case 0:
-				loc = randomizeLocation(loc, 16, 32, 0, 0, -32, 32); break;
-			case 1:
-				loc = randomizeLocation(loc, -32, -16, 0, 0, -32, 32); break;
-			case 2:
-				loc = randomizeLocation(loc, -32, 32, 0, 0, 16, 32); break;
-			case 3:
-				loc = randomizeLocation(loc, -32, 32, 0, 0, -32, -16); break;
-		}
-		loc = getSafeSpawnLocationNear(loc);
-		killer.teleport(loc);
 		
 		int numFriendlyPlayers = players.size() - 1;
 		

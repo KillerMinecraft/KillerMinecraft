@@ -73,8 +73,6 @@ public class CrazyKiller extends GameMode
 					return "You have been chosen to be the killer, and must kill everyone else. They know who you are.";
 				else if ( getOnlinePlayers(1, false).size() > 0 )
 					return "A player has been chosen to be the killer, and must kill everyone else.";
-				else
-					return "A player will soon be chosen to be the killer. You'll be told who it is, and they will be teleported away from the other players.";
 			case 1:
 				if ( team == 1 )
 					return "Every dirt block you pick up will turn into TNT, so have fun with that.";
@@ -154,32 +152,34 @@ public class CrazyKiller extends GameMode
 	@Override
 	public Location getSpawnLocation(Player player)
 	{
-		Location spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), -8, 8, 0, 0, -8, 8);
+		Location spawnPoint;
+		if ( getTeam(player) == 1 )
+		{
+			// the killer starts a little bit away from the other players
+			spawnPoint = WorldManager.instance.mainWorld.getSpawnLocation();
+			switch ( random.nextInt(4) )
+			{
+				case 0:
+					spawnPoint = randomizeLocation(spawnPoint, 32, 48, 0, 0, -48, 48); break;
+				case 1:
+					spawnPoint = randomizeLocation(spawnPoint, -48, -32, 0, 0, -48, 48); break;
+				case 2:
+					spawnPoint = randomizeLocation(spawnPoint, -48, 48, 0, 0, 32, 48); break;
+				case 3:
+					spawnPoint = randomizeLocation(spawnPoint, -48, 48, 0, 0, -48, -32); break;
+			}
+		}
+		else
+			spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), -8, 8, 0, 0, -8, 8);
+		
 		return getSafeSpawnLocationNear(spawnPoint);
 	}
 	
-	int allocationProcessID = -1;
 	
 	@Override
 	public void gameStarted()
 	{
-		// put everyone on team 0.
-		for ( Player player : getOnlinePlayers() )
-			setTeam(player, 0);
-		
-		// allocation doesn't happen right away, there's 30 seconds of "scrabbling" first
-		allocationProcessID = getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), new Runnable() {
-			public void run()
-			{
-				doAllocation();
-				allocationProcessID = -1;
-			}
-		}, allocationDelayTicks);
-	}
-	
-	private void doAllocation()
-	{
-		// pick one player, put them on team 1, and teleport them away
+		// pick one player, put them on team 1
 		final List<Player> players = getOnlinePlayers(true);
 		Player killer = selectRandom(players);
 		if ( killer == null )
@@ -190,8 +190,7 @@ public class CrazyKiller extends GameMode
 		
 		setTeam(killer, 1);
 		
-		
-		// give the killer their items, teleport them a distance away
+		// give the killer their items
 		killer.sendMessage(ChatColor.RED + "You are the killer!\n" + ChatColor.RESET + "Every dirt block you pick up will turn into TNT...");
 		
 		PlayerInventory inv = killer.getInventory();
@@ -202,28 +201,13 @@ public class CrazyKiller extends GameMode
 		inv.addItem(new ItemStack(Material.STONE, 64));
 		
 		inv.addItem(new ItemStack(Material.TNT, 4));
+		inv.addItem(new ItemStack(Material.DIRT, 16));
 		
-		// teleport the killer a little bit away from the other players
-		Location loc = killer.getLocation();
-		switch ( random.nextInt(4) )
-		{
-			case 0:
-				loc = randomizeLocation(loc, 16, 32, 0, 0, -32, 32); break;
-			case 1:
-				loc = randomizeLocation(loc, -32, -16, 0, 0, -32, 32); break;
-			case 2:
-				loc = randomizeLocation(loc, -32, 32, 0, 0, 16, 32); break;
-			case 3:
-				loc = randomizeLocation(loc, -32, 32, 0, 0, -32, -16); break;
-		}
-		loc = getSafeSpawnLocationNear(loc);
-		killer.teleport(loc);
-		
-		
-		// then setup everyone else
+		// then setup everyone else on team 0
 		for ( Player player : players )
 			if ( player != killer )
 			{
+				setTeam(player, 0);
 				player.sendMessage(ChatColor.RED + killer.getName() + " is the killer!\n" + ChatColor.RESET + "Use the /team command to chat without them seeing your messages");
 		
 				inv = player.getInventory();
@@ -233,17 +217,16 @@ public class CrazyKiller extends GameMode
 		
 		// send the message to dead players also
 		for ( Player player : getOnlinePlayers(false) )
+		{
+			setTeam(player, 0);
 			player.sendMessage(ChatColor.RED + killer.getName() + " is the killer!");
+		}
 	}
 	
 	@Override
 	public void gameFinished()
 	{
-		if ( allocationProcessID != -1 )
-		{
-			getPlugin().getServer().getScheduler().cancelTask(allocationProcessID);
-			allocationProcessID = -1;
-		}
+		
 	}
 	
 	@Override
