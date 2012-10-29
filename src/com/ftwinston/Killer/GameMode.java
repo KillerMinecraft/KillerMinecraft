@@ -335,13 +335,29 @@ public abstract class GameMode implements Listener
 		Block b = loc.getBlock();
 		if ( !isBlockSafe(b) )
 			return false;
-		
-		Block below = b.getRelative(BlockFace.DOWN);
-		if ( !isBlockSafe(below) )
+
+		Block other = b.getRelative(BlockFace.UP);
+		if ( !isBlockSafe(other) )
 			return false;
 		
-		Block above = b.getRelative(BlockFace.UP);
-		if ( !isBlockSafe(above) )
+		other = b.getRelative(BlockFace.DOWN);
+		if ( !isBlockSafe(other) )
+			return false;
+		
+		other = b.getRelative(BlockFace.WEST);
+		if ( !isBlockSafe(other) )
+			return false;
+		
+		other = b.getRelative(BlockFace.EAST);
+		if ( !isBlockSafe(other) )
+			return false;
+		
+		other = b.getRelative(BlockFace.NORTH);
+		if ( !isBlockSafe(other) )
+			return false;
+
+		other = b.getRelative(BlockFace.SOUTH);
+		if ( !isBlockSafe(other) )
 			return false;
 		
 		return true;
