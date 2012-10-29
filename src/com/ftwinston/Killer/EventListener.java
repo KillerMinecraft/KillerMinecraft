@@ -65,7 +65,7 @@ public class EventListener implements Listener
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
 		
-		if ( plugin.getGameState().usesGameWorlds )
+		if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.mainWorld != null )
 			event.setRespawnLocation(plugin.getGameMode().getSpawnLocation(event.getPlayer()));
 		else
 			event.setRespawnLocation(plugin.worldManager.getStagingWorldSpawnPoint());
@@ -450,7 +450,7 @@ public class EventListener implements Listener
     			{
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
-    					if ( plugin.getGameState().usesGameWorlds )
+    					if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.mainWorld != null )
     						plugin.playerManager.teleport(player, plugin.getGameMode().getSpawnLocation(player));
     					else
     						plugin.playerManager.teleport(player, plugin.worldManager.getStagingWorldSpawnPoint());
