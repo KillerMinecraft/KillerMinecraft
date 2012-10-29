@@ -644,7 +644,29 @@ public class WorldManager
 			num++;
 		}
 	}
-
+	
+	private void showWorldGenerationIndicator(float completion, boolean secondaryWorld)
+	{
+		int x = StagingWorldGenerator.startButtonX + 1, y = secondaryWorld ? 36 : 37;
+		int maxCompleteZ = (int)((StagingWorldGenerator.progressEndZ - StagingWorldGenerator.progressStartZ) * completion) + StagingWorldGenerator.progressStartZ;
+		for ( int z = StagingWorldGenerator.progressStartZ; z<= StagingWorldGenerator.progressEndZ; z++ )
+		{
+			Block b = stagingWorld.getBlockAt(x, y, z);
+			b.setType(Material.WOOL);
+			b.setData(z <= maxCompleteZ ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+		}
+	}
+	
+	public void removeWorldGenerationIndicator()
+	{
+		int x = StagingWorldGenerator.startButtonX + 1;
+		for ( int z = StagingWorldGenerator.progressStartZ; z<= StagingWorldGenerator.progressEndZ; z++ )
+		{
+			stagingWorld.getBlockAt(x, 36, z).setType(Material.SMOOTH_BRICK);
+			stagingWorld.getBlockAt(x, 37, z).setType(Material.SMOOTH_BRICK);
+		}
+	}
+	
 	public boolean seekNearestNetherFortress(Player player)
 	{
 		if ( netherWorld == null )
@@ -716,7 +738,9 @@ public class WorldManager
 				// allow more animals, so players don't starve if its all wolves
 				if ( plugin.worldManager.mainWorld.getAnimalSpawnLimit() < 25 )
 					plugin.worldManager.mainWorld.setAnimalSpawnLimit(25);
-								
+				
+				removeWorldGenerationIndicator();
+				
 				// run whatever task was passed in
 				if ( runWhenDone != null )
 					runWhenDone.run();
@@ -852,7 +876,9 @@ public class WorldManager
         craftServer.getPluginManager().callEvent(new WorldInitEvent(worldServer.getWorld()));
         System.out.print("Preparing start region for level " + (console.worlds.size() - 1) + " (Seed: " + worldServer.getSeed() + ")");
 
-        ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, runWhenDone);
+        boolean isSecondaryWorld = mainWorld != null;
+        showWorldGenerationIndicator(0f, isSecondaryWorld);
+        ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, isSecondaryWorld, runWhenDone);
         cb.taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, cb, 0L, 1L);
         
         return worldServer.getWorld();
@@ -860,12 +886,13 @@ public class WorldManager
     
     class ChunkBuilder implements Runnable
     {
-    	public ChunkBuilder(int numChunksFromSpawn, CraftServer craftServer, WorldServer worldServer, Runnable runWhenDone)
+    	public ChunkBuilder(int numChunksFromSpawn, CraftServer craftServer, WorldServer worldServer, boolean isSecondaryWorld, Runnable runWhenDone)
     	{
     		this.numChunksFromSpawn = numChunksFromSpawn;
     		sideLength = numChunksFromSpawn * 2 + 1;
     		numSteps = sideLength * sideLength;
     		
+    		this.isSecondaryWorld = isSecondaryWorld;
     		this.craftServer = craftServer;
     		this.worldServer = worldServer;
     		this.runWhenDone = runWhenDone;
@@ -873,6 +900,7 @@ public class WorldManager
     	
     	int numChunksFromSpawn, stepNum = 0, sideLength, numSteps;
         long reportTime = System.currentTimeMillis();
+        boolean isSecondaryWorld;
         public int taskID;
         CraftServer craftServer;
         WorldServer worldServer;
@@ -891,7 +919,8 @@ public class WorldManager
             }
 
             if (time > reportTime + 1000L) {
-                System.out.println("Preparing spawn area for " + worldServer.getWorld().getName() + ", " + (stepNum * 100 / numSteps) + "%");
+            	System.out.println("Preparing spawn area for " + worldServer.getWorld().getName() + ", " + (stepNum * 100 / numSteps) + "%");
+                showWorldGenerationIndicator((float)stepNum/numSteps, isSecondaryWorld);
                 reportTime = time;
             }
 
@@ -907,6 +936,7 @@ public class WorldManager
 
             	if ( stepNum >= numSteps )
             	{
+            		showWorldGenerationIndicator(1f, isSecondaryWorld);
             		craftServer.getPluginManager().callEvent(new WorldLoadEvent(worldServer.getWorld()));
             		plugin.getServer().getScheduler().cancelTask(taskID);
             		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);

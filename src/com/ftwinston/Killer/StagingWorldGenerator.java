@@ -32,7 +32,9 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		// now set up helper values for where the various "extensible" things end
 		endX = Math.max(Math.max(WorldOption.options.size(), maxGameModeOptions) * 2 + 8, 14);
 		endZ = Math.max(GameMode.gameModes.size() * 3 + 12, 22);
-						
+		
+		progressStartZ = 3; progressEndZ = endZ - 7;
+		
 		startButtonX = endX - 1;
 		startButtonZ = endZ / 2;
 		overrideButtonZ = startButtonZ + 1;
@@ -50,7 +52,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		gameModeOptionsClosedOff = true; // always closed off initially, until a game mode is chosen
 	}
 	
-	public static int startButtonX, startButtonZ, overrideButtonZ, cancelButtonZ, gameModeButtonX, worldOptionZ, gameModeOptionZ;
+	public static int startButtonX, startButtonZ, overrideButtonZ, cancelButtonZ, gameModeButtonX, worldOptionZ, gameModeOptionZ, progressStartZ, progressEndZ;
 	
 	public static byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
 		colorStartButton = 4 /* yellow */, colorOverrideButton = 1 /* red */, colorCancelButton = 9 /* green */;

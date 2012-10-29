@@ -69,13 +69,15 @@ public abstract class WorldOption
 	
 	public final void createWorlds(final Runnable runWhenDone)
 	{
-		createMainWorld(Settings.killerWorldName, new Runnable()
+		Runnable doneMainWorld = plugin.getGameMode().usesNether() ? new Runnable()
 		{
 			public void run()
 			{
 				createNetherWorld(Settings.killerWorldName + "_nether", runWhenDone);
 			}
-		});
+		} : runWhenDone;
+		
+		createMainWorld(Settings.killerWorldName, doneMainWorld);
 	}
 	
 	protected abstract void createMainWorld(String name, Runnable runWhenDone);

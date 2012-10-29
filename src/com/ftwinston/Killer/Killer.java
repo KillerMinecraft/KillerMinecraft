@@ -84,6 +84,7 @@ public class Killer extends JavaPlugin
 			worldManager.showStartButton(false);
 			worldManager.showConfirmButtons(false);
 			worldManager.showWaitForDeletion();
+			worldManager.removeWorldGenerationIndicator();
 			
 			for ( Player player : getOnlinePlayers() )
 				if ( player.getWorld() != worldManager.stagingWorld )
