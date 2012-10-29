@@ -755,6 +755,7 @@ public class PlayerManager
 	{
 		if ( player.isDead() )
 			forceRespawn(player); // stop players getting stuck at the "you are dead" screen, unable to do anything except disconnect
+		player.setVelocity(new Vector(0,0,0));
 		player.teleport(loc);
 	}
 }
