@@ -128,7 +128,7 @@ public class ContractKiller extends GameMode
 	{
 		Location worldSpawn = WorldManager.instance.mainWorld.getSpawnLocation();
 		
-		if ( !options.get(playersStartFarApart).isEnabled() )
+		if ( !getOption(playersStartFarApart).isEnabled() )
 		{
 			Location spawnPoint = randomizeLocation(worldSpawn, -8, 8, 0, 0, -8, 8);
 			return getSafeSpawnLocationNear(spawnPoint);

@@ -325,7 +325,7 @@ public class TeamKiller extends GameMode
 	@Override
 	public Location getCompassTarget(Player player)
 	{
-		if ( options.get(compassPointsAtEnemies).isEnabled() )
+		if ( getOption(compassPointsAtEnemies).isEnabled() )
 			return getNearestPlayerTo(player, true); // points in a random direction if no players are found
 		
 		return null;
@@ -352,7 +352,7 @@ public class TeamKiller extends GameMode
 		if ( shouldIgnoreEvent(event.getEntity()) )
 			return;
 		
-		if ( options.get(friendlyFire).isEnabled() )
+		if ( getOption(friendlyFire).isEnabled() )
 			return;
 		
 		Player victim = (Player)event.getEntity();
@@ -380,7 +380,7 @@ public class TeamKiller extends GameMode
 		{// turned on; turn the others off
 			for ( int i=firstTeamOption; i<=lastTeamOption; i++ )
 				if ( i != num )
-					options.get(i).setEnabled(false);
+					getOption(i).setEnabled(false);
 			
 			// change the numTeams value ... it's a happy coincidence that optionTwoTeams = 2, optionThreeTeams = 3, optionFourTeams = 4
 			numTeams = num;
@@ -389,14 +389,14 @@ public class TeamKiller extends GameMode
 		{// turned off; if all are off, turn this one back on
 			boolean allOff = true;
 			for ( int i=optionTwoTeams; i<=lastTeamOption; i++ )
-				if ( options.get(i).isEnabled() )
+				if ( getOption(i).isEnabled() )
 				{
 					allOff = false;
 					break;
 				}
 			if ( allOff )
 			{
-				options.get(num).setEnabled(true);
+				getOption(num).setEnabled(true);
 				retVal = true;
 			}
 		}

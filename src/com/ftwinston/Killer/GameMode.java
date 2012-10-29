@@ -41,14 +41,14 @@ public abstract class GameMode implements Listener
 		if ( Settings.allowModeMysteryKiller )
 		{
 			g = new MysteryKiller();
-			g.plugin = killer;
+			g.initialize(killer);
 			gameModes.add(g);
 		}
 		
 		if ( Settings.allowModeInvisibleKiller )
 		{
 			g = new InvisibleKiller();
-			g.plugin = killer;
+			g.initialize(killer);
 			gameModes.add(g);
 		}
 		
@@ -56,20 +56,21 @@ public abstract class GameMode implements Listener
 		{
 			g = new CrazyKiller();
 			g.plugin = killer;
+			g.initialize(killer);
 			gameModes.add(g);
 		}
 		
 		if ( Settings.allowModeTeamKiller )
 		{
 			g = new TeamKiller();
-			g.plugin = killer;
+			g.initialize(killer);
 			gameModes.add(g);
 		}
 		
 		if ( Settings.allowModeContractKiller )
 		{
 			g = new ContractKiller();
-			g.plugin = killer;
+			g.initialize(killer);
 			gameModes.add(g);
 		}
 		
@@ -82,6 +83,13 @@ public abstract class GameMode implements Listener
 	private Killer plugin;
 	protected Random random = new Random();
 	
+	private final void initialize(Killer killer)
+	{
+		plugin = killer;
+
+		for ( Option option : setupOptions() )
+			options.add(option);
+	}
 	
 	// methods to be overridden by each game mode
 	
@@ -89,7 +97,7 @@ public abstract class GameMode implements Listener
 
 	public abstract int getMinPlayers();
 
-	public abstract Option[] setupOptions();
+	protected abstract Option[] setupOptions();
 
 	public abstract String[] getSignDescription();
 
@@ -581,8 +589,9 @@ public abstract class GameMode implements Listener
 		public void setEnabled(boolean enabled) { this.enabled = enabled; }
 	}
 	
-	protected List<Option> options = new ArrayList<Option>();
+	private List<Option> options = new ArrayList<Option>();
 	public List<Option> getOptions() { return options; }
+	public Option getOption(int num) { return options.get(num); }
 	
 	public boolean toggleOption(int num)
 	{

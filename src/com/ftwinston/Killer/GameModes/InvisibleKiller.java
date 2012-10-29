@@ -98,24 +98,24 @@ public class InvisibleKiller extends GameMode
 				String msg;
 				if ( team == 1 )
 				{
-					if ( options.get(decloakWhenWeaponDrawn).isEnabled() )
+					if ( getOption(decloakWhenWeaponDrawn).isEnabled() )
 						msg = "You will be decloaked when wielding a sword or bow.\n";
 					else
 						msg = "";
 					msg += "Your compass points at the nearest player.";
 					
-					if ( options.get(killerDistanceMessages).isEnabled() )
+					if ( getOption(killerDistanceMessages).isEnabled() )
 						msg += "\nThe other players are told how far away you are.";
 				}
 				else	
 				{
-					if ( options.get(decloakWhenWeaponDrawn).isEnabled() )
+					if ( getOption(decloakWhenWeaponDrawn).isEnabled() )
 						msg = "The killer will be decloaked when wielding a sword or bow.\n";
 					else
 						msg = "";
 					msg += "The killer's compass points at the nearest player.";
 					
-					if ( options.get(killerDistanceMessages).isEnabled() )
+					if ( getOption(killerDistanceMessages).isEnabled() )
 						msg += "\nThe other players are told how far away the killer is.";
 				}
 				return msg;
@@ -228,7 +228,7 @@ public class InvisibleKiller extends GameMode
 		killer.sendMessage(ChatColor.RED + "You are the killer!\n" + ChatColor.RESET + "You are invisible.");
 		setPlayerVisibility(killer, false);
 		
-		if ( options.get(killerDistanceMessages).isEnabled() )
+		if ( getOption(killerDistanceMessages).isEnabled() )
 		{
 			killer.sendMessage("Other players will see a message telling them how far away you are every 10 seconds. You will see a message with the distance to the nearest player at the same time.");
 		}
@@ -261,7 +261,7 @@ public class InvisibleKiller extends GameMode
 		// start our scheduled process
 		inRangeLastTime.clear();
 		
-		if ( !options.get(killerDistanceMessages).isEnabled() )
+		if ( !getOption(killerDistanceMessages).isEnabled() )
 			return; // don't start the range message process
 			
 		updateRangeMessageProcessID = getPlugin().getServer().getScheduler().scheduleSyncRepeatingTask(getPlugin(), new Runnable() {
@@ -340,7 +340,7 @@ public class InvisibleKiller extends GameMode
 		pot.splash();
 		
 		// if decloakWhenWeaponDrawn is enabled, give fewer splash potions
-		stack = pot.toItemStack(Math.max(2, (int)((options.get(decloakWhenWeaponDrawn).isEnabled() ? 32f : 64f) / (numFriendlyPlayers - 1))));
+		stack = pot.toItemStack(Math.max(2, (int)((getOption(decloakWhenWeaponDrawn).isEnabled() ? 32f : 64f) / (numFriendlyPlayers - 1))));
 		inv.addItem(stack);
 	}
 	
@@ -490,7 +490,7 @@ public class InvisibleKiller extends GameMode
 	@EventHandler(ignoreCancelled = true)
 	public void playerItemSwitch(PlayerItemHeldEvent event)
     {
-		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
+		if ( !getOption(decloakWhenWeaponDrawn).isEnabled() )
 			return;
 
 		if ( shouldIgnoreEvent(event.getPlayer()) || getTeam(event.getPlayer()) != 1 )
@@ -524,7 +524,7 @@ public class InvisibleKiller extends GameMode
 		if ( shouldIgnoreEvent(event.getPlayer()) )
 			return;
 		
-		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
+		if ( !getOption(decloakWhenWeaponDrawn).isEnabled() )
 			return;
 		
 		Player player = event.getPlayer();
@@ -546,7 +546,7 @@ public class InvisibleKiller extends GameMode
 	@EventHandler(ignoreCancelled = true)
 	public void playerPickedUpItem(PlayerPickupItemEvent event)
 	{
-		if ( shouldIgnoreEvent(event.getPlayer()) || !options.get(decloakWhenWeaponDrawn).isEnabled() )
+		if ( shouldIgnoreEvent(event.getPlayer()) || !getOption(decloakWhenWeaponDrawn).isEnabled() )
 			return;
 		
 		if ( !isWeapon(event.getItem().getItemStack().getType()) )
@@ -578,7 +578,7 @@ public class InvisibleKiller extends GameMode
 		if ( shouldIgnoreEvent(event.getWhoClicked()) )
 			return;
 	
-		if ( !options.get(decloakWhenWeaponDrawn).isEnabled() )
+		if ( !getOption(decloakWhenWeaponDrawn).isEnabled() )
 			return;
 			
 		final Player player = (Player)event.getWhoClicked();

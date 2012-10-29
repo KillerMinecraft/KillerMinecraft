@@ -77,30 +77,30 @@ public class MysteryKiller extends GameMode
 			case 0:
 				if ( team == 1 )
 				{
-					if ( options.get(allowMultipleKillers).isEnabled() )
+					if ( getOption(allowMultipleKillers).isEnabled() )
 						return "You have been chosen to try and kill everyone else.\nIf there are more than 5 players in the game, multiple players will have been chosen.\nNo one else has been told who was chosen.";
 					else
 						return "You have been chosen to try and kill everyone else.\nNo one else has been told who was chosen.";
 				}
 				else if ( getOnlinePlayers(1, false).size() > 0 )
 				{
-					if ( options.get(allowMultipleKillers).isEnabled() )
+					if ( getOption(allowMultipleKillers).isEnabled() )
 						return "(At least) one player has been chosen to try and kill everyone else.\nIf there are more than 5 players in the game, multiple players will be chosen.\nNo one else has been told who they are.";
 					else
 						return "One player has been chosen to try and kill everyone else. No one else has been told who it is.";
 				}
 				else
 				{
-					if ( options.get(dontAssignKillerUntilSecondDay).isEnabled() )
+					if ( getOption(dontAssignKillerUntilSecondDay).isEnabled() )
 					{
-						if ( options.get(allowMultipleKillers).isEnabled() )
+						if ( getOption(allowMultipleKillers).isEnabled() )
 							return "At the start of the next game day, (at least) one player will be chosen to try and kill everyone else.\nIf there are more than 5 players in the game, multiple players will be chosen.\nNo one else will be told who they are.";
 						else
 							return "At the start of the next game day, one player will be chosen to try and kill everyone else.\nNo one else will be told who it is.";
 					}
 					else
 					{
-						if ( options.get(allowMultipleKillers).isEnabled() )
+						if ( getOption(allowMultipleKillers).isEnabled() )
 							return "(At least) one player will shortly be chosen to try and kill everyone else.\nIf there are more than 5 players in the game, multiple players will be chosen.\nNo one else will be told who they are.";
 						else
 							return "One player will shortly be chosen to try and kill everyone else.\nNo one else will be told who it is.";
@@ -109,14 +109,14 @@ public class MysteryKiller extends GameMode
 			case 1:
 				if ( team == 1 )
 				{
-					if ( options.get(allowMultipleKillers).isEnabled() )
+					if ( getOption(allowMultipleKillers).isEnabled() )
 						return "As a killer, you win if all the friendly players die. You won't be told who the other killers are.";
 					else
 						return "As the killer, you win if everyone else dies.";
 				}
 				else
 				{
-					if ( options.get(allowMultipleKillers).isEnabled() )
+					if ( getOption(allowMultipleKillers).isEnabled() )
 						return "The killers win if everyone else dies... so watch your back!";
 					else
 						return "The killer wins if everyone else dies... so watch your back!";
@@ -137,16 +137,16 @@ public class MysteryKiller extends GameMode
 				message += " to the plinth near the spawn.";
 				return message;
 			case 3:
-				if ( options.get(allowMultipleKillers).isEnabled() )
+				if ( getOption(allowMultipleKillers).isEnabled() )
 				{
-					if ( options.get(autoReallocateKillers).isEnabled() )
+					if ( getOption(autoReallocateKillers).isEnabled() )
 						return "The other players will not automatically win when all the killers are dead, and additional killers may be assigned once to replace dead ones.";
 					else
 						return "The other players will not automatically win when all the killers are dead.";
 				}
 				else
 				{
-					if ( options.get(autoReallocateKillers).isEnabled() )
+					if ( getOption(autoReallocateKillers).isEnabled() )
 						return "The other players will not automatically win when the killer dies, and another killer may be assigned once the first one is dead.";
 					else
 						return "The other players will not automatically win when the killer dies.";
@@ -158,7 +158,7 @@ public class MysteryKiller extends GameMode
 			case 5:
 				if ( team == 1 )
 					return "If you make a compass, it will point at the nearest player. This won't work for other players.";
-				else if ( options.get(allowMultipleKillers).isEnabled() )
+				else if ( getOption(allowMultipleKillers).isEnabled() )
 					return "If one of the killers make a compass, it will point at the nearest player. This won't work for other players.";
 				else
 					return "If the killer makes a compass, it will point at the nearest player. This won't work for other players.";
@@ -220,7 +220,7 @@ public class MysteryKiller extends GameMode
 		for ( Player player : players )
 			setTeam(player, 0);
 		
-		if ( options.get(dontAssignKillerUntilSecondDay).isEnabled() )
+		if ( getOption(dontAssignKillerUntilSecondDay).isEnabled() )
 		{
 			// check based on the time of day
 			// ...
@@ -244,11 +244,11 @@ public class MysteryKiller extends GameMode
 		int numToAdd;
 	
 		// if any killers have already been assigned, and we're not meant to reallocate, don't add any more
-		if ( !options.get(autoReallocateKillers).isEnabled() && numKillers > 0 )
+		if ( !getOption(autoReallocateKillers).isEnabled() && numKillers > 0 )
 			numToAdd = 0;
 		
 		// if we don't allow multiple killers, only ever add 0 or 1
-		else if ( !options.get(allowMultipleKillers).isEnabled() )
+		else if ( !getOption(allowMultipleKillers).isEnabled() )
 			numToAdd = numAliveKillers > 0 ? 0 : 1;
 
 		// 1-5 players should have 1 killer. 6-11 should have 2. 12-17 should have 3. 18-23 should have 4. 
