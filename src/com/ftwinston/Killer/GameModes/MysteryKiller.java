@@ -10,7 +10,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.Material;
 
@@ -227,31 +229,202 @@ public class MysteryKiller extends GameMode
 			allocationProcessID = getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), new Runnable() {
 				public void run()
 				{
-					allocateKiller();
+					allocateKillers();
 					allocationProcessID = -1;
 				}
 			}, 600L);
 	}
 	
-	private void allocateKiller()
+	private void allocateKillers()
 	{
-		// pick one player, put them on team 1
-		List<Player> players = getOnlinePlayers(true);		
-		Player killer = selectRandom(players);
-		if ( killer == null )
+		int numAlive = getOnlinePlayers(true).size();
+		int numKillers = getOnlinePlayers(1).size();
+		int numAliveKillers = getOnlinePlayers(1, true).size();
+		
+		int numToAdd;
+	
+		// if any killers have already been assigned, and we're not meant to reallocate, don't add any more
+		if ( !options.get(autoReallocateKillers).isEnabled() && numKillers > 0 )
+			numToAdd = 0;
+		
+		// if we don't allow multiple killers, only ever add 0 or 1
+		else if ( !options.get(allowMultipleKillers).isEnabled() )
+			numToAdd = numAliveKillers > 0 ? 0 : 1;
+
+		// 1-5 players should have 1 killer. 6-11 should have 2. 12-17 should have 3. 18-23 should have 4. 
+		else
 		{
-			broadcastMessage("Unable to find a player to allocate as the killer");
-			return;
+			int targetNumKillers = numAlive / 6 + 1;
+			numToAdd = targetNumKillers - numAliveKillers;
 		}
 		
+		if ( numToAdd <= 0 )
+			return;
 
-		setTeam(killer, 1);
+		// pick players
+		List<Player> players = getOnlinePlayers(0, true);
+		float numFriendliesPerKiller = (float)(players.size() - numToAdd) / (float)(numAliveKillers + numToAdd);
+		for ( int i=0; i<numToAdd; i++ )
+		{
+			Player killer = selectRandom(players);
+			if ( killer == null )
+			{
+				broadcastMessage("Error selecting player to allocate as the killer");
+				return;
+			}
+			
+			prepareKiller(killer, numToAdd, numFriendliesPerKiller);
+		}
 		
+		players = getOnlinePlayers(0, true); // some have moved to team 1 now, so re-select
+		String message = numToAdd == 1 ? "A killer has been allocated. You are not the killer!" : numToAdd + " killers have been allocated. You are not a killer!"; 
+				
+		for ( Player player : players )
+			player.sendMessage(message);
+	}
+	
+	private void prepareKiller(Player player, int numKillersAllocated, float numFriendliesPerKiller)
+	{
+		setTeam(player, 1);
 		
-		// give the killer their items, teleport them a distance away
-		killer.sendMessage(ChatColor.RED + "You are the killer!\n" + ChatColor.RESET + "Try to kill your allies without them working out who's after them.");
+		// this ougth to say "a" if multiple killers are/have been present in the game
+		String message = ChatColor.RED.toString();
+		if ( numKillersAllocated == 1 )
+			message += "You are the killer!\n" + ChatColor.RESET;
+		else
+			message += "You are a killer!" + ChatColor.RESET + " You are one of " + numKillersAllocated + " that have just been allocated.\n";
 		
+		message += "Try to kill the other players without them working out who's after them.";
+		player.sendMessage(message);
 		
+		PlayerInventory inv = player.getInventory();
+		
+		if ( numFriendliesPerKiller >= 2 )
+			inv.addItem(new ItemStack(Material.STONE, 6));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 3 )
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.IRON_INGOT, 1), new ItemStack(Material.REDSTONE, 2));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 4 )
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.SULPHUR, 1));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 5 )
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.IRON_INGOT, 1), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.ARROW, 3));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 6 )
+			inv.addItem(new ItemStack(Material.MONSTER_EGG, 1, (short)50), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.SULPHUR, 1), new ItemStack(Material.ARROW, 2));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 7 )
+		{
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.SULPHUR, 1), new ItemStack(Material.ARROW, 2));
+			
+			if ( numFriendliesPerKiller < 11 )
+				inv.addItem(new ItemStack(Material.IRON_PICKAXE, 1)); // at 11 friendlies, they'll get a diamond pick instead
+		}
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 8 )
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.BOW, 1), new ItemStack(Material.ARROW, 3));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 9 )
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.MONSTER_EGGS, 4, (short)0), new ItemStack(Material.STONE, 2));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 10 )
+			inv.addItem(new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.MONSTER_EGG, 1, (short)50), new ItemStack(Material.ARROW, 2));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 11 )
+		{
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.SULPHUR, 1));
+			
+			if ( numFriendliesPerKiller < 18 )
+				inv.addItem(new ItemStack(Material.DIAMOND_PICKAXE, 1)); // at 18 friendlies, they get an enchanted version
+		}
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 12 )
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.STONE, 2), new ItemStack(Material.SULPHUR, 1));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 13 )
+			inv.addItem(new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.MONSTER_EGGS, 2, (short)0), new ItemStack(Material.ARROW, 2));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 14 )
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2), new ItemStack(Material.MONSTER_EGGS, 1, (short)0), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.STONE, 2));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 15 )
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2), new ItemStack(Material.MONSTER_EGGS, 1, (short)0), new ItemStack(Material.PISTON_STICKY_BASE, 3));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 16 )
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 1), new ItemStack(Material.SULPHUR, 5));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 17 )
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 1), new ItemStack(Material.MONSTER_EGG, 1, (short)50), new ItemStack(Material.ARROW, 2));
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 18 )
+		{
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2));
+			if ( numFriendliesPerKiller == 18 )
+			{
+				ItemStack stack = new ItemStack(Material.DIAMOND_PICKAXE, 1);
+				stack.addEnchantment(Enchantment.DIG_SPEED, 1);
+				inv.addItem(stack);
+			}
+		}
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 19 )
+		{
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2));
+			if ( numFriendliesPerKiller == 19 )
+			{
+				ItemStack stack = new ItemStack(Material.DIAMOND_PICKAXE, 1);
+				stack.addEnchantment(Enchantment.DIG_SPEED, 2);
+				inv.addItem(stack);
+			}
+		}
+		else
+			return;
+		
+		if ( numFriendliesPerKiller >= 20 )
+		{
+			inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2));
+		
+			ItemStack stack = new ItemStack(Material.DIAMOND_PICKAXE, 1);
+			stack.addEnchantment(Enchantment.DIG_SPEED, 3);
+			inv.addItem(stack);
+		}
+		else
+			return;	
 	}
 	
 	@Override
@@ -262,6 +435,8 @@ public class MysteryKiller extends GameMode
 			getPlugin().getServer().getScheduler().cancelTask(allocationProcessID);
 			allocationProcessID = -1;
 		}
+		
+		// announce who the killer(s) was/were
 	}
 	
 	@Override
@@ -269,6 +444,10 @@ public class MysteryKiller extends GameMode
 	{
 		if ( isNewPlayer )
 			setTeam(player, 0);
+		else if ( getTeam(player) == 1 ) // inform them that they're still a killer
+			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (getOnlinePlayers(1).size() > 1 ? "a" : "the" ) + " killer!"); 
+		else
+			player.sendMessage("Welcome back. You are not the killer, and you're still alive.");
 	}
 	
 	@Override
@@ -276,7 +455,12 @@ public class MysteryKiller extends GameMode
 	{
 		int numFriendlies = getOnlinePlayers(0, true).size();
 		if ( numFriendlies != 0 )
+		{
+			// if only one person left (and they're not the killer), tell people they can /vote if they want to start a new game
+			if ( numFriendlies == 1 )
+				broadcastMessage("There's only one player left, and they're not the killer.\nIf you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");
 			return;
+		}
 		
 		if ( getOnlinePlayers(1, true).size() > 0 )
 		{
@@ -313,230 +497,4 @@ public class MysteryKiller extends GameMode
 				break;
 			}
 	}
-/*
-	@Override
-	public int determineNumberOfKillersToAdd(int numAlive, int numKillers, int numAliveKillers)
-	{
-		// if any killers have already been assigned, and we're not meant to reallocate, don't add any more
-		if ( !options.get(autoReallocateKillers).isEnabled() && numKillers > 0 )
-			return 0;
-		
-		// if we don't allow multiple killers, only ever add 0 or 1
-		if ( !options.get(allowMultipleKillers).isEnabled() )
-			return numAliveKillers > 0 ? 0 : 1;
-
-		// 1-5 players should have 1 killer. 6-11 should have 2. 12-17 should have 3. 18-23 should have 4. 
-		int targetNumKillers = numAlive / 6 + 1;
-		return targetNumKillers - numAliveKillers;
-	}
-	
-	@Override
-	public boolean informOfTeamAssignment(PlayerManager pm) { return pm.numPlayersOnTeam(1) == 0; }
-	
-	@Override
-	public boolean teamAllocationIsSecret() { return true; }
-	
-	@Override
-	public boolean immediateTeamAssignment() { return !options.get(dontAssignKillerUntilSecondDay).isEnabled(); }
-	
-	@Override
-	public boolean revealTeamIdentityAtEnd(int team) { return team == 1; }
-	
-	@Override
-	public void playerJoined(Player player, PlayerManager pm, boolean isNewPlayer, PlayerManager.Info info)
-	{
-		if ( info.getTeam() == 1 ) // inform them that they're still a killer
-			player.sendMessage("Welcome back. " + ChatColor.RED + "You are still " + (pm.numPlayersOnTeam(1) > 1 ? "a" : "the" ) + " killer!"); 
-		else if ( isNewPlayer || !info.isAlive() ) // this is a new player, tell them the rules & state of the game
-			player.sendMessage("Welcome to Killer Minecraft!");
-		else
-			player.sendMessage("Welcome back. You are not the killer, and you're still alive.");
-	}
-	
-	@Override
-	public void preparePlayer(Player player, PlayerManager pm, int team, boolean isNewPlayer)
-	{
-		if ( team == 1 )
-		{
-			if ( !isNewPlayer )
-				return; // don't let the killer rejoin to get more items
-						
-			PlayerInventory inv = player.getInventory();
-			float numFriendliesPerKiller = pm.numSurvivors() / pm.numPlayersOnTeam(1);
-			
-			if ( numFriendliesPerKiller >= 2 )
-				inv.addItem(new ItemStack(Material.STONE, 6));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 3 )
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.IRON_INGOT, 1), new ItemStack(Material.REDSTONE, 2));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 4 )
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.SULPHUR, 1));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 5 )
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.IRON_INGOT, 1), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.ARROW, 3));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 6 )
-				inv.addItem(new ItemStack(Material.MONSTER_EGG, 1, (short)50), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.SULPHUR, 1), new ItemStack(Material.ARROW, 2));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 7 )
-			{
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.SULPHUR, 1), new ItemStack(Material.ARROW, 2));
-				
-				if ( numFriendliesPerKiller < 11 )
-					inv.addItem(new ItemStack(Material.IRON_PICKAXE, 1)); // at 11 friendlies, they'll get a diamond pick instead
-			}
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 8 )
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.BOW, 1), new ItemStack(Material.ARROW, 3));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 9 )
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.MONSTER_EGGS, 4, (short)0), new ItemStack(Material.STONE, 2));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 10 )
-				inv.addItem(new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.MONSTER_EGG, 1, (short)50), new ItemStack(Material.ARROW, 2));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 11 )
-			{
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.SULPHUR, 1));
-				
-				if ( numFriendliesPerKiller < 18 )
-					inv.addItem(new ItemStack(Material.DIAMOND_PICKAXE, 1)); // at 18 friendlies, they get an enchanted version
-			}
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 12 )
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.STONE, 2), new ItemStack(Material.SULPHUR, 1));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 13 )
-				inv.addItem(new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.MONSTER_EGGS, 2, (short)0), new ItemStack(Material.ARROW, 2));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 14 )
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2), new ItemStack(Material.MONSTER_EGGS, 1, (short)0), new ItemStack(Material.REDSTONE, 2), new ItemStack(Material.STONE, 2));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 15 )
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2), new ItemStack(Material.MONSTER_EGGS, 1, (short)0), new ItemStack(Material.PISTON_STICKY_BASE, 3));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 16 )
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 1), new ItemStack(Material.SULPHUR, 5));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 17 )
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 1), new ItemStack(Material.MONSTER_EGG, 1, (short)50), new ItemStack(Material.ARROW, 2));
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 18 )
-			{
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2));
-				if ( numFriendliesPerKiller == 18 )
-				{
-					ItemStack stack = new ItemStack(Material.DIAMOND_PICKAXE, 1);
-					stack.addEnchantment(Enchantment.DIG_SPEED, 1);
-					inv.addItem(stack);
-				}
-			}
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 19 )
-			{
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2));
-				if ( numFriendliesPerKiller == 19 )
-				{
-					ItemStack stack = new ItemStack(Material.DIAMOND_PICKAXE, 1);
-					stack.addEnchantment(Enchantment.DIG_SPEED, 2);
-					inv.addItem(stack);
-				}
-			}
-			else
-				return;
-			
-			if ( numFriendliesPerKiller >= 20 )
-			{
-				inv.addItem(new ItemStack(Material.COOKED_BEEF, 1), new ItemStack(Material.DIAMOND, 2));
-			
-				ItemStack stack = new ItemStack(Material.DIAMOND_PICKAXE, 1);
-				stack.addEnchantment(Enchantment.DIG_SPEED, 3);
-				inv.addItem(stack);
-			}
-			else
-				return;	
-		}
-	}
-		
-	@Override
-	public void checkForEndOfGame(PlayerManager pm, Player playerOnPlinth, Material itemOnPlinth)
-	{
-		// if there's no one alive at all, game was drawn
-		if (pm.numSurvivors() == 0 )
-		{
-			pm.gameFinished(false, false, null, null);
-			return;
-		}
-		
-		// if someone stands on the plinth with a winning item, the friendlies win
-		if ( playerOnPlinth != null && itemOnPlinth != null )
-		{
-			pm.gameFinished(false, true, playerOnPlinth.getName(), itemOnPlinth);
-			return;
-		}
-		
-		// if there's no one alive that isn't a killer, the killer(s) won
-		boolean onlyKillersLeft = true;
-		for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-			if ( entry.getValue().isAlive() && entry.getValue().getTeam() != 1 )
-			{// this person is alive and not a killer
-				onlyKillersLeft = false;
-				break;
-			}
-		
-		if ( onlyKillersLeft )
-		{
-			pm.gameFinished(true, false, null, null);
-			return;
-		}
-
-		// if only one person left (and they're not the killer), tell people they can /vote if they want to start a new game
-		if ( pm.numSurvivors() == 1 )
-			for ( Map.Entry<String, Info> entry : pm.getPlayerInfo() )
-				if ( entry.getValue().isAlive() )
-				{
-					Player last = plugin.getServer().getPlayerExact(entry.getKey());
-					if ( last != null && last.isOnline() )
-					{
-						plugin.broadcastMessage("There's only one player left, and they're not the killer. If you want to draw this game and start another, start a vote by typing " + ChatColor.YELLOW + "/vote");	
-						return;
-					}
-				}
-	}
-*/
 }
