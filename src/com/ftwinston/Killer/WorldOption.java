@@ -4,6 +4,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.WorldCreator;
+import org.bukkit.World.Environment;
+
 import com.ftwinston.Killer.WorldOptions.CopyExistingWorld;
 import com.ftwinston.Killer.WorldOptions.DefaultWorld;
 import com.ftwinston.Killer.WorldOptions.LavaLand;
@@ -64,6 +67,24 @@ public abstract class WorldOption
 
 	protected Killer plugin;
 	
-	public abstract void create(Runnable runWhenDone);
+	public final void createWorlds(final Runnable runWhenDone)
+	{
+		createMainWorld(Settings.killerWorldName, new Runnable()
+		{
+			public void run()
+			{
+				createNetherWorld(Settings.killerWorldName + "_nether", runWhenDone);
+			}
+		});
+	}
+	
+	protected abstract void createMainWorld(String name, Runnable runWhenDone);
+	
+	protected void createNetherWorld(String name, Runnable runWhenDone)
+	{
+		WorldCreator wc = new WorldCreator(name).environment(Environment.NETHER);
+		plugin.worldManager.netherWorld = plugin.worldManager.createWorld(wc, runWhenDone);
+	}
+	
 	public abstract boolean isFixedWorld();
 }

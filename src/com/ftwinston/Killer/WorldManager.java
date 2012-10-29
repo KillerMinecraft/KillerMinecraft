@@ -12,15 +12,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import net.minecraft.server.ChunkCoordinates;
 import net.minecraft.server.ChunkPosition;
 import net.minecraft.server.ChunkProviderHell;
 import net.minecraft.server.ChunkProviderServer;
+import net.minecraft.server.ConvertProgressUpdater;
+import net.minecraft.server.Convertable;
 import net.minecraft.server.EntityEnderSignal;
 import net.minecraft.server.EntityHuman;
+import net.minecraft.server.EntityTracker;
+import net.minecraft.server.EnumGamemode;
 import net.minecraft.server.IChunkProvider;
+import net.minecraft.server.IWorldAccess;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.RegionFile;
+import net.minecraft.server.ServerNBTManager;
 import net.minecraft.server.WorldGenNether;
+import net.minecraft.server.WorldLoaderServer;
 import net.minecraft.server.WorldServer;
+import net.minecraft.server.WorldSettings;
+import net.minecraft.server.WorldType;
 
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
@@ -32,12 +43,18 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+//import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.generator.NetherChunkGenerator;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.event.world.WorldInitEvent;
+import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.generator.BlockPopulator;
+import org.bukkit.generator.ChunkGenerator;
 
 import com.ftwinston.Killer.Killer.GameState;
 
@@ -627,42 +644,7 @@ public class WorldManager
 			num++;
 		}
 	}
-	
-	public void generateWorlds(final WorldOption generator, final Runnable runWhenDone)
-	{
-		plugin.getGameMode().broadcastMessage("Preparing new worlds...");
-		
-		Runnable generationComplete = new Runnable() {
-			@Override
-			public void run()
-			{
-				// ensure those worlds are set to Hard difficulty
-				plugin.worldManager.mainWorld.setDifficulty(Difficulty.HARD);
-				plugin.worldManager.netherWorld.setDifficulty(Difficulty.HARD);
-				
-				// allow more animals, so players don't starve if its all wolves
-				if ( plugin.worldManager.mainWorld.getAnimalSpawnLimit() < 25 )
-					plugin.worldManager.mainWorld.setAnimalSpawnLimit(25);
-								
-				// run whatever task was passed in
-				if ( runWhenDone != null )
-					runWhenDone.run();
-			}
-		};
-	
-		try
-		{
-			generator.create(generationComplete);
-		}
-		catch (ArrayIndexOutOfBoundsException ex)
-		{
-			plugin.log.warning("World generation crashed: see BUKKIT-2601!");
-			plugin.getGameMode().broadcastMessage("An error occurred during world generation.\nThis is a bukkit bug we're waiting on a fix on.\nIt only happens the first time you try and generate.\nPlease try again...");
-			
-			plugin.setGameState(GameState.worldDeletion);
-		}
-	}
-	
+
 	public boolean seekNearestNetherFortress(Player player)
 	{
 		if ( netherWorld == null )
@@ -719,6 +701,41 @@ public class WorldManager
 		return true;
 	}
 	
+	public void generateWorlds(final WorldOption generator, final Runnable runWhenDone)
+	{
+		plugin.getGameMode().broadcastMessage("Preparing new worlds...");
+		
+		Runnable generationComplete = new Runnable() {
+			@Override
+			public void run()
+			{
+				// ensure those worlds are set to Hard difficulty
+				plugin.worldManager.mainWorld.setDifficulty(Difficulty.HARD);
+				plugin.worldManager.netherWorld.setDifficulty(Difficulty.HARD);
+				
+				// allow more animals, so players don't starve if its all wolves
+				if ( plugin.worldManager.mainWorld.getAnimalSpawnLimit() < 25 )
+					plugin.worldManager.mainWorld.setAnimalSpawnLimit(25);
+								
+				// run whatever task was passed in
+				if ( runWhenDone != null )
+					runWhenDone.run();
+			}
+		};
+	
+		try
+		{
+			generator.createWorlds(generationComplete);
+		}
+		catch (ArrayIndexOutOfBoundsException ex)
+		{
+			plugin.log.warning("World generation crashed: see BUKKIT-2601!");
+			plugin.getGameMode().broadcastMessage("An error occurred during world generation.\nThis is a bukkit bug we're waiting on a fix on.\nIt only happens the first time you try and generate.\nPlease try again...");
+			
+			plugin.setGameState(GameState.worldDeletion);
+		}
+	}
+	
 	public static long getSeedFromString(String str)
 	{// copied from how bukkit handles string seeds
 		long k = (new Random()).nextLong();
@@ -759,4 +776,143 @@ public class WorldManager
 		
 		// ... and update the staging world? We'll have to restart, otherwise
 	}
+
+	// this is a clone of CraftServer.createWorld, amended to accept extra block populators
+	// it also creates only one chunk per tick, instead of locking up the server while it generates 
+    public World createWorld(WorldCreator creator, final Runnable runWhenDone, BlockPopulator... extraPopulators)
+    {
+        if (creator == null) {
+            throw new IllegalArgumentException("Creator may not be null");
+        }
+
+        final CraftServer craftServer = (CraftServer)plugin.getServer();
+        MinecraftServer console = craftServer.getServer();
+        
+        final String name = creator.name();
+        ChunkGenerator generator = creator.generator();
+        File folder = new File(craftServer.getWorldContainer(), name);
+        World world = craftServer.getWorld(name);
+        WorldType type = WorldType.getType(creator.type().getName());
+        boolean generateStructures = creator.generateStructures();
+
+        if (world != null) {
+            return world;
+        }
+
+        if ((folder.exists()) && (!folder.isDirectory())) {
+            throw new IllegalArgumentException("File exists with the name '" + name + "' and isn't a folder");
+        }
+
+        if (generator == null) {
+            generator = craftServer.getGenerator(name);
+        }
+
+        Convertable converter = new WorldLoaderServer(craftServer.getWorldContainer());
+        if (converter.isConvertable(name)) {
+        	craftServer.getLogger().info("Converting world '" + name + "'");
+            converter.convert(name, new ConvertProgressUpdater(console));
+        }
+
+        int dimension = 10 + console.worlds.size();
+        boolean used = false;
+        do {
+            for (WorldServer server : console.worlds) {
+                used = server.dimension == dimension;
+                if (used) {
+                    dimension++;
+                    break;
+                }
+            }
+        } while(used);
+        boolean hardcore = false;
+
+        final WorldServer worldServer = new WorldServer(console, new ServerNBTManager(craftServer.getWorldContainer(), name, true), name, dimension, new WorldSettings(creator.seed(), EnumGamemode.a(craftServer.getDefaultGameMode().getValue()), generateStructures, hardcore, type), console.methodProfiler, creator.environment(), generator);
+
+        if (craftServer.getWorld(name) == null) {
+            return null;
+        }
+
+        worldServer.worldMaps = console.worlds.get(0).worldMaps;
+
+        worldServer.tracker = new EntityTracker(worldServer); // CraftBukkit
+        worldServer.addIWorldAccess((IWorldAccess) new net.minecraft.server.WorldManager(console, worldServer));
+        worldServer.difficulty = 1;
+        worldServer.setSpawnFlags(true, true);
+        console.worlds.add(worldServer);
+
+        if (generator != null) {
+        	worldServer.getWorld().getPopulators().addAll(generator.getDefaultPopulators(worldServer.getWorld()));
+        }
+        
+        // use the extra block populators!
+        if ( extraPopulators != null )
+        	for ( int i=0; i<extraPopulators.length; i++ )
+        		worldServer.getWorld().getPopulators().add(extraPopulators[i]);
+
+        craftServer.getPluginManager().callEvent(new WorldInitEvent(worldServer.getWorld()));
+        System.out.print("Preparing start region for level " + (console.worlds.size() - 1) + " (Seed: " + worldServer.getSeed() + ")");
+
+        ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, runWhenDone);
+        cb.taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, cb, 0L, 1L);
+        
+        return worldServer.getWorld();
+    }
+    
+    class ChunkBuilder implements Runnable
+    {
+    	public ChunkBuilder(int numChunksFromSpawn, CraftServer craftServer, WorldServer worldServer, Runnable runWhenDone)
+    	{
+    		this.numChunksFromSpawn = numChunksFromSpawn;
+    		sideLength = numChunksFromSpawn * 2 + 1;
+    		numSteps = sideLength * sideLength;
+    		
+    		this.craftServer = craftServer;
+    		this.worldServer = worldServer;
+    		this.runWhenDone = runWhenDone;
+    	}
+    	
+    	int numChunksFromSpawn, stepNum = 0, sideLength, numSteps;
+        long reportTime = System.currentTimeMillis();
+        public int taskID;
+        CraftServer craftServer;
+        WorldServer worldServer;
+        Runnable runWhenDone;
+        static final int chunksPerTick = 3; // how many chunks to generate each tick? 
+    	
+    	public void run()
+    	{
+    		int chunkX = stepNum / sideLength - numChunksFromSpawn;
+            int chunkZ = stepNum % sideLength - numChunksFromSpawn;
+
+            long time = System.currentTimeMillis();
+
+            if (time < reportTime) {
+                reportTime = time;
+            }
+
+            if (time > reportTime + 1000L) {
+                System.out.println("Preparing spawn area for " + worldServer.getWorld().getName() + ", " + (stepNum * 100 / numSteps) + "%");
+                reportTime = time;
+            }
+
+            for ( int i=0; i<chunksPerTick; i++ )
+            {
+            	stepNum++;
+            	ChunkCoordinates spawnPos = worldServer.getSpawn();
+            	worldServer.chunkProviderServer.getChunkAt(spawnPos.x + chunkX, spawnPos.z + chunkZ);
+
+            	while (worldServer.updateLights()) {
+            		;
+            	}
+
+            	if ( stepNum >= numSteps )
+            	{
+            		craftServer.getPluginManager().callEvent(new WorldLoadEvent(worldServer.getWorld()));
+            		plugin.getServer().getScheduler().cancelTask(taskID);
+            		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
+            		return;
+            	}
+            }
+        }
+    }
 }

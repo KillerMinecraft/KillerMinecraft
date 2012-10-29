@@ -10,8 +10,6 @@ import java.io.OutputStream;
 import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
 
-import com.ftwinston.Killer.Settings;
-
 public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 {
 	public CopyExistingWorld(String name)
@@ -21,7 +19,7 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 	
 	public boolean isFixedWorld() { return true; }
 	
-	public void create(final Runnable runWhenDone)
+	public void createMainWorld(final String name, final Runnable runWhenDone)
 	{	
 		plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new Runnable() {
 			
@@ -29,7 +27,7 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 			public void run()
 			{
 				File sourceDir = new File(plugin.getServer().getWorldContainer() + File.separator + name);
-				File targetDir = new File(plugin.getServer().getWorldContainer() + File.separator + Settings.killerWorldName);
+				File targetDir = new File(plugin.getServer().getWorldContainer() + File.separator + name);
 				
 				try
 				{
@@ -41,7 +39,7 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 				}
 				
 				sourceDir = new File(plugin.getServer().getWorldContainer() + File.separator + name + "_nether");
-				targetDir = new File(plugin.getServer().getWorldContainer() + File.separator + Settings.killerWorldName + "_nether");
+				targetDir = new File(plugin.getServer().getWorldContainer() + File.separator + name + "_nether");
 				
 				if ( sourceDir.exists() && sourceDir.isDirectory() )
 					try
@@ -59,13 +57,19 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 					@Override
 					public void run()
 					{
-						plugin.worldManager.mainWorld = plugin.getServer().createWorld(new WorldCreator(Settings.killerWorldName).environment(Environment.NORMAL));
-						plugin.worldManager.netherWorld = plugin.getServer().createWorld(new WorldCreator(Settings.killerWorldName + "_nether").environment(Environment.NETHER));
+						plugin.worldManager.mainWorld = plugin.getServer().createWorld(new WorldCreator(name).environment(Environment.NORMAL));
+						plugin.worldManager.netherWorld = plugin.getServer().createWorld(new WorldCreator(name + "_nether").environment(Environment.NETHER));
 						runWhenDone.run();						
 					}
 				});
 			}
 		});
+	}
+	
+	@Override
+	protected void createNetherWorld(String name, Runnable runWhenDone)
+	{
+		plugin.worldManager.netherWorld = plugin.getServer().createWorld(new WorldCreator(name).environment(Environment.NETHER));
 	}
 	
 	private void copyFolder(File source, File dest) throws IOException

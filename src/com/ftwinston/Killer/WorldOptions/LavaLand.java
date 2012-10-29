@@ -9,13 +9,8 @@ import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.generator.BlockPopulator;
-
-import com.ftwinston.Killer.Settings;
 
 public class LavaLand extends com.ftwinston.Killer.WorldOption implements Listener
 {
@@ -26,26 +21,10 @@ public class LavaLand extends com.ftwinston.Killer.WorldOption implements Listen
 	
 	public boolean isFixedWorld() { return false; }
 	
-	public void create(Runnable runWhenDone)
+	public void createMainWorld(String name, Runnable runWhenDone)
 	{
-		plugin.getServer().getPluginManager().registerEvents(this, plugin); // listen for events
-		
-		WorldCreator wc = new WorldCreator(Settings.killerWorldName).environment(Environment.NORMAL);
-		plugin.worldManager.mainWorld = wc.createWorld();
-		
-		HandlerList.unregisterAll(this);
-		
-		
-		plugin.worldManager.netherWorld = plugin.getServer().createWorld(new WorldCreator(Settings.killerWorldName + "_nether").environment(Environment.NETHER));
-		
-		runWhenDone.run();
-	}
-	
-	@EventHandler
-	public void onWorldInit(WorldInitEvent e)
-	{
-		e.getWorld().getPopulators().add(new LavaSeaPopulator());
-		e.getWorld().getPopulators().add(new ExtraLavaPopulator());
+		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL);
+		plugin.worldManager.mainWorld = plugin.worldManager.createWorld(wc, runWhenDone, new LavaSeaPopulator(), new ExtraLavaPopulator());
 	}
 	
 	public class LavaSeaPopulator extends BlockPopulator
