@@ -51,6 +51,10 @@ import org.bukkit.craftbukkit.generator.NetherChunkGenerator;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BlockPopulator;
@@ -173,18 +177,18 @@ public class WorldManager
 			@Override
 			public void run() {
 				WorldCreator wc = new WorldCreator(name);
-				StagingWorldGenerator gen = new StagingWorldGenerator();
-				wc.generator(gen);
-				wc.environment(Environment.NORMAL);
-				World newWorld = createWorld(wc, true);
-				
-				stagingWorldCreated(newWorld);
+				wc.generator(new StagingWorldGenerator());
+				stagingWorldCreated(createWorld(wc, true));
 			}
 		}, 1);
 	}
 	
 	public void stagingWorldCreated(World world)
 	{
+		//CraftWorld cw = (CraftWorld)world;
+		//cw.setEnvironment(Environment.NETHER);
+		world.setSpawnFlags(false, false);
+		world.setDifficulty(Difficulty.PEACEFUL);
 		world.setSpawnLocation(8, 2, StagingWorldGenerator.startButtonZ);
 		world.setPVP(false);
 		world.setAutoSave(false); // don't save changes to the staging world
@@ -875,19 +879,17 @@ public class WorldManager
 
         craftServer.getPluginManager().callEvent(new WorldInitEvent(worldServer.getWorld()));
         System.out.print("Preparing start region for level " + (console.worlds.size() - 1) + " (Seed: " + worldServer.getSeed() + ")");
-
-        worldServer.allowAnimals = true;
-        worldServer.allowMonsters = true;
         
         boolean isSecondaryWorld = mainWorld != null;
         showWorldGenerationIndicator(0f, isSecondaryWorld);
         ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, isSecondaryWorld, runWhenDone);
-        cb.taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, cb, 0L, 1L);
+		craftServer.getPluginManager().registerEvents(cb, plugin);
+        cb.taskID = craftServer.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 0L, 1L);
         
         return worldServer.getWorld();
     }
     
-    class ChunkBuilder implements Runnable
+    class ChunkBuilder implements Runnable, Listener
     {
     	public ChunkBuilder(int numChunksFromSpawn, CraftServer craftServer, WorldServer worldServer, boolean isSecondaryWorld, Runnable runWhenDone)
     	{
@@ -941,11 +943,23 @@ public class WorldManager
             	{
             		showWorldGenerationIndicator(1f, isSecondaryWorld);
             		craftServer.getPluginManager().callEvent(new WorldLoadEvent(worldServer.getWorld()));
-            		plugin.getServer().getScheduler().cancelTask(taskID);
-            		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
+            		craftServer.getScheduler().cancelTask(taskID);
+            		craftServer.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
+					HandlerList.unregisterAll(this); // might want to delay this a little more
             		return;
             	}
             }
         }
+		
+		// don't unload chunks during generation
+		@EventHandler
+		public void onChunkUnload(ChunkUnloadEvent event)
+		{
+			if ( event.getWorld() == mainWorld || event.getWorld() == netherWorld )
+			{
+				plugin.log.info("Stopped unload of chunk " + event.getChunk().getX() + ", " + event.getChunk().getZ());
+				event.setCancelled(true);
+			}
+		}
     }
 }

@@ -9,9 +9,12 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.generator.BlockPopulator;
+import org.bukkit.plugin.Plugin;
 
 public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 {
@@ -111,20 +114,157 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		{
 			if ( chunk.getX() < 0 || chunk.getZ() < 0 || chunk.getX() > gen.endX / 16 || chunk.getZ() > gen.endZ / 16 )
 				return;
-			
-			Material mainFloor = Material.SMOOTH_BRICK;
-			Material ceiling = Material.GLOWSTONE;
-			Material walls = Material.SMOOTH_BRICK;
-			Material closedOffWall = Material.SMOOTH_BRICK; // Material.IRON_FENCE
-			
-			Material slab = Material.STEP;
-			Material loweredFloor = Material.NETHERRACK;
+
+			Material floor = Material.STONE;
+			Material wall = Material.SMOOTH_BRICK;
+			Material ceiling = Material.DOUBLE_STEP;
+			Material ceilingPanel = Material.STEP;
+			byte ceilingPanelDataValue = 0x8;
 			
 			Material wool = Material.WOOL;
 			Material button = Material.STONE_BUTTON;
 			Material sign = Material.WALL_SIGN;
 			Block b;
-		
+			
+			int wallMinX = 0, wallMaxX = 22, wallMinZ = 0, wallMaxZ = 29, floorY = 32, ceilingMinY = 43, ceilingMaxY = 49;
+			
+			// floor
+			for ( int x=wallMinX+1; x<wallMaxX; x++ )
+				for ( int z=wallMinZ; z<wallMaxZ; z++ )
+					for ( int y=floorY; y>floorY-2; y-- )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType((x + 1) % 4 == 0 && (z + 1) % 4 == 0 ? Material.GLOWSTONE : floor);
+					}
+			
+			// front wall
+			for ( int x=wallMinX+1; x<wallMaxX; x++ )
+				for ( int y=floorY; y<=ceilingMaxY; y++ )
+					for ( int z=wallMinZ; z>wallMinZ-2; z-- )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType(wall);
+					}
+			
+			// back wall
+			for ( int x=wallMinX+1; x<wallMaxX; x++ )
+				for ( int y=floorY; y<=ceilingMinY; y++ )
+					for ( int z=wallMaxZ; z<wallMaxZ+2; z++ )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType(wall);
+					}
+			
+			// sloped ceiling
+			int z = wallMaxZ-1;
+			for ( int y=ceilingMinY; y<=ceilingMaxY; y++ )
+			{
+				for ( int x=wallMinX+1; x<wallMaxX; x++ )
+				{
+					b = getBlockAbs(chunk, x, y, z);
+					if ( b != null )
+						b.setType(ceiling);
+					b = getBlockAbs(chunk, x, y, z-1);
+					if ( b != null )
+						b.setType(ceiling);
+					b = getBlockAbs(chunk, x, y, z-2);
+					if ( b != null )
+						b.setType(ceiling);
+					b = getBlockAbs(chunk, x, y, z-3);
+					if ( b != null )
+						b.setType(ceiling);
+					
+					b = getBlockAbs(chunk, x, y+1, z);
+					if ( b != null )
+						b.setType(ceiling);
+					b = getBlockAbs(chunk, x, y+1, z-1);
+					if ( b != null )
+						b.setType(ceiling);
+					b = getBlockAbs(chunk, x, y+1, z-2);
+					if ( b != null )
+						b.setType(ceiling);
+					b = getBlockAbs(chunk, x, y+1, z-3);
+					if ( b != null )
+						b.setType(ceiling);
+					
+					b = getBlockAbs(chunk, x, y-1, z);
+					if ( b != null )
+					{
+						b.setType(ceilingPanel);
+						b.setData(ceilingPanelDataValue);
+					}
+					b = getBlockAbs(chunk, x, y-1, z-1);
+					if ( b != null )
+					{
+						b.setType(ceilingPanel);
+						b.setData(ceilingPanelDataValue);
+					}
+				}
+				z -= 4;
+			}
+			
+			// side walls with sloped tops
+			int yMax = ceilingMinY;
+			for ( z = wallMaxZ; z>=wallMinZ; z-=4 )
+			{
+				for ( int y=floorY; y<=yMax; y++ )
+				{
+					for ( int x=wallMinX; x>wallMinX-2; x-- )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType(wall);
+						b = getBlockAbs(chunk, x, y, z-1);
+						if ( b != null )
+							b.setType(wall);
+						b = getBlockAbs(chunk, x, y, z-2);
+						if ( b != null )
+							b.setType(wall);
+						b = getBlockAbs(chunk, x, y, z-3);
+						if ( b != null )
+							b.setType(wall);
+					}
+					for ( int x=wallMaxX; x<wallMaxX+2; x++ )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType(wall);
+						b = getBlockAbs(chunk, x, y, z-1);
+						if ( b != null )
+							b.setType(wall);
+						b = getBlockAbs(chunk, x, y, z-2);
+						if ( b != null )
+							b.setType(wall);
+						b = getBlockAbs(chunk, x, y, z-3);
+						if ( b != null )
+							b.setType(wall);
+					}
+				}
+				yMax++;
+			}
+			
+			// write on the front wall
+			boolean[][] text = writeBlockText("SETUP");
+			for ( int i=0; i<text.length; i++ )
+				for ( int j=0; j<text[i].length; j++ )
+				{
+					b = getBlockAbs(chunk, i + wallMinX + 2, j + floorY + 11, wallMinZ);
+					if ( b != null )
+						b.setType(text[i][j] ? Material.GLOWSTONE : wall);
+				}
+			text = writeBlockText("GAME");
+			for ( int i=0; i<text.length; i++ )
+				for ( int j=0; j<text[i].length; j++ )
+				{
+					b = getBlockAbs(chunk, i + wallMinX + 3, j + floorY + 5, wallMinZ);
+					if ( b != null )
+						b.setType(text[i][j] ? Material.GLOWSTONE : wall);
+				}
+			
+/*		
 			//
 			// the world selection area
 			//
@@ -534,7 +674,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b = getBlockAbs(chunk, x, y, gen.endZ);
 					if ( b != null )
 						b.setType(walls);
-				}
+				}*/
 		}
 	}
 
