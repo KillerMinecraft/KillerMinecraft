@@ -858,9 +858,9 @@ public class WorldManager
 
         worldServer.worldMaps = console.worlds.get(0).worldMaps;
 
-        worldServer.tracker = new EntityTracker(worldServer); // CraftBukkit
+        worldServer.tracker = new EntityTracker(worldServer);
         worldServer.addIWorldAccess((IWorldAccess) new net.minecraft.server.WorldManager(console, worldServer));
-        worldServer.difficulty = 1;
+        worldServer.difficulty = 3;
         worldServer.setSpawnFlags(true, true);
         console.worlds.add(worldServer);
 
@@ -876,6 +876,9 @@ public class WorldManager
         craftServer.getPluginManager().callEvent(new WorldInitEvent(worldServer.getWorld()));
         System.out.print("Preparing start region for level " + (console.worlds.size() - 1) + " (Seed: " + worldServer.getSeed() + ")");
 
+        worldServer.allowAnimals = true;
+        worldServer.allowMonsters = true;
+        
         boolean isSecondaryWorld = mainWorld != null;
         showWorldGenerationIndicator(0f, isSecondaryWorld);
         ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, isSecondaryWorld, runWhenDone);
