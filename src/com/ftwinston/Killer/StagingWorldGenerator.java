@@ -1,5 +1,6 @@
 package com.ftwinston.Killer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -575,5 +576,270 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			if ( lines[1] != null )
 				s.setLine(3, lines[1]);
 		}
+	}
+	
+	// returns a 2D array of booleans, describing the blocks to use to write the text
+	// first dimension is variable-length, and is horizontal, from left to right
+	// second dimension is always of length 5, and is vertical, from bottom to top
+	// most characters are 3 blocks wide (with 1 block spacing), but I is 1 block wide,
+	// W and M are 5 blocks wide, and N is 4 blocks wide.
+	public static boolean[][] writeBlockText(String text)
+	{
+		text = text.toUpperCase();
+		
+		ArrayList<boolean[]> columns = new ArrayList<boolean[]>();
+		for (char ch : text.toCharArray())
+		{
+			switch (ch)
+			{
+				case ' ':
+					columns.add(new boolean[5]);
+					columns.add(new boolean[5]);
+					columns.add(new boolean[5]);
+					columns.add(new boolean[5]);
+					break;
+				case 'A':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { false, false, true, false, true });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'B':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { true, false, true, false, true });
+					columns.add(new boolean[] { false, true, false, true, false });
+					columns.add(new boolean[5]);
+					break;
+				case 'C':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { true, false, false, false, true });
+					columns.add(new boolean[] { true, false, false, false, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'D':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { true, false, false, false, true });
+					columns.add(new boolean[] { false, true, true, true, false });
+					columns.add(new boolean[5]);
+					break;
+				case 'E':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { true, false, true, false, true });
+					columns.add(new boolean[] { true, false, false, false, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'F':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { false, false, true, false, true });
+					columns.add(new boolean[] { false, false, false, false, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'G':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { true, false, false, false, true });
+					columns.add(new boolean[] { true, true, true, false, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'H':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { false, false, true, false, false });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'I':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'J':
+					columns.add(new boolean[] { true, true, false, false, false });
+					columns.add(new boolean[] { true, false, false, false, false });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'K':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { false, false, true, false, false });
+					columns.add(new boolean[] { true, true, false, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'L':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { true, false, false, false, false });
+					columns.add(new boolean[] { true, false, false, false, false });
+					columns.add(new boolean[5]);
+					break;
+				case 'M':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { false, false, false, false, true });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { false, false, false, false, true });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'N':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { false, false, true, true, false });
+					columns.add(new boolean[] { false, true, false, false, false });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'O':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { true, false, false, false, true });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'P':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { false, false, true, false, true });
+					columns.add(new boolean[] { false, false, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'Q':
+					columns.add(new boolean[] { false, true, true, true, false });
+					columns.add(new boolean[] { true, true, false, false, true });
+					columns.add(new boolean[] { true, false, true, true, false });
+					columns.add(new boolean[5]);
+					break;
+				case 'R':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { false, false, true, false, true });
+					columns.add(new boolean[] { true, true, false, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'S':
+					columns.add(new boolean[] { true, false, true, true, true });
+					columns.add(new boolean[] { true, false, true, false, true });
+					columns.add(new boolean[] { true, true, true, false, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'T':
+					columns.add(new boolean[] { false, false, false, false, true });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { false, false, false, false, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'U':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { true, false, false, false, false });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'V':
+					columns.add(new boolean[] { false, false, true, true, true });
+					columns.add(new boolean[] { true, true, false, false, false });
+					columns.add(new boolean[] { false, false, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'W':
+					columns.add(new boolean[] { false, true, true, true, true });
+					columns.add(new boolean[] { true, false, false, false, false });
+					columns.add(new boolean[] { false, true, true, false, false });
+					columns.add(new boolean[] { true, false, false, false, false });
+					columns.add(new boolean[] { false, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'X':
+					columns.add(new boolean[] { true, true, false, true, true });
+					columns.add(new boolean[] { false, false, true, false, false });
+					columns.add(new boolean[] { true, true, false, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'Y':
+					columns.add(new boolean[] { true, false, false, true, true });
+					columns.add(new boolean[] { true, false, true, false, false });
+					columns.add(new boolean[] { false, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case 'Z':
+					columns.add(new boolean[] { true, true, false, false, true });
+					columns.add(new boolean[] { true, false, true, false, true });
+					columns.add(new boolean[] { true, false, false, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case '1':
+					columns.add(new boolean[] { true, false, false, true, false });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { true, false, false, false, false });
+					columns.add(new boolean[5]);
+					break;
+				case '2':
+					columns.add(new boolean[] { true, true, false, false, true });
+					columns.add(new boolean[] { true, false, true, false, true });
+					columns.add(new boolean[] { true, false, false, true, false });
+					columns.add(new boolean[5]);
+					break;
+				case '3':
+					columns.add(new boolean[] { true, false, false, false, true });
+					columns.add(new boolean[] { true, false, true, false, true });
+					columns.add(new boolean[] { false, true, true, true, false });
+					columns.add(new boolean[5]);
+					break;
+				case '4':
+					columns.add(new boolean[] { false, false, true, true, true });
+					columns.add(new boolean[] { false, false, true, false, false });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case '5':
+					columns.add(new boolean[] { true, false, true, true, true });
+					columns.add(new boolean[] { true, false, true, false, true });
+					columns.add(new boolean[] { false, true, false, false, true });
+					columns.add(new boolean[5]);
+					break;
+				case '6':
+					columns.add(new boolean[] { true, true, true, true, false });
+					columns.add(new boolean[] { true, false, true, false, true });
+					columns.add(new boolean[] { true, true, true, false, true });
+					columns.add(new boolean[5]);
+					break;
+				case '7':
+					columns.add(new boolean[] { false, false, false, false, true });
+					columns.add(new boolean[] { true, true, true, false, true });
+					columns.add(new boolean[] { false, false, false, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case '8':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { true, false, true, false, true });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case '9':
+					columns.add(new boolean[] { false, false, true, true, true });
+					columns.add(new boolean[] { false, false, true, false, true });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case '0':
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[] { true, false, false, false, true });
+					columns.add(new boolean[] { true, true, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case '.':
+					columns.add(new boolean[] { true, false, false, false, false });
+					columns.add(new boolean[5]);
+					break;
+				case ',':
+					columns.add(new boolean[] { true, false, false, false, false });
+					columns.add(new boolean[] { false, true, false, false, false });
+					columns.add(new boolean[5]);
+					break;
+				case '!':
+					columns.add(new boolean[] { true, false, true, true, true });
+					columns.add(new boolean[5]);
+					break;
+				case '?':
+				default:
+					columns.add(new boolean[] { false, false, false, false, true });
+					columns.add(new boolean[] { true, false, true, false, true });
+					columns.add(new boolean[] { false, false, false, true, false });
+					columns.add(new boolean[5]);
+					break;
+			}
+		}
+		
+		return columns.toArray(new boolean[0][]);
 	}
 }
