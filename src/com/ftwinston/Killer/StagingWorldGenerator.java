@@ -246,7 +246,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				yMax++;
 			}
 			
-			// write on the front wall
+			// write on the walls
 			boolean[][] text = writeBlockText("SETUP");
 			for ( int i=0; i<text.length; i++ )
 				for ( int j=0; j<text[i].length; j++ )
@@ -260,6 +260,24 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				for ( int j=0; j<text[i].length; j++ )
 				{
 					b = getBlockAbs(chunk, i + wallMinX + 3, j + floorY + 5, wallMinZ);
+					if ( b != null )
+						b.setType(text[i][j] ? Material.GLOWSTONE : wall);
+				}
+			
+			text = writeBlockText("INFO");
+			for ( int i=0; i<text.length; i++ )
+				for ( int j=0; j<text[i].length; j++ )
+				{
+					b = getBlockAbs(chunk, wallMinX, j + floorY + 5, wallMinZ + text.length + 4 - i);
+					if ( b != null )
+						b.setType(text[i][j] ? Material.GLOWSTONE : wall);
+				}
+			
+			text = writeBlockText("CHOOSE");
+			for ( int i=0; i<text.length; i++ )
+				for ( int j=0; j<text[i].length; j++ )
+				{
+					b = getBlockAbs(chunk, wallMaxX, j + floorY + 5, wallMinZ + 4 + i);
 					if ( b != null )
 						b.setType(text[i][j] ? Material.GLOWSTONE : wall);
 				}
