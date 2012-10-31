@@ -178,7 +178,7 @@ public class WorldManager
 			public void run() {
 				WorldCreator wc = new WorldCreator(name);
 				wc.generator(new StagingWorldGenerator());
-				stagingWorldCreated(createWorld(wc, true));
+				stagingWorldCreated(wc.createWorld());
 			}
 		}, 1);
 	}
@@ -206,30 +206,6 @@ public class WorldManager
 		else if ( offset > 3 )
 			offset = 3;
 		return loc.add(0, 0, offset);
-	}
-	
-	public World createWorld(WorldCreator wc, boolean loadChunks)
-	{
-		World world = plugin.getServer().createWorld(wc);
-		
-		if (world != null)
-		{
-			if ( loadChunks )
-			{
-				final int keepdimension = 7;
-				int spawnx = world.getSpawnLocation().getBlockX() >> 4;
-				int spawnz = world.getSpawnLocation().getBlockZ() >> 4;
-				for (int x = -keepdimension; x < keepdimension; x++)
-					for (int z = -keepdimension; z < keepdimension; z++)
-						world.loadChunk(spawnx + x, spawnz + z);
-			}
-			world.setKeepSpawnInMemory(loadChunks);
-			plugin.log.info("World '" + world.getName() + "' created successfully!");
-		}
-		else
-			plugin.log.info("World creation failed!");
-		
-		return world;
 	}
 	
 	public void removeAllItems(World world)
