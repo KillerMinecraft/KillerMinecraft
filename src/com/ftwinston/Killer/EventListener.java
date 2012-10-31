@@ -51,7 +51,7 @@ public class EventListener implements Listener
 		plugin = instance;
     }
     
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onWorldInit(WorldInitEvent event)
     {
     	if ( plugin.stagingWorldIsServerDefault && event.getWorld().getName().equalsIgnoreCase(Settings.stagingWorldName) )
@@ -59,7 +59,7 @@ public class EventListener implements Listener
     }
     
     // when you die a spectator, be made able to fly again when you respawn
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerRespawn(PlayerRespawnEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -90,7 +90,7 @@ public class EventListener implements Listener
     }
     
     // spectators moving between worlds
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void OnPlayerChangedWorld(PlayerChangedWorldEvent event)
     {
 		boolean wasInKiller = plugin.isGameWorld(event.getFrom());
@@ -119,7 +119,7 @@ public class EventListener implements Listener
 			plugin.playerManager.teleport(event.getPlayer(), plugin.worldManager.getStagingWorldSpawnPoint());
     }
     
-	@EventHandler(priority = EventPriority.HIGHEST)
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerPortal(PlayerPortalEvent event)
 	{// we're kinda doing the dirty work in making nether portals work, here
 		World fromWorld = event.getFrom().getWorld();
@@ -144,7 +144,7 @@ public class EventListener implements Listener
 	}
 	
     // prevent spectators picking up anything
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerPickupItem(PlayerPickupItemEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -155,7 +155,7 @@ public class EventListener implements Listener
     }
     
     // prevent spectators breaking anything, prevent anyone breaking protected locations
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockBreak(BlockBreakEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -169,7 +169,7 @@ public class EventListener implements Listener
     }
     
     // prevent anyone placing blocks on protected locations
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockPlace(BlockPlaceEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -183,7 +183,7 @@ public class EventListener implements Listener
     }
     
     // prevent lava/water from flowing onto protected locations
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void BlockFromTo(BlockFromToEvent event)
     {
 		if ( !plugin.isGameWorld(event.getToBlock().getLocation().getWorld()) )
@@ -194,7 +194,7 @@ public class EventListener implements Listener
     }
     
 	// prevent pistons pushing things into/out of protected locations
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockPistonExtend(BlockPistonExtendEvent event)
     {
 		if ( !plugin.isGameWorld(event.getBlock().getLocation().getWorld()) )
@@ -205,7 +205,7 @@ public class EventListener implements Listener
     }
     
 	// prevent explosions from damaging protected locations
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityExplode(EntityExplodeEvent event)
     {
 		if ( !plugin.isGameWorld(event.getEntity().getWorld()) )
@@ -221,7 +221,7 @@ public class EventListener implements Listener
     }
     
 	// switching between spectator items
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerItemSwitch(PlayerItemHeldEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -250,7 +250,7 @@ public class EventListener implements Listener
     	}
     }
     
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerInteract(PlayerInteractEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -319,7 +319,7 @@ public class EventListener implements Listener
 			plugin.getGameMode().playerActivatedPlinth(event.getPlayer());
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onItemDrop(PlayerDropItemEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -330,7 +330,7 @@ public class EventListener implements Listener
     		event.setCancelled(true);
     }
     
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onInventoryClick(InventoryClickEvent event)
     {
     	if ( !plugin.isGameWorld(event.getWhoClicked().getWorld()) )
@@ -346,7 +346,7 @@ public class EventListener implements Listener
     }
     
 	// spectators can't deal or receive damage
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityDamage(EntityDamageEvent event)
     {
 		if ( !plugin.isGameWorld(event.getEntity().getWorld()) )
@@ -371,7 +371,7 @@ public class EventListener implements Listener
 	}
     
 	// can't empty buckets onto protected locations
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -382,7 +382,7 @@ public class EventListener implements Listener
 			event.setCancelled(true);
     }
     
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onCraftItem(CraftItemEvent event)
     {
     	// killer recipes can only be crafter in killer worlds, or we could screw up the rest of the server
@@ -390,7 +390,7 @@ public class EventListener implements Listener
     		event.setCancelled(true);
     }
     
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityTarget(EntityTargetEvent event)
     {
 		if ( !plugin.isGameWorld(event.getEntity().getWorld()) )
@@ -401,7 +401,7 @@ public class EventListener implements Listener
     		event.setCancelled(true);
     }
     
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerChat(AsyncPlayerChatEvent event)
     {
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -439,7 +439,7 @@ public class EventListener implements Listener
     			event.getRecipients().remove(recipient);
     }
 	
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerJoin(PlayerJoinEvent event)
     {
     	if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
@@ -462,7 +462,7 @@ public class EventListener implements Listener
 			playerJoined(event.getPlayer());
 	}
 	
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerQuit(PlayerQuitEvent event)
     {
 		if ( plugin.isGameWorld(event.getPlayer().getWorld()) )
@@ -492,7 +492,7 @@ public class EventListener implements Listener
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName(), true), 600);
     }
     
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityDeath(EntityDeathEvent event)
     {
     	if (!(event instanceof PlayerDeathEvent) || !plugin.isGameWorld(event.getEntity().getWorld()) )
