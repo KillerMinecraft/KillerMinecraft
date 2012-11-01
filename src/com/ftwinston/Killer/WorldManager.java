@@ -247,7 +247,7 @@ public class WorldManager
 	}
 		
 	@SuppressWarnings("rawtypes")
-	private boolean clearWorldReference(String worldName)
+	private synchronized boolean clearWorldReference(String worldName)
 	{
 		if (regionfiles == null) return false;
 		if (rafField == null) return false;
