@@ -115,7 +115,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			if ( chunk.getX() < 0 || chunk.getZ() < 0 || chunk.getX() > gen.endX / 16 || chunk.getZ() > gen.endZ / 16 )
 				return;
 
-			Material floor = Material.STONE;
+			Material floor = Material.REDSTONE_LAMP_ON;
 			Material wall = Material.SMOOTH_BRICK;
 			Material ceiling = Material.DOUBLE_STEP;
 			Material ceilingPanel = Material.STEP;
@@ -127,15 +127,28 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			Block b;
 			
 			int wallMinX = 0, wallMaxX = 22, wallMinZ = 0, wallMaxZ = 29, floorY = 32, ceilingMinY = 43, ceilingMaxY = 49;
+			byte textColorInfo = 5, textColorGame = 4, textColorChoose = 1;
 			
-			// floor
+			// floor ... now with redstone torches underneath
 			for ( int x=wallMinX+1; x<wallMaxX; x++ )
 				for ( int z=wallMinZ; z<wallMaxZ; z++ )
 					for ( int y=floorY; y>floorY-2; y-- )
 					{
 						b = getBlockAbs(chunk, x, y, z);
 						if ( b != null )
-							b.setType((x + 1) % 4 == 0 && (z + 1) % 4 == 0 ? Material.GLOWSTONE : floor);
+							//b.setType((x + 1) % 4 == 0 && (z + 1) % 4 == 0 ? Material.GLOWSTONE : floor);
+							b.setType(floor);
+						
+						b = getBlockAbs(chunk, x, y-2, z);
+						if ( b != null )
+							b.setType(Material.STONE);
+						
+						b = getBlockAbs(chunk, x, y-1, z);
+						if ( b != null )
+						{
+							b.setType(Material.REDSTONE_TORCH_ON);
+							b.setData((byte)5);
+						}
 					}
 			
 			// front wall
@@ -246,6 +259,14 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				yMax++;
 			}
 			
+			// extra light, to make the high text more visible
+			for ( int x=wallMinX+1; x<wallMaxX; x++ )
+			{
+				b = getBlockAbs(chunk, x, ceilingMaxY-1, wallMinZ+5);
+				if ( b != null )
+					b.setType(Material.GLOWSTONE);
+			}
+			
 			// write on the walls
 			boolean[][] text = writeBlockText("SETUP");
 			for ( int i=0; i<text.length; i++ )
@@ -253,7 +274,13 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				{
 					b = getBlockAbs(chunk, i + wallMinX + 2, j + floorY + 11, wallMinZ);
 					if ( b != null )
-						b.setType(text[i][j] ? Material.GLOWSTONE : wall);
+						if ( text[i][j] )
+						{
+							b.setType(wool);
+							b.setData(textColorGame);
+						}
+						else
+							b.setType(wall);
 				}
 			text = writeBlockText("GAME");
 			for ( int i=0; i<text.length; i++ )
@@ -261,7 +288,13 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				{
 					b = getBlockAbs(chunk, i + wallMinX + 3, j + floorY + 5, wallMinZ);
 					if ( b != null )
-						b.setType(text[i][j] ? Material.GLOWSTONE : wall);
+						if ( text[i][j] )
+						{
+							b.setType(wool);
+							b.setData(textColorGame);
+						}
+						else
+							b.setType(wall);
 				}
 			
 			text = writeBlockText("INFO");
@@ -270,7 +303,13 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				{
 					b = getBlockAbs(chunk, wallMinX, j + floorY + 5, wallMinZ + text.length + 4 - i);
 					if ( b != null )
-						b.setType(text[i][j] ? Material.GLOWSTONE : wall);
+						if ( text[i][j] )
+						{
+							b.setType(wool);
+							b.setData(textColorInfo);
+						}
+						else
+							b.setType(wall);
 				}
 			
 			text = writeBlockText("CHOOSE");
@@ -279,7 +318,13 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				{
 					b = getBlockAbs(chunk, wallMaxX, j + floorY + 5, wallMinZ + 4 + i);
 					if ( b != null )
-						b.setType(text[i][j] ? Material.GLOWSTONE : wall);
+						if ( text[i][j] )
+						{
+							b.setType(wool);
+							b.setData(textColorChoose);
+						}
+						else
+							b.setType(wall);
 				}
 			
 /*		
