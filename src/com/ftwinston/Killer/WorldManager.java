@@ -185,6 +185,7 @@ public class WorldManager
 		stagingWorld.setDifficulty(Difficulty.PEACEFUL);
 		stagingWorld.setPVP(false);
 		stagingWorld.setAutoSave(false); // don't save changes to the staging world
+		plugin.log.info("Staging world generated");
 	}
 	
 	Random spawnOffset = new Random();
@@ -216,13 +217,11 @@ public class WorldManager
 			regionfiles = (HashMap) a.get(null);
 			rafField = net.minecraft.server.RegionFile.class.getDeclaredField("c");
 			rafField.setAccessible(true);
-			plugin.log.info("Successfully bound variable to region file cache.");
-			plugin.log.info("File references to unloaded worlds will be cleared!");
+			plugin.log.info("Successfully bound to region file cache.");
 		}
 		catch (Throwable t)
 		{
-			plugin.log.warning("Failed to bind to region file cache.");
-			plugin.log.warning("Files will stay referenced after being unloaded!");
+			plugin.log.warning("Error binding to region file cache.");
 			t.printStackTrace();
 		}
 	}
