@@ -15,57 +15,24 @@ import org.bukkit.generator.BlockPopulator;
 
 public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 {
-	public static int maxGameModeOptions;
-	
-	int endX, endZ, worldEndX, optionsEndX, gameModeEndZ;
-	boolean gameModeSelectionClosedOff, worldSelectionClosedOff, gameModeOptionsClosedOff;
-	
 	public StagingWorldGenerator()
 	{
-        maxGameModeOptions = 0;
-        for ( GameMode mode : GameMode.gameModes )
-        	if ( mode.getOptions().size() > maxGameModeOptions )
-        		maxGameModeOptions = mode.getOptions().size();
-		
 		if ( Settings.customWorldNames.size() == 0 )
 			Settings.allowRandomWorlds = true; // If no custom worlds (are left), always allow random worlds
-		
-		// now set up helper values for where the various "extensible" things end
-		endX = Math.max(Math.max(WorldOption.options.size(), maxGameModeOptions) * 2 + 8, 14);
-		endZ = Math.max(GameMode.gameModes.size() * 3 + 12, 22);
-		
-		progressStartZ = 3; progressEndZ = endZ - 7;
-		
-		startButtonX = endX - 1;
-		startButtonZ = endZ / 2;
-		overrideButtonZ = startButtonZ + 1;
-		cancelButtonZ = startButtonZ - 1;
-		gameModeButtonX = 1;
-		worldOptionZ = 1;
-		gameModeOptionZ = endZ - 1;
-		
-		worldEndX = WorldOption.options.size() * 2 + 8;
-		optionsEndX = maxGameModeOptions == 0 ? 4 : maxGameModeOptions * 2 + 8;
-		gameModeEndZ = GameMode.gameModes.size() * 3 + 8;
-		
-		gameModeSelectionClosedOff = GameMode.gameModes.size() < 2 ;
-		worldSelectionClosedOff = WorldOption.options.size() < 2;
-		gameModeOptionsClosedOff = true; // always closed off initially, until a game mode is chosen
 	}
 	
-	public static int startButtonX, startButtonZ, overrideButtonZ, cancelButtonZ, gameModeButtonX, worldOptionZ, gameModeOptionZ, progressStartZ, progressEndZ;
+	public static final int wallMinX = 0, wallMaxX = 22, wallMinZ = 0, wallMaxZ = 29, floorY = 32, ceilingMinY = 43, ceilingMaxY = 49;
 	
-	public static byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
-		colorStartButton = 4 /* yellow */, colorOverrideButton = 1 /* red */, colorCancelButton = 9 /* green */;
+	public static final int mainButtonZ = wallMinZ + 1, optionButtonX = wallMaxX - 1, buttonY = floorY + 2,
+		 gameModeButtonX = wallMinX + 4, gameOptionButtonX = gameModeButtonX + 2, worldOptionButtonX = gameOptionButtonX + 4,
+		 monstersButtonX = worldOptionButtonX + 3, animalsButtonX = monstersButtonX + 2, startButtonX = animalsButtonX + 4,
+		 overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1;
 	
-	public static int getGameModeZ(int num) { return 8 + num * 3; }
-	public static int getWorldOptionX(int num) { return 7 + num * 2; }
-	public static int getGameModeOptionX(int num) { return 7 + num * 2; }
+	public static final byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
+		colorStartButton = 4 /* yellow */, colorOverrideButton = 1 /* orange */, colorCancelButton = 9 /* teal */,
+		textColorInfo = 5 /* green */, textColorGame = 4 /* yellow */, textColorChoose = 1 /* orange */, signBackColor = 7;
 	
-	public static int getGameModeNumFromZ(int z) { return (z - 8) / 3; }
-	public static int getWorldOptionNumFromX(int x) { return (x - 7) / 2; }
-	public static int getGameModeOptionNumFromX(int x) { return (x - 7) / 2; }
-	
+	public static int getOptionButtonZ(int num) { return 4 + num * 3; }
 	
 	@Override
     public List<BlockPopulator> getDefaultPopulators(World world) {
@@ -74,7 +41,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
     @Override
     public boolean canSpawn(World world, int x, int z) {
-        return x >= 0 && z >= 0 && x <= endX / 16 && z <= endZ / 16;
+        return x == 0 && z == 1;
     }
     
 	public byte[][] generateBlockSections(World world, Random random, int cx, int cz, BiomeGrid biomes)
@@ -84,7 +51,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public Location getFixedSpawnLocation(World world, Random random)
 	{
-		Location loc = new Location(world, 8.5, 34, startButtonZ + 0.5);
+		Location loc = new Location(world, (wallMinX + wallMaxX) / 2, floorY, wallMinZ + 13);
 		loc.setYaw(0); // if 0 actually works, this isn't needed. But we want them to face -x, at any rate
 		return loc;
 	}
@@ -109,7 +76,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		
 		public void populate(World world, Random random, Chunk chunk)
 		{
-			if ( chunk.getX() < 0 || chunk.getZ() < 0 || chunk.getX() > gen.endX / 16 || chunk.getZ() > gen.endZ / 16 )
+			if ( chunk.getX() < -1 || chunk.getZ() < -1 || chunk.getX() > 2 || chunk.getZ() > 3 )
 				return;
 
 			Material floor = Material.REDSTONE_LAMP_ON;
@@ -120,11 +87,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			Material wool = Material.WOOL;
 			Material button = Material.STONE_BUTTON;
-			Material sign = Material.WALL_SIGN;
 			Block b;
-			
-			int wallMinX = 0, wallMaxX = 22, wallMinZ = 0, wallMaxZ = 29, floorY = 32, ceilingMinY = 43, ceilingMaxY = 49;
-			byte textColorInfo = 5, textColorGame = 4, textColorChoose = 1;
 			
 			// floor ... now with redstone torches underneath
 			for ( int x=wallMinX+1; x<wallMaxX; x++ )
@@ -325,47 +288,242 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				}
 			
 			// help signs on the "info" wall
-			b = getBlockAbs(chunk, wallMinX+1, floorY + 3, wallMinZ + 17);
+			for ( int y=floorY + 1; y < floorY + 4; y++ )
+			{
+				b = getBlockAbs(chunk, wallMinX, y, wallMinZ + 17);
+				if ( b != null )
+				{
+					b.setType(wool);
+					b.setData(signBackColor);
+				}
+			}
+			b = getBlockAbs(chunk, wallMinX+1, buttonY + 1, wallMinZ + 17);
 			if ( b != null )
-				setupSign(b, (byte)0x5, "Welcome to", "§4Killer", "Minecraft!");
-			b = getBlockAbs(chunk, wallMinX+1, floorY + 2, wallMinZ + 17);
+				setupSign(b, (byte)0x5, "Welcome to", "Killer", "Minecraft!");
+			b = getBlockAbs(chunk, wallMinX+1, buttonY, wallMinZ + 17);
 			if ( b != null )
-				setupSign(b, (byte)0x5, "This is the", "staging world.", "Use it to setup", "the next game.");
+				setupSign(b, (byte)0x5, "This is the", "staging world.", "It's used to", "set up games.");
 			
-			b = getBlockAbs(chunk, wallMinX+1, floorY + 3, wallMinZ + 15);
+			for ( int y=floorY + 1; y < floorY + 4; y++ )
+			{
+				b = getBlockAbs(chunk, wallMinX, y, wallMinZ + 15);
+				if ( b != null )
+				{
+					b.setType(wool);
+					b.setData(signBackColor);
+				}
+			}
+			b = getBlockAbs(chunk, wallMinX+1, buttonY + 1, wallMinZ + 15);
 			if ( b != null )
 				setupSign(b, (byte)0x5, "There are many", "different game", "modes to choose", "from, several");
-			b = getBlockAbs(chunk, wallMinX+1, floorY + 2, wallMinZ + 15);
+			b = getBlockAbs(chunk, wallMinX+1, buttonY, wallMinZ + 15);
 			if ( b != null )
 				setupSign(b, (byte)0x5, "world options,", "and additional", "settings for", "each game mode.");
 
-			b = getBlockAbs(chunk, wallMinX+1, floorY + 3, wallMinZ + 13);
+			for ( int y=floorY + 1; y < floorY + 4; y++ )
+			{
+				b = getBlockAbs(chunk, wallMinX, y, wallMinZ + 13);
+				if ( b != null )
+				{
+					b.setType(wool);
+					b.setData(signBackColor);
+				}
+			}
+			b = getBlockAbs(chunk, wallMinX+1, buttonY + 1, wallMinZ + 13);
 			if ( b != null )
 				setupSign(b, (byte)0x5, "The buttons on", "the end wall", "control what", "choice is shown");
-			b = getBlockAbs(chunk, wallMinX+1, floorY + 2, wallMinZ + 13);
+			b = getBlockAbs(chunk, wallMinX+1, buttonY, wallMinZ + 13);
 			if ( b != null )
 				setupSign(b, (byte)0x5, "on the wall", "opposite this:", "if you click to", "change the game");
 
-			b = getBlockAbs(chunk, wallMinX+1, floorY + 3, wallMinZ + 11);
+			for ( int y=floorY + 1; y < floorY + 4; y++ )
+			{
+				b = getBlockAbs(chunk, wallMinX, y, wallMinZ + 11);
+				if ( b != null )
+				{
+					b.setType(wool);
+					b.setData(signBackColor);
+				}
+			}
+			b = getBlockAbs(chunk, wallMinX+1, buttonY + 1, wallMinZ + 11);
 			if ( b != null )
 				setupSign(b, (byte)0x5, "mode, a button", "will appear for", "each available", "game mode.");
-			b = getBlockAbs(chunk, wallMinX+1, floorY + 2, wallMinZ + 11);
+			b = getBlockAbs(chunk, wallMinX+1, buttonY, wallMinZ + 11);
 			if ( b != null )
 				setupSign(b, (byte)0x5, "They will stay", "until you bring", "up a different", "option instead.");
 
-			b = getBlockAbs(chunk, wallMinX+1, floorY + 3, wallMinZ + 9);
+			for ( int y=floorY + 1; y < floorY + 4; y++ )
+			{
+				b = getBlockAbs(chunk, wallMinX, y, wallMinZ + 9);
+				if ( b != null )
+				{
+					b.setType(wool);
+					b.setData(signBackColor);
+				}
+			}
+			b = getBlockAbs(chunk, wallMinX+1, buttonY + 1, wallMinZ + 9);
 			if ( b != null )
 				setupSign(b, (byte)0x5, "To start a game", "you should push", "the start game", "button on the");
-			b = getBlockAbs(chunk, wallMinX+1, floorY + 2, wallMinZ + 9);
+			b = getBlockAbs(chunk, wallMinX+1, buttonY, wallMinZ + 9);
 			if ( b != null )
 				setupSign(b, (byte)0x5, "end wall. This", "will create the", "game world, and", "move everyone");
 
-			b = getBlockAbs(chunk, wallMinX+1, floorY + 3, wallMinZ + 7);
+			for ( int y=floorY + 1; y < floorY + 4; y++ )
+			{
+				b = getBlockAbs(chunk, wallMinX, y, wallMinZ + 7);
+				if ( b != null )
+				{
+					b.setType(wool);
+					b.setData(signBackColor);
+				}
+			}
+			b = getBlockAbs(chunk, wallMinX+1, buttonY + 1, wallMinZ + 7);
 			if ( b != null )
 				setupSign(b, (byte)0x5, "into it. When", "the game ends,", "you will be", "returned to the");
-			b = getBlockAbs(chunk, wallMinX+1, floorY + 2, wallMinZ + 7);
+			b = getBlockAbs(chunk, wallMinX+1, buttonY, wallMinZ + 7);
 			if ( b != null )
 				setupSign(b, (byte)0x5, "staging world,", "ready to setup", "a new game.", "Happy killing!");
+				
+			// buttons and signs on the setup wall
+			for ( int y=floorY + 1; y < floorY + 4; y++ )
+			{
+				b = getBlockAbs(chunk, gameModeButtonX + 1, y, wallMinZ);
+				if ( b != null )
+				{
+					b.setType(wool);
+					b.setData(signBackColor);
+				}
+			}
+			b = getBlockAbs(chunk, gameModeButtonX+1, buttonY + 1, mainButtonZ);
+			if ( b != null )
+				setupSign(b, (byte)0x3, "Game mode:", "", "Mystery killer");
+			b = getBlockAbs(chunk, gameModeButtonX+1, buttonY, mainButtonZ);
+			if ( b != null )
+				setupSign(b, (byte)0x3, "<-- change     ", "", "", "  configure -->");
+			b = getBlockAbs(chunk, gameModeButtonX, buttonY, wallMinZ);
+			if ( b != null )
+			{
+				b.setType(wool);
+				b.setData(colorOptionOff);
+			}
+			b = getBlockAbs(chunk, gameModeButtonX, buttonY, mainButtonZ);
+			if ( b != null )
+			{
+				b.setType(button);
+				b.setData((byte)0x3);
+			}
+			
+			b = getBlockAbs(chunk, gameOptionButtonX, buttonY, wallMinZ);
+			if ( b != null )
+			{
+				b.setType(wool);
+				b.setData(colorOptionOff);
+			}
+			b = getBlockAbs(chunk, gameOptionButtonX, buttonY, mainButtonZ);
+			if ( b != null )
+			{
+				b.setType(button);
+				b.setData((byte)0x3);
+			}
+			
+			
+			for ( int y=floorY + 1; y < floorY + 4; y++ )
+			{
+				b = getBlockAbs(chunk, worldOptionButtonX - 1, y, wallMinZ);
+				if ( b != null )
+				{
+					b.setType(wool);
+					b.setData(signBackColor);
+				}
+			}
+			b = getBlockAbs(chunk, worldOptionButtonX-1, buttonY + 1, mainButtonZ);
+			if ( b != null )
+				setupSign(b, (byte)0x3, "World option:", "", "Normal");
+			b = getBlockAbs(chunk, worldOptionButtonX-1, buttonY, mainButtonZ);
+			if ( b != null )
+				setupSign(b, (byte)0x3, "", "     change -->");
+			b = getBlockAbs(chunk, worldOptionButtonX, buttonY, wallMinZ);
+			if ( b != null )
+			{
+				b.setType(wool);
+				b.setData(colorOptionOff);
+			}
+			b = getBlockAbs(chunk, worldOptionButtonX, buttonY, mainButtonZ);
+			if ( b != null )
+			{
+				b.setType(button);
+				b.setData((byte)0x3);
+			}
+			
+			
+			for ( int y=floorY + 1; y < floorY + 4; y++ )
+			{
+				b = getBlockAbs(chunk, monstersButtonX + 1, y, wallMinZ);
+				if ( b != null )
+				{
+					b.setType(wool);
+					b.setData(signBackColor);
+				}
+			}
+			b = getBlockAbs(chunk, monstersButtonX+1, buttonY + 1, mainButtonZ);
+			if ( b != null )
+				setupSign(b, (byte)0x3, "Monsters:      ", "           Many", "Animals:       ", "            Few");
+			b = getBlockAbs(chunk, monstersButtonX+1, buttonY, mainButtonZ);
+			if ( b != null )
+				setupSign(b, (byte)0x3, "<-- monsters   ", "", "", "    animals -->");
+			b = getBlockAbs(chunk, monstersButtonX, buttonY, wallMinZ);
+			if ( b != null )
+			{
+				b.setType(wool);
+				b.setData(colorOptionOff);
+			}
+			b = getBlockAbs(chunk, monstersButtonX, buttonY, mainButtonZ);
+			if ( b != null )
+			{
+				b.setType(button);
+				b.setData((byte)0x3);
+			}
+			
+			b = getBlockAbs(chunk, animalsButtonX, buttonY, wallMinZ);
+			if ( b != null )
+			{
+				b.setType(wool);
+				b.setData(colorOptionOff);
+			}
+			b = getBlockAbs(chunk, animalsButtonX, buttonY, mainButtonZ);
+			if ( b != null )
+			{
+				b.setType(button);
+				b.setData((byte)0x3);
+			}
+			
+			// start button, with a big red surround
+			for ( int x=startButtonX-1; x<startButtonX+2; x++ )
+				for ( int y=floorY+1; y<floorY+4; y++ )
+				{
+					b = getBlockAbs(chunk, x, y, wallMinZ);
+					if ( b != null )
+					{
+						b.setType(wool);
+						b.setData(colorOptionOff);
+					}
+				}
+			b = getBlockAbs(chunk, startButtonX, buttonY + 1, mainButtonZ);
+			if ( b != null )
+				setupSign(b, (byte)0x3, "", "Start", "Game");
+			b = getBlockAbs(chunk, startButtonX, buttonY, wallMinZ);
+			if ( b != null )
+			{
+				b.setType(wool);
+				b.setData(colorStartButton);
+			}
+			b = getBlockAbs(chunk, startButtonX, buttonY, mainButtonZ);
+			if ( b != null )
+			{
+				b.setType(button);
+				b.setData((byte)0x3);
+			}
+			
 /*		
 			//
 			// the world selection area

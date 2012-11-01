@@ -40,6 +40,7 @@ import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -182,30 +183,15 @@ public class WorldManager
 		
 		stagingWorld.setSpawnFlags(false, false);
 		stagingWorld.setDifficulty(Difficulty.PEACEFUL);
-		stagingWorld.setSpawnLocation(8, 2, StagingWorldGenerator.startButtonZ);
 		stagingWorld.setPVP(false);
 		stagingWorld.setAutoSave(false); // don't save changes to the staging world
-	}
-	
-	public void stagingWorldCreated(World world)
-	{
-		//CraftWorld cw = (CraftWorld)world;
-		//cw.setEnvironment(Environment.NETHER);
-		
-		
-		stagingWorld = world;
 	}
 	
 	Random spawnOffset = new Random();
 	public Location getStagingWorldSpawnPoint()
 	{
-		Location loc = new Location(stagingWorld, 8.5, 34, StagingWorldGenerator.startButtonZ + 0.5, 90, 0);
-		double offset = spawnOffset.nextGaussian() * 2;
-		if ( offset < -3 )
-			offset = -3;
-		else if ( offset > 3 )
-			offset = 3;
-		return loc.add(0, 0, offset);
+		Location loc = new Location(stagingWorld, (StagingWorldGenerator.wallMinX + StagingWorldGenerator.wallMaxX) / 2, StagingWorldGenerator.floorY + 1, StagingWorldGenerator.wallMinZ + 13, 90, -15);
+		return loc.add(spawnOffset.nextDouble() * 6 - 3, 0, spawnOffset.nextDouble() * 3 - 1.5);
 	}
 	
 	public void removeAllItems(World world)
@@ -428,27 +414,30 @@ public class WorldManager
 	
 	public void setupButtonClicked(int x, int z)
 	{
-		if ( x == StagingWorldGenerator.startButtonX )
+		if ( z == StagingWorldGenerator.mainButtonZ )
 		{
-			if ( z == StagingWorldGenerator.startButtonZ )
+			if ( x == StagingWorldGenerator.startButtonX )
 			{
 				if ( plugin.getOnlinePlayers().size() >= plugin.getGameMode().getMinPlayers() )
 					plugin.setGameState(GameState.worldGeneration);
 				else
 					plugin.setGameState(GameState.stagingWorldConfirm);
 			}
-			else if ( z == StagingWorldGenerator.overrideButtonZ )
+			else if ( x == StagingWorldGenerator.overrideButtonX )
 			{
 				plugin.setGameState(GameState.worldGeneration);
 			}
-			else if ( z == StagingWorldGenerator.cancelButtonZ )
+			else if ( x == StagingWorldGenerator.cancelButtonX )
 			{
 				plugin.setGameState(GameState.stagingWorldReady);
 			}
 		}
-		else if ( x == StagingWorldGenerator.gameModeButtonX )
+		else if ( x == StagingWorldGenerator.optionButtonX )
 		{
-			int num = StagingWorldGenerator.getGameModeNumFromZ(z);
+			int num = StagingWorldGenerator.getOptionButtonZ(z);
+			
+			// if game mode is selected
+			/*
 			GameMode gameMode = GameMode.get(num);
 			
 			if ( plugin.getGameMode() == gameMode )
@@ -461,11 +450,10 @@ public class WorldManager
 			if ( plugin.setGameMode(gameMode) && plugin.getGameState() == GameState.stagingWorldSetup )
 				plugin.setGameState(GameState.stagingWorldReady);
 
-			showGameOptions(gameMode);
-		}
-		else if ( z == StagingWorldGenerator.worldOptionZ )
-		{
-			int num = StagingWorldGenerator.getWorldOptionNumFromX(x);
+			showGameOptions(gameMode);*/
+			
+			// if world option is selected
+			/*
 			
 			// update all the color blocks
 			for ( int i=0; i<WorldOption.options.size(); i++ )
@@ -476,11 +464,10 @@ public class WorldManager
 			{
 				if ( plugin.getGameState() == GameState.stagingWorldSetup )
 					plugin.setGameState(GameState.stagingWorldReady);
-			}
-		}
-		else if ( z == StagingWorldGenerator.gameModeOptionZ )
-		{
-			int num = StagingWorldGenerator.getGameModeOptionNumFromX(x);
+			}*/
+			
+			// if game mode option is selected
+			/*
 			plugin.getGameMode().toggleOption(num);
 			List<GameMode.Option> options = plugin.getGameMode().getOptions();
 			
@@ -491,22 +478,23 @@ public class WorldManager
 				if ( wool != null && wool.getType() == Material.WOOL )
 					wool.setData(options.get(i).isEnabled() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
 			}
+			*/
 		}
 	}
 	
 	public void showStartButton(boolean show)
 	{
-		Block button = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 34, StagingWorldGenerator.startButtonZ);
-		Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 35, StagingWorldGenerator.startButtonZ);
-		Block back = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 34, StagingWorldGenerator.startButtonZ);
+		Block button = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.mainButtonZ);
+		Block sign = button.getRelative(BlockFace.UP);
+		Block back = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.wallMinZ);
 		
 		if ( show )
 		{
 			button.setType(Material.STONE_BUTTON);
-			button.setData((byte)0x2);
+			button.setData((byte)0x3);
 			
 			sign.setType(Material.WALL_SIGN);
-			sign.setData((byte)0x4);
+			sign.setData((byte)0x3);
 			Sign s = (Sign)sign.getState();
 			s.setLine(1, "Push to");
 			s.setLine(2, "start the game");
@@ -525,34 +513,34 @@ public class WorldManager
 	
 	public void showConfirmButtons(boolean show)
 	{
-		Block bOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 34, StagingWorldGenerator.overrideButtonZ);
-		Block bCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 34, StagingWorldGenerator.cancelButtonZ);
+		Block bOverride = stagingWorld.getBlockAt(StagingWorldGenerator.overrideButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.mainButtonZ);
+		Block bCancel = stagingWorld.getBlockAt(StagingWorldGenerator.cancelButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.mainButtonZ);
 		
-		Block sOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 34, StagingWorldGenerator.overrideButtonZ+1);
-		Block sCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 34, StagingWorldGenerator.cancelButtonZ-1);
-		Block sInfo = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 35, StagingWorldGenerator.startButtonZ);
+		Block sOverride = bOverride.getRelative(BlockFace.UP);
+		Block sCancel = bCancel.getRelative(BlockFace.UP);
+		Block sInfo = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, StagingWorldGenerator.buttonY + 2, StagingWorldGenerator.mainButtonZ);
 		
-		Block backOverride = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 34, StagingWorldGenerator.overrideButtonZ);
-		Block backCancel = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX+1, 34, StagingWorldGenerator.cancelButtonZ);
+		Block backOverride = stagingWorld.getBlockAt(StagingWorldGenerator.overrideButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.wallMinZ);
+		Block backCancel = stagingWorld.getBlockAt(StagingWorldGenerator.cancelButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.wallMinZ);
 		
 		if ( show )
 		{
 			bOverride.setType(Material.STONE_BUTTON);
-			bOverride.setData((byte)0x2);
+			bOverride.setData((byte)0x3);
 			
 			bCancel.setType(Material.STONE_BUTTON);
-			bCancel.setData((byte)0x2);
+			bCancel.setData((byte)0x3);
 			
 			sOverride.setType(Material.WALL_SIGN);
-			sOverride.setData((byte)0x4);
+			sOverride.setData((byte)0x3);
 			Sign s = (Sign)sOverride.getState();
 			s.setLine(1, "Push to start");
 			s.setLine(2, "the game anyway");
 			s.update();
 
-			sCancel.setData((byte)0x4); // because it still has the "data" value from the start button, which is different 
+			//sCancel.setData((byte)0x3); // because it still has the "data" value from the start button, which is different 
 			sCancel.setType(Material.WALL_SIGN);
-			sCancel.setData((byte)0x4);
+			sCancel.setData((byte)0x3);
 			s = (Sign)sCancel.getState();
 			s.setLine(1, "Push to cancel");
 			s.setLine(2, "and choose");
@@ -560,7 +548,7 @@ public class WorldManager
 			s.update();
 			
 			sInfo.setType(Material.WALL_SIGN);
-			sInfo.setData((byte)0x4);
+			sInfo.setData((byte)0x3);
 			s = (Sign)sInfo.getState();
 			s.setLine(0, "This mode needs");
 			s.setLine(1, "at least " + plugin.getGameMode().getMinPlayers());
@@ -588,10 +576,10 @@ public class WorldManager
 	
 	public void showWaitForDeletion()
 	{
-		Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, 35, StagingWorldGenerator.startButtonZ);
+		Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, StagingWorldGenerator.buttonY + 1, StagingWorldGenerator.mainButtonZ);
 			
 		sign.setType(Material.WALL_SIGN);
-		sign.setData((byte)0x4);
+		sign.setData((byte)0x3);
 		Sign s = (Sign)sign.getState();
 		s.setLine(0, "Please wait for");
 		s.setLine(1, "the last game's");
@@ -602,6 +590,7 @@ public class WorldManager
 	
 	public void showGameOptions(GameMode mode)
 	{
+		/*
 		// remove all signs, buttons & colored wool blocks from the south wall, and the "sealed off" wall
 		for ( int x = 5; x < StagingWorldGenerator.maxGameModeOptions * 2 + 8; x++ )
 		{
@@ -657,11 +646,12 @@ public class WorldManager
 			}
 			
 			num++;
-		}
+		}*/
 	}
 	
 	private void showWorldGenerationIndicator(float completion, boolean secondaryWorld)
 	{
+		/*
 		int x = StagingWorldGenerator.startButtonX + 1, y = secondaryWorld ? 36 : 37;
 		int maxCompleteZ = (int)((StagingWorldGenerator.progressEndZ - StagingWorldGenerator.progressStartZ) * completion) + StagingWorldGenerator.progressStartZ;
 		for ( int z = StagingWorldGenerator.progressStartZ; z<= StagingWorldGenerator.progressEndZ; z++ )
@@ -669,17 +659,18 @@ public class WorldManager
 			Block b = stagingWorld.getBlockAt(x, y, z);
 			b.setType(Material.WOOL);
 			b.setData(z <= maxCompleteZ ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
-		}
+		}*/
 	}
 	
 	public void removeWorldGenerationIndicator()
 	{
+		/*
 		int x = StagingWorldGenerator.startButtonX + 1;
 		for ( int z = StagingWorldGenerator.progressStartZ; z<= StagingWorldGenerator.progressEndZ; z++ )
 		{
 			stagingWorld.getBlockAt(x, 36, z).setType(Material.SMOOTH_BRICK);
 			stagingWorld.getBlockAt(x, 37, z).setType(Material.SMOOTH_BRICK);
-		}
+		}*/
 	}
 	
 	public boolean seekNearestNetherFortress(Player player)
