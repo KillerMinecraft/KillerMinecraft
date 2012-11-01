@@ -356,7 +356,7 @@ public class WorldManager
 		}
 		
 		// now we want to try to delete the world folders
-		plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new WorldDeleter(null, worldNames), 80);
+		plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new WorldDeleter(runWhenDone, worldNames), 80);
 	}
 	
 	private class WorldDeleter implements Runnable
