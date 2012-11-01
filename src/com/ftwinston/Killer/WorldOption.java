@@ -50,8 +50,7 @@ public abstract class WorldOption
 		for ( WorldOption option : options )
 			option.plugin = killer;
 		
-		if ( options.size() == 1 )
-			killer.setWorldOption(options.get(0));
+		killer.setWorldOption(options.get(0));
 	}
 	
 	protected WorldOption(String name)

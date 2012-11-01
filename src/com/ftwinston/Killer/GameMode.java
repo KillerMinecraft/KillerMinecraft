@@ -74,8 +74,7 @@ public abstract class GameMode implements Listener
 			gameModes.add(g);
 		}
 		
-		if ( gameModes.size() == 1 )
-			killer.setGameMode(gameModes.get(0));
+		killer.setGameMode(gameModes.get(0));
 	}
 	
 	public static GameMode get(int num) { return gameModes.get(num); }
