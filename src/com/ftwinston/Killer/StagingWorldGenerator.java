@@ -9,12 +9,9 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
-import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.generator.BlockPopulator;
-import org.bukkit.plugin.Plugin;
 
 public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 {
@@ -327,6 +324,48 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 							b.setType(wall);
 				}
 			
+			// help signs on the "info" wall
+			b = getBlockAbs(chunk, wallMinX+1, floorY + 3, wallMinZ + 17);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "Welcome to", "§4Killer", "Minecraft!");
+			b = getBlockAbs(chunk, wallMinX+1, floorY + 2, wallMinZ + 17);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "This is the", "staging world.", "Use it to setup", "the next game.");
+			
+			b = getBlockAbs(chunk, wallMinX+1, floorY + 3, wallMinZ + 15);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "There are many", "different game", "modes to choose", "from, several");
+			b = getBlockAbs(chunk, wallMinX+1, floorY + 2, wallMinZ + 15);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "world options,", "and additional", "settings for", "each game mode.");
+
+			b = getBlockAbs(chunk, wallMinX+1, floorY + 3, wallMinZ + 13);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "The buttons on", "the end wall", "control what", "choice is shown");
+			b = getBlockAbs(chunk, wallMinX+1, floorY + 2, wallMinZ + 13);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "on the wall", "opposite this:", "if you click to", "change the game");
+
+			b = getBlockAbs(chunk, wallMinX+1, floorY + 3, wallMinZ + 11);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "mode, a button", "will appear for", "each available", "game mode.");
+			b = getBlockAbs(chunk, wallMinX+1, floorY + 2, wallMinZ + 11);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "They will stay", "until you bring", "up a different", "option instead.");
+
+			b = getBlockAbs(chunk, wallMinX+1, floorY + 3, wallMinZ + 9);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "To start a game", "you should push", "the start game", "button on the");
+			b = getBlockAbs(chunk, wallMinX+1, floorY + 2, wallMinZ + 9);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "end wall. This", "will create the", "game world, and", "move everyone");
+
+			b = getBlockAbs(chunk, wallMinX+1, floorY + 3, wallMinZ + 7);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "into it. When", "the game ends,", "you will be", "returned to the");
+			b = getBlockAbs(chunk, wallMinX+1, floorY + 2, wallMinZ + 7);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "staging world,", "ready to setup", "a new game.", "Happy killing!");
 /*		
 			//
 			// the world selection area
@@ -741,6 +780,17 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		}
 	}
 
+	public static void setupSign(Block b, byte orientation, String... lines)
+	{
+		b.setType(Material.WALL_SIGN);
+		b.setData(orientation);
+		Sign s = (Sign)b.getState();
+		
+		for ( int i=0; i<4 && i<lines.length; i++ )
+			s.setLine(i, lines[i]);
+		s.update();
+	}
+	
 	public static void fitTextOnSign(Sign s, String text)
 	{
 		if ( text.length() <= 15 )
