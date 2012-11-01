@@ -70,8 +70,7 @@ public class Killer extends JavaPlugin
 		
 		if ( newState == GameState.stagingWorldSetup )
 		{
-			worldManager.showStartButton(false);
-			worldManager.showConfirmButtons(false);
+			worldManager.showStartButtons(false);
 		}
 		else if ( newState == GameState.worldDeletion )
 		{
@@ -82,8 +81,6 @@ public class Killer extends JavaPlugin
 			HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
 
 			// don't show the start buttons until the old world finishes deleting
-			worldManager.showStartButton(false);
-			worldManager.showConfirmButtons(false);
 			worldManager.showWaitForDeletion();
 			worldManager.removeWorldGenerationIndicator();
 			
@@ -102,23 +99,20 @@ public class Killer extends JavaPlugin
 		}
 		else if ( newState == GameState.stagingWorldReady )
 		{
-			worldManager.showConfirmButtons(false);
-			worldManager.showStartButton(true);
+			worldManager.showStartButtons(false);
 		}
 		else if ( newState == GameState.stagingWorldConfirm )
 		{
-			worldManager.showStartButton(false);
-			worldManager.showConfirmButtons(true);
+			worldManager.showStartButtons(true);
 		}
 		else if( newState == GameState.worldGeneration )
 		{
-			worldManager.showConfirmButtons(false);
-			worldManager.showStartButton(false);
 			worldManager.generateWorlds(worldOption, new Runnable() {
 				@Override
 				public void run() {
 					getGameMode().worldGenerationComplete(worldManager.mainWorld, worldManager.netherWorld);
 					setGameState(GameState.beforeAssignment);
+					worldManager.showStartButtons(false);
 				}
 			});
 		}
