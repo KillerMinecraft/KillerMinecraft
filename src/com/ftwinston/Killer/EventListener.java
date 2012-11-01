@@ -52,10 +52,18 @@ public class EventListener implements Listener
     }
     
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onWorldInit(WorldInitEvent event)
+    public void onWorldInit(final WorldInitEvent event)
     {
-    	if ( plugin.stagingWorldIsServerDefault && event.getWorld().getName().equalsIgnoreCase(Settings.stagingWorldName) )
-    		plugin.worldManager.stagingWorldCreated(event.getWorld());
+    	if ( plugin.stagingWorldIsServerDefault && plugin.worldManager.stagingWorld == null )
+    	{
+    		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+    			public void run()
+    			{
+    				plugin.worldManager.createStagingWorld(Settings.stagingWorldName);
+					plugin.worldManager.deleteWorlds(null, event.getWorld());
+    			}
+    		}, 1);
+    	}
     }
     
     // when you die a spectator, be made able to fly again when you respawn

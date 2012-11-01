@@ -52,7 +52,7 @@ public class Settings
 		reportStats = readBoolean(plugin, "reportStats", true);
 		allowRandomWorlds = readBoolean(plugin, "allowRandomWorldGeneration", true);
 		
-		stagingWorldName = readString(plugin, "stagingWorldName", "world");
+		stagingWorldName = readString(plugin, "stagingWorldName", "staging");
 		killerWorldName = readString(plugin, "killerWorldName", "killer");
 		
 		String restartAtEnd = readString(plugin, "restartAtEndOfGame", "vote");

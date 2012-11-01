@@ -11,6 +11,7 @@ package com.ftwinston.Killer;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.logging.Logger;
 
 import net.minecraft.server.MinecraftServer;
@@ -91,7 +92,8 @@ public class Killer extends JavaPlugin
 					playerManager.teleport(player, worldManager.getStagingWorldSpawnPoint());
 			
 			playerManager.reset(true);
-			worldManager.deleteWorlds(new Runnable() {
+			
+			worldManager.deleteKillerWorlds(new Runnable() {
 				@Override
 				public void run() { // we need this to set the state to stagingWorldReady when done
 					setGameState(GameState.stagingWorldReady);
@@ -159,7 +161,7 @@ public class Killer extends JavaPlugin
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
-		return new StagingWorldGenerator();
+		return new EmptyWorldGenerator();
 	}
 	
 	public void onEnable()
@@ -178,21 +180,35 @@ public class Killer extends JavaPlugin
         statsManager = new StatsManager(this);
         getServer().getPluginManager().registerEvents(eventListener, this);
 
-		MinecraftServer ms = getMinecraftServer();
-		if ( ms != null && ms.getPropertyManager().getString("level-name", "world").equalsIgnoreCase(Settings.stagingWorldName) )
+		
+		String defaultLevelName = getMinecraftServer().getPropertyManager().getString("level-name", "world");
+		if ( defaultLevelName.equalsIgnoreCase(Settings.killerWorldName) )
 		{
-			worldManager.hijackDefaultWorldAsStagingWorld(Settings.stagingWorldName); // Killer's staging world is the server's default, so hijack how it's going to be configured
+			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
+			stagingWorldIsServerDefault = true;
+		}
+		else if ( defaultLevelName.equalsIgnoreCase(Settings.stagingWorldName) )
+		{
+			Settings.stagingWorldName = Settings.stagingWorldName + "2"; // rename to avoid conflict
+			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
 			stagingWorldIsServerDefault = true;
 		}
 		else
 		{
-			worldManager.createStagingWorld(Settings.stagingWorldName); // staging world isn't server default, so create it as a new world
+			// delay this by 1 tick, so that some other worlds have already been created, so that the getDefaultGameMode call in CraftServer.createWorld doesn't crash
+			getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				@Override
+				public void run() {
+					worldManager.createStagingWorld(Settings.stagingWorldName); // staging world isn't server default, so create it as a new world
+				}
+			}, 1);
 			stagingWorldIsServerDefault = false;
 		}
-
-		// remove existing Killer worlds
-		worldManager.deleteWorlds(null);
-	
+		
+		// remove existing Killer world files
+		worldManager.deleteWorld(Settings.killerWorldName);
+		worldManager.deleteWorld(Settings.killerWorldName + "_nether");
+		
         // disable spawn protection
         getServer().setSpawnRadius(0);
 	}
@@ -572,5 +588,18 @@ public class Killer extends JavaPlugin
 			getGameMode().broadcastMessage("Game is restarting...");
 		
 		setGameState(GameState.beforeAssignment);
+	}
+	
+	public class EmptyWorldGenerator extends org.bukkit.generator.ChunkGenerator
+	{	
+	    @Override
+	    public boolean canSpawn(World world, int x, int z) {
+	        return true;
+	    }
+	    
+		public byte[][] generateBlockSections(World world, Random random, int cx, int cz, BiomeGrid biomes)
+		{
+			return new byte[1][];
+		}
 	}
 }

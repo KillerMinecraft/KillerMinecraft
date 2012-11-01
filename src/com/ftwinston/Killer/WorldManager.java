@@ -92,9 +92,9 @@ public class WorldManager
 	public World stagingWorld;
 	public World netherWorld;
 	
-	public void hijackDefaultWorldAsStagingWorld(String name)
+	public void hijackDefaultWorld(String name)
 	{
-		// as the config may have changed, delete the existing staging world 
+		// as the config may have changed, delete the existing world 
 		try
 		{
 			delete(new File(plugin.getServer().getWorldContainer() + File.separator + name));
@@ -103,7 +103,7 @@ public class WorldManager
 		{
 		}
 		
-		// in the already-loaded server configuration, create/update an entry specifying the generator to be used for the default world, which is the staging world
+		// in the already-loaded server configuration, create/update an entry specifying the generator to be used for the default world
 		YamlConfiguration configuration = plugin.getBukkitConfiguration();
 		
 		ConfigurationSection section = configuration.getConfigurationSection("worlds");
@@ -116,7 +116,7 @@ public class WorldManager
 		
 		worldSection.set("generator", "Killer");
 		
-		// disable the end and the nether, for the staging world. We'll re-enable once this has generated.
+		// disable the end and the nether. We'll re-enable once this has generated.
 		final String prevAllowNether = plugin.getMinecraftServer().getPropertyManager().properties.getProperty("allow-nether", "true");
 		final boolean prevAllowEnd = configuration.getBoolean("settings.allow-end", true);
 		plugin.getMinecraftServer().getPropertyManager().properties.put("allow-nether", "false");			
@@ -144,15 +144,14 @@ public class WorldManager
 	
 	public void createStagingWorld(final String name) 
 	{
-		World world = plugin.getServer().getWorld(name);
-		if ( world != null )
-		{// staging world already existed; delete it, because we might want to change it to correspond to config changes
+		stagingWorld = plugin.getServer().getWorld(name);
+		if ( stagingWorld != null )
+		{// staging world already existed; delete it, because we might want to reset it back to its default state
 			
 			plugin.log.info("Deleting staging world, cos it already exists...");
 			
 			
-			forceUnloadWorld(world);
-			world = null;
+			forceUnloadWorld(stagingWorld);
 			try
 			{
 				Thread.sleep(200);
@@ -172,26 +171,27 @@ public class WorldManager
 			}
 		}
 		
-		// delay this by 1 tick, so that some other worlds have already been created, so that the getDefaultGameMode call in CraftServer.createWorld doesn't crash
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-			@Override
-			public void run() {
-				WorldCreator wc = new WorldCreator(name);
-				wc.generator(new StagingWorldGenerator());
-				stagingWorldCreated(wc.createWorld());
-			}
-		}, 1);
+		// staging world must not be null when the init event is called, so we don't call this again
+		if ( plugin.stagingWorldIsServerDefault )
+			stagingWorld = plugin.getServer().getWorlds().get(0);
+		
+		stagingWorld = new WorldCreator(name)
+			.generator(new StagingWorldGenerator())
+			.environment(Environment.NETHER)
+			.createWorld();
+		
+		stagingWorld.setSpawnFlags(false, false);
+		stagingWorld.setDifficulty(Difficulty.PEACEFUL);
+		stagingWorld.setSpawnLocation(8, 2, StagingWorldGenerator.startButtonZ);
+		stagingWorld.setPVP(false);
+		stagingWorld.setAutoSave(false); // don't save changes to the staging world
 	}
 	
 	public void stagingWorldCreated(World world)
 	{
 		//CraftWorld cw = (CraftWorld)world;
 		//cw.setEnvironment(Environment.NETHER);
-		world.setSpawnFlags(false, false);
-		world.setDifficulty(Difficulty.PEACEFUL);
-		world.setSpawnLocation(8, 2, StagingWorldGenerator.startButtonZ);
-		world.setPVP(false);
-		world.setAutoSave(false); // don't save changes to the staging world
+		
 		
 		stagingWorld = world;
 	}
@@ -241,7 +241,7 @@ public class WorldManager
 		}
 	}
 	
-	private boolean deleteWorld(String worldName)
+	public boolean deleteWorld(String worldName)
 	{
 		clearWorldReference(worldName);
 		boolean allGood = true;
@@ -317,49 +317,84 @@ public class WorldManager
 				plugin.playerManager.teleport(player, getStagingWorldSpawnPoint());
 		}
 		
-		String worldName = world.getName();
-		((CraftWorld)world).getHandle().players.clear(); // hack to ensure that world unloading doesn't fail
-		if ( !plugin.getServer().unloadWorld(world, false) )
-			plugin.log.warning("Error unloading world: " + worldName);
+		// formerly used server.unloadWorld at this point. But it was failing, even when i force-cleared the player list
+		CraftServer server = (CraftServer)plugin.getServer();
+		CraftWorld craftWorld = (CraftWorld)world;
+		
+		try
+		{
+			Field f = server.getClass().getDeclaredField("worlds");
+			f.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			Map<String, World> worlds = (Map<String, World>)f.get(server);
+			worlds.remove(world.getName().toLowerCase());
+			f.setAccessible(false);
+		}
+		catch ( IllegalAccessException ex )
+		{
+			plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
+		}
+		catch  ( NoSuchFieldException ex )
+		{
+			plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
+		}
+		
+		MinecraftServer ms = plugin.getMinecraftServer();
+		ms.worlds.remove(ms.worlds.indexOf(craftWorld.getHandle()));
 	}
 
-	public void deleteWorlds(Runnable runWhenDone)
+	public void deleteKillerWorlds(Runnable runWhenDone)
 	{
 		plugin.log.info("Clearing out old worlds...");
+		if ( mainWorld == null )
+			if ( netherWorld == null )
+				deleteWorlds(runWhenDone);
+			else
+				deleteWorlds(runWhenDone, netherWorld);
+		else if ( netherWorld == null )
+			deleteWorlds(runWhenDone, mainWorld);
+		else
+			deleteWorlds(runWhenDone, mainWorld, netherWorld);
 		
-		if ( mainWorld != null )
-			forceUnloadWorld(mainWorld);
-		
-		if ( netherWorld != null )
-			forceUnloadWorld(netherWorld);
-		
-		mainWorld = netherWorld = null;
+		mainWorld = null;
+		netherWorld = null;
+	}
+	
+	public void deleteWorlds(Runnable runWhenDone, World... worlds)
+	{
+		String[] worldNames = new String[worlds.length];
+		for ( int i=0; i<worlds.length; i++ )
+		{
+			worldNames[i] = worlds[i].getName();
+			forceUnloadWorld(worlds[i]);
+		}
 		
 		// now we want to try to delete the world folders
-		plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new WorldDeleter(runWhenDone, Settings.killerWorldName, Settings.killerWorldName + "_nether"), 80);
+		plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new WorldDeleter(null, worldNames), 80);
 	}
 	
 	private class WorldDeleter implements Runnable
 	{
 		Runnable runWhenDone;
-		String world1, world2;
+		String[] worlds;
 		
 		static final long retryDelay = 30;
 		static final int maxRetries = 5;
 		int attempt;
 		
-		public WorldDeleter(Runnable runWhenDone, String name1, String name2)
+		public WorldDeleter(Runnable runWhenDone, String... names)
 		{
 			attempt = 0;
-			world1 = name1;
-			world2 = name2;
+			worlds = names;
 			this.runWhenDone = runWhenDone;
 		}
 		
 		public void run()
 		{
-			boolean allGood = deleteWorld(world1) && deleteWorld(world2);
-				
+			boolean allGood = true;
+			for ( String world : worlds )
+				allGood = allGood && deleteWorld(world);
+			
 			if ( !allGood )
 				if ( attempt < maxRetries )
 				{
