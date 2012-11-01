@@ -161,7 +161,7 @@ public class Killer extends JavaPlugin
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
-		return new EmptyWorldGenerator();
+		return worldManager.stagingWorld == null ? new EmptyWorldGenerator() : null;
 	}
 	
 	public void onEnable()
