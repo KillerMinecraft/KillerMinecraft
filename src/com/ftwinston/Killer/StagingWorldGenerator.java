@@ -396,7 +396,15 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			}
 			b = getBlockAbs(chunk, gameModeButtonX+1, buttonY + 1, mainButtonZ);
 			if ( b != null )
-				setupSign(b, (byte)0x3, "Game mode:", "", "Mystery killer");
+			{
+				b.setType(Material.WALL_SIGN);
+				b.setData((byte)0x3);
+				Sign s = (Sign)b.getState();
+				s.setLine(0, "Game mode:");
+				
+				fitTextOnSign(s, Killer.instance.getGameMode().getName());
+				s.update();
+			}
 			b = getBlockAbs(chunk, gameModeButtonX+1, buttonY, mainButtonZ);
 			if ( b != null )
 				setupSign(b, (byte)0x3, "<-- change     ", "", "", "  configure -->");
@@ -438,7 +446,15 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			}
 			b = getBlockAbs(chunk, worldOptionButtonX-1, buttonY + 1, mainButtonZ);
 			if ( b != null )
-				setupSign(b, (byte)0x3, "World option:", "", "Normal");
+			{
+				b.setType(Material.WALL_SIGN);
+				b.setData((byte)0x3);
+				Sign s = (Sign)b.getState();
+				s.setLine(0, "World option:");
+				
+				fitTextOnSign(s, Killer.instance.getWorldOption().getName());
+				s.update();
+			}
 			b = getBlockAbs(chunk, worldOptionButtonX-1, buttonY, mainButtonZ);
 			if ( b != null )
 				setupSign(b, (byte)0x3, "", "     change -->");
