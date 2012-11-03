@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Random;
 
 import org.bukkit.Chunk;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -49,13 +48,6 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	public byte[][] generateBlockSections(World world, Random random, int cx, int cz, BiomeGrid biomes)
 	{
 		return new byte[1][];
-	}
-	
-	public Location getFixedSpawnLocation(World world, Random random)
-	{
-		Location loc = new Location(world, (wallMinX + wallMaxX) / 2, floorY, wallMinZ + 13);
-		loc.setYaw(0); // if 0 actually works, this isn't needed. But we want them to face -x, at any rate
-		return loc;
 	}
 	
 	public class StagingWorldPopulator extends org.bukkit.generator.BlockPopulator
