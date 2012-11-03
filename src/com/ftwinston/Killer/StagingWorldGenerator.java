@@ -23,7 +23,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public static final int wallMinX = 0, wallMaxX = 22, wallMinZ = 0, wallMaxZ = 29, floorY = 32, ceilingMinY = 43, ceilingMaxY = 49;
 	
-	public static final int mainButtonZ = wallMinZ + 1, optionButtonX = wallMaxX - 1, firstOptionButtonZ = wallMinZ + 4, optionButtonSpacing = 2, buttonY = floorY + 2,
+	public static final int mainButtonZ = wallMinZ + 1, optionButtonX = wallMaxX - 1, buttonY = floorY + 2,
 		 gameModeButtonX = wallMinX + 4, gameOptionButtonX = gameModeButtonX + 2, worldOptionButtonX = gameOptionButtonX + 4,
 		 monstersButtonX = worldOptionButtonX + 3, animalsButtonX = monstersButtonX + 2, startButtonX = animalsButtonX + 4,
 		 overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1;
@@ -32,7 +32,9 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		colorStartButton = 4 /* yellow */, colorOverrideButton = 1 /* orange */, colorCancelButton = 9 /* teal */,
 		textColorInfo = 5 /* green */, textColorGame = 4 /* yellow */, textColorChoose = 1 /* orange */, signBackColor = 7;
 	
-	public static int getOptionButtonZ(int num) { return 4 + num * 3; }
+	public static int getOptionButtonZ(int num) { return wallMinZ + 4 + num * 2; }
+	
+	public static int getOptionNumFromZ(int z) { return (z - wallMinZ - 4) / 2; }
 	
 	@Override
     public List<BlockPopulator> getDefaultPopulators(World world) {
@@ -483,7 +485,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			}
 			b = getBlockAbs(chunk, monstersButtonX+1, buttonY + 1, mainButtonZ);
 			if ( b != null )
-				setupSign(b, (byte)0x3, "Monsters:      ", "           Many", "Animals:       ", "            Few");
+				setupSign(b, (byte)0x3, "Monsters:      ", "           Some", "Animals:       ", "           Some");
 			b = getBlockAbs(chunk, monstersButtonX+1, buttonY, mainButtonZ);
 			if ( b != null )
 				setupSign(b, (byte)0x3, "<-- monsters   ", "", "", "    animals -->");
