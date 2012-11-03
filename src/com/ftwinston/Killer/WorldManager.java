@@ -1048,9 +1048,55 @@ public class WorldManager
 				plugin.worldManager.mainWorld.setDifficulty(Difficulty.HARD);
 				plugin.worldManager.netherWorld.setDifficulty(Difficulty.HARD);
 				
-				// allow more animals, so players don't starve if its all wolves
-				if ( plugin.worldManager.mainWorld.getAnimalSpawnLimit() < 25 )
-					plugin.worldManager.mainWorld.setAnimalSpawnLimit(25);
+				switch ( plugin.animalNumbers )
+				{
+				case 0:
+					mainWorld.setAnimalSpawnLimit(0);
+					mainWorld.setTicksPerAnimalSpawns(600);
+					break;
+				case 1:
+					mainWorld.setAnimalSpawnLimit(8);
+					mainWorld.setTicksPerAnimalSpawns(500);
+					break;
+				case 2: // mc defaults
+					mainWorld.setAnimalSpawnLimit(15);
+					mainWorld.setTicksPerAnimalSpawns(400);
+					break;
+				case 3:
+					mainWorld.setAnimalSpawnLimit(25);
+					mainWorld.setTicksPerAnimalSpawns(300);
+					break;
+				case 4:
+					mainWorld.setAnimalSpawnLimit(40);
+					mainWorld.setTicksPerAnimalSpawns(200);
+					break;
+				}
+				
+				World[] worlds = netherWorld == null ? new World[] { mainWorld } : new World[] { mainWorld, netherWorld };
+				for ( World world : worlds )
+					switch ( plugin.monsterNumbers )
+					{
+					case 0:
+						world.setMonsterSpawnLimit(0);
+						world.setTicksPerMonsterSpawns(600);
+						break;
+					case 1:
+						world.setMonsterSpawnLimit(35);
+						world.setTicksPerMonsterSpawns(500);
+						break;
+					case 2: // MC defaults
+						world.setMonsterSpawnLimit(70);
+						world.setTicksPerMonsterSpawns(400);
+						break;
+					case 3:
+						world.setMonsterSpawnLimit(110);
+						world.setTicksPerMonsterSpawns(300);
+						break;
+					case 4:
+						world.setMonsterSpawnLimit(180);
+						world.setTicksPerMonsterSpawns(200);
+						break;
+					}
 				
 				removeWorldGenerationIndicator();
 				
@@ -1192,10 +1238,9 @@ public class WorldManager
         boolean isSecondaryWorld = mainWorld != null;
         showWorldGenerationIndicator(0f, isSecondaryWorld);
         ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, isSecondaryWorld, runWhenDone);
-		craftServer.getPluginManager().registerEvents(cb, plugin);
-        cb.taskID = craftServer.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 0L, 1L);
-        
-        return worldServer.getWorld();
+    	craftServer.getPluginManager().registerEvents(cb, plugin);
+    	cb.taskID = craftServer.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 0L, 1L);
+    	return worldServer.getWorld();
     }
     
     class ChunkBuilder implements Runnable, Listener
