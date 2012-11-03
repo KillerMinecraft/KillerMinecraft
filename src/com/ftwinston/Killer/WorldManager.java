@@ -417,6 +417,7 @@ public class WorldManager
 		GAME_MODE,
 		GAME_MODE_OPTION,
 		WORLD_OPTION,
+		GLOBAL_OPTION,
 		MONSTERS,
 		ANIMALS,
 	}
@@ -440,6 +441,10 @@ public class WorldManager
 			break;
 		case WORLD_OPTION:
 			stagingWorld.getBlockAt(StagingWorldGenerator.worldOptionButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.wallMinZ).setData(StagingWorldGenerator.colorOptionOff);
+			hideSetupOptionButtons();
+			break;
+		case GLOBAL_OPTION:
+			stagingWorld.getBlockAt(StagingWorldGenerator.globalOptionButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.wallMinZ).setData(StagingWorldGenerator.colorOptionOff);
 			hideSetupOptionButtons();
 			break;
 		case MONSTERS:
@@ -497,6 +502,12 @@ public class WorldManager
 				values[i] = worldOption == plugin.getWorldOption();
 			}
 			showSetupOptionButtons("World option:", labels, values);
+			break;
+		case GLOBAL_OPTION:
+			stagingWorld.getBlockAt(StagingWorldGenerator.globalOptionButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.wallMinZ).setData(StagingWorldGenerator.colorOptionOn);
+			labels = new String[] { "Craftable monster eggs", "Easier dispenser recipe", "Eyes of ender find nether fortresses" };
+			values = new boolean[] { true, true, true, true };
+			showSetupOptionButtons("Global option:", labels, values);
 			break;
 		case MONSTERS:
 			stagingWorld.getBlockAt(StagingWorldGenerator.monstersButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.wallMinZ).setData(StagingWorldGenerator.colorOptionOn);
@@ -607,6 +618,8 @@ public class WorldManager
 				setCurrentOption(currentOption == StagingWorldOption.GAME_MODE_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE_OPTION);
 			else if ( x == StagingWorldGenerator.worldOptionButtonX )
 				setCurrentOption(currentOption == StagingWorldOption.WORLD_OPTION ? StagingWorldOption.NONE : StagingWorldOption.WORLD_OPTION);
+			else if ( x == StagingWorldGenerator.globalOptionButtonX )
+				setCurrentOption(currentOption == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
 			else if ( x == StagingWorldGenerator.monstersButtonX )
 				setCurrentOption(currentOption == StagingWorldOption.MONSTERS ? StagingWorldOption.NONE : StagingWorldOption.MONSTERS);
 			else if ( x == StagingWorldGenerator.animalsButtonX )
@@ -663,10 +676,13 @@ public class WorldManager
 				updateSetupOptionButtons(newValues);
 				
 				// update world option sign
-				b = stagingWorld.getBlockAt(StagingWorldGenerator.worldOptionButtonX-1, StagingWorldGenerator.buttonY+1, StagingWorldGenerator.mainButtonZ);
+				b = stagingWorld.getBlockAt(StagingWorldGenerator.worldOptionButtonX+1, StagingWorldGenerator.buttonY+1, StagingWorldGenerator.mainButtonZ);
 				s = (Sign)b.getState();
 				StagingWorldGenerator.fitTextOnSign(s, option.getName());
 				s.update();
+				break;
+			case GLOBAL_OPTION:
+				// todo: something for this to hook up to
 				break;
 			case MONSTERS:
 				// todo: something for this to hook up to
