@@ -23,7 +23,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public static final int wallMinX = 0, wallMaxX = 22, wallMinZ = 0, wallMaxZ = 29, floorY = 32, ceilingMinY = 43, ceilingMaxY = 49;
 	
-	public static final int mainButtonZ = wallMinZ + 1, optionButtonX = wallMaxX - 1, buttonY = floorY + 2,
+	public static final int mainButtonZ = wallMinZ + 1, optionButtonX = wallMaxX - 1, firstOptionButtonZ = wallMinZ + 4, optionButtonSpacing = 2, buttonY = floorY + 2,
 		 gameModeButtonX = wallMinX + 4, gameOptionButtonX = gameModeButtonX + 2, worldOptionButtonX = gameOptionButtonX + 4,
 		 monstersButtonX = worldOptionButtonX + 3, animalsButtonX = monstersButtonX + 2, startButtonX = animalsButtonX + 4,
 		 overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1;
