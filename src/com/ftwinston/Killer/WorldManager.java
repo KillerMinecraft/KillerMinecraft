@@ -511,14 +511,24 @@ public class WorldManager
 			break;
 		case MONSTERS:
 			stagingWorld.getBlockAt(StagingWorldGenerator.monstersButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.wallMinZ).setData(StagingWorldGenerator.colorOptionOn);
-			labels = new String[] { "None", "Few", "Some", "Many", "Too Many" };
-			values = new boolean[] { false, false, true, false, false };
+			labels = new String[5];
+			values = new boolean[5];
+			for ( int i=0; i<5; i++ )
+			{
+				labels[i] = StagingWorldGenerator.getQuantityText(i);
+				values[i] = i == plugin.monsterNumbers;
+			}
 			showSetupOptionButtons("Monsters:", labels, values);
 			break;
 		case ANIMALS:
 			stagingWorld.getBlockAt(StagingWorldGenerator.animalsButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.wallMinZ).setData(StagingWorldGenerator.colorOptionOn);
-			labels = new String[] { "None", "Few", "Some", "Many", "Too Many" };
-			values = new boolean[] { false, false, true, false, false };
+			labels = new String[5];
+			values = new boolean[5];
+			for ( int i=0; i<5; i++ )
+			{
+				labels[i] = StagingWorldGenerator.getQuantityText(i);
+				values[i] = i == plugin.animalNumbers;
+			}
 			showSetupOptionButtons("Animals:", labels, values);
 		}
 	}
@@ -685,10 +695,35 @@ public class WorldManager
 				// todo: something for this to hook up to
 				break;
 			case MONSTERS:
-				// todo: something for this to hook up to
+				plugin.monsterNumbers = num;
+				
+				// update block colors
+				newValues = new boolean[5];
+				for ( int i=0; i<newValues.length; i++ )
+					newValues[i] = i == num;
+				updateSetupOptionButtons(newValues);
+				
+				// update main sign
+				b = stagingWorld.getBlockAt(StagingWorldGenerator.monstersButtonX+1, StagingWorldGenerator.buttonY+1, StagingWorldGenerator.mainButtonZ);
+				s = (Sign)b.getState();
+				s.setLine(1, StagingWorldGenerator.padSignLeft(StagingWorldGenerator.getQuantityText(num)));
+				s.update();
 				break;
 			case ANIMALS:
 				// todo: something for this to hook up to
+				plugin.animalNumbers = num;
+				
+				// update block colors
+				newValues = new boolean[5];
+				for ( int i=0; i<newValues.length; i++ )
+					newValues[i] = i == num;
+				updateSetupOptionButtons(newValues);
+				
+				// update main sign
+				b = stagingWorld.getBlockAt(StagingWorldGenerator.monstersButtonX+1, StagingWorldGenerator.buttonY+1, StagingWorldGenerator.mainButtonZ);
+				s = (Sign)b.getState();
+				s.setLine(3, StagingWorldGenerator.padSignLeft(StagingWorldGenerator.getQuantityText(num)));
+				s.update();
 				break;
 			}
 			

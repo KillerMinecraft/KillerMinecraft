@@ -153,6 +153,8 @@ public class Killer extends JavaPlugin
 	public WorldOption getWorldOption() { return worldOption; }
 	public boolean setWorldOption(WorldOption w) { worldOption = w; return gameMode != null && worldOption != null; }
 	
+	public int monsterNumbers = 2, animalNumbers = 2;
+	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
 		return worldManager.stagingWorld == null ? new EmptyWorldGenerator() : null;

@@ -489,7 +489,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			}
 			b = getBlockAbs(chunk, monstersButtonX+1, buttonY + 1, mainButtonZ);
 			if ( b != null )
-				setupSign(b, (byte)0x3, "Monsters:      ", "           Some", "Animals:       ", "           Some");
+				setupSign(b, (byte)0x3, "Monsters:      ", padSignLeft(getQuantityText(Killer.instance.monsterNumbers)), "Animals:       ", padSignLeft(getQuantityText(Killer.instance.monsterNumbers)));
 			b = getBlockAbs(chunk, monstersButtonX+1, buttonY, mainButtonZ);
 			if ( b != null )
 				setupSign(b, (byte)0x3, "<-- monsters   ", "", "", "    animals -->");
@@ -1008,6 +1008,32 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			s.setLine(2, lines[0]);
 			if ( lines[1] != null )
 				s.setLine(3, lines[1]);
+		}
+	}
+	
+	public static String padSignLeft(String text)
+	{
+		while ( text.length() < 15 )
+			text = " " + text;
+		return text;
+	}
+
+	public static String getQuantityText(int num)
+	{
+		switch ( num )
+		{
+		case 0:
+			return "None";
+		case 1:
+			return "Few";
+		case 2:
+			return "Some";
+		case 3:
+			return "Many";
+		case 4:
+			return "Too Many";
+		default:
+			return "???";
 		}
 	}
 	
