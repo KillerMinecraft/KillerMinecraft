@@ -710,7 +710,6 @@ public class WorldManager
 				s.update();
 				break;
 			case ANIMALS:
-				// todo: something for this to hook up to
 				plugin.animalNumbers = num;
 				
 				// update block colors
@@ -727,49 +726,6 @@ public class WorldManager
 				break;
 			}
 			
-			// if game mode is selected
-			/*
-			GameMode gameMode = GameMode.get(num);
-			
-			if ( plugin.getGameMode() == gameMode )
-				return; // no change
-			
-			// update all the color blocks
-			for ( int i=0; i<GameMode.gameModes.size(); i++ )
-				stagingWorld.getBlockAt(x-1, 35, StagingWorldGenerator.getGameModeZ(i)).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
-			
-			if ( plugin.setGameMode(gameMode) && plugin.getGameState() == GameState.stagingWorldSetup )
-				plugin.setGameState(GameState.stagingWorldReady);
-
-			showGameOptions(gameMode);*/
-			
-			// if world option is selected
-			/*
-			
-			// update all the color blocks
-			for ( int i=0; i<WorldOption.options.size(); i++ )
-				stagingWorld.getBlockAt(StagingWorldGenerator.getWorldOptionX(i), 35, z-1).setData(i == num ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
-			
-			WorldOption world = WorldOption.get(num);
-			if ( plugin.setWorldOption(world) )	
-			{
-				if ( plugin.getGameState() == GameState.stagingWorldSetup )
-					plugin.setGameState(GameState.stagingWorldReady);
-			}*/
-			
-			// if game mode option is selected
-			/*
-			plugin.getGameMode().toggleOption(num);
-			List<GameMode.Option> options = plugin.getGameMode().getOptions();
-			
-			// update all the color blocks
-			for ( int i=0; i<options.size(); i++ )
-			{
-				Block wool = stagingWorld.getBlockAt(StagingWorldGenerator.getGameModeOptionX(i), 35, z+1);
-				if ( wool != null && wool.getType() == Material.WOOL )
-					wool.setData(options.get(i).isEnabled() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
-			}
-			*/
 		}
 	}
 	
