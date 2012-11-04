@@ -9,6 +9,7 @@ package com.ftwinston.Killer;
  */
 
 import java.lang.reflect.Field;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
@@ -133,9 +134,6 @@ public class Killer extends JavaPlugin
 			getGameMode().startGame();
 		}
 	}
-	
-	
-	List<Recipe> allRecipes = new ArrayList<Recipe>();
 
 	public boolean stagingWorldIsServerDefault;
 	
@@ -215,55 +213,150 @@ public class Killer extends JavaPlugin
 		worldManager.onDisable();
 	}
 	
+	List<Recipe> monsterRecipes = new ArrayList<Recipe>();
+	public ShapedRecipe dispenserRecipe;
+	ShapelessRecipe enderRecipe;
+	
+	boolean dispenserRecipeEnabled = true;
+	public void toggleDispenserRecipe()
+	{
+		dispenserRecipeEnabled = !dispenserRecipeEnabled;
+		
+		if ( dispenserRecipeEnabled )
+		{
+			getServer().addRecipe(dispenserRecipe);
+			return;
+		}
+		
+		Iterator<Recipe> iterator = getServer().recipeIterator();
+        while (iterator.hasNext())
+        	if ( isDispenserRecipe(iterator.next()) )
+        	{
+        		iterator.remove();
+        		return;
+        	}
+	}
+	
+	public boolean isDispenserRecipe(Recipe recipe)
+	{
+		if ( recipe.getResult().getType() != dispenserRecipe.getResult().getType() || !(recipe instanceof ShapedRecipe) )
+    		return false;
+    	
+    	// this is *a* dispenser recipe. it's the right one if it includes a sapling in the ingredients
+    	ShapedRecipe shaped = (ShapedRecipe)recipe;
+    	for ( ItemStack ingredient : shaped.getIngredientMap().values() )
+    		if ( ingredient.getType() == Material.SAPLING )
+				return true;
+    	
+		return false;	
+	}
+	
+	boolean enderEyeRecipeEnabled = true;
+	public void toggleEnderEyeRecipe()
+	{
+		enderEyeRecipeEnabled = !enderEyeRecipeEnabled;
+		
+		if ( enderEyeRecipeEnabled )
+		{
+			getServer().addRecipe(enderRecipe);
+			return;
+		}
+		
+		Iterator<Recipe> iterator = getServer().recipeIterator();
+        while (iterator.hasNext())
+        	if ( isEnderEyeRecipe(iterator.next()) )
+        	{
+        		iterator.remove();
+        		return;
+        	}
+	}
+	
+	public boolean isEnderEyeRecipe(Recipe recipe)
+	{
+		if ( recipe.getResult().getType() != enderRecipe.getResult().getType() || !(recipe instanceof ShapelessRecipe) )
+    		return true;
+    	
+    	// this is *an* eye of ender recipe. it's the right one if it includes a spider eye in the ingredients
+    	ShapelessRecipe shapeless = (ShapelessRecipe)recipe;
+    	for ( ItemStack ingredient : shapeless.getIngredientList() )
+    		if ( ingredient.getType() == Material.SPIDER_EYE )
+    			return true;
+    			
+    	return false;
+	}
+	
+	boolean monsterEggsEnabled = true;
+	public void toggleMonsterEggRecipes()
+	{
+		monsterEggsEnabled = !monsterEggsEnabled;
+		
+		if ( monsterEggsEnabled )
+		{
+			for ( Recipe recipe : monsterRecipes )
+				getServer().addRecipe(recipe);
+			return;
+		}
+		
+		Iterator<Recipe> iterator = getServer().recipeIterator();
+		while (iterator.hasNext())
+        {
+			if ( isMonsterEggRecipe(iterator.next()) )
+            	iterator.remove();
+    	}
+	}
+	
+	public boolean isMonsterEggRecipe(Recipe recipe)
+	{
+		return recipe.getResult().getType() == Material.MONSTER_EGG;
+	}
+	
 	private void createRecipes()
 	{
 		// add "simplified" dispenser recipe: replace bow with sapling (of any sort) 
-		ShapedRecipe dispenser = new ShapedRecipe(new ItemStack(Material.DISPENSER, 1));
-		dispenser.shape(new String[] { "AAA", "ABA", "ACA" });
-		dispenser.setIngredient('A', Material.COBBLESTONE);
-		dispenser.setIngredient('B', Material.SAPLING);
-		dispenser.setIngredient('C', Material.REDSTONE);
-		getServer().addRecipe(dispenser);
-		allRecipes.add(dispenser);
+		dispenserRecipe = new ShapedRecipe(new ItemStack(Material.DISPENSER, 1));
+		dispenserRecipe.shape(new String[] { "AAA", "ABA", "ACA" });
+		dispenserRecipe.setIngredient('A', Material.COBBLESTONE);
+		dispenserRecipe.setIngredient('B', Material.SAPLING);
+		dispenserRecipe.setIngredient('C', Material.REDSTONE);
+		getServer().addRecipe(dispenserRecipe);
 		
 		// eye of ender recipe for use in finding nether fortresses. Replacing blaze powder with spider eye!
-		ShapelessRecipe recipe = new ShapelessRecipe(new ItemStack(Material.EYE_OF_ENDER, 1));
-		recipe.addIngredient(Material.ENDER_PEARL);
-		recipe.addIngredient(Material.SPIDER_EYE);
-		getServer().addRecipe(recipe);
-		allRecipes.add(recipe);
+		enderRecipe = new ShapelessRecipe(new ItemStack(Material.EYE_OF_ENDER, 1));
+		enderRecipe.addIngredient(Material.ENDER_PEARL);
+		enderRecipe.addIngredient(Material.SPIDER_EYE);
+		getServer().addRecipe(enderRecipe);
 		
 		short zero = 0;
 		
-		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGGS, 1, zero, (byte)EntityType.SPIDER.getTypeId()));
+		ShapelessRecipe recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SPIDER.getTypeId()));
 		recipe.addIngredient(Material.STRING);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
-		allRecipes.add(recipe);
+		monsterRecipes.add(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.ZOMBIE.getTypeId()));
 		recipe.addIngredient(Material.ROTTEN_FLESH);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
-		allRecipes.add(recipe);
+		monsterRecipes.add(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.CREEPER.getTypeId()));
 		recipe.addIngredient(Material.SULPHUR);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
-		allRecipes.add(recipe);
+		monsterRecipes.add(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SKELETON.getTypeId()));
 		recipe.addIngredient(Material.BONE);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
-		allRecipes.add(recipe);
+		monsterRecipes.add(recipe);
 		
 		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SLIME.getTypeId()));
 		recipe.addIngredient(Material.SLIME_BALL);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
-		allRecipes.add(recipe);
+		monsterRecipes.add(recipe);
 	}
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)

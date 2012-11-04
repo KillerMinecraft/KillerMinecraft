@@ -692,7 +692,15 @@ public class WorldManager
 				s.update();
 				break;
 			case GLOBAL_OPTION:
-				// todo: something for this to hook up to
+				if ( num == 0 )
+					plugin.toggleMonsterEggRecipes();
+				else if ( num == 1 )
+					plugin.toggleDispenserRecipe();
+				else if ( num == 2 )
+					plugin.toggleEnderEyeRecipe();
+
+				newValues = new boolean[] { plugin.monsterEggsEnabled, plugin.dispenserRecipeEnabled, plugin.enderEyeRecipeEnabled };
+				updateSetupOptionButtons(newValues);
 				break;
 			case MONSTERS:
 				plugin.monsterNumbers = num;
@@ -1034,23 +1042,23 @@ public class WorldManager
 					{
 					case 0:
 						world.setMonsterSpawnLimit(0);
-						world.setTicksPerMonsterSpawns(600);
+						world.setTicksPerMonsterSpawns(1);
 						break;
 					case 1:
 						world.setMonsterSpawnLimit(35);
-						world.setTicksPerMonsterSpawns(500);
+						world.setTicksPerMonsterSpawns(1);
 						break;
 					case 2: // MC defaults
 						world.setMonsterSpawnLimit(70);
-						world.setTicksPerMonsterSpawns(400);
+						world.setTicksPerMonsterSpawns(1);
 						break;
 					case 3:
 						world.setMonsterSpawnLimit(110);
-						world.setTicksPerMonsterSpawns(300);
+						world.setTicksPerMonsterSpawns(1);
 						break;
 					case 4:
 						world.setMonsterSpawnLimit(180);
-						world.setTicksPerMonsterSpawns(200);
+						world.setTicksPerMonsterSpawns(1);
 						break;
 					}
 				

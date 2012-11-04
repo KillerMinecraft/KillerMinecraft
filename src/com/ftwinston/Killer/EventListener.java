@@ -394,8 +394,17 @@ public class EventListener implements Listener
     public void onCraftItem(CraftItemEvent event)
     {
     	// killer recipes can only be crafter in killer worlds, or we could screw up the rest of the server
-    	if ( plugin.allRecipes.contains(event.getRecipe()) && !plugin.isGameWorld(event.getWhoClicked().getWorld()) )
-    		event.setCancelled(true);
+    	if ( !plugin.isGameWorld(event.getWhoClicked().getWorld()) )
+    	{
+    		if ( 	(plugin.dispenserRecipeEnabled && plugin.isDispenserRecipe(event.getRecipe()))
+    			 || (plugin.enderEyeRecipeEnabled && plugin.isEnderEyeRecipe(event.getRecipe()))
+    			 || (plugin.monsterEggsEnabled && plugin.isMonsterEggRecipe(event.getRecipe()))
+    			)
+    		{
+    			plugin.log.info("cancelling craft event");
+    			event.setCancelled(true);
+    		}
+    	}
     }
     
     @EventHandler(priority = EventPriority.LOWEST)
