@@ -920,7 +920,7 @@ public class WorldManager
 		}*/
 	}
 	
-	private void showWorldGenerationIndicator(float completion, boolean secondaryWorld)
+	private void showWorldGenerationIndicator(float completion)
 	{
 		/*
 		int x = StagingWorldGenerator.startButtonX + 1, y = secondaryWorld ? 36 : 37;
@@ -931,17 +931,32 @@ public class WorldManager
 			b.setType(Material.WOOL);
 			b.setData(z <= maxCompleteZ ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
 		}*/
+		
+		int maxCompleteZ = (int)((StagingWorldGenerator.wallMinZ - StagingWorldGenerator.wallMaxZ) * completion) + StagingWorldGenerator.wallMaxZ;
+		if ( completion != 0f )
+			maxCompleteZ --;
+		
+		for ( int x=StagingWorldGenerator.wallMinX+1; x<StagingWorldGenerator.wallMaxX; x++ )
+			for ( int z=StagingWorldGenerator.wallMinZ; z<StagingWorldGenerator.wallMaxZ; z++ )
+			{				
+				Block b = stagingWorld.getBlockAt(x, StagingWorldGenerator.floorY-2, z);
+				if ( b != null )
+				{
+					if ( z < maxCompleteZ )
+					{
+						b.setType(Material.REDSTONE_TORCH_ON);
+						b.setData((byte)5);
+					}
+					else
+						b.setType(Material.AIR);
+				}
+			}
+		
 	}
 	
 	public void removeWorldGenerationIndicator()
 	{
-		/*
-		int x = StagingWorldGenerator.startButtonX + 1;
-		for ( int z = StagingWorldGenerator.progressStartZ; z<= StagingWorldGenerator.progressEndZ; z++ )
-		{
-			stagingWorld.getBlockAt(x, 36, z).setType(Material.SMOOTH_BRICK);
-			stagingWorld.getBlockAt(x, 37, z).setType(Material.SMOOTH_BRICK);
-		}*/
+		showWorldGenerationIndicator(0f);
 	}
 	
 	public boolean seekNearestNetherFortress(Player player)
@@ -1199,9 +1214,9 @@ public class WorldManager
         craftServer.getPluginManager().callEvent(new WorldInitEvent(worldServer.getWorld()));
         System.out.print("Preparing start region for level " + (console.worlds.size() - 1) + " (Seed: " + worldServer.getSeed() + ")");
         
-        boolean isSecondaryWorld = mainWorld != null;
-        showWorldGenerationIndicator(0f, isSecondaryWorld);
-        ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, isSecondaryWorld, runWhenDone);
+        if ( mainWorld == null )
+        	showWorldGenerationIndicator(0f);
+        ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, plugin.getGameMode().usesNether(), mainWorld != null, runWhenDone);
     	craftServer.getPluginManager().registerEvents(cb, plugin);
     	cb.taskID = craftServer.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 0L, 1L);
     	return worldServer.getWorld();
@@ -1209,12 +1224,13 @@ public class WorldManager
     
     class ChunkBuilder implements Runnable, Listener
     {
-    	public ChunkBuilder(int numChunksFromSpawn, CraftServer craftServer, WorldServer worldServer, boolean isSecondaryWorld, Runnable runWhenDone)
+    	public ChunkBuilder(int numChunksFromSpawn, CraftServer craftServer, WorldServer worldServer, boolean usesSecondaryWorld, boolean isSecondaryWorld, Runnable runWhenDone)
     	{
     		this.numChunksFromSpawn = numChunksFromSpawn;
     		sideLength = numChunksFromSpawn * 2 + 1;
     		numSteps = sideLength * sideLength;
     		
+    		this.usesSecondaryWorld = usesSecondaryWorld;
     		this.isSecondaryWorld = isSecondaryWorld;
     		this.craftServer = craftServer;
     		this.worldServer = worldServer;
@@ -1223,7 +1239,7 @@ public class WorldManager
     	
     	int numChunksFromSpawn, stepNum = 0, sideLength, numSteps;
         long reportTime = System.currentTimeMillis();
-        boolean isSecondaryWorld;
+        boolean usesSecondaryWorld, isSecondaryWorld;
         public int taskID;
         CraftServer craftServer;
         WorldServer worldServer;
@@ -1243,7 +1259,14 @@ public class WorldManager
 
             if (time > reportTime + 1000L) {
             	System.out.println("Preparing spawn area for " + worldServer.getWorld().getName() + ", " + (stepNum * 100 / numSteps) + "%");
-                showWorldGenerationIndicator((float)stepNum/numSteps, isSecondaryWorld);
+            	float fraction = (float)stepNum/numSteps;
+            	if ( usesSecondaryWorld )
+            	{
+            		fraction *= 0.5f;
+            		if ( isSecondaryWorld )
+            			fraction += 0.5f;
+            	}
+                showWorldGenerationIndicator(fraction);
                 reportTime = time;
             }
 
@@ -1259,7 +1282,8 @@ public class WorldManager
 
             	if ( stepNum >= numSteps )
             	{
-            		showWorldGenerationIndicator(1f, isSecondaryWorld);
+            		if ( isSecondaryWorld || !usesSecondaryWorld )
+            			showWorldGenerationIndicator(1f);
             		craftServer.getPluginManager().callEvent(new WorldLoadEvent(worldServer.getWorld()));
             		craftServer.getScheduler().cancelTask(taskID);
             		craftServer.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);

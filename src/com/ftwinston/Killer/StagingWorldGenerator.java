@@ -86,24 +86,25 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			// floor ... now with redstone torches underneath
 			for ( int x=wallMinX+1; x<wallMaxX; x++ )
 				for ( int z=wallMinZ; z<wallMaxZ; z++ )
+				{
 					for ( int y=floorY; y>floorY-2; y-- )
 					{
 						b = getBlockAbs(chunk, x, y, z);
 						if ( b != null )
-							//b.setType((x + 1) % 4 == 0 && (z + 1) % 4 == 0 ? Material.GLOWSTONE : floor);
 							b.setType(floor);
-						
-						b = getBlockAbs(chunk, x, y-2, z);
-						if ( b != null )
-							b.setType(Material.STONE);
-						
-						b = getBlockAbs(chunk, x, y-1, z);
-						if ( b != null )
-						{
-							b.setType(Material.REDSTONE_TORCH_ON);
-							b.setData((byte)5);
-						}
 					}
+
+					b = getBlockAbs(chunk, x, floorY-3, z);
+					if ( b != null )
+						b.setType(Material.STONE);
+					
+					b = getBlockAbs(chunk, x, floorY-2, z);
+					if ( b != null )
+					{
+						b.setType(Material.REDSTONE_TORCH_ON);
+						b.setData((byte)5);
+					}
+				}
 			
 			// front wall
 			for ( int x=wallMinX+1; x<wallMaxX; x++ )
