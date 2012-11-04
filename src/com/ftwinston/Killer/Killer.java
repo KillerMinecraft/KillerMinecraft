@@ -266,6 +266,7 @@ public class Killer extends JavaPlugin
         while (iterator.hasNext())
         	if ( isEnderEyeRecipe(iterator.next()) )
         	{
+        		log.info("removing ender eye recipe");
         		iterator.remove();
         		return;
         	}
@@ -274,7 +275,7 @@ public class Killer extends JavaPlugin
 	public boolean isEnderEyeRecipe(Recipe recipe)
 	{
 		if ( recipe.getResult().getType() != enderRecipe.getResult().getType() || !(recipe instanceof ShapelessRecipe) )
-    		return true;
+    		return false;
     	
     	// this is *an* eye of ender recipe. it's the right one if it includes a spider eye in the ingredients
     	ShapelessRecipe shapeless = (ShapelessRecipe)recipe;

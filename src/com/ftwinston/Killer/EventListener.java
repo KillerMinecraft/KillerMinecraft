@@ -401,7 +401,6 @@ public class EventListener implements Listener
     			 || (plugin.monsterEggsEnabled && plugin.isMonsterEggRecipe(event.getRecipe()))
     			)
     		{
-    			plugin.log.info("cancelling craft event");
     			event.setCancelled(true);
     		}
     	}
