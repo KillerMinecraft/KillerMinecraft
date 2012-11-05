@@ -65,7 +65,7 @@ public class EventListener implements Listener
     		}, 1);
     	}
     }
-    
+
     // when you die a spectator, be made able to fly again when you respawn
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerRespawn(PlayerRespawnEvent event)

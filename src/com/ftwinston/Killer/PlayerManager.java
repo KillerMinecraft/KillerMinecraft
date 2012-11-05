@@ -295,6 +295,9 @@ public class PlayerManager
 	// player either died, or disconnected and didn't rejoin in the required time
 	public void playerKilled(OfflinePlayer player)
 	{
+		if ( !plugin.getGameState().usesGameWorlds )
+			return;
+		
 		Info info = playerInfo.get(player.getName());
 		info.setAlive(false);
 		
