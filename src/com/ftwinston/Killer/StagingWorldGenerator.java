@@ -116,15 +116,51 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 							b.setType(wall);
 					}
 			
-			// back wall
-			for ( int x=wallMinX+1; x<wallMaxX; x++ )
-				for ( int y=floorY; y<=ceilingMinY; y++ )
-					for ( int z=wallMaxZ; z<wallMaxZ+2; z++ )
+			// back wall(s)
+			int zMax = wallMaxZ+9;
+			for ( int z=wallMaxZ; z<=wallMaxZ+9; z++ )
+			{
+				int xMin = wallMinX + z - wallMaxZ + 1, xMax = wallMaxX - z + wallMaxZ - 1;
+				int yMax = ceilingMinY - z + wallMaxZ;
+				
+				for ( int x=xMin; x<=xMax; x++ )
+				{
+					// floor
+					for ( int y=floorY; y>floorY-2; y-- )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType(Material.STONE);
+					}
+
+					// ceiling
+					if ( z != zMax ) 
+						for ( int y=yMax; y<yMax+2; y++ )
+						{
+							b = getBlockAbs(chunk, x, y, z);
+							if ( b != null )
+								b.setType(ceiling);
+						}
+				}
+
+				// walls themselves
+				for ( int y=floorY; y<=yMax; y++ )
+				{
+					for ( int x=xMin; x>xMin-2; x-- )			
 					{
 						b = getBlockAbs(chunk, x, y, z);
 						if ( b != null )
 							b.setType(wall);
 					}
+					
+					for ( int x=xMax; x<xMax+2; x++ )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType(wall);
+					}
+				}
+			}
 			
 			// sloped ceiling
 			int z = wallMaxZ-1;
@@ -176,7 +212,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// side walls with sloped tops
 			int yMax = ceilingMinY;
-			for ( z = wallMaxZ; z>=wallMinZ; z-=4 )
+			for ( z = wallMaxZ+1; z>=wallMinZ; z-=4 )
 			{
 				for ( int y=floorY; y<=yMax; y++ )
 				{
