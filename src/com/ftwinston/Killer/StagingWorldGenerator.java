@@ -161,6 +161,9 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					}
 				}
 			}
+			b = getBlockAbs(chunk, (wallMinX+wallMaxX)/2, floorY+2, zMax);
+			if ( b != null )
+				b.setType(wall);
 			
 			// sloped ceiling
 			int z = wallMaxZ-1;
