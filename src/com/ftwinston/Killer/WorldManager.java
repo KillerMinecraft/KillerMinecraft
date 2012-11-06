@@ -859,79 +859,8 @@ public class WorldManager
 		
 	}
 	
-	public void showGameOptions(GameMode mode)
-	{
-		/*
-		// remove all signs, buttons & colored wool blocks from the south wall, and the "sealed off" wall
-		for ( int x = 5; x < StagingWorldGenerator.maxGameModeOptions * 2 + 8; x++ )
-		{
-			Block b;
-			if ( mode.getOptions().size() > 0 )
-				for ( int y = 34; y < 39; y++ )
-				{
-					b = stagingWorld.getBlockAt(x, y, StagingWorldGenerator.gameModeOptionZ - 3);
-					if ( b != null )
-						b.setType(Material.AIR);
-				}
-			
-			b = stagingWorld.getBlockAt(x, 35, StagingWorldGenerator.gameModeOptionZ);
-			if ( b != null )
-				b.setType(Material.AIR);
-			
-			b = stagingWorld.getBlockAt(x, 36, StagingWorldGenerator.gameModeOptionZ);
-			if ( b != null )
-				b.setType(Material.AIR);
-					
-			b = stagingWorld.getBlockAt(x, 35, StagingWorldGenerator.gameModeOptionZ + 1);
-			if ( b != null )
-				b.setType(Material.SMOOTH_BRICK);
-		}
-		
-		int num = 0;
-		for ( GameMode.Option option : mode.getOptions() )			
-		{
-			int optionX = StagingWorldGenerator.getGameModeOptionX(num);
-			Block b = stagingWorld.getBlockAt(optionX, 35, StagingWorldGenerator.gameModeOptionZ);
-			if ( b != null )
-			{
-				b.setType(Material.STONE_BUTTON);
-				b.setData((byte)0x4);
-			}
-			
-			b = stagingWorld.getBlockAt(optionX, 36, StagingWorldGenerator.gameModeOptionZ);
-			if ( b != null )
-			{
-				b.setType(Material.WALL_SIGN);
-				b.setData((byte)0x2);
-				Sign s = (Sign)b.getState();
-				s.setLine(0, "Option:");
-				StagingWorldGenerator.fitTextOnSign(s, option.getName());
-				s.update();
-			}
-			
-			b = stagingWorld.getBlockAt(optionX, 35, StagingWorldGenerator.gameModeOptionZ + 1);
-			if ( b != null )
-			{
-				b.setType(Material.WOOL);
-				b.setData(option.isEnabled() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
-			}
-			
-			num++;
-		}*/
-	}
-	
 	private void showWorldGenerationIndicator(float completion)
 	{
-		/*
-		int x = StagingWorldGenerator.startButtonX + 1, y = secondaryWorld ? 36 : 37;
-		int maxCompleteZ = (int)((StagingWorldGenerator.progressEndZ - StagingWorldGenerator.progressStartZ) * completion) + StagingWorldGenerator.progressStartZ;
-		for ( int z = StagingWorldGenerator.progressStartZ; z<= StagingWorldGenerator.progressEndZ; z++ )
-		{
-			Block b = stagingWorld.getBlockAt(x, y, z);
-			b.setType(Material.WOOL);
-			b.setData(z <= maxCompleteZ ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
-		}*/
-		
 		int maxCompleteZ = (int)((StagingWorldGenerator.wallMinZ - StagingWorldGenerator.wallMaxZ) * completion) + StagingWorldGenerator.wallMaxZ;
 		if ( completion != 0f )
 			maxCompleteZ --;
