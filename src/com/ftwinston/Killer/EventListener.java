@@ -309,7 +309,7 @@ public class EventListener implements Listener
     	}
     	
 		// eyes of ender can be made to seek out nether fortresses
-    	if ( event.getPlayer().getWorld() == plugin.worldManager.netherWorld && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
+    	if ( plugin.enderEyeRecipeEnabled && event.getPlayer().getWorld() == plugin.worldManager.netherWorld && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
     	{
 			if ( !plugin.worldManager.seekNearestNetherFortress(event.getPlayer()) )
 				event.getPlayer().sendMessage("No nether fortresses nearby");
