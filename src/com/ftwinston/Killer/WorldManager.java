@@ -52,10 +52,6 @@ import org.bukkit.craftbukkit.generator.NetherChunkGenerator;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.HandlerList;
-import org.bukkit.event.Listener;
-import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BlockPopulator;
@@ -855,8 +851,6 @@ public class WorldManager
 		backStart.setData(StagingWorldGenerator.colorOptionOff);
 		backOverride.setData(StagingWorldGenerator.colorOptionOff);
 		backCancel.setData(StagingWorldGenerator.colorOptionOff);
-		
-		
 	}
 	
 	private void showWorldGenerationIndicator(float completion)
@@ -1146,12 +1140,11 @@ public class WorldManager
         if ( mainWorld == null )
         	showWorldGenerationIndicator(0f);
         ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, plugin.getGameMode().usesNether(), mainWorld != null, runWhenDone);
-    	craftServer.getPluginManager().registerEvents(cb, plugin);
     	cb.taskID = craftServer.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 0L, 1L);
     	return worldServer.getWorld();
     }
     
-    class ChunkBuilder implements Runnable, Listener
+    class ChunkBuilder implements Runnable
     {
     	public ChunkBuilder(int numChunksFromSpawn, CraftServer craftServer, WorldServer worldServer, boolean usesSecondaryWorld, boolean isSecondaryWorld, Runnable runWhenDone)
     	{
@@ -1164,9 +1157,13 @@ public class WorldManager
     		this.craftServer = craftServer;
     		this.worldServer = worldServer;
     		this.runWhenDone = runWhenDone;
+    		
+    		ChunkCoordinates spawnPos = worldServer.getSpawn();
+        	spawnX = worldServer.getChunkAtWorldCoords(spawnPos.x, spawnPos.z).x;
+        	spawnZ = worldServer.getChunkAtWorldCoords(spawnPos.x, spawnPos.z).z;
     	}
     	
-    	int numChunksFromSpawn, stepNum = 0, sideLength, numSteps;
+    	int numChunksFromSpawn, stepNum = 0, sideLength, numSteps, spawnX, spawnZ;
         long reportTime = System.currentTimeMillis();
         boolean usesSecondaryWorld, isSecondaryWorld;
         public int taskID;
@@ -1177,9 +1174,6 @@ public class WorldManager
     	
     	public void run()
     	{
-    		int chunkX = stepNum / sideLength - numChunksFromSpawn;
-            int chunkZ = stepNum % sideLength - numChunksFromSpawn;
-
             long time = System.currentTimeMillis();
 
             if (time < reportTime) {
@@ -1201,9 +1195,11 @@ public class WorldManager
 
             for ( int i=0; i<chunksPerTick; i++ )
             {
+            	int offsetX = stepNum / sideLength - numChunksFromSpawn;
+            	int offsetZ = stepNum % sideLength - numChunksFromSpawn;
+
             	stepNum++;
-            	ChunkCoordinates spawnPos = worldServer.getSpawn();
-            	worldServer.chunkProviderServer.getChunkAt(spawnPos.x + chunkX, spawnPos.z + chunkZ);
+            	worldServer.chunkProviderServer.getChunkAt(spawnX + offsetX, spawnZ + offsetZ);
 
             	while (worldServer.updateLights()) {
             		;
@@ -1216,21 +1212,9 @@ public class WorldManager
             		craftServer.getPluginManager().callEvent(new WorldLoadEvent(worldServer.getWorld()));
             		craftServer.getScheduler().cancelTask(taskID);
             		craftServer.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
-					HandlerList.unregisterAll(this); // might want to delay this a little more
             		return;
             	}
             }
         }
-		
-		// don't unload chunks during generation
-		@EventHandler
-		public void onChunkUnload(ChunkUnloadEvent event)
-		{
-			if ( event.getWorld() == mainWorld || event.getWorld() == netherWorld )
-			{
-				plugin.log.info("Stopped unload of chunk " + event.getChunk().getX() + ", " + event.getChunk().getZ());
-				event.setCancelled(true);
-			}
-		}
     }
 }
