@@ -15,7 +15,6 @@ import java.util.Random;
 import net.minecraft.server.ChunkCoordinates;
 import net.minecraft.server.ChunkPosition;
 import net.minecraft.server.ChunkProviderHell;
-import net.minecraft.server.ChunkProviderServer;
 import net.minecraft.server.ConvertProgressUpdater;
 import net.minecraft.server.Convertable;
 import net.minecraft.server.EntityEnderSignal;
@@ -888,14 +887,13 @@ public class WorldManager
 			return false;
 		
 		WorldServer world = ((CraftWorld)netherWorld).getHandle();
-		ChunkProviderServer cps = (ChunkProviderServer)world.F();
 		
 		IChunkProvider chunkProvider;
 		try
 		{
 			Field field = net.minecraft.server.ChunkProviderServer.class.getDeclaredField("chunkProvider");
 			field.setAccessible(true);
-			chunkProvider = (IChunkProvider)field.get(cps);
+			chunkProvider = (IChunkProvider)field.get(world.chunkProviderServer);
 			field.setAccessible(false);
 		}
 		catch (Throwable t)
@@ -1200,10 +1198,6 @@ public class WorldManager
 
             	stepNum++;
             	worldServer.chunkProviderServer.getChunkAt(spawnX + offsetX, spawnZ + offsetZ);
-
-            	while (worldServer.updateLights()) {
-            		;
-            	}
 
             	if ( stepNum >= numSteps )
             	{

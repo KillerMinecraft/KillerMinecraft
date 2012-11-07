@@ -2,7 +2,7 @@ name: Killer
 main: com.ftwinston.Killer.Killer
 version: 0.3
 load: STARTUP
-description: Allows ops to randomly assign one player as a killer, who must try to kill the rest, without being found out
+description: Several PVP game modes that focus on subtlety. Features a staging world that lets you set up games to be played on new worlds, automatically deletes these worlds afterwards.
 authors: [FTWinston, Canazza]
 commands:
   spec:
