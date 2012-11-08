@@ -266,7 +266,6 @@ public class Killer extends JavaPlugin
         while (iterator.hasNext())
         	if ( isEnderEyeRecipe(iterator.next()) )
         	{
-        		log.info("removing ender eye recipe");
         		iterator.remove();
         		return;
         	}
