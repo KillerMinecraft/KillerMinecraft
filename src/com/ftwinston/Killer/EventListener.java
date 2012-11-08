@@ -169,10 +169,7 @@ public class EventListener implements Listener
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
 
-    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName())
-    	  || event.getPlayer().getWorld() == plugin.worldManager.stagingWorld
-    	  || plugin.getGameMode().isLocationProtected(event.getBlock().getLocation())
-    	  )
+    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName()) || plugin.worldManager.isProtectedLocation(event.getBlock().getLocation()) )
     		event.setCancelled(true);
     }
     
@@ -265,9 +262,9 @@ public class EventListener implements Listener
 			return;
 		
 		if ( plugin.getGameState().canChangeGameSetup && event.getPlayer().getWorld() == plugin.worldManager.stagingWorld
-		  && event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.STONE_BUTTON )
+		  && event.getClickedBlock() != null && (event.getClickedBlock().getType() == Material.STONE_BUTTON || event.getClickedBlock().getType() == Material.STONE_PLATE) )
 		{
-			plugin.worldManager.setupButtonClicked(event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ());
+			plugin.worldManager.setupButtonClicked(event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
 			return;
 		}
 		
@@ -519,6 +516,12 @@ public class EventListener implements Listener
     	Player player = pEvent.getEntity();
 		if ( player == null )
 			return;
+		
+		if ( !plugin.getGameState().usesGameWorlds )
+		{
+			plugin.playerManager.forceRespawn(player);
+			return;
+		}
 		
 		if ( plugin.getGameMode().useDiscreetDeathMessages() )
 			pEvent.setDeathMessage(ChatColor.RED + player.getName() + " died");	

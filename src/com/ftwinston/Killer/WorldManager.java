@@ -55,6 +55,8 @@ import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 import com.ftwinston.Killer.Killer.GameState;
 
@@ -199,6 +201,19 @@ public class WorldManager
 			if (entity instanceof Item)
 				entity.remove();
 		}
+	}
+	
+	public boolean isProtectedLocation(Location loc)
+	{
+		if ( loc.getWorld() == stagingWorld )
+		{
+			return loc.getBlockZ() < StagingWorldGenerator.spleefMinZ
+				|| loc.getBlockZ() > StagingWorldGenerator.spleefMaxZ
+				|| loc.getBlockX() < StagingWorldGenerator.spleefMinX
+				|| loc.getBlockX() > StagingWorldGenerator.spleefMaxX;	
+		}
+		
+		return plugin.getGameMode().isLocationProtected(loc);
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -595,9 +610,39 @@ public class WorldManager
 		}
 	}
 	
-	public void setupButtonClicked(int x, int z)
+	boolean arenaModeIsSpleef = true;
+	public void setupButtonClicked(int x, int z, Player player)
 	{
-		if ( x == StagingWorldGenerator.mainButtonX )
+		if ( z == StagingWorldGenerator.waitingButtonZ )
+		{
+			if ( x == StagingWorldGenerator.waitingSpleefButtonX )
+			{
+				stagingWorld.getBlockAt(StagingWorldGenerator.waitingSpleefButtonX+1, StagingWorldGenerator.buttonY, z).setData(StagingWorldGenerator.colorOptionOn);
+				stagingWorld.getBlockAt(StagingWorldGenerator.waitingMonsterButtonX-1, StagingWorldGenerator.buttonY, z).setData(StagingWorldGenerator.colorOptionOff);
+				arenaModeIsSpleef = true;
+			}
+			else if ( x == StagingWorldGenerator.waitingMonsterButtonX )
+			{
+				stagingWorld.getBlockAt(StagingWorldGenerator.waitingSpleefButtonX+1, StagingWorldGenerator.buttonY, z).setData(StagingWorldGenerator.colorOptionOff);
+				stagingWorld.getBlockAt(StagingWorldGenerator.waitingMonsterButtonX-1, StagingWorldGenerator.buttonY, z).setData(StagingWorldGenerator.colorOptionOn);
+				arenaModeIsSpleef = false;
+			}
+		}
+		else if ( z == StagingWorldGenerator.spleefPressurePlateZ )
+		{
+			PlayerInventory inv = player.getInventory();
+			inv.clear();
+			if ( arenaModeIsSpleef )
+				player.getInventory().addItem(new ItemStack(Material.DIAMOND_SPADE));
+			else
+				player.getInventory().addItem(new ItemStack(Material.IRON_SWORD));
+			
+			// rebuild the arena itself
+			for ( x=StagingWorldGenerator.spleefMinX; x<=StagingWorldGenerator.spleefMaxX; x++ )
+				for ( z=StagingWorldGenerator.spleefMinZ; z<=StagingWorldGenerator.spleefMaxZ; z++ )
+					stagingWorld.getBlockAt(x, StagingWorldGenerator.spleefY, z).setType(Material.DIRT);
+		}
+		else if ( x == StagingWorldGenerator.mainButtonX )
 		{
 			if ( z == StagingWorldGenerator.gameModeButtonZ )
 				setCurrentOption(currentOption == StagingWorldOption.GAME_MODE ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE);

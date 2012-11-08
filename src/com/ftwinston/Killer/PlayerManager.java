@@ -463,7 +463,7 @@ public class PlayerManager
 		clearPlayerNameColor(player);
 	}
 	
-    private void forceRespawn(final Player player)
+    public void forceRespawn(final Player player)
     {
     	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
             @Override

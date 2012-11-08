@@ -23,7 +23,9 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	public static final int floorY = 32, ceilingY = 38, wallMaxX = -2, wallMinCorridorX = -8, wallMinInfoX = -21, wallMinCorridorZ = 1, wallMinInfoZ = 18, wallMaxZ = 27, buttonY = floorY + 2,
 			mainButtonX = wallMinCorridorX + 1, optionButtonX = wallMaxX - 1, gameModeButtonZ = wallMinInfoZ - 2, gameOptionButtonZ = gameModeButtonZ - 2, worldOptionButtonZ = gameOptionButtonZ - 3,
 			globalOptionButtonZ = worldOptionButtonZ - 2,  monstersButtonZ = globalOptionButtonZ - 3, animalsButtonZ = monstersButtonZ - 2, startButtonX = wallMaxX - 3, startButtonZ = wallMinCorridorZ + 1,
-			overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1;
+			overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1,
+			waitingButtonZ = wallMaxZ + 2, waitingSpleefButtonX = wallMaxX-5, waitingMonsterButtonX = waitingSpleefButtonX - 5,
+			spleefY = floorY-2, spleefMaxX = wallMaxX, spleefMinX = spleefMaxX - 15, spleefMinZ = wallMaxZ + 9, spleefMaxZ = spleefMinZ + 15, spleefPressurePlateZ = spleefMinZ-3;
 	
 	public static final byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
 		colorStartButton = 4 /* yellow */, colorOverrideButton = 1 /* orange */, colorCancelButton = 9 /* teal */,
@@ -68,7 +70,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		
 		public void populate(World world, Random random, Chunk chunk)
 		{
-			if ( chunk.getX() >= 0 || chunk.getZ() < 0 || chunk.getX() < -2 || chunk.getZ() > 3 )
+			if ( chunk.getX() >= 1 || chunk.getZ() < 0 || chunk.getX() < -3 || chunk.getZ() > 4 )
 				return;
 
 			Material floor = Material.STONE;
@@ -81,7 +83,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// floor
 			for ( int x=wallMaxX+1; x>wallMinCorridorX-2; x-- )
-				for ( int z=wallMinCorridorZ-1; z<wallMaxZ+2; z++ )
+				for ( int z=wallMinCorridorZ-1; z<wallMaxZ+4; z++ )
 					for ( int y=floorY; y>floorY-2; y-- )
 					{
 						b = getBlockAbs(chunk, x, y, z);
@@ -89,7 +91,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 							b.setType(floor);
 					}
 			for ( int x=wallMinCorridorX+1; x>wallMinInfoX-2; x-- )
-				for ( int z=wallMinInfoZ-1; z<wallMaxZ+2; z++ )
+				for ( int z=wallMinInfoZ-1; z<wallMaxZ+4; z++ )
 					for ( int y=floorY; y>floorY-2; y-- )
 					{
 						b = getBlockAbs(chunk, x, y, z);
@@ -99,7 +101,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// ceiling
 			for ( int x=wallMaxX+1; x>wallMinCorridorX-2; x-- )
-				for ( int z=wallMinCorridorZ-1; z<wallMaxZ+2; z++ )
+				for ( int z=wallMinCorridorZ-1; z<wallMaxZ+4; z++ )
 					for ( int y=ceilingY; y<ceilingY+2; y++ )
 					{
 						b = getBlockAbs(chunk, x, y, z);
@@ -107,7 +109,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 							b.setType(ceiling);
 					}
 			for ( int x=wallMinCorridorX+1; x>wallMinInfoX-2; x-- )
-				for ( int z=wallMinInfoZ-1; z<wallMaxZ+2; z++ )
+				for ( int z=wallMinInfoZ-1; z<wallMaxZ+4; z++ )
 					for ( int y=ceilingY; y<ceilingY+2; y++ )
 					{
 						b = getBlockAbs(chunk, x, y, z);
@@ -132,8 +134,10 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						if ( b != null )
 							b.setType(wall);
 					}
-			for ( int x=wallMaxX+1; x>=wallMinInfoX; x-- )
-				for ( int z=wallMaxZ; z<wallMaxZ+2; z++ )
+			
+			int backWallMaxX = wallMaxX + 5;
+			for ( int x=backWallMaxX; x>=wallMinInfoX-1; x-- )
+				for ( int z=wallMaxZ; z<wallMaxZ+4; z++ )
 					for ( int y=floorY+1; y<ceilingY; y++ )
 					{
 						b = getBlockAbs(chunk, x, y, z);
@@ -155,6 +159,16 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						b = getBlockAbs(chunk, x, y, z);
 						if ( b != null )
 							b.setType(wall);
+					}
+			
+			// extra bit of ceiling light towards the spleef arena 
+			for ( int x=backWallMaxX; x>=wallMaxX; x-- )
+				for ( int z=wallMaxZ; z<wallMaxZ+4; z++ )
+					for ( int y=ceilingY; y<ceilingY+2; y++ )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType(ceiling);
 					}
 			
 			// help signs on the "info" wall
@@ -424,6 +438,186 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				b.setData((byte)0x3);
 			}
 			
+			// spleef arena setup room
+			for ( int x=waitingSpleefButtonX; x>=waitingMonsterButtonX; x-- )
+				for ( int z=wallMaxZ+1; z<wallMaxZ+4; z++ )
+					for ( int y=floorY+1; y<ceilingY; y++ )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType(Material.AIR);
+					}
+			for ( int x=waitingSpleefButtonX-2; x>=waitingSpleefButtonX-3; x-- )
+				for ( int y=floorY+1; y<=floorY+2; y++ )
+				{
+					b = getBlockAbs(chunk, x, y, wallMaxZ);
+					if ( b != null )
+						b.setType(Material.AIR);
+				}
+				
+			// spleef setup buttons
+			for ( int y=floorY + 1; y < floorY + 4; y++ )
+			{
+				b = getBlockAbs(chunk, waitingSpleefButtonX+1, y, waitingButtonZ);
+				if ( b != null )
+				{
+					b.setType(wool);
+					b.setData(signBackColor);
+				}
+			}
+			b = getBlockAbs(chunk, waitingSpleefButtonX, buttonY+1, waitingButtonZ);
+			if ( b != null )
+				setupSign(b, (byte)0x4, "", "Spleef", "Arena");
+			b = getBlockAbs(chunk, waitingSpleefButtonX+1, buttonY, waitingButtonZ);
+			if ( b != null )
+			{
+				b.setType(wool);
+				b.setData(colorOptionOn);
+			}
+			b = getBlockAbs(chunk, waitingSpleefButtonX, buttonY, waitingButtonZ);
+			if ( b != null )
+			{
+				b.setType(button);
+				b.setData((byte)0x2);
+			}
+			
+			for ( int y=floorY + 1; y < floorY + 4; y++ )
+			{
+				b = getBlockAbs(chunk, waitingMonsterButtonX-1, y, waitingButtonZ);
+				if ( b != null )
+				{
+					b.setType(wool);
+					b.setData(signBackColor);
+				}
+			}
+			b = getBlockAbs(chunk, waitingMonsterButtonX, buttonY+1, waitingButtonZ);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "", "Survival", "Arena");
+			b = getBlockAbs(chunk, waitingMonsterButtonX-1, buttonY, waitingButtonZ);
+			if ( b != null )
+			{
+				b.setType(wool);
+				b.setData(colorOptionOff);
+			}
+			b = getBlockAbs(chunk, waitingMonsterButtonX, buttonY, waitingButtonZ);
+			if ( b != null )
+			{
+				b.setType(button);
+				b.setData((byte)0x1);
+			}
+			
+			// spleef arena itself
+			for ( int x=spleefMinX; x<=spleefMaxX; x++ )
+				for ( int z=spleefMinZ; z<=spleefMaxZ; z++ )
+				{
+					b = getBlockAbs(chunk, x, spleefY, z);
+					if ( b != null )
+						b.setType(Material.DIRT);
+				}
+				
+			// spleef viewing gallery
+			for ( int x = spleefMinX - 5; x <= spleefMaxX + 5; x++ )
+			{
+				for ( int z=spleefMinZ - 3; z>spleefMinZ - 6; z-- )
+				{
+					b = getBlockAbs(chunk, x, floorY, z);
+					if ( b != null )
+						b.setType(floor);
+					for ( int y=floorY-1; y>floorY-3; y-- )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType(Material.GLOWSTONE);
+					}
+				}
+				for ( int z=spleefMaxZ + 3; z<spleefMaxZ + 6; z++ )
+				{
+					b = getBlockAbs(chunk, x, floorY, z);
+					if ( b != null )
+						b.setType(floor);
+					for ( int y=floorY-1; y>floorY-3; y-- )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType(Material.GLOWSTONE);
+					}
+				}
+			}
+			for ( int z=spleefMinZ - 2; z<=spleefMaxZ + 2; z++ )
+			{
+				for ( int x = spleefMinX - 3; x > spleefMinX - 6; x-- )
+				{
+					b = getBlockAbs(chunk, x, floorY, z);
+					if ( b != null )
+						b.setType(floor);
+					for ( int y=floorY-1; y>floorY-3; y-- )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType(Material.GLOWSTONE);
+					}
+				}
+				for ( int x = spleefMaxX + 3; x < spleefMaxX + 6; x++ )
+				{
+					b = getBlockAbs(chunk, x, floorY, z);
+					if ( b != null )
+						b.setType(floor);
+					for ( int y=floorY-1; y>floorY-3; y-- )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+							b.setType(Material.GLOWSTONE);
+					}
+				}
+			}
+			
+			// inner railings
+			for ( int z=spleefMinZ - 3; z<=spleefMaxZ + 3; z++ )
+			{
+				b = getBlockAbs(chunk, spleefMaxX+3, floorY+1, z);
+				if ( b != null )
+					b.setType(Material.FENCE);
+				b = getBlockAbs(chunk, spleefMinX-3, floorY+1, z);
+				if ( b != null )
+					b.setType(Material.FENCE);
+			}
+			for ( int x=spleefMinX - 3; x<=spleefMaxX + 3; x++ )
+			{
+				b = getBlockAbs(chunk, x, floorY+1, spleefMaxZ+3);
+				if ( b != null )
+					b.setType(Material.FENCE);
+			
+				if ( x < waitingSpleefButtonX - 1 && x > waitingSpleefButtonX - 4 )
+					continue; // gap for the doors
+				b = getBlockAbs(chunk, x, floorY+1, spleefMinZ-3);
+				if ( b != null )
+					b.setType(Material.FENCE);
+			}
+			
+			// outer railing
+			for ( int z=spleefMinZ - 5; z<=spleefMaxZ + 5; z++ )
+			{
+				b = getBlockAbs(chunk, spleefMaxX+5, floorY+1, z);
+				if ( b != null )
+					b.setType(Material.FENCE);
+				b = getBlockAbs(chunk, spleefMinX-5, floorY+1, z);
+				if ( b != null )
+					b.setType(Material.FENCE);
+			}
+			for ( int x=spleefMinX - 5; x<=spleefMaxX + 5; x++ )
+			{
+				b = getBlockAbs(chunk, x, floorY+1, spleefMaxZ+5);
+				if ( b != null )
+					b.setType(Material.FENCE);
+			}
+			
+			// pressure plates
+			for ( int x = waitingSpleefButtonX - 2; x>waitingSpleefButtonX - 4; x-- )
+			{
+				b = getBlockAbs(chunk, x, floorY+1, spleefPressurePlateZ);
+				if ( b != null )
+					b.setType(Material.STONE_PLATE);
+			}
 			
 			/*
 			// write on the walls
@@ -470,21 +664,7 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						else
 							b.setType(wall);
 				}
-			
-			text = writeBlockText("CHOOSE");
-			for ( int i=0; i<text.length; i++ )
-				for ( int j=0; j<text[i].length; j++ )
-				{
-					b = getBlockAbs(chunk, wallMaxX, j + floorY + 5, wallMinZ + 4 + i);
-					if ( b != null )
-						if ( text[i][j] )
-						{
-							b.setType(wool);
-							b.setData(textColorChoose);
-						}
-						else
-							b.setType(wall);
-				}*/
+			*/
 		}
 	}
 
