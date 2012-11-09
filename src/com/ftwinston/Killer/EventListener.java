@@ -444,8 +444,8 @@ public class EventListener implements Listener
     	if ( event.getPlayer().isConversing() )
     		return;
     	
-    	if ( !PlayerManager.instance.isSpectator(event.getPlayer().getName()))
-		{// colored player names shouldn't produce colored messages
+    	if ( plugin.getGameState() == Killer.GameState.finished || !PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+		{// colored player names shouldn't produce colored messages ... spectator chat isn't special when the game is in the "finished" state.
 			event.setMessage(ChatColor.RESET + event.getMessage());
     		return;
 		}

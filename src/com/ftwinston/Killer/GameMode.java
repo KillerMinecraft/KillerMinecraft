@@ -528,7 +528,7 @@ public abstract class GameMode implements Listener
 					else
 						plugin.endGame(null);
 				}
-			}, 100); // add a 5 second delay
+			}, 220); // add a 12 second delay
 		}
 	}
 	
