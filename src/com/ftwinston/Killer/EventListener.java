@@ -180,10 +180,7 @@ public class EventListener implements Listener
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
 
-    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName())
-    	  || event.getPlayer().getWorld() == plugin.worldManager.stagingWorld
-    	  || plugin.getGameMode().isLocationProtected(event.getBlock().getLocation())
-    	  )
+    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName()) || plugin.worldManager.isProtectedLocation(event.getBlock().getLocation()) )
     		event.setCancelled(true);
     }
     

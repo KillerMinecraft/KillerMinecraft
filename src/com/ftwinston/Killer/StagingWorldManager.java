@@ -306,7 +306,7 @@ public class StagingWorldManager
 		// wither + normal skeleton
 		if ( monsterWaveNumber == 5 )
 		{
-			numMonstersAlive = 1;
+			numMonstersAlive = 2;
 			
 			loc = new Location(stagingWorld, StagingWorldGenerator.spleefMinX + random.nextDouble() * 16, StagingWorldGenerator.spleefY+1, StagingWorldGenerator.spleefMinZ + random.nextDouble() * 16);
 			loc.setY(stagingWorld.getHighestBlockYAt(loc));
