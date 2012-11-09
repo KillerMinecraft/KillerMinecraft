@@ -76,7 +76,7 @@ public class EventListener implements Listener
 		if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.mainWorld != null )
 			event.setRespawnLocation(plugin.getGameMode().getSpawnLocation(event.getPlayer()));
 		else
-			event.setRespawnLocation(plugin.worldManager.getStagingWorldSpawnPoint());
+			event.setRespawnLocation(plugin.stagingWorldManager.getStagingWorldSpawnPoint());
 	
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     	{
@@ -124,7 +124,7 @@ public class EventListener implements Listener
 			playerJoined(event.getPlayer());
 		
 		if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
-			plugin.playerManager.teleport(event.getPlayer(), plugin.worldManager.getStagingWorldSpawnPoint());
+			plugin.playerManager.teleport(event.getPlayer(), plugin.stagingWorldManager.getStagingWorldSpawnPoint());
     }
     
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -218,11 +218,14 @@ public class EventListener implements Listener
 		
     	List<Block> blocks = event.blockList();
     	for ( int i=0; i<blocks.size(); i++ )
-    		if ( plugin.getGameMode().isLocationProtected(blocks.get(i).getLocation()) )
+    		if ( plugin.worldManager.isProtectedLocation(blocks.get(i).getLocation()) )
     		{
     			blocks.remove(i);
     			i--;
     		}
+    	
+    	if ( event.getEntity().getWorld() == plugin.worldManager.stagingWorld )
+    		plugin.stagingWorldManager.stagingWorldMonsterKilled();
     }
     
 	// switching between spectator items
@@ -264,7 +267,7 @@ public class EventListener implements Listener
 		if ( plugin.getGameState().canChangeGameSetup && event.getPlayer().getWorld() == plugin.worldManager.stagingWorld
 		  && event.getClickedBlock() != null && (event.getClickedBlock().getType() == Material.STONE_BUTTON || event.getClickedBlock().getType() == Material.STONE_PLATE) )
 		{
-			plugin.worldManager.setupButtonClicked(event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
+			plugin.stagingWorldManager.setupButtonClicked(event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
 			return;
 		}
 		
@@ -331,8 +334,9 @@ public class EventListener implements Listener
 			return;
 		
     	// spectators can't drop items
-    	if ( plugin.playerManager.isSpectator(event.getPlayer().getName()) )
+    	if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld || plugin.playerManager.isSpectator(event.getPlayer().getName()) )
     		event.setCancelled(true);
+    	
     }
     
     @EventHandler(priority = EventPriority.LOWEST)
@@ -466,7 +470,7 @@ public class EventListener implements Listener
     					if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.mainWorld != null )
     						plugin.playerManager.teleport(player, plugin.getGameMode().getSpawnLocation(player));
     					else
-    						plugin.playerManager.teleport(player, plugin.worldManager.getStagingWorldSpawnPoint());
+    						plugin.playerManager.teleport(player, plugin.stagingWorldManager.getStagingWorldSpawnPoint());
     			}
     		});
     	}
@@ -508,20 +512,37 @@ public class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityDeath(EntityDeathEvent event)
     {
-    	if (!(event instanceof PlayerDeathEvent) || !plugin.isGameWorld(event.getEntity().getWorld()) )
+    	if ( !plugin.isGameWorld(event.getEntity().getWorld()) )
     		return;
+    	
+    	if ( event.getEntity().getWorld() == plugin.worldManager.stagingWorld )
+		{
+			event.getDrops().clear();
+    		event.setDroppedExp(0);
+
+        	if ( event instanceof PlayerDeathEvent )
+        	{
+        		plugin.stagingWorldManager.stagingWorldPlayerKilled();
+        		
+        		final Player player = (Player)event.getEntity();
+        		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+					@Override
+					public void run() {
+		        		plugin.playerManager.forceRespawn(player);
+					}
+				}, 30);
+        	}
+        	else
+        		plugin.stagingWorldManager.stagingWorldMonsterKilled(); // entity killed ... if its a monster in arena mode in the staging world
+        	
+    		return;
+    	}
     	
     	PlayerDeathEvent pEvent = (PlayerDeathEvent)event;
 		
     	Player player = pEvent.getEntity();
 		if ( player == null )
 			return;
-		
-		if ( !plugin.getGameState().usesGameWorlds )
-		{
-			plugin.playerManager.forceRespawn(player);
-			return;
-		}
 		
 		if ( plugin.getGameMode().useDiscreetDeathMessages() )
 			pEvent.setDeathMessage(ChatColor.RED + player.getName() + " died");	

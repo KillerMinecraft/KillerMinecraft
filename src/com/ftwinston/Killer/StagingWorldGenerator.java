@@ -514,6 +514,15 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					if ( b != null )
 						b.setType(Material.DIRT);
 				}
+			
+			// floor to fall onto, to ensure monsters die
+			for ( int x = spleefMinX - 5; x <= spleefMaxX + 5; x++ )
+				for ( int z=spleefMinZ - 5; z <= spleefMaxZ + 5; z++ )
+				{
+					b = getBlockAbs(chunk, x, 0, z);
+					if ( b != null )
+						b.setType(Material.OBSIDIAN);					
+				}
 				
 			// spleef viewing gallery
 			for ( int x = spleefMinX - 5; x <= spleefMaxX + 5; x++ )
@@ -618,53 +627,6 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				if ( b != null )
 					b.setType(Material.STONE_PLATE);
 			}
-			
-			/*
-			// write on the walls
-			boolean[][] text = writeBlockText("SETUP");
-			for ( int i=0; i<text.length; i++ )
-				for ( int j=0; j<text[i].length; j++ )
-				{
-					b = getBlockAbs(chunk, i + wallMinX + 2, j + floorY + 11, wallMinZ);
-					if ( b != null )
-						if ( text[i][j] )
-						{
-							b.setType(wool);
-							b.setData(textColorGame);
-						}
-						else
-							b.setType(wall);
-				}
-			text = writeBlockText("GAME");
-			for ( int i=0; i<text.length; i++ )
-				for ( int j=0; j<text[i].length; j++ )
-				{
-					b = getBlockAbs(chunk, i + wallMinX + 3, j + floorY + 5, wallMinZ);
-					if ( b != null )
-						if ( text[i][j] )
-						{
-							b.setType(wool);
-							b.setData(textColorGame);
-						}
-						else
-							b.setType(wall);
-				}
-			
-			text = writeBlockText("INFO");
-			for ( int i=0; i<text.length; i++ )
-				for ( int j=0; j<text[i].length; j++ )
-				{
-					b = getBlockAbs(chunk, wallMinX, j + floorY + 5, wallMinZ + text.length + 4 - i);
-					if ( b != null )
-						if ( text[i][j] )
-						{
-							b.setType(wool);
-							b.setData(textColorInfo);
-						}
-						else
-							b.setType(wall);
-				}
-			*/
 		}
 	}
 
@@ -760,7 +722,6 @@ public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			switch (ch)
 			{
 				case ' ':
-					columns.add(new boolean[5]);
 					columns.add(new boolean[5]);
 					columns.add(new boolean[5]);
 					columns.add(new boolean[5]);

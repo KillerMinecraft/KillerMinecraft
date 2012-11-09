@@ -71,7 +71,7 @@ public class Killer extends JavaPlugin
 		
 		if ( newState == GameState.stagingWorldSetup )
 		{
-			worldManager.showStartButtons(false);
+			stagingWorldManager.showStartButtons(false);
 		}
 		else if ( newState == GameState.worldDeletion )
 		{
@@ -82,12 +82,12 @@ public class Killer extends JavaPlugin
 			HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
 
 			// don't show the start buttons until the old world finishes deleting
-			worldManager.showWaitForDeletion();
-			worldManager.removeWorldGenerationIndicator();
+			stagingWorldManager.showWaitForDeletion();
+			stagingWorldManager.removeWorldGenerationIndicator();
 			
 			for ( Player player : getOnlinePlayers() )
 				if ( player.getWorld() != worldManager.stagingWorld )
-					playerManager.teleport(player, worldManager.getStagingWorldSpawnPoint());
+					playerManager.teleport(player, stagingWorldManager.getStagingWorldSpawnPoint());
 			
 			playerManager.reset(true);
 			
@@ -100,20 +100,23 @@ public class Killer extends JavaPlugin
 		}
 		else if ( newState == GameState.stagingWorldReady )
 		{
-			worldManager.showStartButtons(false);
+			stagingWorldManager.showStartButtons(false);
 		}
 		else if ( newState == GameState.stagingWorldConfirm )
 		{
-			worldManager.showStartButtons(true);
+			stagingWorldManager.showStartButtons(true);
 		}
 		else if( newState == GameState.worldGeneration )
 		{
 			worldManager.generateWorlds(worldOption, new Runnable() {
 				@Override
 				public void run() {
+					// don't waste memory on monsters in the staging world
+					stagingWorldManager.endMonsterArena();
+					
 					getGameMode().worldGenerationComplete(worldManager.mainWorld, worldManager.netherWorld);
 					setGameState(GameState.beforeAssignment);
-					worldManager.showStartButtons(false);
+					stagingWorldManager.showStartButtons(false);
 				}
 			});
 		}
@@ -126,7 +129,7 @@ public class Killer extends JavaPlugin
 			if ( prevState.usesGameWorlds )
 			{
 				worldManager.removeAllItems(worldManager.mainWorld);
-				worldManager.mainWorld.setTime(0);				
+				worldManager.mainWorld.setTime(0);
 			}
 			else
 				getServer().getPluginManager().registerEvents(getGameMode(), this);
@@ -139,6 +142,7 @@ public class Killer extends JavaPlugin
 	
 	private EventListener eventListener = new EventListener(this);
 	public WorldManager worldManager;
+	public StagingWorldManager stagingWorldManager;
 	public PlayerManager playerManager;
 	public VoteManager voteManager;
 	public StatsManager statsManager;

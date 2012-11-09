@@ -63,7 +63,7 @@ public class PlayerManager
 		if ( plugin.getGameState().usesGameWorlds )
 			teleport(player, plugin.getGameMode().getSpawnLocation(player));
 		else
-			teleport(player, plugin.worldManager.getStagingWorldSpawnPoint());
+			teleport(player, plugin.stagingWorldManager.getStagingWorldSpawnPoint());
 	}
 	
 	public class Info
