@@ -199,7 +199,7 @@ public class WorldManager
 			return loc.getBlockZ() < StagingWorldGenerator.spleefMinZ
 				|| loc.getBlockZ() > StagingWorldGenerator.spleefMaxZ
 				|| loc.getBlockX() < StagingWorldGenerator.spleefMinX
-				|| loc.getBlockX() > StagingWorldGenerator.spleefMaxX;	
+				|| loc.getBlockX() > StagingWorldGenerator.spleefMaxX;
 		}
 		
 		return plugin.getGameMode().isLocationProtected(loc);

@@ -180,7 +180,9 @@ public class EventListener implements Listener
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
 
-    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName()) || plugin.worldManager.isProtectedLocation(event.getBlock().getLocation()) )
+    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName())
+    		|| plugin.getGameMode().isLocationProtected(event.getBlock().getLocation())
+    		|| event.getBlock().getLocation().getWorld() == plugin.worldManager.stagingWorld )
     		event.setCancelled(true);
     }
     
@@ -222,7 +224,10 @@ public class EventListener implements Listener
     		}
     	
     	if ( event.getEntity().getWorld() == plugin.worldManager.stagingWorld )
+    	{
     		plugin.stagingWorldManager.stagingWorldMonsterKilled();
+    		event.setYield(0);
+    	}
     }
     
 	// switching between spectator items
@@ -479,7 +484,9 @@ public class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerQuit(PlayerQuitEvent event)
     {
-		if ( plugin.isGameWorld(event.getPlayer().getWorld()) )
+    	if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
+    		plugin.stagingWorldManager.stagingWorldPlayerKilled();
+    	else if ( plugin.isGameWorld(event.getPlayer().getWorld()) )
 			playerQuit(event.getPlayer(), true);
 	}
 	

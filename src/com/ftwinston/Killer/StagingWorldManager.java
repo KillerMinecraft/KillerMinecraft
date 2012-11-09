@@ -242,7 +242,7 @@ public class StagingWorldManager
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				@Override
 				public void run() {
-					spawnMonsterWave(); // needs to start (that's easy enough) when player enters					
+					spawnMonsterWave();					
 				}
 			}, 50);
 			
@@ -250,10 +250,16 @@ public class StagingWorldManager
 	
 	public void stagingWorldPlayerKilled()
 	{
-		if ( arenaModeIsSpleef || countPlayersInArena() > 0 )
+		if ( arenaModeIsSpleef )
 			return;
 		
-		endMonsterArena();
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+			@Override
+			public void run() {
+				if ( countPlayersInArena() == 0 )
+					endMonsterArena();
+			}
+		}, 40);
 	}
 	
 	public void endMonsterArena()
@@ -300,29 +306,21 @@ public class StagingWorldManager
 		WorldServer ws = ((CraftWorld)stagingWorld).getHandle();
 		ws.allowMonsters = true;
 		stagingWorld.setMonsterSpawnLimit(monsterWaveNumber);
-
-		Location loc;
 		
 		// wither + normal skeleton
 		if ( monsterWaveNumber == 5 )
 		{
 			numMonstersAlive = 2;
 			
-			loc = new Location(stagingWorld, StagingWorldGenerator.spleefMinX + random.nextDouble() * 16, StagingWorldGenerator.spleefY+1, StagingWorldGenerator.spleefMinZ + random.nextDouble() * 16);
-			loc.setY(stagingWorld.getHighestBlockYAt(loc));
-			
-			CraftSkeleton skeleton = (CraftSkeleton)stagingWorld.spawnEntity(loc, EntityType.SKELETON);
+			CraftSkeleton skeleton = (CraftSkeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
 			skeleton.getHandle().setSkeletonType(1);
 			skeleton.getHandle().setEquipment(0, new net.minecraft.server.ItemStack(net.minecraft.server.Item.STONE_SWORD));
 			skeleton.getHandle().a(new NBTTagCompound()); // this triggers attack behaviour
 			
-			skeleton = (CraftSkeleton)stagingWorld.spawnEntity(loc, EntityType.SKELETON);
+			skeleton = (CraftSkeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
 			skeleton.getHandle().setSkeletonType(0);
 			skeleton.getHandle().setEquipment(0, new net.minecraft.server.ItemStack(net.minecraft.server.Item.BOW));
 			skeleton.getHandle().a(new NBTTagCompound()); // this triggers attack behaviour
-			
-			loc = new Location(stagingWorld, StagingWorldGenerator.spleefMinX + random.nextDouble() * 16, StagingWorldGenerator.spleefY+1, StagingWorldGenerator.spleefMinZ + random.nextDouble() * 16);
-			loc.setY(stagingWorld.getHighestBlockYAt(loc));
 			return;
 		}
 		
@@ -330,36 +328,29 @@ public class StagingWorldManager
 		
 		if ( monsterWaveNumber % 10 == 0 )
 		{
-			loc = new Location(stagingWorld, StagingWorldGenerator.spleefMinX + random.nextDouble() * 16, StagingWorldGenerator.spleefY+1, StagingWorldGenerator.spleefMinZ + random.nextDouble() * 16);
-			loc.setY(stagingWorld.getHighestBlockYAt(loc));
-			numMonstersAlive++;
-			
 			// add a witch into the mix every 10th wave
-			stagingWorld.spawnEntity(loc, EntityType.WITCH);
+			stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.WITCH);
 		}
 		
 		for ( int i=0; i<monsterWaveNumber; i++ )
 		{
-			loc = new Location(stagingWorld, StagingWorldGenerator.spleefMinX + random.nextDouble() * 16, StagingWorldGenerator.spleefY+1, StagingWorldGenerator.spleefMinZ + random.nextDouble() * 16);
-			loc.setY(stagingWorld.getHighestBlockYAt(loc));
-			
 			switch ( random.nextInt(4) )
 			{
 			case 0:
-				stagingWorld.spawnEntity(loc, EntityType.SPIDER);
+				stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SPIDER);
 				break;
 			case 1:
-				stagingWorld.spawnEntity(loc, EntityType.ZOMBIE);
+				stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.ZOMBIE);
 				break;
 			case 2:
-				CraftSkeleton skeleton = (CraftSkeleton)stagingWorld.spawnEntity(loc, EntityType.SKELETON);
+				CraftSkeleton skeleton = (CraftSkeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
 				skeleton.getHandle().setSkeletonType(0);
 				skeleton.getHandle().setEquipment(0, new net.minecraft.server.ItemStack(net.minecraft.server.Item.BOW));
 				skeleton.getHandle().a(new NBTTagCompound()); // this triggers attack behaviour
 				
 				break;
 			case 3:
-				stagingWorld.spawnEntity(loc, EntityType.CREEPER);
+				stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.CREEPER);
 				break;
 			}
 		}
@@ -368,6 +359,24 @@ public class StagingWorldManager
 	}
 	
 	
+	private Location getMonsterSpawnLocation()
+	{
+		Location loc;
+		int triesLeft = 3, highestY;
+		do
+		{
+			loc = new Location(stagingWorld, StagingWorldGenerator.spleefMinX + random.nextDouble() * 16, StagingWorldGenerator.spleefY+1, StagingWorldGenerator.spleefMinZ + random.nextDouble() * 16);
+			highestY = stagingWorld.getHighestBlockYAt(loc);
+			triesLeft --;
+		}
+		while ( triesLeft > 0 && highestY < StagingWorldGenerator.spleefY );
+		
+		if ( highestY >= StagingWorldGenerator.spleefY )
+			loc.setY(highestY);
+		
+		return loc;
+	}
+
 	public void setupButtonClicked(int x, int z, Player player)
 	{
 		if ( z == StagingWorldGenerator.waitingButtonZ )
@@ -396,12 +405,17 @@ public class StagingWorldManager
 			else
 				player.getInventory().addItem(new ItemStack(Material.IRON_SWORD));
 			
-			if ( countPlayersInArena() == 0 )
+			if ( monsterWaveNumber == 0 )
 			{
-				rebuildArena();				
+				rebuildArena();
 				endMonsterArena();
 				if ( !arenaModeIsSpleef )
-					spawnMonsterWave();
+					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+						@Override
+						public void run() {
+							spawnMonsterWave();					
+						}
+					}, 50);
 			}
 		}
 		else if ( x == StagingWorldGenerator.mainButtonX )
@@ -544,7 +558,11 @@ public class StagingWorldManager
 	{
 		for ( int x=StagingWorldGenerator.spleefMinX; x<=StagingWorldGenerator.spleefMaxX; x++ )
 			for ( int z=StagingWorldGenerator.spleefMinZ; z<=StagingWorldGenerator.spleefMaxZ; z++ )
+			{
 				stagingWorld.getBlockAt(x, StagingWorldGenerator.spleefY, z).setType(Material.DIRT);
+				for ( int y=StagingWorldGenerator.spleefY+1; y<StagingWorldGenerator.spleefY+3; y++ )
+					stagingWorld.getBlockAt(x, y, z).setType(Material.AIR);
+			}
 		
 		if ( !arenaModeIsSpleef )
 		{
