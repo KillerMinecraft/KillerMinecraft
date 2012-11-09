@@ -239,13 +239,16 @@ public class StagingWorldManager
 		numMonstersAlive--;
 		
 		if ( numMonstersAlive <= 0 )
+		{
+			prepareNextMonsterWave();
+			
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				@Override
 				public void run() {
 					spawnMonsterWave();					
 				}
 			}, 50);
-			
+		}
 	}
 	
 	public void stagingWorldPlayerKilled()
@@ -291,7 +294,7 @@ public class StagingWorldManager
 	}
 	
 	private static final int arenaScoreZ = StagingWorldGenerator.spleefMaxZ + 8, arenaScoreX = StagingWorldGenerator.waitingMonsterButtonX + 2;
-	public void spawnMonsterWave()
+	public void prepareNextMonsterWave()
 	{
 		monsterWaveNumber++;
 		
@@ -301,8 +304,10 @@ public class StagingWorldManager
 		for ( int i=0; i<text.length; i++ )
 			for ( int j=0; j<text[i].length; j++ )
 				stagingWorld.getBlockAt(xMin-i, yMin + j, arenaScoreZ).setType(text[i][j] ? Material.SNOW_BLOCK : Material.AIR);
-		
-		
+	}
+	
+	public void spawnMonsterWave()
+	{
 		WorldServer ws = ((CraftWorld)stagingWorld).getHandle();
 		ws.allowMonsters = true;
 		stagingWorld.setMonsterSpawnLimit(monsterWaveNumber);
@@ -409,6 +414,8 @@ public class StagingWorldManager
 			{
 				rebuildArena();
 				endMonsterArena();
+				prepareNextMonsterWave();
+				
 				if ( !arenaModeIsSpleef )
 					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 						@Override
