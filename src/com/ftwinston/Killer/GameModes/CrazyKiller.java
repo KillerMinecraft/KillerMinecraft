@@ -155,22 +155,11 @@ public class CrazyKiller extends GameMode
 		Location spawnPoint;
 		if ( getTeam(player) == 1 )
 		{
-			// the killer starts a little bit away from the other players
-			spawnPoint = WorldManager.instance.mainWorld.getSpawnLocation();
-			switch ( random.nextInt(4) )
-			{
-				case 0:
-					spawnPoint = randomizeLocation(spawnPoint, 32, 48, 0, 0, -48, 48); break;
-				case 1:
-					spawnPoint = randomizeLocation(spawnPoint, -48, -32, 0, 0, -48, 48); break;
-				case 2:
-					spawnPoint = randomizeLocation(spawnPoint, -48, 48, 0, 0, 32, 48); break;
-				case 3:
-					spawnPoint = randomizeLocation(spawnPoint, -48, 48, 0, 0, -48, -32); break;
-			}
+			// the killer starts a good distance away from the other players
+			spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), 64, 0, 64, 96, 0, 96);
 		}
 		else
-			spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), -8, 8, 0, 0, -8, 8);
+			spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), 0, 0, 0, 8, 0, 8);
 		
 		return getSafeSpawnLocationNear(spawnPoint);
 	}

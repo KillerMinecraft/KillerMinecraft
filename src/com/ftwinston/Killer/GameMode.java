@@ -300,13 +300,14 @@ public abstract class GameMode implements Listener
 		return candidates.get(random.nextInt(candidates.size()));
 	}
 	
-	protected final Location randomizeLocation(Location loc, double xMin, double xMax, double yMin, double yMax, double zMin, double zMax)
+	// Adds a random offset to a location. Each component of the location will be offset by a value at least as different as the corresponding min, and at most as different as the max.
+	protected final Location randomizeLocation(Location loc, double xMin, double yMin, double zMin, double xMax, double yMax, double zMax)
 	{
-		double xOff = xMin == xMax ? xMin : (xMin + random.nextDouble() * (xMax - xMin));
-		double yOff = yMin == yMax ? yMin : (yMin + random.nextDouble() * (yMax - yMin));
-		double zOff = zMin == zMax ? zMin : (zMin + random.nextDouble() * (zMax - zMin));
-		
-		return loc.add(xOff, yOff, zOff);
+		double xOff = xMin + (xMax - xMin) * random.nextDouble();
+		double yOff = yMin + (yMax - yMin) * random.nextDouble();
+		double zOff = zMin + (zMax - zMin) * random.nextDouble();
+	
+		return loc.add(random.nextBoolean() ? xOff : -xOff, random.nextBoolean() ? yOff : -yOff, random.nextBoolean() ? zOff : -zOff);
 	}
 	
 	protected final Location getSafeSpawnLocationNear(Location loc)
@@ -316,7 +317,7 @@ public abstract class GameMode implements Listener
 		do
 		{
 			double range = attempt * 2.5;
-			loc = randomizeLocation(loc, -range, range, 0, 0, -range, range);
+			loc = randomizeLocation(loc, 0, 0, 0, range, 0, range);
 			
 			Chunk chunk = world.getChunkAt(loc);
 			if (!world.isChunkLoaded(chunk))
