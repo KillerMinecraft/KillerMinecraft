@@ -183,6 +183,7 @@ public class CrazyKiller extends GameMode
 		killer.sendMessage(ChatColor.RED + "You are the killer!\n" + ChatColor.RESET + "Every dirt block you pick up will turn into TNT...");
 		
 		PlayerInventory inv = killer.getInventory();
+		inv.addItem(new ItemStack(Material.DIAMOND_PICKAXE, 1));
 		inv.addItem(new ItemStack(Material.COMPASS, 1));
 		inv.addItem(new ItemStack(Material.COOKED_BEEF, 10));
 		
@@ -191,6 +192,10 @@ public class CrazyKiller extends GameMode
 		
 		inv.addItem(new ItemStack(Material.TNT, 4));
 		inv.addItem(new ItemStack(Material.DIRT, 16));
+		
+		// give them one swiftness potion for each player on the other team
+		// 8290 = swiftness 2 extended, 8226 = swiftness 2, 8194 = swiftness, 8258 = swiftness extended
+		inv.addItem(new ItemStack(Material.POTION, players.size()-1, (short)8226));
 		
 		// then setup everyone else on team 0
 		for ( Player player : players )
