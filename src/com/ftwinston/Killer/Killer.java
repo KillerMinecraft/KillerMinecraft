@@ -89,7 +89,7 @@ public class Killer extends JavaPlugin
 				if ( player.getWorld() != worldManager.stagingWorld )
 					playerManager.teleport(player, stagingWorldManager.getStagingWorldSpawnPoint());
 			
-			playerManager.reset(true);
+			playerManager.reset();
 			
 			worldManager.deleteKillerWorlds(new Runnable() {
 				@Override
@@ -213,7 +213,7 @@ public class Killer extends JavaPlugin
 	
 	public void onDisable()
 	{
-		playerManager.reset(true);
+		playerManager.reset();
 		worldManager.onDisable();
 	}
 	
@@ -481,11 +481,11 @@ public class Killer extends JavaPlugin
 			
 			// if they've already reached the end of the messages, start again from the beginning
 			Player player = (Player)sender;
-			PlayerManager.Info info = playerManager.getInfo(player.getName());
-			if ( info.nextHelpMessage == -1 )
-				info.nextHelpMessage = 0;
-			
-			getGameMode().sendGameModeHelpMessage(player);
+			if ( !getGameMode().sendGameModeHelpMessage(player) )
+			{// if there was no message to send, restart from the beginning
+				playerManager.getInfo(player.getName()).nextHelpMessage = 0;
+				getGameMode().sendGameModeHelpMessage(player);
+			}
 			return true;
 		}
 		else if (cmd.getName().equalsIgnoreCase("killer"))

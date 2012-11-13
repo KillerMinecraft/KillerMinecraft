@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -590,7 +591,7 @@ public abstract class GameMode implements Listener
 			sendGameModeHelpMessage(player);
 	}
 	
-	public final void sendGameModeHelpMessage(Player player)
+	public final boolean sendGameModeHelpMessage(Player player)
 	{
 		PlayerManager.Info info = plugin.playerManager.getInfo(player.getName());
 		String message = null;
@@ -603,20 +604,21 @@ public abstract class GameMode implements Listener
 			else
 			{
 				if ( info.nextHelpMessage == 0 )
-					message = getName() + "\n" + message; // put the game mode name on the front of the first message
+					message = ChatColor.YELLOW + getName() + ChatColor.RESET + "\n" + message; // put the game mode name on the front of the first message
 				
 				player.sendMessage(message);
 				info.nextHelpMessage ++;
-				return;
+				return true;
 			}
 		}
 		
 		message = getExtraHelpMessage(info.nextHelpMessage); // -1 ... -m
 		if ( message == null )
-			return;
+			return false;
 		
 		player.sendMessage(message);
 		info.nextHelpMessage --;
+		return true;
 	}
 	
 	protected class Option

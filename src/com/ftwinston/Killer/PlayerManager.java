@@ -84,15 +84,6 @@ public class PlayerManager
 		
 		public void setAlive(boolean b)
 		{
-			if ( b )
-			{
-				nextHelpMessage = 0;
-			}
-			else if ( a ) // currently alive, being cleared
-			{
-				nextHelpMessage = -1;
-			}
-		
 			a = b;
 		}
 		
@@ -112,10 +103,9 @@ public class PlayerManager
 			info.setTeam(teamNum);
 	}
 
-	public void reset(boolean resetInventories)
+	public void reset()
 	{
 		playerInfo.clear();
-		//numAlive = 0;
 		
 		if ( helpMessageProcess != -1 )
 		{
@@ -125,7 +115,7 @@ public class PlayerManager
 		
 		for ( Player player : plugin.getOnlinePlayers() )
 		{
-			resetPlayer(player, resetInventories);
+			resetPlayer(player);
 			setAlive(player, true);
 		}
 		
@@ -145,7 +135,7 @@ public class PlayerManager
 	
 	public void startGame()
 	{
-		reset(true);
+		reset();  
 		
 		// start sending out help messages explaining the game rules
 		helpMessageProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
@@ -236,7 +226,7 @@ public class PlayerManager
 			playerInfo.put(player.getName(), info);
 			
 			// this player is new for this game, but they might still have stuff from previous game on same world. clear them down.
-			resetPlayer(player, true);
+			resetPlayer(player);
 		}
 		else
 			isNewPlayer = false;
@@ -437,7 +427,7 @@ public class PlayerManager
 				p.showPlayer(player);
 	}
 
-	public void resetPlayer(Player player, boolean resetInventory)
+	public void resetPlayer(Player player)
 	{
 		if ( !player.isDead() )
 		{
@@ -448,21 +438,18 @@ public class PlayerManager
 			player.setExhaustion(0);
 			player.setFireTicks(0);
 			
-			if ( resetInventory )
-			{
-				PlayerInventory inv = player.getInventory();
-				inv.clear();
-				inv.setHelmet(null);
-				inv.setChestplate(null);
-				inv.setLeggings(null);
-				inv.setBoots(null);
-				
-				player.closeInventory(); // this stops them from keeping items they had in (e.g.) a crafting table
-				
-				if ( isAlive(player.getName()) ) // if any starting items are configured, give them if the player is alive
-					for ( Material material : Settings.startingItems )
-						inv.addItem(new ItemStack(material));
-			}
+			PlayerInventory inv = player.getInventory();
+			inv.clear();
+			inv.setHelmet(null);
+			inv.setChestplate(null);
+			inv.setLeggings(null);
+			inv.setBoots(null);
+			
+			player.closeInventory(); // this stops them from keeping items they had in (e.g.) a crafting table
+			
+			if ( isAlive(player.getName()) ) // if any starting items are configured, give them if the player is alive
+				for ( Material material : Settings.startingItems )
+					inv.addItem(new ItemStack(material));
 		}
 		
 		clearPlayerNameColor(player);
