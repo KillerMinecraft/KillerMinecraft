@@ -444,6 +444,9 @@ public class MysteryKiller extends GameMode
 	@Override
 	public void playerKilledOrQuit(OfflinePlayer player)
 	{
+		if ( hasGameFinished() )
+			return;
+		
 		int numFriendlies = getOnlinePlayers(0, true).size();
 		if ( numFriendlies != 0 )
 		{

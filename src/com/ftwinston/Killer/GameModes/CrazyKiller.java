@@ -230,6 +230,9 @@ public class CrazyKiller extends GameMode
 	@Override
 	public void playerKilledOrQuit(OfflinePlayer player)
 	{
+		if ( hasGameFinished() )
+			return;
+		
 		int team = getTeam(player);
 		int numSurvivorsOnTeam = getOnlinePlayers(team, true).size();
 		

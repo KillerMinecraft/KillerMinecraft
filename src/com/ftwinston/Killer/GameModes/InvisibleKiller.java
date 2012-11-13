@@ -342,6 +342,9 @@ public class InvisibleKiller extends GameMode
 	@Override
 	public void playerKilledOrQuit(OfflinePlayer player)
 	{
+		if ( hasGameFinished() )
+			return;
+		
 		int team = getTeam(player);
 		int numSurvivorsOnTeam = getOnlinePlayers(team, true).size();
 		
@@ -352,17 +355,17 @@ public class InvisibleKiller extends GameMode
 		if ( numSurvivorsTotal == 0 )
 		{
 			broadcastMessage("Everybody died - nobody wins!");
-			finishGame(); // draw, nobody wins
+			finishGame();
 		}
 		else if ( team == 1 )
 		{
 			broadcastMessage("The killer died - the friendly players win!");
-			finishGame(); // killer died, friendlies win
+			finishGame();
 		}
 		else
 		{
 			broadcastMessage("All the friendly players died - the killer wins!");
-			finishGame(); // friendlies died, killer wins
+			finishGame();
 		}
 	}
 	

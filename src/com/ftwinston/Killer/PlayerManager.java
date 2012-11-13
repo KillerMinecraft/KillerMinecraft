@@ -293,7 +293,7 @@ public class PlayerManager
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time
-	public void playerKilled(OfflinePlayer player)
+	public void playerKilled(final OfflinePlayer player)
 	{
 		if ( !plugin.getGameState().usesGameWorlds )
 			return;
@@ -309,7 +309,12 @@ public class PlayerManager
 			return;
 		}
 		
-		plugin.getGameMode().playerKilledOrQuit(player);
+		plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new Runnable() {
+			@Override
+			public void run() {
+				plugin.getGameMode().playerKilledOrQuit(player);				
+			}
+		}, 15); // game mode doesn't respond for short period, so as to be able to account for other deaths happening simultaneously (e.g. caused by the same explosion)
 		
 		Player online = player.isOnline() ? (Player)player : null;
 		if ( online != null )

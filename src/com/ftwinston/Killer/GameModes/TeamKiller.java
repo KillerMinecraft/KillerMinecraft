@@ -288,6 +288,9 @@ public class TeamKiller extends GameMode
 	@Override
 	public void playerKilledOrQuit(OfflinePlayer player)
 	{
+		if ( hasGameFinished() )
+			return;
+		
 		int[] teamSizes = new int[numTeams];
 		int numTeamsWithSurvivors = 0, someTeamWithSurvivors = -1;
 		for ( int i=0; i<numTeams; i++ )

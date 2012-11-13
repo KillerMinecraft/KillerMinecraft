@@ -276,6 +276,9 @@ public class ContractKiller extends GameMode
 	@Override
 	public void playerKilledOrQuit(OfflinePlayer player)
 	{
+		if ( hasGameFinished() )
+			return;
+		
 		List<Player> survivors = getOnlinePlayers(true);
 		
 		if ( survivors.size() > 1 ) 

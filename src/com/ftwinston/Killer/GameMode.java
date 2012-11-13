@@ -523,8 +523,16 @@ public abstract class GameMode implements Listener
 			player.teleport(getSpawnLocation(player));
 	}
 	
+	protected boolean hasGameFinished()
+	{
+		return !plugin.getGameState().usesGameWorlds || plugin.getGameState() == GameState.finished;
+	}
+	
 	public final void finishGame()
 	{	
+		if ( hasGameFinished() )
+			return;
+		
 		gameFinished();
 		plinthLoc = null;
 		
