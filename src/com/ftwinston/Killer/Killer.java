@@ -221,7 +221,7 @@ public class Killer extends JavaPlugin
 	public ShapedRecipe dispenserRecipe;
 	ShapelessRecipe enderRecipe;
 	
-	boolean dispenserRecipeEnabled = true;
+	private boolean dispenserRecipeEnabled = true;
 	public void toggleDispenserRecipe()
 	{
 		dispenserRecipeEnabled = !dispenserRecipeEnabled;
@@ -241,6 +241,8 @@ public class Killer extends JavaPlugin
         	}
 	}
 	
+	public boolean isDispenserRecipeEnabled() { return dispenserRecipeEnabled; }
+	
 	public boolean isDispenserRecipe(Recipe recipe)
 	{
 		if ( recipe.getResult().getType() != dispenserRecipe.getResult().getType() || !(recipe instanceof ShapedRecipe) )
@@ -255,7 +257,7 @@ public class Killer extends JavaPlugin
 		return false;	
 	}
 	
-	boolean enderEyeRecipeEnabled = true;
+	private boolean enderEyeRecipeEnabled = true;
 	public void toggleEnderEyeRecipe()
 	{
 		enderEyeRecipeEnabled = !enderEyeRecipeEnabled;
@@ -275,6 +277,8 @@ public class Killer extends JavaPlugin
         	}
 	}
 	
+	public boolean isEnderEyeRecipeEnabled() { return enderEyeRecipeEnabled; }
+	
 	public boolean isEnderEyeRecipe(Recipe recipe)
 	{
 		if ( recipe.getResult().getType() != enderRecipe.getResult().getType() || !(recipe instanceof ShapelessRecipe) )
@@ -289,7 +293,7 @@ public class Killer extends JavaPlugin
     	return false;
 	}
 	
-	boolean monsterEggsEnabled = true;
+	private boolean monsterEggsEnabled = true;
 	public void toggleMonsterEggRecipes()
 	{
 		monsterEggsEnabled = !monsterEggsEnabled;
@@ -308,6 +312,8 @@ public class Killer extends JavaPlugin
             	iterator.remove();
     	}
 	}
+	
+	public boolean isMonsterEggRecipeEnabled() { return monsterEggsEnabled; }
 	
 	public boolean isMonsterEggRecipe(Recipe recipe)
 	{

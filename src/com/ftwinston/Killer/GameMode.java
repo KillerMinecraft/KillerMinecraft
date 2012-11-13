@@ -103,6 +103,34 @@ public abstract class GameMode implements Listener
 	protected abstract String describeTeam(int teamNum, boolean plural);
 
 	public abstract String getHelpMessage(int messageNum, int teamNum);
+	
+	private String getExtraHelpMessage(int messageNum)
+	{
+		boolean use1 = usesNether() && plugin.isEnderEyeRecipeEnabled();
+		boolean use2 = plugin.isMonsterEggRecipeEnabled();
+		boolean use3 = plugin.isDispenserRecipeEnabled();
+		
+		if ( !use1 )
+			messageNum --;
+		
+		if ( messageNum < -1 && !use2 )
+			messageNum --;
+		
+		if ( messageNum < -2 && !use3 )
+			messageNum --;
+			
+		switch ( messageNum )
+		{
+			case -1:
+				return "Eyes of ender will help you find nether fortresses (to get blaze rods).\nThey can be crafted from an ender pearl and a spider eye.";
+			case -2:
+				return "Several monster eggs can be crafted by combining one of their dropped items with an iron ingot.";
+			case -3:
+				return "Dispensers can be crafted using a sapling instead of a bow. These work well with monster eggs.";
+			default:
+				return null;
+		}
+	}
 
 	public abstract boolean teamAllocationIsSecret();
 	
@@ -557,20 +585,30 @@ public abstract class GameMode implements Listener
 	public final void sendGameModeHelpMessage(Player player)
 	{
 		PlayerManager.Info info = plugin.playerManager.getInfo(player.getName());
-		if ( info.nextHelpMessage == -1 )
-			return;
+		String message = null;
 		
-		String message = getHelpMessage(info.nextHelpMessage, info.getTeam());
-		if ( message == null )
+		if ( info.nextHelpMessage >= 0 )
 		{
-			info.nextHelpMessage = -1; 
-			return;
+			message = getHelpMessage(info.nextHelpMessage, info.getTeam()); // 0 ... n
+			if ( message == null )
+				info.nextHelpMessage = -1;
+			else
+			{
+				if ( info.nextHelpMessage == 0 )
+					message = getName() + "\n" + message; // put the game mode name on the front of the first message
+				
+				player.sendMessage(message);
+				info.nextHelpMessage ++;
+				return;
+			}
 		}
 		
-		if ( info.nextHelpMessage == 0 )
-			message = getName() + "\n" + message; // put the game mode name on the front of the first message
+		message = getExtraHelpMessage(info.nextHelpMessage); // -1 ... -m
+		if ( message == null )
+			return;
+		
 		player.sendMessage(message);
-		info.nextHelpMessage ++;
+		info.nextHelpMessage --;
 	}
 	
 	protected class Option

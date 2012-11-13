@@ -107,16 +107,7 @@ public class CrazyKiller extends GameMode
 					return "You can make buttons and pressure plates with the stone you started with.\nTry to avoid blowing yourself up!";
 				else
 					return "The killer starts with enough stone and redstone to make plenty buttons, wires and pressure plates.";
-			
-			case 6:
-				return "Eyes of ender will help you find fortresses in the nether (to get blaze rods).\nThey can be crafted from an ender pearl and a spider eye.";
-			
-			case 7:
-				return "Several monster eggs can be crafted by combining one of their dropped items with an iron ingot.";
 
-			case 8:
-				return "Dispensers can be crafted using a sapling instead of a bow. These work well with monster eggs.";
-			
 			default:
 				return null;
 		}

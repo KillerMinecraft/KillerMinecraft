@@ -163,15 +163,6 @@ public class MysteryKiller extends GameMode
 				else
 					return "If the killer makes a compass, it will point at the nearest player. This won't work for other players.";
 
-			case 6:
-				return "Eyes of ender will help you find fortresses in the nether (to get blaze rods).\nThey can be crafted from an ender pearl and a spider eye.";
-			
-			case 7:
-				return "Several monster eggs can be crafted by combining one of their dropped items with an iron ingot.";
-
-			case 8:
-				return "Dispensers can be crafted using a sapling instead of a bow. These work well with monster eggs.";
-				
 			default:
 				return null;
 		}

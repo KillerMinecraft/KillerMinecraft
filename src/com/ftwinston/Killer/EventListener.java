@@ -311,7 +311,7 @@ public class EventListener implements Listener
     	}
     	
 		// eyes of ender can be made to seek out nether fortresses
-    	if ( plugin.enderEyeRecipeEnabled && event.getPlayer().getWorld() == plugin.worldManager.netherWorld && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
+    	if ( plugin.isEnderEyeRecipeEnabled() && event.getPlayer().getWorld() == plugin.worldManager.netherWorld && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
     	{
 			if ( !plugin.worldManager.seekNearestNetherFortress(event.getPlayer()) )
 				event.getPlayer().sendMessage("No nether fortresses nearby");
@@ -399,9 +399,9 @@ public class EventListener implements Listener
     	// killer recipes can only be crafter in killer worlds, or we could screw up the rest of the server
     	if ( !plugin.isGameWorld(event.getWhoClicked().getWorld()) )
     	{
-    		if ( 	(plugin.dispenserRecipeEnabled && plugin.isDispenserRecipe(event.getRecipe()))
-    			 || (plugin.enderEyeRecipeEnabled && plugin.isEnderEyeRecipe(event.getRecipe()))
-    			 || (plugin.monsterEggsEnabled && plugin.isMonsterEggRecipe(event.getRecipe()))
+    		if ( 	(plugin.isDispenserRecipeEnabled() && plugin.isDispenserRecipe(event.getRecipe()))
+    			 || (plugin.isEnderEyeRecipeEnabled() && plugin.isEnderEyeRecipe(event.getRecipe()))
+    			 || (plugin.isMonsterEggRecipeEnabled() && plugin.isMonsterEggRecipe(event.getRecipe()))
     			)
     		{
     			event.setCancelled(true);

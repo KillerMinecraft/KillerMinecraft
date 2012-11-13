@@ -504,7 +504,7 @@ public class StagingWorldManager
 				else if ( num == 2 )
 					plugin.toggleEnderEyeRecipe();
 
-				newValues = new boolean[] { plugin.monsterEggsEnabled, plugin.dispenserRecipeEnabled, plugin.enderEyeRecipeEnabled };
+				newValues = new boolean[] { plugin.isMonsterEggRecipeEnabled(), plugin.isDispenserRecipeEnabled(), plugin.isEnderEyeRecipeEnabled() };
 				updateSetupOptionButtons(newValues);
 				break;
 			case MONSTERS:

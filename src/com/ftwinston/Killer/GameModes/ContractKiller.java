@@ -85,15 +85,6 @@ public class ContractKiller extends GameMode
 			case 3:
 				return "When you kill your target, you are assigned their target, and the game continues until only one player remains alive.";
 			
-			case 4:
-				return "When someone attacks you, you will be told if they are allowed to kill you. If they're not, don't kill them back!";
-			
-			case 5:
-				return "Several monster eggs can be crafted by combining one of their dropped items with an iron ingot.";
-
-			case 6:
-				return "Dispensers can be crafted using a sapling instead of a bow. These work well with monster eggs.";
-			
 			default:
 				return null;
 		}
