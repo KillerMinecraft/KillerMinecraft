@@ -542,6 +542,9 @@ public class EventListener implements Listener
     		return;
     	}
     	
+    	if ( !(event instanceof PlayerDeathEvent) )
+    		return;
+    	
     	PlayerDeathEvent pEvent = (PlayerDeathEvent)event;
 		
     	Player player = pEvent.getEntity();
