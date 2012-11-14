@@ -12,7 +12,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.generator.BlockPopulator;
 
-public class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
+class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 {
 	public StagingWorldGenerator()
 	{

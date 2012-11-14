@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.ftwinston.Killer.GameMode;
-import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -289,7 +288,7 @@ public class FarmKiller extends GameMode
 			case 3:
 				return dropOffCenter.add(0, 0, -20);
 			default:
-				return WorldManager.instance.mainWorld.getSpawnLocation();
+				return getMainWorld().getSpawnLocation();
 		}
 	}
 	

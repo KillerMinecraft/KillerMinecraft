@@ -7,7 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
 
-public class StatsManager
+class StatsManager
 {
 	Killer plugin;
 	public StatsManager(Killer plugin)

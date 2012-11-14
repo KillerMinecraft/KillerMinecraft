@@ -81,7 +81,7 @@ public abstract class GameMode implements Listener
 	public static GameMode get(int num) { return gameModes.get(num); }
 	
 	private Killer plugin;
-	protected Random random = new Random();
+	protected final Random random = new Random();
 	
 	private final void initialize(Killer killer)
 	{
@@ -406,7 +406,7 @@ public abstract class GameMode implements Listener
 		return b.getType() != Material.LAVA && b.getType() != Material.STATIONARY_LAVA;
 	}
 	
-	public Player getAttacker(EntityDamageEvent event)
+	public final Player getAttacker(EntityDamageEvent event)
 	{
 		Player attacker = null;
 		if ( event instanceof EntityDamageByEntityEvent )
@@ -487,7 +487,7 @@ public abstract class GameMode implements Listener
 		return plinthLoc;
 	}
 	
-	protected boolean isOnPlinth(Location loc)
+	protected final boolean isOnPlinth(Location loc)
 	{
 		return  plinthLoc != null && loc.getWorld() == plinthLoc.getWorld()
 	            && loc.getX() >= plinthLoc.getBlockX() - 1
@@ -496,7 +496,7 @@ public abstract class GameMode implements Listener
 	            && loc.getZ() <= plinthLoc.getBlockZ() + 1;
 	}
 	
-	protected void setPlayerVisibility(Player player, boolean visible)
+	protected final void setPlayerVisibility(Player player, boolean visible)
 	{
 		if ( visible )
 			plugin.playerManager.makePlayerVisibleToAll(player);
@@ -504,18 +504,24 @@ public abstract class GameMode implements Listener
 			plugin.playerManager.makePlayerInvisibleToAll(player);
 	}
 	
-	protected void hidePlayer(Player player, Player looker)
+	protected final void hidePlayer(Player player, Player looker)
 	{
 		plugin.playerManager.hidePlayer(looker, player);
 	}
 	
 	protected final JavaPlugin getPlugin() { return plugin; }
 	
+	private World mainWorld, netherWorld;
+	protected final World getMainWorld() { return mainWorld; }
+	protected final World getNetherWorld() { return netherWorld; }
 	
 	// methods to be used by external code for accessing the game modes, rather than going directly into the mode-specific functions
 	
 	public final void startGame()
 	{
+		mainWorld = plugin.worldManager.mainWorld;
+		netherWorld = plugin.worldManager.netherWorld;
+		
 		plugin.forcedGameEnd = false;
 		plugin.playerManager.startGame();
 		gameStarted();
@@ -524,7 +530,7 @@ public abstract class GameMode implements Listener
 			player.teleport(getSpawnLocation(player));
 	}
 	
-	protected boolean hasGameFinished()
+	protected final boolean hasGameFinished()
 	{
 		return !plugin.getGameState().usesGameWorlds || plugin.getGameState() == GameState.finished;
 	}
@@ -621,7 +627,7 @@ public abstract class GameMode implements Listener
 		return true;
 	}
 	
-	protected class Option
+	protected final class Option
 	{
 		public Option(String name, boolean enabledByDefault)
 		{
@@ -638,8 +644,8 @@ public abstract class GameMode implements Listener
 	}
 	
 	private List<Option> options = new ArrayList<Option>();
-	public List<Option> getOptions() { return options; }
-	public Option getOption(int num) { return options.get(num); }
+	public final List<Option> getOptions() { return options; }
+	public final Option getOption(int num) { return options.get(num); }
 	
 	public boolean toggleOption(int num)
 	{
@@ -652,25 +658,25 @@ public abstract class GameMode implements Listener
 	}
 	
 	// allows game modes to determine if an event is in their game world
-	protected boolean shouldIgnoreEvent(Entity e)
+	protected final boolean shouldIgnoreEvent(Entity e)
 	{
 		return !plugin.isGameWorld(e.getWorld());
 	}
 	
 	// allows events to determine if an event is in their game world
-	protected boolean shouldIgnoreEvent(Block b)
+	protected final boolean shouldIgnoreEvent(Block b)
 	{
 		return !plugin.isGameWorld(b.getWorld());
 	}
 	
 	// allows events to determine if an event is in their game world
-	protected boolean shouldIgnoreEvent(World w)
+	protected final boolean shouldIgnoreEvent(World w)
 	{
 		return !plugin.isGameWorld(w);
 	}
 	
 	// allows events to determine if an event is in their game world
-	protected boolean shouldIgnoreEvent(Location l)
+	protected final boolean shouldIgnoreEvent(Location l)
 	{
 		return !plugin.isGameWorld(l.getWorld());
 	}

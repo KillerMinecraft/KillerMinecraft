@@ -53,7 +53,7 @@ import org.bukkit.generator.ChunkGenerator;
 
 import com.ftwinston.Killer.Killer.GameState;
 
-public class WorldManager
+class WorldManager
 {
 	public static WorldManager instance;
 	

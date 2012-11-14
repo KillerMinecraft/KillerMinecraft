@@ -6,7 +6,6 @@ import java.util.Map;
 
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.Settings;
-import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -176,10 +175,10 @@ public class InvisibleKiller extends GameMode
 		if ( getTeam(player) == 1 )
 		{
 			// the killer starts a little bit away from the other players
-			spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), 32, 0, 32, 48, 0, 48);
+			spawnPoint = randomizeLocation(getMainWorld().getSpawnLocation(), 32, 0, 32, 48, 0, 48);
 		}
 		else
-			spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), 0, 0, 0, 8, 0, 8);
+			spawnPoint = randomizeLocation(getMainWorld().getSpawnLocation(), 0, 0, 0, 8, 0, 8);
 		
 		return getSafeSpawnLocationNear(spawnPoint);
 	}

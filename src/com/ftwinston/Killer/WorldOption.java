@@ -4,20 +4,24 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
+import org.bukkit.generator.BlockPopulator;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import com.ftwinston.Killer.WorldOptions.CopyExistingWorld;
 import com.ftwinston.Killer.WorldOptions.DefaultWorld;
 import com.ftwinston.Killer.WorldOptions.LavaLand;
+import com.ftwinston.Killer.WorldOptions.LotsaTraps;
 import com.ftwinston.Killer.WorldOptions.Superflat;
 
 public abstract class WorldOption
 {
-	public static List<WorldOption> options = new ArrayList<WorldOption>();
-	public static WorldOption get(int num) { return options.get(num); }
+	static List<WorldOption> options = new ArrayList<WorldOption>();
+	static WorldOption get(int num) { return options.get(num); }
 	
-	public static void setup(Killer killer)
+	static void setup(Killer killer)
 	{
 		for ( int i=0; i<Settings.customWorldNames.size(); i++ )
 		{
@@ -40,6 +44,7 @@ public abstract class WorldOption
 			options.add(new Superflat());
 			
 			options.add(new LavaLand());
+			options.add(new LotsaTraps());
 		}
 		
 		for ( String name : Settings.customWorldNames )
@@ -58,13 +63,19 @@ public abstract class WorldOption
 		this.name = name;
 	}
 	
-	protected String name;
-	public String getName()
+	private String name;
+	public final String getName()
 	{
 		return name;
 	}
 
-	protected Killer plugin;
+	private Killer plugin;
+	protected final JavaPlugin getPlugin() { return plugin; }
+	
+	protected final World createWorld(WorldCreator wc, Runnable runWhenDone, BlockPopulator ... extraPopulators)
+	{
+		return plugin.worldManager.createWorld(wc, runWhenDone, extraPopulators);
+	}
 	
 	public final void createWorlds(final Runnable runWhenDone)
 	{
@@ -80,12 +91,14 @@ public abstract class WorldOption
 	}
 	
 	protected abstract void createMainWorld(String name, Runnable runWhenDone);
+	protected final void setMainWorld(World world) { plugin.worldManager.mainWorld = world; }
 	
 	protected void createNetherWorld(String name, Runnable runWhenDone)
 	{
 		WorldCreator wc = new WorldCreator(name).environment(Environment.NETHER);
-		plugin.worldManager.netherWorld = plugin.worldManager.createWorld(wc, runWhenDone);
+		setNetherWorld(createWorld(wc, runWhenDone));
 	}
+	protected final void setNetherWorld(World world) { plugin.worldManager.netherWorld = world; }
 	
 	public abstract boolean isFixedWorld();
 }

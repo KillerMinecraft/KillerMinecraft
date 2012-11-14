@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.Settings;
-import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -198,7 +197,7 @@ public class MysteryKiller extends GameMode
 	@Override
 	public Location getSpawnLocation(Player player)
 	{
-		Location spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), 0, 0, 0, 8, 0, 8);
+		Location spawnPoint = randomizeLocation(getMainWorld().getSpawnLocation(), 0, 0, 0, 8, 0, 8);
 		return getSafeSpawnLocationNear(spawnPoint);
 	}
 	

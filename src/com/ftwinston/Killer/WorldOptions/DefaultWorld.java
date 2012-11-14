@@ -15,6 +15,6 @@ public class DefaultWorld extends com.ftwinston.Killer.WorldOption
 	public void createMainWorld(String name, Runnable runWhenDone)
 	{
 		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL);
-		plugin.worldManager.mainWorld = plugin.worldManager.createWorld(wc, runWhenDone);
+		setMainWorld(createWorld(wc, runWhenDone));
 	}
 }

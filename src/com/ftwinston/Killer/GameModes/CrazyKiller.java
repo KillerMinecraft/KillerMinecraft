@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.Settings;
-import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -147,10 +146,10 @@ public class CrazyKiller extends GameMode
 		if ( getTeam(player) == 1 )
 		{
 			// the killer starts a good distance away from the other players
-			spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), 64, 0, 64, 96, 0, 96);
+			spawnPoint = randomizeLocation(getMainWorld().getSpawnLocation(), 64, 0, 64, 96, 0, 96);
 		}
 		else
-			spawnPoint = randomizeLocation(WorldManager.instance.mainWorld.getSpawnLocation(), 0, 0, 0, 8, 0, 8);
+			spawnPoint = randomizeLocation(getMainWorld().getSpawnLocation(), 0, 0, 0, 8, 0, 8);
 		
 		return getSafeSpawnLocationNear(spawnPoint);
 	}

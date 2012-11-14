@@ -14,7 +14,7 @@ import org.bukkit.conversations.Prompt;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-public class VoteManager
+class VoteManager
 {
 	public static VoteManager instance;
 	private Killer plugin;

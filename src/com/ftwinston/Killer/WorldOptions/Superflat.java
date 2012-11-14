@@ -2,6 +2,7 @@ package com.ftwinston.Killer.WorldOptions;
 
 import org.bukkit.World.Environment;
 import org.bukkit.WorldCreator;
+import org.bukkit.WorldType;
 
 public class Superflat extends com.ftwinston.Killer.WorldOption
 {
@@ -14,7 +15,7 @@ public class Superflat extends com.ftwinston.Killer.WorldOption
 	
 	public void createMainWorld(String name, Runnable runWhenDone)
 	{
-		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL);
-		plugin.worldManager.mainWorld = plugin.worldManager.createWorld(wc, runWhenDone);
+		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL).type(WorldType.FLAT);
+		setMainWorld(createWorld(wc, runWhenDone));
 	}
 }

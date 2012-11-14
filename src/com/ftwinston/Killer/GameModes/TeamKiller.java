@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.ftwinston.Killer.GameMode;
 import com.ftwinston.Killer.Settings;
-import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -194,7 +193,7 @@ public class TeamKiller extends GameMode
 			case 3:
 				loc = plinthLoc.add(0, 0, -20); break;
 			default:
-				loc = WorldManager.instance.mainWorld.getSpawnLocation(); // todo: improve this
+				loc = getMainWorld().getSpawnLocation(); // todo: improve this
 				break;
 		}
 		

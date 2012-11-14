@@ -25,7 +25,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
-public class PlayerManager
+class PlayerManager
 {
 	public static PlayerManager instance;
 	private Killer plugin;

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.ftwinston.Killer.GameMode;
-import com.ftwinston.Killer.WorldManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -117,7 +116,7 @@ public class ContractKiller extends GameMode
 	@Override
 	public Location getSpawnLocation(Player player)
 	{
-		Location worldSpawn = WorldManager.instance.mainWorld.getSpawnLocation();
+		Location worldSpawn = getMainWorld().getSpawnLocation();
 		
 		if ( !getOption(playersStartFarApart).isEnabled() )
 		{
@@ -404,7 +403,7 @@ public class ContractKiller extends GameMode
 	{
 		// if there's a value saved for this player pair/relationship, see if it was saved within the last 10 secs - if so, don't send.
 		String key = victim + "|" + attacker + "|" + relationship;
-		long currentTime = WorldManager.instance.mainWorld.getTime();
+		long currentTime = getMainWorld().getTime();
 		
 		if ( victimWarningTimes.containsKey(key) )
 		{

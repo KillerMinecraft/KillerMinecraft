@@ -42,7 +42,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.inventory.ItemStack;
 
-public class EventListener implements Listener
+class EventListener implements Listener
 {
     public static Killer plugin;
     
@@ -145,7 +145,10 @@ public class EventListener implements Listener
 			blockRatio = 8;
 		}
 		else
+		{
+			plugin.log.warning("can't determine from world for PlayerPortalEvent");
 			return;
+		}
 		
 		Location playerLoc = event.getPlayer().getLocation();
 		event.setTo(new Location(toWorld, (playerLoc.getX() * blockRatio), playerLoc.getY(), (playerLoc.getZ() * blockRatio), playerLoc.getYaw(), playerLoc.getPitch()));

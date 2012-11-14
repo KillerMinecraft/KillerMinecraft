@@ -23,7 +23,7 @@ import org.bukkit.inventory.PlayerInventory;
 
 import com.ftwinston.Killer.Killer.GameState;
 
-public class StagingWorldManager
+class StagingWorldManager
 {
 	public StagingWorldManager(Killer plugin, World world)
 	{
