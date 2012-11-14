@@ -23,72 +23,28 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.ftwinston.Killer.Killer.GameState;
 import com.ftwinston.Killer.PlayerManager;
-
-import com.ftwinston.Killer.GameModes.ContractKiller;
-import com.ftwinston.Killer.GameModes.CrazyKiller;
-import com.ftwinston.Killer.GameModes.InvisibleKiller;
-import com.ftwinston.Killer.GameModes.MysteryKiller;
-import com.ftwinston.Killer.GameModes.TeamKiller;
 import com.ftwinston.Killer.PlayerManager.Info;
 
 public abstract class GameMode implements Listener
 {
 	public static List<GameMode> gameModes = new ArrayList<GameMode>();
 
-	public static void setup(Killer killer)
-	{
-		GameMode g;
-	
-		if ( Settings.allowModeMysteryKiller )
-		{
-			g = new MysteryKiller();
-			g.initialize(killer);
-			gameModes.add(g);
-		}
-		
-		if ( Settings.allowModeInvisibleKiller )
-		{
-			g = new InvisibleKiller();
-			g.initialize(killer);
-			gameModes.add(g);
-		}
-		
-		if ( Settings.allowModeCrazyKiller )
-		{
-			g = new CrazyKiller();
-			g.plugin = killer;
-			g.initialize(killer);
-			gameModes.add(g);
-		}
-		
-		if ( Settings.allowModeTeamKiller )
-		{
-			g = new TeamKiller();
-			g.initialize(killer);
-			gameModes.add(g);
-		}
-		
-		if ( Settings.allowModeContractKiller )
-		{
-			g = new ContractKiller();
-			g.initialize(killer);
-			gameModes.add(g);
-		}
-		
-		killer.setGameMode(gameModes.get(0));
-	}
-	
 	public static GameMode get(int num) { return gameModes.get(num); }
 	
-	private Killer plugin;
+	Killer plugin;
 	protected final Random random = new Random();
 	
-	private final void initialize(Killer killer)
+	final void initialize(Killer killer)
 	{
 		plugin = killer;
 
 		for ( Option option : setupOptions() )
 			options.add(option);
+
+		gameModes.add(this);
+		
+		if ( gameModes.size() == 1 )
+			killer.setGameMode(this);
 	}
 	
 	// methods to be overridden by each game mode

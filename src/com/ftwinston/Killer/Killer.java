@@ -167,7 +167,6 @@ public class Killer extends JavaPlugin
         instance = this;
         
         Settings.setup(this);
-        GameMode.setup(this);
         WorldOption.setup(this);
 		
 		createRecipes();
@@ -216,6 +215,12 @@ public class Killer extends JavaPlugin
 		playerManager.reset();
 		worldManager.onDisable();
 	}
+	
+	public static void registerGameMode(GameMode mode)
+	{
+		mode.initialize(instance);
+	}
+	
 	
 	List<Recipe> monsterRecipes = new ArrayList<Recipe>();
 	ShapedRecipe dispenserRecipe;

@@ -9,11 +9,6 @@ import org.bukkit.Material;
 public class Settings
 {
 	public static boolean
-	allowModeMysteryKiller,
-	allowModeInvisibleKiller,
-	allowModeCrazyKiller,
-	allowModeTeamKiller,
-	allowModeContractKiller,
 	autoAssignKiller, // probably want to keep this
 	restartDayWhenFirstPlayerJoins, // don't want to keep this. Worlds are being created at start time anyway
 	lateJoinersStartAsSpectator,
@@ -37,12 +32,6 @@ public class Settings
 	public static void setup(Killer plugin)
 	{
 		plugin.getConfig().options().copyDefaults(true);
-		
-		allowModeMysteryKiller = readBoolean(plugin, "allowModeMysteryKiller", true);
-		allowModeInvisibleKiller = readBoolean(plugin, "allowModeInvisibleKiller", true);
-		allowModeCrazyKiller = readBoolean(plugin, "allowModeCrazyKiller", true);
-		allowModeTeamKiller = readBoolean(plugin, "allowModeTeamKiller", true);
-		allowModeContractKiller = readBoolean(plugin, "allowModeContractKiller", true);
 		
 		autoAssignKiller = readBoolean(plugin, "autoAssign", false);
 		restartDayWhenFirstPlayerJoins = readBoolean(plugin, "restartDay", true);
