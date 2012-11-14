@@ -42,7 +42,7 @@ public class Killer extends JavaPlugin
 	public Logger log = Logger.getLogger("Minecraft");
 	
 
-	public enum GameState
+	enum GameState
 	{
 		stagingWorldSetup(false, false, true), // in staging world, players need to choose mode/world
 		worldDeletion(false, false, true), // in staging world, hide start buttons, delete old world, then show start button again
@@ -63,8 +63,8 @@ public class Killer extends JavaPlugin
 	}
 	
 	private GameState gameState = GameState.stagingWorldSetup;
-	public GameState getGameState() { return gameState; }
-	public void setGameState(GameState newState)
+	GameState getGameState() { return gameState; }
+	void setGameState(GameState newState)
 	{
 		GameState prevState = gameState;
 		gameState = newState;
@@ -138,24 +138,24 @@ public class Killer extends JavaPlugin
 		}
 	}
 
-	public boolean stagingWorldIsServerDefault;
+	boolean stagingWorldIsServerDefault;
 	
 	private EventListener eventListener = new EventListener(this);
-	public WorldManager worldManager;
-	public StagingWorldManager stagingWorldManager;
-	public PlayerManager playerManager;
-	public VoteManager voteManager;
-	public StatsManager statsManager;
+	WorldManager worldManager;
+	StagingWorldManager stagingWorldManager;
+	PlayerManager playerManager;
+	VoteManager voteManager;
+	StatsManager statsManager;
 	
 	private GameMode gameMode = null;
-	public GameMode getGameMode() { return gameMode; }
-	public boolean setGameMode(GameMode g) { gameMode = g; return gameMode != null && worldOption != null; }
+	GameMode getGameMode() { return gameMode; }
+	boolean setGameMode(GameMode g) { gameMode = g; return gameMode != null && worldOption != null; }
 	
 	private WorldOption worldOption = null;
-	public WorldOption getWorldOption() { return worldOption; }
-	public boolean setWorldOption(WorldOption w) { worldOption = w; return gameMode != null && worldOption != null; }
+	WorldOption getWorldOption() { return worldOption; }
+	boolean setWorldOption(WorldOption w) { worldOption = w; return gameMode != null && worldOption != null; }
 	
-	public int monsterNumbers = 2, animalNumbers = 2;
+	int monsterNumbers = 2, animalNumbers = 2;
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
@@ -218,11 +218,11 @@ public class Killer extends JavaPlugin
 	}
 	
 	List<Recipe> monsterRecipes = new ArrayList<Recipe>();
-	public ShapedRecipe dispenserRecipe;
+	ShapedRecipe dispenserRecipe;
 	ShapelessRecipe enderRecipe;
 	
 	private boolean dispenserRecipeEnabled = true;
-	public void toggleDispenserRecipe()
+	void toggleDispenserRecipe()
 	{
 		dispenserRecipeEnabled = !dispenserRecipeEnabled;
 		
@@ -241,9 +241,9 @@ public class Killer extends JavaPlugin
         	}
 	}
 	
-	public boolean isDispenserRecipeEnabled() { return dispenserRecipeEnabled; }
+	boolean isDispenserRecipeEnabled() { return dispenserRecipeEnabled; }
 	
-	public boolean isDispenserRecipe(Recipe recipe)
+	boolean isDispenserRecipe(Recipe recipe)
 	{
 		if ( recipe.getResult().getType() != dispenserRecipe.getResult().getType() || !(recipe instanceof ShapedRecipe) )
     		return false;
@@ -258,7 +258,7 @@ public class Killer extends JavaPlugin
 	}
 	
 	private boolean enderEyeRecipeEnabled = true;
-	public void toggleEnderEyeRecipe()
+	void toggleEnderEyeRecipe()
 	{
 		enderEyeRecipeEnabled = !enderEyeRecipeEnabled;
 		
@@ -277,9 +277,9 @@ public class Killer extends JavaPlugin
         	}
 	}
 	
-	public boolean isEnderEyeRecipeEnabled() { return enderEyeRecipeEnabled; }
+	boolean isEnderEyeRecipeEnabled() { return enderEyeRecipeEnabled; }
 	
-	public boolean isEnderEyeRecipe(Recipe recipe)
+	boolean isEnderEyeRecipe(Recipe recipe)
 	{
 		if ( recipe.getResult().getType() != enderRecipe.getResult().getType() || !(recipe instanceof ShapelessRecipe) )
     		return false;
@@ -294,7 +294,7 @@ public class Killer extends JavaPlugin
 	}
 	
 	private boolean monsterEggsEnabled = true;
-	public void toggleMonsterEggRecipes()
+	void toggleMonsterEggRecipes()
 	{
 		monsterEggsEnabled = !monsterEggsEnabled;
 		
@@ -313,9 +313,9 @@ public class Killer extends JavaPlugin
     	}
 	}
 	
-	public boolean isMonsterEggRecipeEnabled() { return monsterEggsEnabled; }
+	boolean isMonsterEggRecipeEnabled() { return monsterEggsEnabled; }
 	
-	public boolean isMonsterEggRecipe(Recipe recipe)
+	boolean isMonsterEggRecipe(Recipe recipe)
 	{
 		return recipe.getResult().getType() == Material.MONSTER_EGG;
 	}
@@ -612,7 +612,7 @@ public class Killer extends JavaPlugin
 		return false;
 	}
 
-	public MinecraftServer getMinecraftServer()
+	MinecraftServer getMinecraftServer()
 	{
 		try
 		{
@@ -633,7 +633,7 @@ public class Killer extends JavaPlugin
 		return null;
 	}
 	
-	public YamlConfiguration getBukkitConfiguration()
+	YamlConfiguration getBukkitConfiguration()
 	{
 		YamlConfiguration config = null;
 		try
@@ -654,12 +654,12 @@ public class Killer extends JavaPlugin
 		return config;
 	}
 	
-	public boolean isGameWorld(World world)
+	boolean isGameWorld(World world)
 	{
 		return world == worldManager.mainWorld || world == worldManager.netherWorld || world == worldManager.stagingWorld;
 	}
 	
-	public final List<Player> getOnlinePlayers()
+	final List<Player> getOnlinePlayers()
 	{
 		ArrayList<Player> players = new ArrayList<Player>();
 		for ( Player player : getServer().getOnlinePlayers() )
@@ -669,7 +669,7 @@ public class Killer extends JavaPlugin
 	}
 	
 	boolean forcedGameEnd = false;
-	public void endGame(CommandSender actionedBy)
+	void endGame(CommandSender actionedBy)
 	{
 		if ( actionedBy != null )
 			getGameMode().broadcastMessage(actionedBy.getName() + " ended the game. You've been moved to the staging world to allow you to set up a new one...");
@@ -679,7 +679,7 @@ public class Killer extends JavaPlugin
 		setGameState(GameState.worldDeletion); // stagingWorldReady cos the options from last time will still be selected
 	}
 	
-	public void restartGame(CommandSender actionedBy)
+	void restartGame(CommandSender actionedBy)
 	{
 		if ( actionedBy != null )
 			getGameMode().broadcastMessage(actionedBy.getName() + " is restarting the game...");
@@ -689,7 +689,7 @@ public class Killer extends JavaPlugin
 		setGameState(GameState.beforeAssignment);
 	}
 	
-	public class EmptyWorldGenerator extends org.bukkit.generator.ChunkGenerator
+	class EmptyWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	{	
 	    @Override
 	    public boolean canSpawn(World world, int x, int z) {
