@@ -41,10 +41,18 @@ public abstract class GameMode implements Listener
 		for ( Option option : setupOptions() )
 			options.add(option);
 
-		gameModes.add(this);
-		
-		if ( gameModes.size() == 1 )
+		String name = getName();
+		if ( gameModes.size() == 0 || name.equals(Settings.defaultGameMode) )
 			killer.setGameMode(this);
+				
+		// keep the game modes in alphabetic order
+		for ( int i=0; i<gameModes.size(); i++ )
+			if ( name.compareToIgnoreCase(gameModes.get(i).getName()) < 0 )
+			{
+				gameModes.add(i, this);
+				return;
+			}
+		gameModes.add(this);
 	}
 	
 	// methods to be overridden by each game mode

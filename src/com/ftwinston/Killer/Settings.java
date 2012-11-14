@@ -21,7 +21,8 @@ public class Settings
 	
 	public static String
 	stagingWorldName,
-	killerWorldName;
+	killerWorldName,
+	defaultGameMode;
 	
 	public static List<String> customWorldNames;
 	
@@ -43,6 +44,7 @@ public class Settings
 		
 		stagingWorldName = readString(plugin, "stagingWorldName", "staging");
 		killerWorldName = readString(plugin, "killerWorldName", "killer");
+		defaultGameMode = readString(plugin, "defaultGameMode", "Mystery Killer");
 		
 		String restartAtEnd = readString(plugin, "restartAtEndOfGame", "vote");
 		if ( restartAtEnd.equalsIgnoreCase("vote") )
