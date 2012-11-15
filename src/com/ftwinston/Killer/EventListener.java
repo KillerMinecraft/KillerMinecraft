@@ -25,6 +25,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -167,6 +168,13 @@ class EventListener implements Listener
 			return;
 
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+    		event.setCancelled(true);
+    }
+    
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onItemSpawn(ItemSpawnEvent event)
+    {
+    	if ( event.getLocation().getWorld() == plugin.worldManager.stagingWorld )
     		event.setCancelled(true);
     }
     
