@@ -31,9 +31,9 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		colorStartButton = 4 /* yellow */, colorOverrideButton = 1 /* orange */, colorCancelButton = 9 /* teal */,
 		textColorInfo = 5 /* green */, textColorGame = 4 /* yellow */, textColorChoose = 1 /* orange */, signBackColor = 7;
 	
-	public static int getOptionButtonZ(int num) { return wallMinCorridorZ + 2 + num * 2; }
+	public static int getOptionButtonZ(int num, boolean forGameModes) { return wallMinCorridorZ + 2 + num * (forGameModes ? 3 : 2); }
 	
-	public static int getOptionNumFromZ(int z) { return (z - wallMinCorridorZ - 2) / 2; }
+	public static int getOptionNumFromZ(int z, boolean forGameModes) { return (z - wallMinCorridorZ - 2) / (forGameModes ? 3 : 2); }
 	
 	@Override
     public List<BlockPopulator> getDefaultPopulators(World world) {
