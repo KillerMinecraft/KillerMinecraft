@@ -25,7 +25,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			globalOptionButtonZ = worldOptionButtonZ - 2,  monstersButtonZ = globalOptionButtonZ - 3, animalsButtonZ = monstersButtonZ - 2, startButtonX = wallMaxX - 3, startButtonZ = wallMinCorridorZ + 1,
 			overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1,
 			waitingButtonZ = wallMaxZ + 2, waitingSpleefButtonX = wallMaxX-5, waitingMonsterButtonX = waitingSpleefButtonX - 5,
-			spleefY = floorY-2, spleefMaxX = wallMaxX, spleefMinX = spleefMaxX - 15, spleefMinZ = wallMaxZ + 9, spleefMaxZ = spleefMinZ + 15, spleefPressurePlateZ = spleefMinZ-3;
+			spleefY = floorY-2, spleefMaxX = wallMaxX, spleefMinX = spleefMaxX - 15, spleefMinZ = wallMaxZ + 9, spleefMaxZ = spleefMinZ + 15, spleefPressurePlateZ = spleefMinZ-2;
 	
 	public static final byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
 		colorStartButton = 4 /* yellow */, colorOverrideButton = 1 /* orange */, colorCancelButton = 9 /* teal */,
@@ -620,9 +620,13 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(Material.FENCE);
 			}
 			
-			// pressure plates
+			// pressure plates (and floor underneath them)
 			for ( int x = waitingSpleefButtonX - 2; x>waitingSpleefButtonX - 4; x-- )
 			{
+				b = getBlockAbs(chunk, x, floorY, spleefPressurePlateZ);
+				if ( b != null )
+					b.setType(floor);
+				
 				b = getBlockAbs(chunk, x, floorY+1, spleefPressurePlateZ);
 				if ( b != null )
 					b.setType(Material.STONE_PLATE);
