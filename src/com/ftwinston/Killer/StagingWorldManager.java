@@ -730,11 +730,11 @@ class StagingWorldManager
 	public void showWorldGenerationIndicator(float completion)
 	{
 		int minZ = StagingWorldGenerator.wallMinCorridorZ + 2, maxZ = StagingWorldGenerator.wallMaxZ - 2;
-		int maxCompleteZ = (int)((maxZ - minZ) * completion) + minZ;
+		int maxCompleteZ = (int)((maxZ - minZ) * completion + 0.5f) + minZ;
 		if ( completion != 0f )
-			maxCompleteZ --;
+			maxCompleteZ += 2;
 	
-		int x = StagingWorldGenerator.wallMaxX, y = StagingWorldGenerator.buttonY + 2;
+		int x = StagingWorldGenerator.wallMaxX, y = StagingWorldGenerator.buttonY + 1;
 		for ( int z = minZ; z <= maxZ; z++ )
 		{
 			Block b = stagingWorld.getBlockAt(x, y, z);

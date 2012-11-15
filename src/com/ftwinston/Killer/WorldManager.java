@@ -663,10 +663,9 @@ class WorldManager
         craftServer.getPluginManager().callEvent(new WorldInitEvent(worldServer.getWorld()));
         System.out.print("Preparing start region for level " + (console.worlds.size() - 1) + " (Seed: " + worldServer.getSeed() + ")");
         
-        if ( mainWorld == null )
-        	plugin.stagingWorldManager.showWorldGenerationIndicator(0f);
+        plugin.stagingWorldManager.showWorldGenerationIndicator(mainWorld == null ? 0f : 0.5f );
         ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, plugin.getGameMode().usesNether(), mainWorld != null, runWhenDone);
-    	cb.taskID = craftServer.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 0L, 1L);
+    	cb.taskID = craftServer.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);
     	return worldServer.getWorld();
     }
     
@@ -730,7 +729,7 @@ class WorldManager
             	if ( stepNum >= numSteps )
             	{
             		if ( isSecondaryWorld || !usesSecondaryWorld )
-            			plugin.stagingWorldManager.showWorldGenerationIndicator(1f);
+            			plugin.stagingWorldManager.removeWorldGenerationIndicator();
             		craftServer.getPluginManager().callEvent(new WorldLoadEvent(worldServer.getWorld()));
             		craftServer.getScheduler().cancelTask(taskID);
             		craftServer.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
