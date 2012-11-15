@@ -223,7 +223,7 @@ class StagingWorldManager
 	{
 		Block b;
 		int minZ = StagingWorldGenerator.getOptionButtonZ(0, false);
-		int maxZ = StagingWorldGenerator.getOptionButtonZ(12, false); // there's only space for 12 options, without extending the world further
+		int maxZ = StagingWorldGenerator.getOptionButtonZ(11, false); // there's only space for 12 options, without extending the world further
 		
 		for ( int z=minZ; z<=maxZ; z++ )
 			for ( int y=StagingWorldGenerator.buttonY-1; y<=StagingWorldGenerator.buttonY+1; y++ )
