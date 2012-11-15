@@ -540,8 +540,8 @@ class WorldManager
 		}
 		catch (ArrayIndexOutOfBoundsException ex)
 		{
-			plugin.log.warning("World generation crashed: see BUKKIT-2601!");
-			plugin.getGameMode().broadcastMessage("An error occurred during world generation.\nThis is a bukkit bug we're waiting on a fix on.\nIt only happens the first time you try and generate.\nPlease try again...");
+			plugin.log.warning("An crash occurred during world generation. This might be a bug with the selected world option, vanilla minecraft, bukkit, or killer itself.");
+			plugin.getGameMode().broadcastMessage("An error occurred during world generation.\nPlease try again...");
 			
 			plugin.setGameState(GameState.worldDeletion);
 		}
