@@ -59,6 +59,11 @@ class EventListener implements Listener
     		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
     			public void run()
     			{
+    				if ( GameMode.gameModes.size() == 0 )
+					{
+						plugin.warnNoGameModes();
+						return;
+					}
     				plugin.worldManager.createStagingWorld(Settings.stagingWorldName);
 					plugin.worldManager.deleteWorlds(null, event.getWorld());
     			}

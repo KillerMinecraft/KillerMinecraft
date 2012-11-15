@@ -175,41 +175,17 @@ public class Killer extends JavaPlugin
         statsManager = new StatsManager(this);
         getServer().getPluginManager().registerEvents(eventListener, this);
 
-		final String defaultLevelName = getMinecraftServer().getPropertyManager().getString("level-name", "world");
+		String defaultLevelName = getMinecraftServer().getPropertyManager().getString("level-name", "world");
 		if ( defaultLevelName.equalsIgnoreCase(Settings.killerWorldName) )
 		{
 			stagingWorldIsServerDefault = true;
-			
-			// delay by 1 tick, so that game modes are loaded
-			getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-				@Override
-				public void run() {
-					if ( GameMode.gameModes.size() == 0 )
-					{
-						warnNoGameModes();
-						return;
-					}
-					worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
-				}
-			}, 1);
+			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
 		}
 		else if ( defaultLevelName.equalsIgnoreCase(Settings.stagingWorldName) )
 		{
 			stagingWorldIsServerDefault = true;
 			Settings.stagingWorldName = Settings.stagingWorldName + "2"; // rename to avoid conflict
-			
-			// delay by 1 tick, so that game modes are loaded
-			getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-				@Override
-				public void run() {
-					if ( GameMode.gameModes.size() == 0 )
-					{
-						warnNoGameModes();
-						return;
-					}
-					worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
-				}
-			}, 1);
+			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
 		}
 		else
 		{
@@ -247,7 +223,7 @@ public class Killer extends JavaPlugin
 		mode.initialize(instance);
 	}
 	
-	private void warnNoGameModes()
+	void warnNoGameModes()
 	{
 		log.warning("Killer cannot start: No game modes have been loaded!");
 		log.warning("Add some game mode plugins to your server!");
