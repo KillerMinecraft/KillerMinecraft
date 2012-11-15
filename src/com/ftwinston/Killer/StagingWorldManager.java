@@ -229,7 +229,7 @@ class StagingWorldManager
 		}
 	}
 	
-	boolean arenaModeIsSpleef = true;
+	boolean monsterArenaModeEnabled = false;
 	int monsterWaveNumber = 0, numMonstersAlive = 0;
 	public void stagingWorldMonsterKilled()	
 	{
@@ -253,7 +253,7 @@ class StagingWorldManager
 	
 	public void stagingWorldPlayerKilled()
 	{
-		if ( arenaModeIsSpleef )
+		if ( !monsterArenaModeEnabled )
 			return;
 		
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
@@ -391,13 +391,13 @@ class StagingWorldManager
 			{
 				stagingWorld.getBlockAt(StagingWorldGenerator.waitingSpleefButtonX+1, StagingWorldGenerator.buttonY, z).setData(StagingWorldGenerator.colorOptionOn);
 				stagingWorld.getBlockAt(StagingWorldGenerator.waitingMonsterButtonX-1, StagingWorldGenerator.buttonY, z).setData(StagingWorldGenerator.colorOptionOff);
-				arenaModeIsSpleef = true;
+				monsterArenaModeEnabled = false;
 			}
 			else if ( x == StagingWorldGenerator.waitingMonsterButtonX )
 			{
 				stagingWorld.getBlockAt(StagingWorldGenerator.waitingSpleefButtonX+1, StagingWorldGenerator.buttonY, z).setData(StagingWorldGenerator.colorOptionOff);
 				stagingWorld.getBlockAt(StagingWorldGenerator.waitingMonsterButtonX-1, StagingWorldGenerator.buttonY, z).setData(StagingWorldGenerator.colorOptionOn);
-				arenaModeIsSpleef = false;
+				monsterArenaModeEnabled = true;
 			}
 			
 			endMonsterArena();
@@ -406,10 +406,7 @@ class StagingWorldManager
 		{
 			PlayerInventory inv = player.getInventory();
 			inv.clear();
-			if ( arenaModeIsSpleef )
-				player.getInventory().addItem(new ItemStack(Material.DIAMOND_SPADE));
-			else
-				player.getInventory().addItem(new ItemStack(Material.IRON_SWORD));
+			player.getInventory().addItem(new ItemStack(monsterArenaModeEnabled ? Material.IRON_SWORD : Material.DIAMOND_SPADE));
 			
 			if ( monsterWaveNumber == 0 )
 			{
@@ -421,15 +418,17 @@ class StagingWorldManager
 					for ( int y=StagingWorldGenerator.floorY+3; y<StagingWorldGenerator.floorY+8; y++ )
 						stagingWorld.getBlockAt(x, y, arenaScoreZ).setType(Material.AIR);
 				
-				prepareNextMonsterWave();
-				
-				if ( !arenaModeIsSpleef )
+				if ( monsterArenaModeEnabled )
+				{
+					prepareNextMonsterWave();
+
 					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 						@Override
 						public void run() {
 							spawnMonsterWave();					
 						}
 					}, 50);
+				}
 			}
 		}
 		else if ( x == StagingWorldGenerator.mainButtonX )
@@ -578,7 +577,7 @@ class StagingWorldManager
 					stagingWorld.getBlockAt(x, y, z).setType(Material.AIR);
 			}
 		
-		if ( !arenaModeIsSpleef )
+		if ( monsterArenaModeEnabled )
 		{
 			int centerZ = (StagingWorldGenerator.spleefMinZ + StagingWorldGenerator.spleefMaxZ) / 2;
 			for ( int x=StagingWorldGenerator.spleefMinX + 3; x<=StagingWorldGenerator.spleefMaxX - 3; x++ )
