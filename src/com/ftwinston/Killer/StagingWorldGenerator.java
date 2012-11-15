@@ -455,6 +455,14 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						b.setType(Material.AIR);
 				}
 				
+			// signs over spleef setup room door
+			b = getBlockAbs(chunk, waitingSpleefButtonX - 2, floorY + 3, wallMaxZ);
+			if ( b != null )
+				setupSign(b, (byte)0x4, "Waiting        ", "for            ", "other          ", "players?       ");
+			b = getBlockAbs(chunk, waitingSpleefButtonX - 3, floorY + 3, wallMaxZ);
+			if ( b != null )
+				setupSign(b, (byte)0x4, "       Distract", "       yourself", "       in here!");
+				
 			// spleef setup buttons
 			for ( int y=floorY + 1; y < floorY + 4; y++ )
 			{
