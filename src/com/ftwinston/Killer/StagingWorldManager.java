@@ -710,30 +710,32 @@ class StagingWorldManager
 	
 	public void showWorldGenerationIndicator(float completion)
 	{
-		/*
-		int maxCompleteZ = (int)((StagingWorldGenerator.wallMinZ - StagingWorldGenerator.wallMaxZ) * completion) + StagingWorldGenerator.wallMaxZ;
+		int minZ = StagingWorldGenerator.wallMinCorridorZ + 2, maxZ = StagingWorldGenerator.wallMaxZ - 2;
+		int maxCompleteZ = (int)((maxZ - minZ) * completion) + minZ;
 		if ( completion != 0f )
 			maxCompleteZ --;
-		
-		for ( int x=StagingWorldGenerator.wallMinX+1; x<StagingWorldGenerator.wallMaxX; x++ )
-			for ( int z=StagingWorldGenerator.wallMinZ; z<StagingWorldGenerator.wallMaxZ; z++ )
-			{				
-				Block b = stagingWorld.getBlockAt(x, StagingWorldGenerator.floorY-2, z);
-				if ( b != null )
-				{
-					if ( z < maxCompleteZ )
-					{
-						b.setType(Material.REDSTONE_TORCH_ON);
-						b.setData((byte)5);
-					}
-					else
-						b.setType(Material.AIR);
-				}
-			}*/
+	
+		int x = StagingWorldGenerator.wallMaxX, y = StagingWorldGenerator.buttonY + 2;
+		for ( int z = minZ; z <= maxZ; z++ )
+		{
+			Block b = stagingWorld.getBlockAt(x, y, z);
+			b.setType(Material.WOOL);
+			if ( z < maxCompleteZ )
+				b.setData(StagingWorldGenerator.colorOptionOn);
+			else
+				b.setData(StagingWorldGenerator.colorOptionOff);
+		}
 	}
 	
 	public void removeWorldGenerationIndicator()
 	{
-		showWorldGenerationIndicator(0f);
+		int minZ = StagingWorldGenerator.wallMinCorridorZ + 2, maxZ = StagingWorldGenerator.wallMaxZ - 2;
+		
+		int x = StagingWorldGenerator.wallMaxX, y = StagingWorldGenerator.buttonY + 2;
+		for ( int z = minZ; z <= maxZ; z++ )
+		{
+			Block b = stagingWorld.getBlockAt(x, y, z);
+			b.setType(Material.SMOOTH_BRICK);
+		}
 	}
 }
