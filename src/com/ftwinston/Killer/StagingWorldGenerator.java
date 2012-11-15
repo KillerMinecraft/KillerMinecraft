@@ -516,8 +516,8 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				}
 			
 			// floor to fall onto, to ensure monsters die
-			for ( int x = spleefMinX - 5; x <= spleefMaxX + 5; x++ )
-				for ( int z=spleefMinZ - 5; z <= spleefMaxZ + 5; z++ )
+			for ( int x = spleefMinX - 7; x <= spleefMaxX + 7; x++ )
+				for ( int z=spleefMinZ - 7; z <= spleefMaxZ + 7; z++ )
 				{
 					b = getBlockAbs(chunk, x, 0, z);
 					if ( b != null )
