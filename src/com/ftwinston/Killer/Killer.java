@@ -175,29 +175,57 @@ public class Killer extends JavaPlugin
         statsManager = new StatsManager(this);
         getServer().getPluginManager().registerEvents(eventListener, this);
 
-		
-		String defaultLevelName = getMinecraftServer().getPropertyManager().getString("level-name", "world");
+		final String defaultLevelName = getMinecraftServer().getPropertyManager().getString("level-name", "world");
 		if ( defaultLevelName.equalsIgnoreCase(Settings.killerWorldName) )
 		{
-			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
 			stagingWorldIsServerDefault = true;
-		}
-		else if ( defaultLevelName.equalsIgnoreCase(Settings.stagingWorldName) )
-		{
-			Settings.stagingWorldName = Settings.stagingWorldName + "2"; // rename to avoid conflict
-			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
-			stagingWorldIsServerDefault = true;
-		}
-		else
-		{
-			// delay this by 1 tick, so that some other worlds have already been created, so that the getDefaultGameMode call in CraftServer.createWorld doesn't crash
+			
+			// delay by 1 tick, so that game modes are loaded
 			getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 				@Override
 				public void run() {
+					if ( GameMode.gameModes.size() == 0 )
+					{
+						warnNoGameModes();
+						return;
+					}
+					worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
+				}
+			}, 1);
+		}
+		else if ( defaultLevelName.equalsIgnoreCase(Settings.stagingWorldName) )
+		{
+			stagingWorldIsServerDefault = true;
+			Settings.stagingWorldName = Settings.stagingWorldName + "2"; // rename to avoid conflict
+			
+			// delay by 1 tick, so that game modes are loaded
+			getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				@Override
+				public void run() {
+					if ( GameMode.gameModes.size() == 0 )
+					{
+						warnNoGameModes();
+						return;
+					}
+					worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
+				}
+			}, 1);
+		}
+		else
+		{
+			stagingWorldIsServerDefault = false;
+			// delay this by 1 tick, so that game modes are loaded and some other worlds have already been created (so that the getDefaultGameMode call in CraftServer.createWorld doesn't crash)
+			getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				@Override
+				public void run() {
+					if ( GameMode.gameModes.size() == 0 )
+					{
+						warnNoGameModes();
+						return;
+					}
 					worldManager.createStagingWorld(Settings.stagingWorldName); // staging world isn't server default, so create it as a new world
 				}
 			}, 1);
-			stagingWorldIsServerDefault = false;
 		}
 		
 		// remove existing Killer world files
@@ -219,6 +247,11 @@ public class Killer extends JavaPlugin
 		mode.initialize(instance);
 	}
 	
+	private void warnNoGameModes()
+	{
+		log.warning("Killer cannot start: No game modes have been loaded!");
+		log.warning("Add some game mode plugins to your server!");
+	}
 	
 	List<Recipe> monsterRecipes = new ArrayList<Recipe>();
 	ShapedRecipe dispenserRecipe;

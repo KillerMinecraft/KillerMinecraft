@@ -27,9 +27,9 @@ import com.ftwinston.Killer.PlayerManager.Info;
 
 public abstract class GameMode implements Listener
 {
-	public static List<GameMode> gameModes = new ArrayList<GameMode>();
+	static List<GameMode> gameModes = new ArrayList<GameMode>();
 
-	public static GameMode get(int num) { return gameModes.get(num); }
+	static GameMode get(int num) { return gameModes.get(num); }
 	
 	Killer plugin;
 	protected final Random random = new Random();
