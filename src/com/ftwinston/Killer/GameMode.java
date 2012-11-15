@@ -65,8 +65,6 @@ public abstract class GameMode implements Listener
 
 	public abstract String[] getSignDescription();
 
-	protected abstract String describeTeam(int teamNum, boolean plural);
-
 	public abstract String getHelpMessage(int messageNum, int teamNum);
 	
 	private String getExtraHelpMessage(int messageNum)
@@ -538,21 +536,6 @@ public abstract class GameMode implements Listener
 				}
 			}, 220); // add a 12 second delay
 		}
-	}
-	
-	public final String describeTeam(int teamNum)
-	{
-		int playersOnTeam = 0;
-		
-		for ( Map.Entry<String, Info> info : plugin.playerManager.getPlayerInfo() )
-			if ( info.getValue().getTeam() == teamNum )
-			{
-				playersOnTeam ++;
-				if ( playersOnTeam > 1 )
-					break; // no need to keep going, we only care if there's one or not
-			}
-		
-		return describeTeam(teamNum, playersOnTeam != 1);
 	}
 	
 	public final void sendGameModeHelpMessage()
