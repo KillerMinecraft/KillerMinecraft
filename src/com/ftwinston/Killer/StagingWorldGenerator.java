@@ -500,7 +500,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			}
 			b = getBlockAbs(chunk, waitingMonsterButtonX, buttonY+1, waitingButtonZ);
 			if ( b != null )
-				setupSign(b, (byte)0x5, "", "Survival", "Arena");
+				setupSign(b, (byte)0x5, "", "Monster", "Arena");
 			b = getBlockAbs(chunk, waitingMonsterButtonX-1, buttonY, waitingButtonZ);
 			if ( b != null )
 			{
