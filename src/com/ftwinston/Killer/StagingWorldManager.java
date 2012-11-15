@@ -272,11 +272,6 @@ class StagingWorldManager
 				entity.remove();
 		monsterWaveNumber = 0; numMonstersAlive = 0;
 		stagingWorld.setMonsterSpawnLimit(0);
-		
-		// clear the world writing
-		for ( int x=arenaScoreX - 25; x<arenaScoreX + 25; x++ )
-			for ( int y=StagingWorldGenerator.floorY+3; y<StagingWorldGenerator.floorY+8; y++ )
-				stagingWorld.getBlockAt(x, y, arenaScoreZ).setType(Material.AIR);
 	}
 	
 	private int countPlayersInArena()
@@ -308,6 +303,12 @@ class StagingWorldManager
 	
 	public void spawnMonsterWave()
 	{
+		if ( countPlayersInArena() == 0 )
+		{
+			endMonsterArena();
+			return;
+		}
+		
 		WorldServer ws = ((CraftWorld)stagingWorld).getHandle();
 		ws.allowMonsters = true;
 		stagingWorld.setMonsterSpawnLimit(monsterWaveNumber);
@@ -414,6 +415,12 @@ class StagingWorldManager
 			{
 				rebuildArena();
 				endMonsterArena();
+
+				// clear the world writing
+				for ( x=arenaScoreX - 25; x<arenaScoreX + 25; x++ )
+					for ( int y=StagingWorldGenerator.floorY+3; y<StagingWorldGenerator.floorY+8; y++ )
+						stagingWorld.getBlockAt(x, y, arenaScoreZ).setType(Material.AIR);
+				
 				prepareNextMonsterWave();
 				
 				if ( !arenaModeIsSpleef )
