@@ -44,20 +44,18 @@ public class Killer extends JavaPlugin
 
 	enum GameState
 	{
-		stagingWorldSetup(false, false, true), // in staging world, players need to choose mode/world
-		worldDeletion(false, false, true), // in staging world, hide start buttons, delete old world, then show start button again
-		stagingWorldReady(false, false, true), // in staging world, players need to push start
-		stagingWorldConfirm(false, false, true), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
-		worldGeneration(false, false, false), // in staging world, game worlds are being generated
-		beforeAssignment(true, false, false), // game is active, killer(s) not yet assigned
-		active(true, true, false), // game is active, killer(s) assigned
-		finished(true, true, false); // game is finished, but not yet restarted
+		stagingWorldSetup(false, true), // in staging world, players need to choose mode/world
+		worldDeletion(false, true), // in staging world, hide start buttons, delete old world, then show start button again
+		stagingWorldReady(false, true), // in staging world, players need to push start
+		stagingWorldConfirm(false, true), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
+		worldGeneration(false, false), // in staging world, game worlds are being generated
+		active(true, false), // game is active, in game world
+		finished(true, false); // game is finished, but not yet restarted
 		
-		public final boolean usesGameWorlds, usesSpectators, canChangeGameSetup;
-		GameState(boolean useGameWorlds, boolean useSpectators, boolean canChangeGameSetup)
+		public final boolean usesGameWorlds, canChangeGameSetup;
+		GameState(boolean useGameWorlds, boolean canChangeGameSetup)
 		{
 			this.usesGameWorlds = useGameWorlds;
-			this.usesSpectators = useSpectators;
 			this.canChangeGameSetup = canChangeGameSetup;
 		}
 	}
@@ -115,12 +113,12 @@ public class Killer extends JavaPlugin
 					stagingWorldManager.endMonsterArena();
 					
 					getGameMode().worldGenerationComplete(worldManager.mainWorld, worldManager.netherWorld);
-					setGameState(GameState.beforeAssignment);
+					setGameState(GameState.active);
 					stagingWorldManager.showStartButtons(false);
 				}
 			});
 		}
-		else if ( newState == GameState.beforeAssignment )
+		else if ( newState == GameState.active )
 		{
 			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 			if ( statsManager.isTracking )
@@ -691,7 +689,7 @@ public class Killer extends JavaPlugin
 		else
 			getGameMode().broadcastMessage("Game is restarting...");
 		
-		setGameState(GameState.beforeAssignment);
+		setGameState(GameState.active);
 	}
 	
 	class EmptyWorldGenerator extends org.bukkit.generator.ChunkGenerator

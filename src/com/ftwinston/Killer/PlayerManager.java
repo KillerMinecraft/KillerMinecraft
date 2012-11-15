@@ -214,7 +214,7 @@ class PlayerManager
 		{
 			isNewPlayer = true;
 			
-			if ( !plugin.getGameState().usesSpectators )
+			if ( !plugin.getGameState().usesGameWorlds )
 				info = new Info(true);
 			else if ( Settings.lateJoinersStartAsSpectator )
 				info = new Info(false);
