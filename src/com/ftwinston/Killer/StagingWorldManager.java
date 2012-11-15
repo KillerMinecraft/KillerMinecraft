@@ -192,7 +192,7 @@ class StagingWorldManager
 				continue;
 			
 			// show game mode description signs
-			String[] descLines = plugin.getGameMode().getSignDescription();
+			String[] descLines = GameMode.get(i).getSignDescription();
 			if ( descLines == null )
 				continue;
 			
