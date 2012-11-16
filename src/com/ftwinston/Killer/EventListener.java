@@ -20,6 +20,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -423,6 +425,13 @@ class EventListener implements Listener
     			event.setCancelled(true);
     		}
     	}
+    }
+    
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onCreatureSpawn(CreatureSpawnEvent event)
+    {
+    	if ( event.getLocation().getWorld() == plugin.worldManager.stagingWorld && event.getSpawnReason() == SpawnReason.NATURAL )
+    		event.setCancelled(true);
     }
     
     @EventHandler(priority = EventPriority.LOWEST)
