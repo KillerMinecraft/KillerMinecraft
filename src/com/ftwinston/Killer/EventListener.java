@@ -543,6 +543,7 @@ class EventListener implements Listener
         	if ( event instanceof PlayerDeathEvent )
         	{
         		plugin.stagingWorldManager.stagingWorldPlayerKilled();
+        		((PlayerDeathEvent) event).setDeathMessage(((PlayerDeathEvent) event).getDeathMessage().replace("hit the ground too hard", "fell out of the world"));
         		
         		final Player player = (Player)event.getEntity();
         		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
