@@ -9,11 +9,8 @@ import org.bukkit.Material;
 public class Settings
 {
 	public static boolean
-	autoAssignKiller, // probably want to keep this
-	restartDayWhenFirstPlayerJoins, // don't want to keep this. Worlds are being created at start time anyway
 	lateJoinersStartAsSpectator,
 	banOnDeath,
-	informEveryoneOfReassignedKillers, // umm ... not sure
 	reportStats,
 	allowRandomWorlds,
 	autoRestartAtEndOfGame,
@@ -34,11 +31,8 @@ public class Settings
 	{
 		plugin.getConfig().options().copyDefaults(true);
 		
-		autoAssignKiller = readBoolean(plugin, "autoAssign", false);
-		restartDayWhenFirstPlayerJoins = readBoolean(plugin, "restartDay", true);
 		lateJoinersStartAsSpectator = readBoolean(plugin, "lateJoinersStartAsSpectator", false);
 		banOnDeath = readBoolean(plugin, "banOnDeath", false);
-		informEveryoneOfReassignedKillers = readBoolean(plugin, "informEveryoneOfReassignedKillers", true);
 		reportStats = readBoolean(plugin, "reportStats", true);
 		allowRandomWorlds = readBoolean(plugin, "allowRandomWorldGeneration", true);
 		
