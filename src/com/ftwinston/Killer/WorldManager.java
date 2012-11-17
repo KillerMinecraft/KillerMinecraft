@@ -466,7 +466,7 @@ class WorldManager
 	
 	public void generateWorlds(final WorldOption generator, final Runnable runWhenDone)
 	{
-		plugin.getGameMode().broadcastMessage("Preparing new worlds...");
+		plugin.getGameMode().broadcastMessage(plugin.getGameMode().usesNether() ? "Preparing new worlds..." : "Preparing new world...");
 		
 		Runnable generationComplete = new Runnable() {
 			@Override
