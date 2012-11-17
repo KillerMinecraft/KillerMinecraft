@@ -537,7 +537,7 @@ public class Killer extends JavaPlugin
 						playerManager.movePlayerIntoKillerGame(player);
 						return true;
 					}
-					else if ( firstParam.equals("quit") )
+					else if ( firstParam.equals("quit") || firstParam.equals("exit"))
 					{
 						if ( player == null )
 						{

@@ -584,6 +584,10 @@ class StagingWorldManager
 			else if ( x == StagingWorldGenerator.cancelButtonX )
 				plugin.setGameState(GameState.stagingWorldReady);
 		}
+		else if ( x == StagingWorldGenerator.exitButtonX )
+		{			
+			plugin.playerManager.movePlayerOutOfKillerGame(player);
+		}
 	}
 	
 	private void rebuildArena()

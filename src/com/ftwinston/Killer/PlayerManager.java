@@ -49,13 +49,11 @@ class PlayerManager
 	public void movePlayerOutOfKillerGame(Player player)
 	{
 		Location exitPoint = previousLocations.get(player.getName());
-		if ( exitPoint != null )
-		{
-			plugin.getGameMode().broadcastMessage(player.getName() + " quit the game");
-			teleport(player, exitPoint);
-		}
-		else
-			player.sendMessage("Cannot quit killer, because there is no exit point stored for you! Leave this world via other commands, if the server has them.");
+		if ( exitPoint == null )
+			exitPoint = plugin.getServer().getWorlds().get(0).getSpawnLocation();
+
+		plugin.getGameMode().broadcastMessage(player.getName() + " quit the game");
+		teleport(player, exitPoint);
 	}
 	
 	public void movePlayerIntoKillerGame(Player player)
