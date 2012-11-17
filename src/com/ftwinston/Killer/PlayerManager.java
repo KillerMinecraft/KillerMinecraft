@@ -390,7 +390,7 @@ class PlayerManager
 			if ( !wasAlive )
 				player.sendMessage("You are no longer a spectator.");
 		}
-		else
+		else if ( !player.isDead() )
 		{
 			player.setAllowFlight(true);
 			player.setFlying(true);
@@ -398,8 +398,7 @@ class PlayerManager
 			inv.addItem(new ItemStack(Settings.followModeItem, 1));
 			makePlayerInvisibleToAll(player);
 			
-			if ( wasAlive )
-				player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Clicking has different effects depending on the selected item. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
+			player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Clicking has different effects depending on the selected item. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
 		}
 	}
 	
