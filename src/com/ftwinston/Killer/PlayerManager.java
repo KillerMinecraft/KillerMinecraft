@@ -22,6 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
@@ -445,6 +446,10 @@ class PlayerManager
 			inv.setLeggings(null);
 			inv.setBoots(null);
 			
+			for (PotionEffectType p : PotionEffectType.values())
+			     if (p != null && player.hasPotionEffect(p))
+			          player.removePotionEffect(p);
+			
 			player.closeInventory(); // this stops them from keeping items they had in (e.g.) a crafting table
 			
 			if ( isAlive(player.getName()) ) // if any starting items are configured, give them if the player is alive
@@ -752,5 +757,16 @@ class PlayerManager
 			forceRespawn(player); // stop players getting stuck at the "you are dead" screen, unable to do anything except disconnect
 		player.setVelocity(new Vector(0,0,0));
 		player.teleport(loc);
+	}
+
+	public boolean isInventoryEmpty(PlayerInventory inv)
+	{
+		for (ItemStack is : inv.getArmorContents())
+            if (is != null && is.getAmount() > 0)
+                return false;
+        for (ItemStack is : inv.getContents())
+            if (is != null && is.getAmount() > 0)
+                return false;
+        return true;
 	}
 }

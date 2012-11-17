@@ -528,6 +528,12 @@ public class Killer extends JavaPlugin
 							return true;
 						}
 						
+						if ( !playerManager.isInventoryEmpty(player.getInventory()) )
+						{
+							sender.sendMessage("You must have a completely empty inventory to join Killer Minecraft!");
+							return true;
+						}
+						
 						playerManager.movePlayerIntoKillerGame(player);
 						return true;
 					}
