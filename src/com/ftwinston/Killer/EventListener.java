@@ -1,7 +1,10 @@
 package com.ftwinston.Killer;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+
+import net.minecraft.server.AxisAlignedBB;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -10,6 +13,8 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -326,6 +331,42 @@ class EventListener implements Listener
     		}
     		
     		return;
+    	}
+
+    	// prevent spectators from interfering with other players' block placement
+    	if ( !event.isCancelled() && event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null )
+    	{
+    		Block b = event.getClickedBlock().getRelative(event.getBlockFace());
+    		
+    		AxisAlignedBB aabb = AxisAlignedBB.a(b.getX()-1, b.getY()-1, b.getZ()-1, b.getX()+2, b.getY()+2, b.getZ()+2);
+    		((CraftWorld)b.getWorld()).getHandle().getEntities(((CraftPlayer)event.getPlayer()).getHandle(), aabb);
+    		
+    		boolean onlySpectators = true;
+    		List<Player> spectators = new ArrayList<Player>();
+    		for ( Entity nearby : event.getPlayer().getNearbyEntities(4, 4, 4) )
+        	{
+    			if ( nearby == event.getPlayer() )
+    				continue;
+    			
+    			if ( !(nearby instanceof Player) )
+    			{
+    				onlySpectators = false;
+    				break;
+    			}
+    			
+    			Player player = (Player)nearby;
+    			if ( !plugin.playerManager.isSpectator(player.getName()) )
+    			{
+    				onlySpectators = false;
+    				break;
+    			}
+    			
+    			spectators.add(player);
+        	}
+    		
+    		if ( onlySpectators )
+    			for ( Player player : spectators )
+					player.teleport(player.getLocation().add(0, 3, 0)); // just teleport them upwards, out of the way of this block place
     	}
     	
 		// eyes of ender can be made to seek out nether fortresses
