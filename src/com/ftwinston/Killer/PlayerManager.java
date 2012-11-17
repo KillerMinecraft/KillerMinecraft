@@ -489,9 +489,9 @@ class PlayerManager
 	private final int maxSpectatePositionAttempts = 5, idealFollowSpectateRange = 20;
 	
 	public void checkFollowTarget(Player player, String targetName)
-	{		
-		Player target = plugin.getServer().getPlayerExact(targetName);
-		if ( !isAlive(targetName) || target == null || !target.isOnline() || !plugin.isGameWorld(target.getWorld()) )
+	{
+		Player target = targetName == null ? null : plugin.getServer().getPlayerExact(targetName);
+		if ( targetName == null || target == null || !isAlive(targetName) || !target.isOnline() || !plugin.isGameWorld(target.getWorld()) )
 		{
 			targetName = getNearestFollowTarget(player);
 			setFollowTarget(player, targetName);
