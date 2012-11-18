@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import net.minecraft.server.NBTTagCompound;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -13,12 +15,14 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.ftwinston.Killer.Killer.GameState;
@@ -290,6 +294,65 @@ public abstract class GameMode implements Listener
 	{
 		return candidates.get(random.nextInt(candidates.size()));
 	}
+	
+	public ChatColor getTeamChatColor(int team)
+	{
+		switch ( team )
+		{
+		case 0:
+			return ChatColor.BLUE;
+		case 1:
+			return ChatColor.RED;
+		case 2:
+			return ChatColor.YELLOW;
+		case 3:
+			return ChatColor.GREEN;
+		default:
+			return ChatColor.RESET;
+		}
+	}
+	
+	public int getTeamItemColor(int team)
+	{
+		switch ( team )
+		{
+		case 0:
+			return 0x0066FF;
+		case 1:
+			return 0xFF0000;
+		case 2:
+			return 0xDDDD00;
+		case 3:
+			return 0x00CC00;
+		default:
+			return 0xFFFFFF;
+		}
+	}
+	
+	public ItemStack setColor(ItemStack item, int color)
+	{
+        CraftItemStack craftStack = null;
+        net.minecraft.server.ItemStack itemStack = null;
+        if (item instanceof CraftItemStack) {
+            craftStack = (CraftItemStack) item;
+            itemStack = craftStack.getHandle();
+        }
+        else if (item instanceof ItemStack) {
+            craftStack = new CraftItemStack(item);
+            itemStack = craftStack.getHandle();
+        }
+        NBTTagCompound tag = itemStack.tag;
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            tag.setCompound("display", new NBTTagCompound());
+            itemStack.tag = tag;
+        }
+ 
+        tag = itemStack.tag.getCompound("display");
+        tag.setInt("color", color);
+        itemStack.tag.setCompound("display", tag);
+        return craftStack;
+    }
 	
 	// Adds a random offset to a location. Each component of the location will be offset by a value at least as different as the corresponding min, and at most as different as the max.
 	protected final Location randomizeLocation(Location loc, double xMin, double yMin, double zMin, double xMax, double yMax, double zMax)
