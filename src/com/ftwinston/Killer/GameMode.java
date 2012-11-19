@@ -110,8 +110,6 @@ public abstract class GameMode implements Listener
 
 
 	public abstract boolean isAllowedToRespawn(Player player); // return false and player will become a spectator
-
-	public abstract boolean lateJoinersMustSpectate();
 	
 	public abstract Location getSpawnLocation(Player player); // where should this player spawn?
 
