@@ -474,7 +474,8 @@ class WorldManager
 			{
 				// ensure those worlds are set to Hard difficulty
 				plugin.worldManager.mainWorld.setDifficulty(Difficulty.HARD);
-				plugin.worldManager.netherWorld.setDifficulty(Difficulty.HARD);
+				if ( plugin.worldManager.netherWorld != null )
+					plugin.worldManager.netherWorld.setDifficulty(Difficulty.HARD);
 				
 				switch ( plugin.animalNumbers )
 				{
@@ -499,7 +500,7 @@ class WorldManager
 					mainWorld.setTicksPerAnimalSpawns(200);
 					break;
 				}
-				
+
 				World[] worlds = netherWorld == null ? new World[] { mainWorld } : new World[] { mainWorld, netherWorld };
 				for ( World world : worlds )
 					switch ( plugin.monsterNumbers )
