@@ -204,7 +204,7 @@ class EventListener implements Listener
 			return;
 
     	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName())
-    		|| plugin.getGameMode().isLocationProtected(event.getBlock().getLocation())
+    		|| plugin.worldManager.isProtectedLocation(event.getBlock().getLocation())
     		|| event.getBlock().getLocation().getWorld() == plugin.worldManager.stagingWorld )
     		event.setCancelled(true);
     }
@@ -216,7 +216,7 @@ class EventListener implements Listener
 		if ( !plugin.isGameWorld(event.getToBlock().getLocation().getWorld()) )
 			return;
 		
-        if ( plugin.getGameMode().isLocationProtected(event.getToBlock().getLocation()) )
+        if ( plugin.worldManager.isProtectedLocation(event.getBlock().getLocation()) )
             event.setCancelled(true);
     }
     
@@ -227,7 +227,7 @@ class EventListener implements Listener
 		if ( !plugin.isGameWorld(event.getBlock().getLocation().getWorld()) )
 			return;
 		
-    	if ( plugin.getGameMode().isLocationProtected(event.getBlock().getLocation()) )
+    	if ( plugin.worldManager.isProtectedLocation(event.getBlock().getLocation()) )
     		event.setCancelled(true);
     }
     
@@ -448,7 +448,7 @@ class EventListener implements Listener
 			return;
 		
 		Block affected = event.getBlockClicked().getRelative(event.getBlockFace());
-		if ( plugin.getGameMode().isLocationProtected(affected.getLocation()) )
+		if ( plugin.worldManager.isProtectedLocation(affected.getLocation()) )
 			event.setCancelled(true);
     }
     

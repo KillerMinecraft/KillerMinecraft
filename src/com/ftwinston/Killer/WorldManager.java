@@ -195,14 +195,14 @@ class WorldManager
 	public boolean isProtectedLocation(Location loc)
 	{
 		if ( loc.getWorld() == stagingWorld )
-		{
 			return loc.getBlockZ() < StagingWorldGenerator.spleefMinZ
 				|| loc.getBlockZ() > StagingWorldGenerator.spleefMaxZ
 				|| loc.getBlockX() < StagingWorldGenerator.spleefMinX
 				|| loc.getBlockX() > StagingWorldGenerator.spleefMaxX;
-		}
-		
-		return plugin.getGameMode().isLocationProtected(loc);
+		else if ( plugin.getGameState().usesGameWorlds )
+			return plugin.getGameMode().isLocationProtected(loc);
+		else
+			return false;
 	}
 	
 	@SuppressWarnings("rawtypes")
