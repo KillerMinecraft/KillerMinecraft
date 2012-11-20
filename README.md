@@ -1,26 +1,20 @@
 Killer Minecraft
 ======
 
-This is a Bukkit server plugin that offers a new game mode based around suspicion and paranoia, to be played on a brand new world.
+This is a Bukkit server plugin that allows you to play a variety of PVP games on "temporary" worlds, either alongside the existing worlds on your server, or as the only thing on the server.
 
-The game is best played on Hard difficulty (3), and in a manner similar to Hardcore mode, when you die, you're out until the end of the round.
+It comes with a variety of game modes and world generation options, and makes it very easy to add new ones, as each of these are separate plugins, dependent on this one.
 
-After the first day of play, one player will be informed that they are the Killer. No one else will know who it is. The other players have to bring a blaze rod or ghast tear to a tower near the spawn, and the killer has to stop them.
+When the server's default world is set to "killer", players will start in the staging world, which allows you (through buttons) to configure the game you want to play. When a game is in progress, new players will join that game directly.
 
-Significant features include:
+When the server's default world is NOT set to "killer", players can type /killer join to enter the staging world, or the current game if there is one.
+They can then play as normal, or type /killer quit to leave Killer at any time. For players that forget this command, there is also an "exit" button in the staging world.
 
-* Once you die, you become an invisible spectator, and can fly and use "follow" mode - type /spec to list spectator commands.
+For players that are waiting around for other players to join the server, the staging world features a spleef arena that doubles as a monster arena, allowing you to fight off waves of monsters.
 
-* Easy to use voting system, lets players vote on if & how to restart the game, and more - type /vote to bring up the vote menu.
+Killer Minecraft features many features designed to prevent each game mode from having to reinvent the same things over and over again. It features a comprehensive spectator mode for dead players, world protection, team chat, voting, and much more.
 
-* Rebuilds new worlds without having to kick players, by moving them to a temporary "holding" world first.
+Most of the game modes that come with Killer Minecraft focus more on subterfuge and misdirection, as opposed to straight up deathmatch. For more information on each, please see the game modes page: 
+http://dev.bukkit.org/server-mods/killer/pages/game-modes
 
-* Death messages no longer say who killed the victim. This makes it possible for the killer to pick people off one by one if they don't stick together.
-
-* If the killer has a compass, it will point towards the nearest player. This helps them find other players if they all scatter in different directions.
-
-* The killer will be given some items to help them. These won't be significant if playing against only a few players, but if there are a large number, the killer can get some very useful items.
-
-* At dawn every day, if there isn't a (surviving) killer assigned, and there are sufficient players, a new killer will be assigned. Every time a killer is assigned, all players are told about it - they're just not told who it is.
-
-Killer Minecraft works best with 4-8 players, although the bare minimum is 3 players, and there is no maximum limit. You should start play on a new world, and shouldn't play on any world containing anything you wish to keep - the world can be deleted at the end of a round! Lastly, remember that in hard mode, you can starve to death. Players should get aim to get some food as soon as possible.
+Happy killing!
