@@ -3,7 +3,6 @@ package com.ftwinston.Killer;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.lang.ref.SoftReference;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -259,16 +258,12 @@ class WorldManager
 				
 				if (f.toString().startsWith("." + File.separator + worldName))
 				{
-					SoftReference ref = (SoftReference) e.getValue();
+					RegionFile file = (RegionFile) e.getValue();
 					try
 					{
-						RegionFile file = (RegionFile) ref.get();
-						if (file != null)
-						{
-							RandomAccessFile raf = (RandomAccessFile) rafField.get(file);
-							raf.close();
-							removedKeys.add(f);
-						}
+						RandomAccessFile raf = (RandomAccessFile) rafField.get(file);
+						raf.close();
+						removedKeys.add(f);
 					}
 					catch (Exception ex)
 					{
