@@ -754,7 +754,7 @@ class StagingWorldManager
 	{
 		int minZ = StagingWorldGenerator.wallMinCorridorZ + 2, maxZ = StagingWorldGenerator.wallMaxZ - 2;
 		
-		int x = StagingWorldGenerator.wallMaxX, y = StagingWorldGenerator.buttonY + 2;
+		int x = StagingWorldGenerator.wallMaxX, y = StagingWorldGenerator.buttonY + 1;
 		for ( int z = minZ; z <= maxZ; z++ )
 		{
 			Block b = stagingWorld.getBlockAt(x, y, z);
