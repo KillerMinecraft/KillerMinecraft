@@ -385,7 +385,7 @@ class PlayerManager
 			}
 			makePlayerVisibleToAll(player);
 			
-			if ( !wasAlive )
+			if ( !wasAlive && !player.isDead() )
 				player.sendMessage("You are no longer a spectator.");
 		}
 		else if ( !player.isDead() )
