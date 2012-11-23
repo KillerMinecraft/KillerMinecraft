@@ -427,7 +427,7 @@ class StagingWorldManager
 			inv.clear();
 			player.getInventory().addItem(new ItemStack(monsterArenaModeEnabled ? Material.IRON_SWORD : Material.DIAMOND_SPADE));
 			
-			if ( monsterWaveNumber == 0 )
+			if ( monsterWaveNumber == 0 && countPlayersInArena() == 0 )
 			{
 				rebuildArena();
 				endMonsterArena();
