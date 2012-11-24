@@ -714,7 +714,7 @@ class PlayerManager
 			Block blockBelow = targetLoc.getWorld().getBlockAt(block.getLocation().getBlockX(), block.getLocation().getBlockY()-1, block.getLocation().getBlockZ());
 			if ( blockBelow.isEmpty() || blockBelow.isLiquid() )
 			{
-				bestPos = blockBelow.getLocation().add(new Vector(0.5, player.getEyeHeight()-1, 0.5));
+				bestPos = new Location(blockBelow.getWorld(), blockBelow.getX() + 0.5, blockBelow.getY() + player.getEyeHeight()-1, blockBelow.getZ() + 0.5);
 				if ( seekClosest )
 					return bestPos;
 			}

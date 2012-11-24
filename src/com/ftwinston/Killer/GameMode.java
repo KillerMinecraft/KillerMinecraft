@@ -359,7 +359,7 @@ public abstract class GameMode implements Listener
 		double yOff = yMin + (yMax - yMin) * random.nextDouble();
 		double zOff = zMin + (zMax - zMin) * random.nextDouble();
 	
-		return loc.add(random.nextBoolean() ? xOff : -xOff, random.nextBoolean() ? yOff : -yOff, random.nextBoolean() ? zOff : -zOff);
+		return loc.clone().add(random.nextBoolean() ? xOff : -xOff, random.nextBoolean() ? yOff : -yOff, random.nextBoolean() ? zOff : -zOff);
 	}
 	
 	protected final Location getSafeSpawnLocationNear(Location loc)
@@ -451,7 +451,9 @@ public abstract class GameMode implements Listener
 	private Location plinthLoc = null;
 	protected final Location generatePlinth(World world)
 	{
-		return generatePlinth(world.getSpawnLocation().add(20, 0, 0));
+		return generatePlinth(new Location(world, world.getSpawnLocation().getX() + 20,
+												  world.getSpawnLocation().getY(),
+												  world.getSpawnLocation().getZ()));
 	}
 	
 	protected final Location generatePlinth(Location loc)
