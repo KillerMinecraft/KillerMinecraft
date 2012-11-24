@@ -327,6 +327,23 @@ public abstract class GameMode implements Listener
 		}
 	}
 	
+	public byte getTeamWoolColor(int team)
+	{
+		switch ( team )
+		{
+		case 0:
+			return 0xB;
+		case 1:
+			return 0xE;
+		case 2:
+			return 0x4;
+		case 3:
+			return 0x5;
+		default:
+			return 0x0;
+		}
+	}
+	
 	public ItemStack setColor(ItemStack item, int color)
 	{
         CraftItemStack craftStack = null;
