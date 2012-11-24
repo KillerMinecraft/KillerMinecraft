@@ -309,12 +309,12 @@ public abstract class GameMode implements Listener
 			return ChatColor.DARK_PURPLE;
 		case 5:
 			return ChatColor.AQUA;
+		case 8:
+			return ChatColor.WHITE;
 		case 6:
 			return ChatColor.DARK_GRAY;
 		case 7:
 			return ChatColor.GRAY;
-		case 8:
-			return ChatColor.WHITE;
 		case 9:
 			return ChatColor.LIGHT_PURPLE;
 		default:
@@ -339,11 +339,11 @@ public abstract class GameMode implements Listener
 		case 5:
 			return 0x3FFEFE; // aqua
 		case 6:
-			return 0x3F3F3F; // dark grey
-		case 7:
-			return 0xBEBEBE; // light grey
-		case 8:
 			return 0xEEEEEE; // white
+		case 7:
+			return 0x3F3F3F; // dark grey
+		case 8:
+			return 0xBEBEBE; // light grey
 		case 9:
 			return 0xFE3FFE; // pink
 		default:
@@ -368,15 +368,44 @@ public abstract class GameMode implements Listener
 		case 5:
 			return 0x3; // aqua
 		case 6:
-			return 0x7; // dark grey
-		case 7:
-			return 0x8; // light grey
-		case 8:
 			return 0x0; // white
+		case 7:
+			return 0x7; // dark grey
+		case 8:
+			return 0x8; // light grey
 		case 9:
 			return 0x6; // pink
 		default:
 			return 0x0;
+		}
+	}
+	
+	public String getTeamName(int team)
+	{
+		switch ( team )
+		{
+		case 0:
+			return "blue team";
+		case 1:
+			return "red team";
+		case 2:
+			return "yellow team";
+		case 3:
+			return "green team";
+		case 4:
+			return "purple team";
+		case 5:
+			return "aqua team";
+		case 6:
+			return "white team";
+		case 7:
+			return "dark grey team";
+		case 8:
+			return "light grey team";
+		case 9:
+			return "pink team";
+		default:
+			return "unnamed team";
 		}
 	}
 	
