@@ -305,6 +305,18 @@ public abstract class GameMode implements Listener
 			return ChatColor.YELLOW;
 		case 3:
 			return ChatColor.GREEN;
+		case 4:
+			return ChatColor.DARK_PURPLE;
+		case 5:
+			return ChatColor.AQUA;
+		case 6:
+			return ChatColor.DARK_GRAY;
+		case 7:
+			return ChatColor.GRAY;
+		case 8:
+			return ChatColor.WHITE;
+		case 9:
+			return ChatColor.LIGHT_PURPLE;
 		default:
 			return ChatColor.RESET;
 		}
@@ -315,13 +327,25 @@ public abstract class GameMode implements Listener
 		switch ( team )
 		{
 		case 0:
-			return 0x0066FF;
+			return 0x0066FF; // blue
 		case 1:
-			return 0xFF0000;
+			return 0xFF0000; // red
 		case 2:
-			return 0xDDDD00;
+			return 0xDDDD00; // yellow
 		case 3:
-			return 0x00CC00;
+			return 0x00CC00; // green
+		case 4:
+			return 0xBE00BE; // purple
+		case 5:
+			return 0x3FFEFE; // aqua
+		case 6:
+			return 0x3F3F3F; // dark grey
+		case 7:
+			return 0xBEBEBE; // light grey
+		case 8:
+			return 0xEEEEEE; // white
+		case 9:
+			return 0xFE3FFE; // pink
 		default:
 			return 0xFFFFFF;
 		}
@@ -332,13 +356,25 @@ public abstract class GameMode implements Listener
 		switch ( team )
 		{
 		case 0:
-			return 0xB;
+			return 0xB; // blue
 		case 1:
-			return 0xE;
+			return 0xE; // red
 		case 2:
-			return 0x4;
+			return 0x4; // yellow
 		case 3:
-			return 0x5;
+			return 0x5; // green
+		case 4:
+			return 0xA; // purple
+		case 5:
+			return 0x3; // aqua
+		case 6:
+			return 0x7; // dark grey
+		case 7:
+			return 0x8; // light grey
+		case 8:
+			return 0x0; // white
+		case 9:
+			return 0x6; // pink
 		default:
 			return 0x0;
 		}
