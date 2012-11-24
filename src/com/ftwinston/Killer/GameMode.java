@@ -293,6 +293,44 @@ public abstract class GameMode implements Listener
 		return candidates.get(random.nextInt(candidates.size()));
 	}
 	
+	// returns the index with the highest value. If multiple indices share the highest value, picks one of these at random.
+	protected final int getHighestIndex(long[] values)
+	{
+		long highestVal = Long.MIN_VALUE;
+		ArrayList<Integer> highestIndices = new ArrayList<Integer>();
+		
+		for ( int i=0; i<values.length; i++ )
+			if ( values[i] > highestVal )
+			{
+				highestVal = values[i];
+				highestIndices.clear();
+				highestIndices.add(i);
+			}
+			else if ( values[i] == highestVal )
+				highestIndices.add(i);
+		
+		return selectRandom(highestIndices);
+	}
+	
+	// returns the index with the highest value. If multiple indices share the highest value, picks one of these at random.
+	protected final int getHighestIndex(int[] values)
+	{
+		int highestVal = Integer.MIN_VALUE;
+		ArrayList<Integer> highestIndices = new ArrayList<Integer>();
+		
+		for ( int i=0; i<values.length; i++ )
+			if ( values[i] > highestVal )
+			{
+				highestVal = values[i];
+				highestIndices.clear();
+				highestIndices.add(i);
+			}
+			else if ( values[i] == highestVal )
+				highestIndices.add(i);
+		
+		return selectRandom(highestIndices);
+	}
+	
 	public ChatColor getTeamChatColor(int team)
 	{
 		switch ( team )
