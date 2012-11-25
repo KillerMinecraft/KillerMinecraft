@@ -31,43 +31,32 @@ import com.ftwinston.Killer.PlayerManager.Info;
 
 public abstract class GameMode implements Listener
 {
-	static List<GameMode> gameModes = new ArrayList<GameMode>();
+	static List<GameModePlugin> gameModes = new ArrayList<GameModePlugin>();
 
-	static GameMode get(int num) { return gameModes.get(num); }
+	static GameModePlugin get(int num) { return gameModes.get(num); }
 	
 	Killer plugin;
 	protected final Random random = new Random();
 	
-	final void initialize(Killer killer)
+	final void initialize(Killer killer, GameModePlugin modePlugin)
 	{
 		plugin = killer;
+		name = modePlugin.getName();
 
 		for ( Option option : setupOptions() )
 			options.add(option);
-
-		String name = getName();
-		if ( gameModes.size() == 0 || name.equals(Settings.defaultGameMode) )
-			killer.setGameMode(this);
-				
-		// keep the game modes in alphabetic order
-		for ( int i=0; i<gameModes.size(); i++ )
-			if ( name.compareToIgnoreCase(gameModes.get(i).getName()) < 0 )
-			{
-				gameModes.add(i, this);
-				return;
-			}
-		gameModes.add(this);
 	}
 	
 	// methods to be overridden by each game mode
-	
-	public abstract String getName();
-
 	public abstract int getMinPlayers();
 
+	private String name; 
+	public String getName() 
+	{
+		return name;
+	}
+				
 	protected abstract Option[] setupOptions();
-
-	public abstract String[] getSignDescription();
 
 	public abstract String getHelpMessage(int messageNum, int teamNum);
 	

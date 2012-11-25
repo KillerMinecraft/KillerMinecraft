@@ -147,7 +147,12 @@ public class Killer extends JavaPlugin
 	
 	private GameMode gameMode = null;
 	GameMode getGameMode() { return gameMode; }
-	boolean setGameMode(GameMode g) { gameMode = g; return gameMode != null && worldOption != null; }
+	void setGameMode(GameModePlugin plugin)
+	{
+		GameMode mode = plugin.createInstance();
+		mode.initialize(this, plugin);
+		gameMode = mode;
+	}
 	
 	private WorldOption worldOption = null;
 	WorldOption getWorldOption() { return worldOption; }
@@ -218,9 +223,9 @@ public class Killer extends JavaPlugin
 		worldManager.onDisable();
 	}
 	
-	public static void registerGameMode(GameMode mode)
+	public static void registerGameMode(GameModePlugin plugin)
 	{
-		mode.initialize(instance);
+		plugin.initialize(instance);
 	}
 	
 	void warnNoGameModes()
