@@ -31,7 +31,7 @@ class PlayerManager
 	public static PlayerManager instance;
 	private Killer plugin;
 	private Random random;
-	private int killerAssignProcess, helpMessageProcess, compassProcess, spectatorFollowProcess;
+	private int helpMessageProcess, compassProcess, spectatorFollowProcess;
 	
 	public PlayerManager(Killer _plugin)
 	{
@@ -122,12 +122,6 @@ class PlayerManager
 			for ( OfflinePlayer player : plugin.getServer().getBannedPlayers() )
 				player.setBanned(false);
 		
-		if ( killerAssignProcess != -1 )
-		{
-			plugin.getServer().getScheduler().cancelTask(killerAssignProcess);
-			killerAssignProcess = -1;
-		}
-
 		plugin.getServer().getScheduler().cancelTask(compassProcess);
 		plugin.getServer().getScheduler().cancelTask(spectatorFollowProcess);
 	}
