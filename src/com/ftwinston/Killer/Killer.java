@@ -120,10 +120,9 @@ public class Killer extends JavaPlugin
 		worldManager.onDisable();
 	}
 	
-	public static void registerGameMode(GameMode mode)
+	public static void registerGameMode(GameModePlugin plugin)
 	{
-		for ( Game game : instance.games )
-			mode.initialize(game);
+		plugin.initialize(instance);
 	}
 	
 	void warnNoGameModes()

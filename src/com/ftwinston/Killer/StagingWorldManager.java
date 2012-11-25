@@ -94,9 +94,9 @@ class StagingWorldManager
 			values = new boolean[labels.length];
 			for ( int i=0; i<labels.length; i++ )
 			{
-				GameMode mode = GameMode.gameModes.get(i); 
+				GameModePlugin mode = GameMode.gameModes.get(i); 
 				labels[i] = mode.getName();
-				values[i] = mode == game.getGameMode();
+				values[i] = mode.getName().equals(game.getGameMode().getName());
 			}
 			showSetupOptionButtons(game, "Game mode:", true, labels, values);
 			break;
@@ -474,8 +474,8 @@ class StagingWorldManager
 			{
 			case GAME_MODE:
 				// change mode
-				GameMode gameMode = GameMode.get(num);
-				if ( game.getGameMode() == gameMode )
+				GameModePlugin gameMode = GameMode.get(num);
+				if ( game.getGameMode().getName().equals(gameMode.getName()) )
 					return;
 				game.setGameMode(gameMode);
 				
