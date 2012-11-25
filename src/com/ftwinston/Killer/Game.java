@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -121,7 +122,7 @@ class Game
 		
 		if ( newState == GameState.stagingWorldSetup )
 		{
-			plugin.stagingWorldManager.showStartButtons(number, false);
+			plugin.stagingWorldManager.showStartButtons(this, false);
 		}
 		else if ( newState == GameState.worldDeletion )
 		{
@@ -132,8 +133,8 @@ class Game
 			HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
 
 			// don't show the start buttons until the old world finishes deleting
-			plugin.stagingWorldManager.showWaitForDeletion(number);
-			plugin.stagingWorldManager.removeWorldGenerationIndicator(number);
+			plugin.stagingWorldManager.showWaitForDeletion(this);
+			plugin.stagingWorldManager.removeWorldGenerationIndicator(this);
 			
 			for ( Player player : getOnlinePlayers() )
 				if ( player.getWorld() != plugin.worldManager.stagingWorld )
@@ -150,15 +151,16 @@ class Game
 		}
 		else if ( newState == GameState.stagingWorldReady )
 		{
-			plugin.stagingWorldManager.showStartButtons(number, false);
+			plugin.stagingWorldManager.showStartButtons(this, false);
 		}
 		else if ( newState == GameState.stagingWorldConfirm )
 		{
-			plugin.stagingWorldManager.showStartButtons(number, true);
+			plugin.stagingWorldManager.showStartButtons(this, true);
 		}
 		else if( newState == GameState.worldGeneration )
 		{
-			plugin.worldManager.generateWorlds(worldOption, new Runnable() {
+			final Game game = this;
+			plugin.worldManager.generateWorlds(this, worldOption, new Runnable() {
 				@Override
 				public void run() {
 					// don't waste memory on monsters in the staging world
@@ -167,7 +169,7 @@ class Game
 					
 					getGameMode().worldGenerationComplete(getMainWorld(), getNetherWorld());
 					setGameState(GameState.active);
-					plugin.stagingWorldManager.showStartButtons(number, false);
+					plugin.stagingWorldManager.showStartButtons(game, false);
 				}
 			});
 		}
@@ -260,6 +262,12 @@ class Game
 	{
 		return recipe.getResult().getType() == Material.MONSTER_EGG;
 	}
+	
+	private World mainWorld = null, netherWorld = null;
+	World getMainWorld() { return mainWorld; }
+	World getNetherWorld() { return netherWorld; }
+	void setMainWorld(World w) { mainWorld = w; }
+	void setNetherWorld(World w) { netherWorld = w; }
 	
 	boolean forcedGameEnd = false;
 	void endGame(CommandSender actionedBy)

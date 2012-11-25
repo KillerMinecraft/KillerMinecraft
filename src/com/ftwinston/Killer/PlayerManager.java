@@ -47,11 +47,13 @@ class PlayerManager
 	public Map<String, Location> previousLocations = new HashMap<String, Location>();
 	public void movePlayerOutOfKillerGame(Player player)
 	{
+		Game game = plugin.getGameForPlayer(player);
+		
 		Location exitPoint = previousLocations.get(player.getName());
 		if ( exitPoint == null )
 			exitPoint = plugin.getServer().getWorlds().get(0).getSpawnLocation();
 
-		plugin.getGameMode().broadcastMessage(player.getName() + " quit the game");
+		game.getGameMode().broadcastMessage(player.getName() + " quit the game");
 		teleport(player, exitPoint);
 	}
 	
@@ -235,39 +237,39 @@ class PlayerManager
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time
-	public void playerKilled(final OfflinePlayer player)
+	public void playerKilled(final Game game, final OfflinePlayer player)
 	{
-		if ( !plugin.getGameState().usesGameWorlds )
+		if ( game == null || !game.getGameState().usesGameWorlds )
 			return;
 		
 		Info info = playerInfo.get(player.getName());
 		info.setAlive(false);
 		
-		if ( plugin.getOnlinePlayers().size() == 0 )
+		if ( game.getOnlinePlayers().size() == 0 )
 		{// no one still playing, so end the game
-			plugin.forcedGameEnd = true;
-			plugin.getGameMode().gameFinished();
-			plugin.endGame(null);
+			game.forcedGameEnd = true;
+			game.getGameMode().gameFinished();
+			game.endGame(null);
 			return;
 		}
 		
 		plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new Runnable() {
 			@Override
 			public void run() {
-				plugin.getGameMode().playerKilledOrQuit(player);				
+				game.getGameMode().playerKilledOrQuit(player);				
 			}
 		}, 15); // game mode doesn't respond for short period, so as to be able to account for other deaths happening simultaneously (e.g. caused by the same explosion)
 		
 		Player online = player.isOnline() ? (Player)player : null;
 		if ( online != null )
 		{
-			if ( plugin.getGameMode().isAllowedToRespawn(online) )
+			if ( game.getGameMode().isAllowedToRespawn(online) )
 			{
 				setAlive(online, true);
 				return;
 			}
 			
-			if ( !plugin.getGameMode().teamAllocationIsSecret() )
+			if ( !game.getGameMode().teamAllocationIsSecret() )
 				plugin.playerManager.clearPlayerNameColor(online);
 		}
 		
@@ -279,9 +281,9 @@ class PlayerManager
 		}
 	}
 	
-	public Location getCompassTarget(Player player)
+	public Location getCompassTarget(Game game, Player player)
 	{
-		Location target = plugin.getGameMode().getCompassTarget(player);
+		Location target = game.getGameMode().getCompassTarget(player);
 		if ( target == null )
 			return player.getWorld().getSpawnLocation();
 		else

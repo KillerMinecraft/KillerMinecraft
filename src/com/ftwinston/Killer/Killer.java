@@ -96,7 +96,7 @@ public class Killer extends JavaPlugin
 			getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 				@Override
 				public void run() {
-					if ( games[0].allGameModes.size() == 0 )
+					if ( GameMode.gameModes.size() == 0 )
 					{
 						warnNoGameModes();
 						return;
@@ -462,9 +462,27 @@ public class Killer extends JavaPlugin
 		return false;
 	}
 	
+	Game getGameForWorld(World w)
+	{
+		for ( Game game : games )
+			if ( w == game.getMainWorld() || w == game.getNetherWorld() )
+				return game;
+		
+		return null;
+	}
+	
 	Game getGameForPlayer(Player player)
 	{
+		World w = player.getWorld();
 		
+		if ( w == worldManager.stagingWorld )
+		{
+			// based on player y position
+			
+			return null;
+		}
+		
+		return getGameForWorld(w);
 	}
 
 	MinecraftServer getMinecraftServer()

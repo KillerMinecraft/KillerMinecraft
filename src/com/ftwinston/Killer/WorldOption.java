@@ -21,13 +21,13 @@ public abstract class WorldOption
 	static List<WorldOption> options = new ArrayList<WorldOption>();
 	static WorldOption get(int num) { return options.get(num); }
 	
-	static void setup(Killer killer)
+	static void setup(Killer plugin)
 	{
 		for ( int i=0; i<Settings.customWorldNames.size(); i++ )
 		{
 			String name = Settings.customWorldNames.get(i); 
 			// check the corresponding folder exists for each of these. Otherwise, delete
-			File folder = new File(killer.getServer().getWorldContainer() + File.separator + name);
+			File folder = new File(plugin.getServer().getWorldContainer() + File.separator + name);
 			if ( name.length() > 0 && folder.exists() && folder.isDirectory() )
 				continue;
 			
@@ -53,9 +53,10 @@ public abstract class WorldOption
 		}
 		
 		for ( WorldOption option : options )
-			option.plugin = killer;
+			option.plugin = plugin;
 		
-		killer.setWorldOption(options.get(0));
+		for ( Game game : plugin.games )
+			game.setWorldOption(options.get(0));
 	}
 	
 	protected WorldOption(String name)
@@ -77,9 +78,9 @@ public abstract class WorldOption
 		return plugin.worldManager.createWorld(wc, runWhenDone, extraPopulators);
 	}
 	
-	public final void createWorlds(final Runnable runWhenDone)
+	public final void createWorlds(Game game, final Runnable runWhenDone)
 	{
-		Runnable doneMainWorld = plugin.getGameMode().usesNether() ? new Runnable()
+		Runnable doneMainWorld = game.getGameMode().usesNether() ? new Runnable()
 		{
 			public void run()
 			{
@@ -91,14 +92,14 @@ public abstract class WorldOption
 	}
 	
 	protected abstract void createMainWorld(String name, Runnable runWhenDone);
-	protected final void setMainWorld(World world) { plugin.worldManager.mainWorld = world; }
+	protected final void setMainWorld(World world) { game.setMainWorld(world); }
 	
 	protected void createNetherWorld(String name, Runnable runWhenDone)
 	{
 		WorldCreator wc = new WorldCreator(name).environment(Environment.NETHER);
 		setNetherWorld(createWorld(wc, runWhenDone));
 	}
-	protected final void setNetherWorld(World world) { plugin.worldManager.netherWorld = world; }
+	protected final void setNetherWorld(World world) { game.setNetherWorld(world); }
 	
 	public abstract boolean isFixedWorld();
 }

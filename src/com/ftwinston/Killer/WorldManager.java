@@ -50,6 +50,8 @@ import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 
+import com.ftwinston.Killer.Game.GameState;
+
 class WorldManager
 {
 	public static WorldManager instance;
@@ -76,9 +78,7 @@ class WorldManager
 	private static HashMap regionfiles;
 	private static Field rafField;
 	
-	public World mainWorld;
 	public World stagingWorld;
-	public World netherWorld;
 	
 	public void hijackDefaultWorld(String name)
 	{
@@ -196,8 +196,10 @@ class WorldManager
 				|| loc.getBlockZ() > StagingWorldGenerator.spleefMaxZ
 				|| loc.getBlockX() < StagingWorldGenerator.spleefMinX
 				|| loc.getBlockX() > StagingWorldGenerator.spleefMaxX;
-		else if ( plugin.getGameState().usesGameWorlds )
-			return plugin.getGameMode().isLocationProtected(loc);
+				
+		Game game = plugin.getGameForWorld(loc.getWorld());
+		if ( game != null )
+			return game.getGameMode().isLocationProtected(loc);
 		else
 			return false;
 	}
@@ -319,21 +321,21 @@ class WorldManager
 		ms.worlds.remove(ms.worlds.indexOf(craftWorld.getHandle()));
 	}
 
-	public void deleteKillerWorlds(Runnable runWhenDone)
+	public void deleteKillerWorlds(Game game, Runnable runWhenDone)
 	{
 		plugin.log.info("Clearing out old worlds...");
 		if ( mainWorld == null )
 			if ( netherWorld == null )
 				deleteWorlds(runWhenDone);
 			else
-				deleteWorlds(runWhenDone, netherWorld);
+				deleteWorlds(runWhenDone, game.getNetherWorld());
 		else if ( netherWorld == null )
-			deleteWorlds(runWhenDone, mainWorld);
+			deleteWorlds(runWhenDone, game.getMainWorld());
 		else
-			deleteWorlds(runWhenDone, mainWorld, netherWorld);
+			deleteWorlds(runWhenDone, game.getMainWorld(), game.getNetherWorld());
 		
-		mainWorld = null;
-		netherWorld = null;
+		game.setMainWorld(null);
+		game.setNetherWorld(null);
 	}
 	
 	public void deleteWorlds(Runnable runWhenDone, World... worlds)
@@ -530,7 +532,7 @@ class WorldManager
 	
 		try
 		{
-			generator.createWorlds(generationComplete);
+			generator.createWorlds(game, generationComplete);
 		}
 		catch (ArrayIndexOutOfBoundsException ex)
 		{
