@@ -31,7 +31,6 @@ class PlayerManager
 	public static PlayerManager instance;
 	private Killer plugin;
 	private Random random;
-	private int helpMessageProcess, compassProcess, spectatorFollowProcess;
 	
 	public PlayerManager(Killer _plugin)
 	{
@@ -106,12 +105,6 @@ class PlayerManager
 	{
 		playerInfo.clear();
 		
-		if ( helpMessageProcess != -1 )
-		{
-			plugin.getServer().getScheduler().cancelTask(helpMessageProcess);
-			helpMessageProcess = -1;
-		}
-		
 		for ( Player player : plugin.getOnlinePlayers() )
 		{
 			resetPlayer(player);
@@ -121,45 +114,11 @@ class PlayerManager
 		if ( Settings.banOnDeath )
 			for ( OfflinePlayer player : plugin.getServer().getBannedPlayers() )
 				player.setBanned(false);
-		
-		plugin.getServer().getScheduler().cancelTask(compassProcess);
-		plugin.getServer().getScheduler().cancelTask(spectatorFollowProcess);
 	}
 	
 	public void startGame()
 	{
-		reset();  
-		
-		// start sending out help messages explaining the game rules
-		helpMessageProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-			public void run()
-			{
-				plugin.getGameMode().sendGameModeHelpMessage();
-			}
-		}, 0, 550L); // send every 25 seconds
-		
-		compassProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-        	public void run()
-        	{
-	        	for ( Player player : plugin.getGameMode().getOnlinePlayers(true) )
-	        		if ( player.getInventory().contains(Material.COMPASS) )
-	        		{// does this need a null check on the target?
-	        			player.setCompassTarget(getCompassTarget(player));
-	        		}
-        	}
-        }, 20, 10);
-	        			
-		spectatorFollowProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-        	public void run()
-        	{
-	        	for ( Player player : plugin.getGameMode().getOnlinePlayers(false) )
-	        	{
-	        		PlayerManager.Info info = getInfo(player.getName());
-	        		if (info.target != null )
-	        			checkFollowTarget(player, info.target);
-	        	}
-        	}
-        }, 40, 40);
+		reset();
 	}
 	
 	public void colorPlayerName(Player player, ChatColor color)

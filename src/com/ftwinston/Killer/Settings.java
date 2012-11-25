@@ -8,6 +8,8 @@ import org.bukkit.Material;
 
 public class Settings
 {
+	public static int maxSimultaneousGames;
+	
 	public static boolean
 	lateJoinersStartAsSpectator,
 	banOnDeath,
@@ -30,6 +32,12 @@ public class Settings
 	public static void setup(Killer plugin)
 	{
 		plugin.getConfig().options().copyDefaults(true);
+		
+		maxSimultaneousGames = readInt(plugin, "maxSimultaneousGames", 1);
+		if ( maxSimultaneousGames < 1 )
+			maxSimultaneousGames = 1;
+		else if ( maxSimultaneousGames > 8 )
+			maxSimultaneousGames = 8;
 		
 		lateJoinersStartAsSpectator = readBoolean(plugin, "lateJoinersStartAsSpectator", false);
 		banOnDeath = readBoolean(plugin, "banOnDeath", false);
@@ -64,6 +72,12 @@ public class Settings
 		startingItems = readMaterialList(plugin, "startingItems", new ArrayList<Integer>(), Material.STONE_PICKAXE);
 		
 		plugin.saveConfig();
+	}
+	
+	private static int readInt(Killer plugin, String keyName, int defaultVal)
+	{
+		plugin.getConfig().addDefault(keyName, defaultVal);
+		return plugin.getConfig().getInt(keyName);
 	}
 	
 	private static boolean readBoolean(Killer plugin, String keyName, boolean defaultVal)

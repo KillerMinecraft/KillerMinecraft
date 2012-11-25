@@ -50,8 +50,6 @@ import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 
-import com.ftwinston.Killer.Killer.GameState;
-
 class WorldManager
 {
 	public static WorldManager instance;
@@ -459,46 +457,46 @@ class WorldManager
 		return true;
 	}
 	
-	public void generateWorlds(final WorldOption generator, final Runnable runWhenDone)
+	public void generateWorlds(final Game game, final WorldOption generator, final Runnable runWhenDone)
 	{
-		plugin.getGameMode().broadcastMessage(plugin.getGameMode().usesNether() ? "Preparing new worlds..." : "Preparing new world...");
+		game.getGameMode().broadcastMessage(game.getGameMode().usesNether() ? "Preparing new worlds..." : "Preparing new world...");
 		
 		Runnable generationComplete = new Runnable() {
 			@Override
 			public void run()
 			{
 				// ensure those worlds are set to Hard difficulty
-				plugin.worldManager.mainWorld.setDifficulty(Difficulty.HARD);
-				if ( plugin.worldManager.netherWorld != null )
-					plugin.worldManager.netherWorld.setDifficulty(Difficulty.HARD);
+				game.getMainWorld().setDifficulty(Difficulty.HARD);
+				if ( game.getNetherWorld() != null )
+					game.getNetherWorld().setDifficulty(Difficulty.HARD);
 				
-				switch ( plugin.animalNumbers )
+				switch ( game.animalNumbers )
 				{
 				case 0:
-					mainWorld.setAnimalSpawnLimit(0);
-					mainWorld.setTicksPerAnimalSpawns(600);
+					game.getMainWorld().setAnimalSpawnLimit(0);
+					game.getMainWorld().setTicksPerAnimalSpawns(600);
 					break;
 				case 1:
-					mainWorld.setAnimalSpawnLimit(8);
-					mainWorld.setTicksPerAnimalSpawns(500);
+					game.getMainWorld().setAnimalSpawnLimit(8);
+					game.getMainWorld().setTicksPerAnimalSpawns(500);
 					break;
 				case 2: // mc defaults
-					mainWorld.setAnimalSpawnLimit(15);
-					mainWorld.setTicksPerAnimalSpawns(400);
+					game.getMainWorld().setAnimalSpawnLimit(15);
+					game.getMainWorld().setTicksPerAnimalSpawns(400);
 					break;
 				case 3:
-					mainWorld.setAnimalSpawnLimit(25);
-					mainWorld.setTicksPerAnimalSpawns(300);
+					game.getMainWorld().setAnimalSpawnLimit(25);
+					game.getMainWorld().setTicksPerAnimalSpawns(300);
 					break;
 				case 4:
-					mainWorld.setAnimalSpawnLimit(40);
-					mainWorld.setTicksPerAnimalSpawns(200);
+					game.getMainWorld().setAnimalSpawnLimit(40);
+					game.getMainWorld().setTicksPerAnimalSpawns(200);
 					break;
 				}
 
-				World[] worlds = netherWorld == null ? new World[] { mainWorld } : new World[] { mainWorld, netherWorld };
+				World[] worlds = netherWorld == null ? new World[] { game.getMainWorld() } : new World[] { game.getMainWorld(), netherWorld };
 				for ( World world : worlds )
-					switch ( plugin.monsterNumbers )
+					switch ( game.monsterNumbers )
 					{
 					case 0:
 						world.setMonsterSpawnLimit(0);
@@ -537,9 +535,9 @@ class WorldManager
 		catch (ArrayIndexOutOfBoundsException ex)
 		{
 			plugin.log.warning("An crash occurred during world generation. This might be a bug with the selected world option, vanilla minecraft, bukkit, or killer itself.");
-			plugin.getGameMode().broadcastMessage("An error occurred during world generation.\nPlease try again...");
+			game.getGameMode().broadcastMessage("An error occurred during world generation.\nPlease try again...");
 			
-			plugin.setGameState(GameState.worldDeletion);
+			game.setGameState(GameState.worldDeletion);
 		}
 	}
 	

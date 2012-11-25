@@ -35,106 +35,12 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
+import com.ftwinston.Killer.Game.GameState;
 
 public class Killer extends JavaPlugin
 {
 	public static Killer instance;
 	public Logger log = Logger.getLogger("Minecraft");
-	
-
-	enum GameState
-	{
-		stagingWorldSetup(false, true), // in staging world, players need to choose mode/world
-		worldDeletion(false, true), // in staging world, hide start buttons, delete old world, then show start button again
-		stagingWorldReady(false, true), // in staging world, players need to push start
-		stagingWorldConfirm(false, true), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
-		worldGeneration(false, false), // in staging world, game worlds are being generated
-		active(true, false), // game is active, in game world
-		finished(true, false); // game is finished, but not yet restarted
-		
-		public final boolean usesGameWorlds, canChangeGameSetup;
-		GameState(boolean useGameWorlds, boolean canChangeGameSetup)
-		{
-			this.usesGameWorlds = useGameWorlds;
-			this.canChangeGameSetup = canChangeGameSetup;
-		}
-	}
-	
-	private GameState gameState = GameState.stagingWorldSetup;
-	GameState getGameState() { return gameState; }
-	void setGameState(GameState newState)
-	{
-		GameState prevState = gameState;
-		gameState = newState;
-		
-		if ( newState == GameState.stagingWorldSetup )
-		{
-			stagingWorldManager.showStartButtons(false);
-		}
-		else if ( newState == GameState.worldDeletion )
-		{
-			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
-			if ( statsManager.isTracking )
-				statsManager.gameFinished(getGameMode(), getGameMode().getOnlinePlayers(true).size(), 3, 0);
-			
-			HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
-
-			// don't show the start buttons until the old world finishes deleting
-			stagingWorldManager.showWaitForDeletion();
-			stagingWorldManager.removeWorldGenerationIndicator();
-			
-			for ( Player player : getOnlinePlayers() )
-				if ( player.getWorld() != worldManager.stagingWorld )
-					playerManager.teleport(player, stagingWorldManager.getStagingWorldSpawnPoint());
-			
-			playerManager.reset();
-			
-			worldManager.deleteKillerWorlds(new Runnable() {
-				@Override
-				public void run() { // we need this to set the state to stagingWorldReady when done
-					setGameState(GameState.stagingWorldReady);
-				}
-			});
-		}
-		else if ( newState == GameState.stagingWorldReady )
-		{
-			stagingWorldManager.showStartButtons(false);
-		}
-		else if ( newState == GameState.stagingWorldConfirm )
-		{
-			stagingWorldManager.showStartButtons(true);
-		}
-		else if( newState == GameState.worldGeneration )
-		{
-			worldManager.generateWorlds(worldOption, new Runnable() {
-				@Override
-				public void run() {
-					// don't waste memory on monsters in the staging world
-					stagingWorldManager.endMonsterArena();
-					
-					getGameMode().worldGenerationComplete(worldManager.mainWorld, worldManager.netherWorld);
-					setGameState(GameState.active);
-					stagingWorldManager.showStartButtons(false);
-				}
-			});
-		}
-		else if ( newState == GameState.active )
-		{
-			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
-			if ( statsManager.isTracking )
-				statsManager.gameFinished(getGameMode(), getGameMode().getOnlinePlayers(true).size(), 3, 0);
-			
-			if ( prevState.usesGameWorlds )
-			{
-				worldManager.removeAllItems(worldManager.mainWorld);
-				worldManager.mainWorld.setTime(0);
-			}
-			else
-				getServer().getPluginManager().registerEvents(getGameMode(), this);
-
-			getGameMode().startGame();
-		}
-	}
 
 	boolean stagingWorldIsServerDefault;
 	
@@ -144,16 +50,7 @@ public class Killer extends JavaPlugin
 	PlayerManager playerManager;
 	VoteManager voteManager;
 	StatsManager statsManager;
-	
-	private GameMode gameMode = null;
-	GameMode getGameMode() { return gameMode; }
-	boolean setGameMode(GameMode g) { gameMode = g; return gameMode != null && worldOption != null; }
-	
-	private WorldOption worldOption = null;
-	WorldOption getWorldOption() { return worldOption; }
-	boolean setWorldOption(WorldOption w) { worldOption = w; return gameMode != null && worldOption != null; }
-	
-	int monsterNumbers = 2, animalNumbers = 2;
+	Game[] games;
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
@@ -165,6 +62,11 @@ public class Killer extends JavaPlugin
         instance = this;
         
         Settings.setup(this);
+        
+        games = new Game[Settings.maxSimultaneousGames];
+        for ( int i=0; i<games.length; i++ )
+        	games[i] = new Game(this, i);
+        
         WorldOption.setup(this);
 		
 		createRecipes();
@@ -179,7 +81,7 @@ public class Killer extends JavaPlugin
 		if ( defaultLevelName.equalsIgnoreCase(Settings.killerWorldName) )
 		{
 			stagingWorldIsServerDefault = true;
-			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
+			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be an 'end' world, so create an empty world first until we can create that
 		}
 		else if ( defaultLevelName.equalsIgnoreCase(Settings.stagingWorldName) )
 		{
@@ -194,7 +96,7 @@ public class Killer extends JavaPlugin
 			getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 				@Override
 				public void run() {
-					if ( GameMode.gameModes.size() == 0 )
+					if ( games[0].allGameModes.size() == 0 )
 					{
 						warnNoGameModes();
 						return;
@@ -220,7 +122,8 @@ public class Killer extends JavaPlugin
 	
 	public static void registerGameMode(GameMode mode)
 	{
-		mode.initialize(instance);
+		for ( Game game : instance.games )
+			mode.initialize(game);
 	}
 	
 	void warnNoGameModes()
@@ -232,29 +135,7 @@ public class Killer extends JavaPlugin
 	List<Recipe> monsterRecipes = new ArrayList<Recipe>();
 	ShapedRecipe dispenserRecipe;
 	ShapelessRecipe enderRecipe;
-	
-	private boolean dispenserRecipeEnabled = true;
-	void toggleDispenserRecipe()
-	{
-		dispenserRecipeEnabled = !dispenserRecipeEnabled;
-		
-		if ( dispenserRecipeEnabled )
-		{
-			getServer().addRecipe(dispenserRecipe);
-			return;
-		}
-		
-		Iterator<Recipe> iterator = getServer().recipeIterator();
-        while (iterator.hasNext())
-        	if ( isDispenserRecipe(iterator.next()) )
-        	{
-        		iterator.remove();
-        		return;
-        	}
-	}
-	
-	boolean isDispenserRecipeEnabled() { return dispenserRecipeEnabled; }
-	
+
 	boolean isDispenserRecipe(Recipe recipe)
 	{
 		if ( recipe.getResult().getType() != dispenserRecipe.getResult().getType() || !(recipe instanceof ShapedRecipe) )
@@ -269,28 +150,6 @@ public class Killer extends JavaPlugin
 		return false;	
 	}
 	
-	private boolean enderEyeRecipeEnabled = true;
-	void toggleEnderEyeRecipe()
-	{
-		enderEyeRecipeEnabled = !enderEyeRecipeEnabled;
-		
-		if ( enderEyeRecipeEnabled )
-		{
-			getServer().addRecipe(enderRecipe);
-			return;
-		}
-		
-		Iterator<Recipe> iterator = getServer().recipeIterator();
-        while (iterator.hasNext())
-        	if ( isEnderEyeRecipe(iterator.next()) )
-        	{
-        		iterator.remove();
-        		return;
-        	}
-	}
-	
-	boolean isEnderEyeRecipeEnabled() { return enderEyeRecipeEnabled; }
-	
 	boolean isEnderEyeRecipe(Recipe recipe)
 	{
 		if ( recipe.getResult().getType() != enderRecipe.getResult().getType() || !(recipe instanceof ShapelessRecipe) )
@@ -303,33 +162,6 @@ public class Killer extends JavaPlugin
     			return true;
     			
     	return false;
-	}
-	
-	private boolean monsterEggsEnabled = true;
-	void toggleMonsterEggRecipes()
-	{
-		monsterEggsEnabled = !monsterEggsEnabled;
-		
-		if ( monsterEggsEnabled )
-		{
-			for ( Recipe recipe : monsterRecipes )
-				getServer().addRecipe(recipe);
-			return;
-		}
-		
-		Iterator<Recipe> iterator = getServer().recipeIterator();
-		while (iterator.hasNext())
-        {
-			if ( isMonsterEggRecipe(iterator.next()) )
-            	iterator.remove();
-    	}
-	}
-	
-	boolean isMonsterEggRecipeEnabled() { return monsterEggsEnabled; }
-	
-	boolean isMonsterEggRecipe(Recipe recipe)
-	{
-		return recipe.getResult().getType() == Material.MONSTER_EGG;
 	}
 	
 	private void createRecipes()
@@ -393,44 +225,33 @@ public class Killer extends JavaPlugin
 				sender.sendMessage("Usage: /spec main, /spec nether, /spec <player name>, or /spec follow");
 				return true;
 			}
+			Player player = (Player)sender;
 			
-			if ( !playerManager.isSpectator(sender.getName()) )
+			if ( !playerManager.isSpectator(sender.getName()) || !isGameWorld(player.getWorld()) )
 			{
 				sender.sendMessage("Only spectators can use this command");
 				return true;
 			}
 			
-			Player player = (Player)sender;
+			Game game = getGameForPlayer(player);
+			if ( game == null )
+				return true;
+			
 			if ( args[0].equalsIgnoreCase("main") )
 			{
-				playerManager.teleport(player, getGameMode().getSpawnLocation(player));
+				playerManager.teleport(player, game.getSpawnLocation(player));
 			}
 			else if ( args[0].equalsIgnoreCase("nether") )
 			{
-				if ( worldManager.netherWorld != null )
-					playerManager.teleport(player, worldManager.netherWorld.getSpawnLocation());
+				if ( game.getNetherWorld() != null )
+					playerManager.teleport(player, game.getNetherWorld().getSpawnLocation());
 				else
 					sender.sendMessage("Nether world not found, please try again");
-			}
-			else if ( args[0].equalsIgnoreCase("follow") )
-			{
-				if ( playerManager.getFollowTarget(player) == null )
-				{
-					String target = playerManager.getNearestFollowTarget(player);
-					playerManager.setFollowTarget(player, target);
-					playerManager.checkFollowTarget(player, target);
-					sender.sendMessage("Follow mode enabled. Type " + ChatColor.YELLOW + "/spec follow" + ChatColor.RESET + " again to exist follow mode. Type /spec <player name> to follow another player.");
-				}
-				else
-				{
-					playerManager.setFollowTarget(player, null);
-					sender.sendMessage("Follow mode disabled.");
-				}
 			}
 			else
 			{
 				Player other = getServer().getPlayer(args[0]);
-				if ( other == null || !other.isOnline() )
+				if ( other == null || !other.isOnline() || game != getGameForPlayer(other) || !playerManager.isAlive(other.getName()))
 					sender.sendMessage("Player not found: " + args[0]);
 				else if ( playerManager.getFollowTarget(player) != null )
 					playerManager.setFollowTarget(player, other.getName());
@@ -448,12 +269,6 @@ public class Killer extends JavaPlugin
 		}
 		else if (cmd.getName().equalsIgnoreCase("team"))
 		{
-			if ( getGameMode().teamAllocationIsSecret() )
-			{
-				sender.sendMessage("Team chat is not available in " + getGameMode().getName() + " mode");
-				return true;
-			}
-			
 			if ( !(sender instanceof Player) )
 				return true;
 			
@@ -463,11 +278,22 @@ public class Killer extends JavaPlugin
 				return true;
 			}
 			
+			Player player = (Player)sender;
+			Game game = getGameForPlayer(player);
+			
+			if ( game == null || !game.getGameState().usesGameWorlds )
+				return true;
+			
+			if ( game.getGameMode().teamAllocationIsSecret() )
+			{
+				sender.sendMessage("Team chat is not available in " + game.getGameMode().getName() + " mode");
+				return true;
+			}
+			
 			String message = "[Team] " + ChatColor.RESET + args[0];
 			for ( int i=1; i<args.length; i++ )
 				message += " " + args[i];
 			
-			Player player = (Player)sender;
 			PlayerManager.Info info = playerManager.getInfo(player.getName());
 		
 			// most of this code is a clone of the actual chat code in NetServerHandler.chat
@@ -477,6 +303,7 @@ public class Killer extends JavaPlugin
 			if (event.isCancelled())
 				return true;
 		
+			// fixmulti
 			message = String.format(event.getFormat(), player.getDisplayName(), message);
 			getServer().getConsoleSender().sendMessage(message);
 			
@@ -493,10 +320,14 @@ public class Killer extends JavaPlugin
 			
 			// if they've already reached the end of the messages, start again from the beginning
 			Player player = (Player)sender;
-			if ( !getGameMode().sendGameModeHelpMessage(player) )
+			Game game = getGameForPlayer(player);
+			if ( game == null )
+				return true;
+			
+			if ( !game.getGameMode().sendGameModeHelpMessage(player) )
 			{// if there was no message to send, restart from the beginning
 				playerManager.getInfo(player.getName()).nextHelpMessage = 0;
-				getGameMode().sendGameModeHelpMessage(player);
+				game.getGameMode().sendGameModeHelpMessage(player);
 			}
 			return true;
 		}
@@ -524,7 +355,7 @@ public class Killer extends JavaPlugin
 						}
 						if ( isGameWorld(player.getWorld()) )
 						{
-							sender.sendMessage("You are already part of the Killer game, you can't join again!");
+							sender.sendMessage("You are already part of a Killer game, you can't join again!");
 							return true;
 						}
 						
@@ -581,20 +412,22 @@ public class Killer extends JavaPlugin
 			String firstParam = args[0].toLowerCase();
 			if ( firstParam.equals("restart") )
 			{
-				if ( getGameState().usesGameWorlds )
+				Game game = getGameForPlayer(player);
+				if ( game != null && game.getGameState().usesGameWorlds )
 				{
-					forcedGameEnd = true;
-					getGameMode().gameFinished();
-					restartGame(sender);
+					game.forcedGameEnd = true;
+					game.getGameMode().gameFinished();
+					game.restartGame(sender);
 				}
 			}
 			else if ( firstParam.equals("end") )
 			{
-				if ( getGameState().usesGameWorlds )
+				Game game = getGameForPlayer(player);
+				if ( game != null && game.getGameState().usesGameWorlds )
 				{
-					forcedGameEnd = true;
-					getGameMode().gameFinished();
-					endGame(sender);
+					game.forcedGameEnd = true;
+					game.getGameMode().gameFinished();
+					game.endGame(sender);
 				}
 			}
 			else if ( firstParam.equals("world") )
@@ -628,6 +461,11 @@ public class Killer extends JavaPlugin
 		}
 		
 		return false;
+	}
+	
+	Game getGameForPlayer(Player player)
+	{
+		
 	}
 
 	MinecraftServer getMinecraftServer()
@@ -684,27 +522,6 @@ public class Killer extends JavaPlugin
 			if ( isGameWorld(player.getWorld()) )
 				players.add(player);
 		return players;
-	}
-	
-	boolean forcedGameEnd = false;
-	void endGame(CommandSender actionedBy)
-	{
-		if ( actionedBy != null )
-			getGameMode().broadcastMessage(actionedBy.getName() + " ended the game. You've been moved to the staging world to allow you to set up a new one...");
-		else
-			getGameMode().broadcastMessage("The game has ended. You've been moved to the staging world to allow you to set up a new one...");
-		
-		setGameState(GameState.worldDeletion); // stagingWorldReady cos the options from last time will still be selected
-	}
-	
-	void restartGame(CommandSender actionedBy)
-	{
-		if ( actionedBy != null )
-			getGameMode().broadcastMessage(actionedBy.getName() + " is restarting the game...");
-		else
-			getGameMode().broadcastMessage("Game is restarting...");
-		
-		setGameState(GameState.active);
 	}
 	
 	class EmptyWorldGenerator extends org.bukkit.generator.ChunkGenerator

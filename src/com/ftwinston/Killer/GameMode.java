@@ -31,32 +31,29 @@ import com.ftwinston.Killer.PlayerManager.Info;
 
 public abstract class GameMode implements Listener
 {
-	static List<GameMode> gameModes = new ArrayList<GameMode>();
-
-	static GameMode get(int num) { return gameModes.get(num); }
-	
-	Killer plugin;
+	Killer plugin; Game game;
 	protected final Random random = new Random();
 	
-	final void initialize(Killer killer)
+	final void initialize(Game game)
 	{
-		plugin = killer;
+		this.game = game;
+		plugin = game.plugin;
 
 		for ( Option option : setupOptions() )
 			options.add(option);
 
 		String name = getName();
-		if ( gameModes.size() == 0 || name.equals(Settings.defaultGameMode) )
-			killer.setGameMode(this);
-				
+		if ( game.allGameModes.size() == 0 || name.equals(Settings.defaultGameMode) )
+			game.setGameMode(this);
+		
 		// keep the game modes in alphabetic order
-		for ( int i=0; i<gameModes.size(); i++ )
-			if ( name.compareToIgnoreCase(gameModes.get(i).getName()) < 0 )
+		for ( int i=0; i<game.allGameModes.size(); i++ )
+			if ( name.compareToIgnoreCase(game.allGameModes.get(i).getName()) < 0 )
 			{
-				gameModes.add(i, this);
+				game.allGameModes.add(i, this);
 				return;
 			}
-		gameModes.add(this);
+		game.allGameModes.add(this);
 	}
 	
 	// methods to be overridden by each game mode
@@ -73,9 +70,9 @@ public abstract class GameMode implements Listener
 	
 	private String getExtraHelpMessage(int messageNum)
 	{
-		boolean use1 = usesNether() && plugin.isEnderEyeRecipeEnabled();
-		boolean use2 = plugin.isMonsterEggRecipeEnabled();
-		boolean use3 = plugin.isDispenserRecipeEnabled();
+		boolean use1 = usesNether() && game.isEnderEyeRecipeEnabled();
+		boolean use2 = game.isMonsterEggRecipeEnabled();
+		boolean use3 = game.isDispenserRecipeEnabled();
 		
 		if ( !use1 )
 			messageNum --;

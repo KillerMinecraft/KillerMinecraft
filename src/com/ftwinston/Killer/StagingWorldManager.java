@@ -21,7 +21,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-import com.ftwinston.Killer.Killer.GameState;
+import com.ftwinston.Killer.Game.GameState;
 
 class StagingWorldManager
 {
@@ -51,7 +51,7 @@ class StagingWorldManager
 	}
 	
 	private StagingWorldOption currentOption = StagingWorldOption.NONE;
-	public void setCurrentOption(StagingWorldOption option)
+	public void setCurrentOption(Game game, StagingWorldOption option)
 	{
 		if ( option == currentOption )
 			return;
@@ -96,14 +96,14 @@ class StagingWorldManager
 			{
 				GameMode mode = GameMode.gameModes.get(i); 
 				labels[i] = mode.getName();
-				values[i] = mode == plugin.getGameMode();
+				values[i] = mode == game.getGameMode();
 			}
-			showSetupOptionButtons("Game mode:", true, labels, values);
+			showSetupOptionButtons(game, "Game mode:", true, labels, values);
 			break;
 		case GAME_MODE_OPTION:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.gameOptionButtonZ).setData(StagingWorldGenerator.colorOptionOn);
 			
-			List<GameMode.Option> options = plugin.getGameMode().getOptions();
+			List<GameMode.Option> options = game.getGameMode().getOptions();
 			labels = new String[options.size()];
 			values = new boolean[labels.length];
 			for ( int i=0; i<options.size(); i++ )
@@ -111,7 +111,7 @@ class StagingWorldManager
 				labels[i] = options.get(i).getName();
 				values[i] = options.get(i).isEnabled();
 			}
-			showSetupOptionButtons("Mode option:", false, labels, values);
+			showSetupOptionButtons(game, "Mode option:", false, labels, values);
 			break;
 		case WORLD_OPTION:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.worldOptionButtonZ).setData(StagingWorldGenerator.colorOptionOn);
@@ -122,15 +122,15 @@ class StagingWorldManager
 			{
 				WorldOption worldOption = WorldOption.options.get(i); 
 				labels[i] = worldOption.getName();
-				values[i] = worldOption == plugin.getWorldOption();
+				values[i] = worldOption == game.getWorldOption();
 			}
-			showSetupOptionButtons("World option:", false, labels, values);
+			showSetupOptionButtons(game, "World option:", false, labels, values);
 			break;
 		case GLOBAL_OPTION:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.globalOptionButtonZ).setData(StagingWorldGenerator.colorOptionOn);
 			labels = new String[] { "Craftable monster eggs", "Easier dispenser recipe", "Eyes of ender find nether fortresses" };
 			values = new boolean[] { true, true, true, true };
-			showSetupOptionButtons("Global option:", false, labels, values);
+			showSetupOptionButtons(game, "Global option:", false, labels, values);
 			break;
 		case MONSTERS:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.monstersButtonZ).setData(StagingWorldGenerator.colorOptionOn);
@@ -139,9 +139,9 @@ class StagingWorldManager
 			for ( int i=0; i<5; i++ )
 			{
 				labels[i] = StagingWorldGenerator.getQuantityText(i);
-				values[i] = i == plugin.monsterNumbers;
+				values[i] = i == game.monsterNumbers;
 			}
-			showSetupOptionButtons("Monsters:", false, labels, values);
+			showSetupOptionButtons(game, "Monsters:", false, labels, values);
 			break;
 		case ANIMALS:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.animalsButtonZ).setData(StagingWorldGenerator.colorOptionOn);
@@ -150,13 +150,13 @@ class StagingWorldManager
 			for ( int i=0; i<5; i++ )
 			{
 				labels[i] = StagingWorldGenerator.getQuantityText(i);
-				values[i] = i == plugin.animalNumbers;
+				values[i] = i == game.animalNumbers;
 			}
-			showSetupOptionButtons("Animals:", false, labels, values);
+			showSetupOptionButtons(game, "Animals:", false, labels, values);
 		}
 	}
 	
-	private void showSetupOptionButtons(String heading, boolean forGameMode, String[] labels, boolean[] values)
+	private void showSetupOptionButtons(Game game, String heading, boolean forGameMode, String[] labels, boolean[] values)
 	{
 		Block b;
 		for ( int i=0; i<labels.length; i++ )
@@ -293,7 +293,7 @@ class StagingWorldManager
 		stagingWorld.setMonsterSpawnLimit(0);
 	}
 	
-	private int countPlayersInArena()
+	int countPlayersInArena()
 	{
 		int numPlayersInArena = 0;
 		for ( Player player : stagingWorld.getPlayers() )
@@ -402,7 +402,7 @@ class StagingWorldManager
 		return loc;
 	}
 
-	public void setupButtonClicked(int x, int z, Player player)
+	public void setupButtonClicked(Game game, int x, int z, Player player)
 	{
 		if ( z == StagingWorldGenerator.waitingButtonZ )
 		{
@@ -453,17 +453,17 @@ class StagingWorldManager
 		else if ( x == StagingWorldGenerator.mainButtonX )
 		{
 			if ( z == StagingWorldGenerator.gameModeButtonZ )
-				setCurrentOption(currentOption == StagingWorldOption.GAME_MODE ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE);
+				setCurrentOption(game, currentOption == StagingWorldOption.GAME_MODE ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE);
 			else if ( z == StagingWorldGenerator.gameOptionButtonZ )
-				setCurrentOption(currentOption == StagingWorldOption.GAME_MODE_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE_OPTION);
+				setCurrentOption(game, currentOption == StagingWorldOption.GAME_MODE_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE_OPTION);
 			else if ( z == StagingWorldGenerator.worldOptionButtonZ )
-				setCurrentOption(currentOption == StagingWorldOption.WORLD_OPTION ? StagingWorldOption.NONE : StagingWorldOption.WORLD_OPTION);
+				setCurrentOption(game, currentOption == StagingWorldOption.WORLD_OPTION ? StagingWorldOption.NONE : StagingWorldOption.WORLD_OPTION);
 			else if ( z == StagingWorldGenerator.globalOptionButtonZ )
-				setCurrentOption(currentOption == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
+				setCurrentOption(game, currentOption == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
 			else if ( z == StagingWorldGenerator.monstersButtonZ )
-				setCurrentOption(currentOption == StagingWorldOption.MONSTERS ? StagingWorldOption.NONE : StagingWorldOption.MONSTERS);
+				setCurrentOption(game, currentOption == StagingWorldOption.MONSTERS ? StagingWorldOption.NONE : StagingWorldOption.MONSTERS);
 			else if ( z == StagingWorldGenerator.animalsButtonZ )
-				setCurrentOption(currentOption == StagingWorldOption.ANIMALS ? StagingWorldOption.NONE : StagingWorldOption.ANIMALS);
+				setCurrentOption(game, currentOption == StagingWorldOption.ANIMALS ? StagingWorldOption.NONE : StagingWorldOption.ANIMALS);
 		}
 		else if ( x == StagingWorldGenerator.optionButtonX )
 		{
@@ -475,9 +475,9 @@ class StagingWorldManager
 			case GAME_MODE:
 				// change mode
 				GameMode gameMode = GameMode.get(num);
-				if ( plugin.getGameMode() == gameMode )
+				if ( game.getGameMode() == gameMode )
 					return;
-				plugin.setGameMode(gameMode);
+				game.setGameMode(gameMode);
 				
 				// update block colors
 				newValues = new boolean[GameMode.gameModes.size()];
@@ -493,8 +493,8 @@ class StagingWorldManager
 				break;
 			case GAME_MODE_OPTION:
 				// toggle this option
-				plugin.getGameMode().toggleOption(num);
-				List<GameMode.Option> options = plugin.getGameMode().getOptions();
+				game.getGameMode().toggleOption(num);
+				List<GameMode.Option> options = game.getGameMode().getOptions();
 				
 				// update block colors
 				newValues = new boolean[options.size()];
@@ -505,9 +505,9 @@ class StagingWorldManager
 			case WORLD_OPTION:
 				// change option
 				WorldOption option = WorldOption.get(num);
-				if ( plugin.getWorldOption() == option )
+				if ( game.getWorldOption() == option )
 					return;
-				plugin.setWorldOption(option);
+				game.setWorldOption(option);
 				
 				// update block colors
 				newValues = new boolean[WorldOption.options.size()];
@@ -523,17 +523,17 @@ class StagingWorldManager
 				break;
 			case GLOBAL_OPTION:
 				if ( num == 0 )
-					plugin.toggleMonsterEggRecipes();
+					game.toggleMonsterEggRecipes();
 				else if ( num == 1 )
-					plugin.toggleDispenserRecipe();
+					game.toggleDispenserRecipe();
 				else if ( num == 2 )
-					plugin.toggleEnderEyeRecipe();
+					game.toggleEnderEyeRecipe();
 
-				newValues = new boolean[] { plugin.isMonsterEggRecipeEnabled(), plugin.isDispenserRecipeEnabled(), plugin.isEnderEyeRecipeEnabled() };
+				newValues = new boolean[] { game.isMonsterEggRecipeEnabled(), game.isDispenserRecipeEnabled(), game.isEnderEyeRecipeEnabled() };
 				updateSetupOptionButtons(newValues, false);
 				break;
 			case MONSTERS:
-				plugin.monsterNumbers = num;
+				game.monsterNumbers = num;
 				
 				// update block colors
 				newValues = new boolean[5];
@@ -548,7 +548,7 @@ class StagingWorldManager
 				s.update();
 				break;
 			case ANIMALS:
-				plugin.animalNumbers = num;
+				game.animalNumbers = num;
 				
 				// update block colors
 				newValues = new boolean[5];
@@ -568,21 +568,21 @@ class StagingWorldManager
 		{
 			if ( x == StagingWorldGenerator.startButtonX )
 			{
-				if ( plugin.getOnlinePlayers().size() >= plugin.getGameMode().getMinPlayers() )
+				if ( plugin.getOnlinePlayers().size() >= game.getGameMode().getMinPlayers() )
 				{
-					setCurrentOption(StagingWorldOption.NONE);
-					plugin.setGameState(GameState.worldGeneration);
+					setCurrentOption(game, StagingWorldOption.NONE);
+					game.setGameState(GameState.worldGeneration);
 				}
 				else
-					plugin.setGameState(GameState.stagingWorldConfirm);
+					game.setGameState(GameState.stagingWorldConfirm);
 			}
 			else if ( x == StagingWorldGenerator.overrideButtonX )
 			{
-				setCurrentOption(StagingWorldOption.NONE);
-				plugin.setGameState(GameState.worldGeneration);
+				setCurrentOption(game, StagingWorldOption.NONE);
+				game.setGameState(GameState.worldGeneration);
 			}
 			else if ( x == StagingWorldGenerator.cancelButtonX )
-				plugin.setGameState(GameState.stagingWorldReady);
+				game.setGameState(GameState.stagingWorldReady);
 		}
 		else if ( x == StagingWorldGenerator.exitButtonX )
 		{			
@@ -612,7 +612,7 @@ class StagingWorldManager
 		}
 	}
 
-	public void showStartButtons(boolean confirm)
+	public void showStartButtons(Game game, boolean confirm)
 	{
 		Block bStart = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, StagingWorldGenerator.buttonY, StagingWorldGenerator.startButtonZ);
 		Block sStart = bStart.getRelative(BlockFace.UP);
@@ -660,9 +660,9 @@ class StagingWorldManager
 			sHighInfo.setData((byte)0x3);
 			s = (Sign)sHighInfo.getState();
 			s.setLine(0, "This mode needs");
-			s.setLine(1, "at least " + plugin.getGameMode().getMinPlayers());
+			s.setLine(1, "at least " + game.getGameMode().getMinPlayers());
 			s.setLine(2, "players. You");
-			s.setLine(3, "only have " + plugin.getOnlinePlayers().size() + ".");
+			s.setLine(3, "only have " + game.getOnlinePlayers().size() + ".");
 			s.update();
 			
 			backOverride.setData(StagingWorldGenerator.colorOverrideButton);
