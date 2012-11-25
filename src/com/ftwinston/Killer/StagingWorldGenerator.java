@@ -672,6 +672,8 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		
 		for ( int i=0; i<4 && i<lines.length; i++ )
 			s.setLine(i, lines[i]);
+		for ( int i=lines.length; i<4; i++ )
+			s.setLine(i, "");
 		s.update();
 	}
 	
@@ -709,9 +711,12 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		}
 		else
 		{
+			s.setLine(1, "");
 			s.setLine(2, lines[0]);
 			if ( lines[1] != null )
 				s.setLine(3, lines[1]);
+			else
+				s.setLine(3, "");
 		}
 	}
 	
