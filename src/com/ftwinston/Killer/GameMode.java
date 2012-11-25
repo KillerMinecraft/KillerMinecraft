@@ -294,26 +294,7 @@ public abstract class GameMode implements Listener
 	}
 	
 	// returns the index with the highest value. If multiple indices share the highest value, picks one of these at random.
-	protected final int getHighestIndex(long[] values)
-	{
-		long highestVal = Long.MIN_VALUE;
-		ArrayList<Integer> highestIndices = new ArrayList<Integer>();
-		
-		for ( int i=0; i<values.length; i++ )
-			if ( values[i] > highestVal )
-			{
-				highestVal = values[i];
-				highestIndices.clear();
-				highestIndices.add(i);
-			}
-			else if ( values[i] == highestVal )
-				highestIndices.add(i);
-		
-		return selectRandom(highestIndices);
-	}
-	
-	// returns the index with the highest value. If multiple indices share the highest value, picks one of these at random.
-	protected final int getHighestIndex(int[] values)
+	protected final int getHighestValueIndex(int[] values)
 	{
 		int highestVal = Integer.MIN_VALUE;
 		ArrayList<Integer> highestIndices = new ArrayList<Integer>();
@@ -328,9 +309,32 @@ public abstract class GameMode implements Listener
 			else if ( values[i] == highestVal )
 				highestIndices.add(i);
 		
+		if ( highestIndices.size() == 0 )
+			return 0;
 		return selectRandom(highestIndices);
 	}
-	
+
+	// returns the index with the lowest value. If multiple indices share the lowest value, picks one of these at random.
+	protected final int getLowestValueIndex(int[] values)
+	{
+		int lowestVal = Integer.MAX_VALUE;
+		ArrayList<Integer> lowestIndices = new ArrayList<Integer>();
+		
+		for ( int i=0; i<values.length; i++ )
+			if ( values[i] < lowestVal )
+			{
+				lowestVal = values[i];
+				lowestIndices.clear();
+				lowestIndices.add(i);
+			}
+			else if ( values[i] == lowestVal )
+				lowestIndices.add(i);
+		
+		if ( lowestIndices.size() == 0 )
+			return 0;
+		return selectRandom(lowestIndices);
+	}
+		
 	public ChatColor getTeamChatColor(int team)
 	{
 		switch ( team )
