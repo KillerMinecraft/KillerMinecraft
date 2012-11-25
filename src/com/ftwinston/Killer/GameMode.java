@@ -25,7 +25,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.ftwinston.Killer.Killer.GameState;
+import com.ftwinston.Killer.Game.GameState;
 import com.ftwinston.Killer.PlayerManager;
 import com.ftwinston.Killer.PlayerManager.Info;
 
@@ -659,7 +659,7 @@ public abstract class GameMode implements Listener
 		mainWorld = plugin.worldManager.mainWorld;
 		netherWorld = plugin.worldManager.netherWorld;
 		
-		plugin.forcedGameEnd = false;
+		game.forcedGameEnd = false;
 		plugin.playerManager.startGame();
 		gameStarted();
 		
@@ -669,7 +669,7 @@ public abstract class GameMode implements Listener
 	
 	protected final boolean hasGameFinished()
 	{
-		return !plugin.getGameState().usesGameWorlds || plugin.getGameState() == GameState.finished;
+		return !game.getGameState().usesGameWorlds || game.getGameState() == GameState.finished;
 	}
 	
 	public final void finishGame()
@@ -680,9 +680,9 @@ public abstract class GameMode implements Listener
 		gameFinished();
 		plinthLoc = null;
 		
-		plugin.setGameState(GameState.finished);
+		game.setGameState(GameState.finished);
 		
-		if ( !plugin.forcedGameEnd )
+		if ( !game.forcedGameEnd )
 		{
 			plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new Runnable() {
 				@Override
@@ -691,23 +691,23 @@ public abstract class GameMode implements Listener
 						plugin.voteManager.startVote("Play another game in the same world?", null, new Runnable() {
 							public void run()
 							{
-								plugin.restartGame(null);
+								game.restartGame(null);
 							}
 						}, new Runnable() {
 							public void run()
 							{
-								plugin.endGame(null);
+								game.endGame(null);
 							}
 						}, new Runnable() {
 							public void run()
 							{
-								plugin.endGame(null);
+								game.endGame(null);
 							}
 						});
 					else if  ( Settings.autoRestartAtEndOfGame )
-						plugin.restartGame(null);
+						game.restartGame(null);
 					else
-						plugin.endGame(null);
+						game.endGame(null);
 				}
 			}, 220); // add a 12 second delay
 		}

@@ -24,10 +24,14 @@ class Game
 	
 	public int getNumber() { return number; }
 
-	List<GameMode> allGameModes = new ArrayList<GameMode>();
 	private GameMode gameMode = null;
 	GameMode getGameMode() { return gameMode; }
-	boolean setGameMode(GameMode g) { gameMode = g; return gameMode != null && worldOption != null; }
+	void setGameMode(GameModePlugin plugin)
+	{
+		GameMode mode = plugin.createInstance();
+		mode.initialize(this, plugin);
+		gameMode = mode;
+	}
 	
 	private WorldOption worldOption = null;
 	WorldOption getWorldOption() { return worldOption; }
