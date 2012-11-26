@@ -78,8 +78,6 @@ class WorldManager
 	private static HashMap regionfiles;
 	private static Field rafField;
 	
-	public World stagingWorld;
-	
 	public void hijackDefaultWorld(String name)
 	{
 		// as the config may have changed, delete the existing world 
@@ -189,15 +187,14 @@ class WorldManager
 		}
 	}
 	
-	public boolean isProtectedLocation(Location loc)
+	public boolean isProtectedLocation(Game game, Location loc)
 	{
-		if ( loc.getWorld() == stagingWorld )
+		if ( loc.getWorld() == plugin.stagingWorld )
 			return loc.getBlockZ() < StagingWorldGenerator.spleefMinZ
 				|| loc.getBlockZ() > StagingWorldGenerator.spleefMaxZ
 				|| loc.getBlockX() < StagingWorldGenerator.spleefMinX
 				|| loc.getBlockX() > StagingWorldGenerator.spleefMaxX;
-				
-		Game game = plugin.getGameForWorld(loc.getWorld());
+		
 		if ( game != null )
 			return game.getGameMode().isLocationProtected(loc);
 		else

@@ -51,6 +51,8 @@ public class Killer extends JavaPlugin
 	VoteManager voteManager;
 	StatsManager statsManager;
 	Game[] games;
+
+	World stagingWorld;
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
@@ -161,6 +163,11 @@ public class Killer extends JavaPlugin
     			return true;
     			
     	return false;
+	}
+	
+	boolean isMonsterEggRecipe(Recipe recipe)
+	{
+		return recipe.getResult().getType() == Material.MONSTER_EGG;
 	}
 	
 	private void createRecipes()
@@ -525,11 +532,6 @@ public class Killer extends JavaPlugin
 			log.warning("Error removing world from bukkit master list: " + ex.getMessage());
 		}
 		return config;
-	}
-	
-	boolean isGameWorld(World world)
-	{
-		return world == worldManager.mainWorld || world == worldManager.netherWorld || world == worldManager.stagingWorld;
 	}
 	
 	final List<Player> getOnlinePlayers()

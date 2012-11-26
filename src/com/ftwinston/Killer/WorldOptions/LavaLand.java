@@ -12,6 +12,8 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.event.Listener;
 import org.bukkit.generator.BlockPopulator;
 
+import com.ftwinston.Killer.Game;
+
 public class LavaLand extends com.ftwinston.Killer.WorldOption implements Listener
 {
 	public LavaLand()
@@ -21,10 +23,10 @@ public class LavaLand extends com.ftwinston.Killer.WorldOption implements Listen
 	
 	public boolean isFixedWorld() { return false; }
 	
-	public void createMainWorld(String name, Runnable runWhenDone)
+	public void createMainWorld(Game game, String name, Runnable runWhenDone)
 	{
 		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL);
-		setMainWorld(createWorld(wc, runWhenDone, new LavaSeaPopulator(), new ExtraLavaPopulator()));
+		game.setMainWorld(createWorld(wc, runWhenDone, new LavaSeaPopulator(), new ExtraLavaPopulator()));
 	}
 	
 	public class LavaSeaPopulator extends BlockPopulator

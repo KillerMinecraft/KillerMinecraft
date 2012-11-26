@@ -10,6 +10,8 @@ import java.io.OutputStream;
 import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
 
+import com.ftwinston.Killer.Game;
+
 public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 {
 	public CopyExistingWorld(String name)
@@ -19,7 +21,7 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 	
 	public boolean isFixedWorld() { return true; }
 	
-	public void createMainWorld(final String name, final Runnable runWhenDone)
+	public void createMainWorld(final Game game, final String name, final Runnable runWhenDone)
 	{
 		getPlugin().getServer().getScheduler().scheduleAsyncDelayedTask(getPlugin(), new Runnable() {
 			
@@ -56,7 +58,7 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 					@Override
 					public void run()
 					{
-						setMainWorld(createWorld(new WorldCreator(name).environment(Environment.NORMAL), runWhenDone));
+						game.setMainWorld(createWorld(new WorldCreator(name).environment(Environment.NORMAL), runWhenDone));
 					}
 				});
 			}
@@ -64,9 +66,9 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 	}
 	
 	@Override
-	protected void createNetherWorld(String name, Runnable runWhenDone)
+	protected void createNetherWorld(Game game, String name, Runnable runWhenDone)
 	{
-		setNetherWorld(createWorld(new WorldCreator(name + "_nether").environment(Environment.NETHER), runWhenDone));
+		game.setNetherWorld(createWorld(new WorldCreator(name + "_nether").environment(Environment.NETHER), runWhenDone));
 	}
 	
 	private void copyFolder(File source, File dest) throws IOException

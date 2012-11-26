@@ -580,7 +580,7 @@ class PlayerManager
 		player.teleport(bestLoc);
 	}
 	
-	public String getNearestFollowTarget(Player lookFor)
+	public String getNearestFollowTarget(Game game, Player lookFor)
 	{
 		double nearestDistSq = Double.MAX_VALUE;
 		String nearestName = null, firstName = null;

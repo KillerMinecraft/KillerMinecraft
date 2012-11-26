@@ -78,28 +78,26 @@ public abstract class WorldOption
 		return plugin.worldManager.createWorld(wc, runWhenDone, extraPopulators);
 	}
 	
-	public final void createWorlds(Game game, final Runnable runWhenDone)
+	public final void createWorlds(final Game game, final Runnable runWhenDone)
 	{
 		Runnable doneMainWorld = game.getGameMode().usesNether() ? new Runnable()
 		{
 			public void run()
 			{
-				createNetherWorld(Settings.killerWorldName + "_nether", runWhenDone);
+				createNetherWorld(game, game.getNetherWorldName(), runWhenDone);
 			}
 		} : runWhenDone;
 		
-		createMainWorld(Settings.killerWorldName, doneMainWorld);
+		createMainWorld(game, game.getMainWorldName(), doneMainWorld);
 	}
 	
-	protected abstract void createMainWorld(String name, Runnable runWhenDone);
-	protected final void setMainWorld(World world) { game.setMainWorld(world); }
+	protected abstract void createMainWorld(Game game, String name, Runnable runWhenDone);
 	
-	protected void createNetherWorld(String name, Runnable runWhenDone)
+	protected void createNetherWorld(Game game, String name, Runnable runWhenDone)
 	{
 		WorldCreator wc = new WorldCreator(name).environment(Environment.NETHER);
-		setNetherWorld(createWorld(wc, runWhenDone));
+		game.setNetherWorld(createWorld(wc, runWhenDone));
 	}
-	protected final void setNetherWorld(World world) { game.setNetherWorld(world); }
 	
 	public abstract boolean isFixedWorld();
 }

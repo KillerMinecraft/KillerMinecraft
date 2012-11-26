@@ -64,7 +64,7 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onWorldInit(final WorldInitEvent event)
     {
-    	if ( plugin.stagingWorldIsServerDefault && plugin.worldManager.stagingWorld == null )
+    	if ( plugin.stagingWorldIsServerDefault && plugin.stagingWorld == null )
     	{
     		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
     			public void run()
@@ -85,11 +85,19 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerRespawn(PlayerRespawnEvent event)
     {
-		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
-			return;
-		
-		if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.mainWorld != null )
-			event.setRespawnLocation(plugin.getGameMode().getSpawnLocation(event.getPlayer()));
+    	World world = event.getPlayer().getWorld();
+    	if ( world == plugin.stagingWorld )
+    	{
+    		event.setRespawnLocation(plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+    		return;
+    	}
+    	
+    	final Game game = plugin.getGameForWorld(world);
+    	if ( game == null )
+    		return;
+    	
+		if ( game.getGameState().usesGameWorlds && game.getMainWorld() != null )
+			event.setRespawnLocation(game.getGameMode().getSpawnLocation(event.getPlayer()));
 		else
 			event.setRespawnLocation(plugin.stagingWorldManager.getStagingWorldSpawnPoint());
 	
@@ -102,10 +110,10 @@ class EventListener implements Listener
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
     				{
-    					boolean alive = plugin.getGameMode().isAllowedToRespawn(player);
+    					boolean alive = game.getGameMode().isAllowedToRespawn(player);
     					plugin.playerManager.setAlive(player, alive);
     					if ( alive )
-    						player.setCompassTarget(plugin.playerManager.getCompassTarget(player));
+    						player.setCompassTarget(plugin.playerManager.getCompassTarget(game, player));
     				}
     			}
     		});
@@ -116,9 +124,12 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void OnPlayerChangedWorld(PlayerChangedWorldEvent event)
     {
-		boolean wasInKiller = plugin.isGameWorld(event.getFrom());
-		boolean nowInKiller = plugin.isGameWorld(event.getPlayer().getWorld());
-		
+    	Game fromGame = plugin.getGameForWorld(event.getFrom());
+    	Game toGame = plugin.getGameForWorld(event.getPlayer().getWorld());
+    	
+    	boolean wasInKiller = fromGame == null;
+    	boolean nowInKiller = toGame == null;
+    	
 		if ( wasInKiller )
 		{
 			if ( nowInKiller )
@@ -127,7 +138,7 @@ class EventListener implements Listener
 				if(PlayerManager.instance.isSpectator(player.getName()))
 					PlayerManager.instance.setAlive(player, false);
 				else
-					player.setCompassTarget(plugin.playerManager.getCompassTarget(player));
+					player.setCompassTarget(plugin.playerManager.getCompassTarget(fromGame, player));
 			}
 			else
 			{
@@ -138,7 +149,7 @@ class EventListener implements Listener
 		else if ( nowInKiller )
 			playerJoined(event.getPlayer());
 		
-		if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
+		if ( event.getPlayer().getWorld() == plugin.stagingWorld )
 			plugin.playerManager.teleport(event.getPlayer(), plugin.stagingWorldManager.getStagingWorldSpawnPoint());
     }
     
@@ -149,21 +160,23 @@ class EventListener implements Listener
 		World toWorld;
 		double blockRatio;
 		
-		if ( fromWorld == plugin.worldManager.mainWorld )
+		Game game = plugin.getGameForWorld(fromWorld);
+		
+		if ( fromWorld == game.getMainWorld() )
 		{
-			toWorld = plugin.worldManager.netherWorld;
+			toWorld = game.getNetherWorld();
 			blockRatio = 0.125;
 		}
-		else if ( fromWorld == plugin.worldManager.netherWorld )
+		else if ( fromWorld == game.getNetherWorld() )
 		{
-			toWorld = plugin.worldManager.mainWorld;
+			toWorld = game.getMainWorld();
 			blockRatio = 8;
 		}
 		else
-		{
-			plugin.log.warning("can't determine from world for PlayerPortalEvent");
 			return;
-		}
+
+		if ( toWorld == null )
+			return;
 		
 		Location playerLoc = event.getPlayer().getLocation();
 		event.setTo(new Location(toWorld, (playerLoc.getX() * blockRatio), playerLoc.getY(), (playerLoc.getZ() * blockRatio), playerLoc.getYaw(), playerLoc.getPitch()));
@@ -173,7 +186,8 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerPickupItem(PlayerPickupItemEvent event)
     {
-		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
+    	Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game == null )
 			return;
 
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
@@ -183,7 +197,7 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onItemSpawn(ItemSpawnEvent event)
     {
-    	if ( event.getLocation().getWorld() == plugin.worldManager.stagingWorld )
+    	if ( event.getLocation().getWorld() == plugin.stagingWorld )
     		event.setCancelled(true);
     }
     
@@ -191,10 +205,13 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockBreak(BlockBreakEvent event)
     {
-		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
+    	World world = event.getPlayer().getWorld();
+    	Game game = plugin.getGameForWorld(world);
+    	
+    	if ( game == null && world != plugin.stagingWorld ) 
 			return;
 
-    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName()) || plugin.worldManager.isProtectedLocation(event.getBlock().getLocation()) )
+    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName()) || plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) )
     		event.setCancelled(true);
     }
     
@@ -202,12 +219,18 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockPlace(BlockPlaceEvent event)
     {
-		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
+    	World world = event.getPlayer().getWorld();
+    	if ( world == plugin.stagingWorld )
+    	{
+    		event.setCancelled(true);
+    		return;
+    	}
+    	
+    	Game game = plugin.getGameForWorld(world);
+    	if ( game == null ) 
 			return;
-
-    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName())
-    		|| plugin.worldManager.isProtectedLocation(event.getBlock().getLocation())
-    		|| event.getBlock().getLocation().getWorld() == plugin.worldManager.stagingWorld )
+    	
+    	if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) || PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     		event.setCancelled(true);
     }
     
@@ -215,10 +238,11 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void BlockFromTo(BlockFromToEvent event)
     {
-		if ( !plugin.isGameWorld(event.getToBlock().getLocation().getWorld()) )
+    	Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+    	if ( game == null ) 
 			return;
-		
-        if ( plugin.worldManager.isProtectedLocation(event.getBlock().getLocation()) )
+    	
+        if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) )
             event.setCancelled(true);
     }
     
@@ -226,10 +250,11 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockPistonExtend(BlockPistonExtendEvent event)
     {
-		if ( !plugin.isGameWorld(event.getBlock().getLocation().getWorld()) )
+    	Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+    	if ( game == null ) 
 			return;
-		
-    	if ( plugin.worldManager.isProtectedLocation(event.getBlock().getLocation()) )
+    	
+    	if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) )
     		event.setCancelled(true);
     }
     
@@ -237,18 +262,20 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityExplode(EntityExplodeEvent event)
     {
-		if ( !plugin.isGameWorld(event.getEntity().getWorld()) )
+    	World world = event.getEntity().getWorld();
+    	Game game = plugin.getGameForWorld(world);
+    	if ( game == null && world != plugin.stagingWorld ) 
 			return;
-		
+    	
     	List<Block> blocks = event.blockList();
     	for ( int i=0; i<blocks.size(); i++ )
-    		if ( plugin.worldManager.isProtectedLocation(blocks.get(i).getLocation()) )
+    		if ( plugin.worldManager.isProtectedLocation(game, blocks.get(i).getLocation()) )
     		{
     			blocks.remove(i);
     			i--;
     		}
     	
-    	if ( event.getEntity().getWorld() == plugin.worldManager.stagingWorld )
+    	if ( world == plugin.stagingWorld )
     	{
     		plugin.stagingWorldManager.stagingWorldMonsterKilled();
     		event.setYield(0);
@@ -259,7 +286,9 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerItemSwitch(PlayerItemHeldEvent event)
     {
-		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
+    	World world = event.getPlayer().getWorld();
+    	Game game = plugin.getGameForWorld(world);
+    	if ( game == null ) 
 			return;
 		
     	if ( plugin.playerManager.isSpectator(event.getPlayer().getName()) )
@@ -276,7 +305,7 @@ class EventListener implements Listener
     		else if ( item.getType() == Settings.followModeItem )
     		{
     			event.getPlayer().sendMessage("Follow mode: click to cycle target");
-    			String target = plugin.playerManager.getNearestFollowTarget(event.getPlayer());
+    			String target = plugin.playerManager.getNearestFollowTarget(game, event.getPlayer());
     			plugin.playerManager.setFollowTarget(event.getPlayer(), target);
 				plugin.playerManager.checkFollowTarget(event.getPlayer(), target);
     		}
@@ -288,13 +317,14 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerInteract(PlayerInteractEvent event)
     {
-		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
+    	Game game = plugin.getGameForPlayer(event.getPlayer());
+    	if ( game == null ) 
 			return;
 		
-		if ( plugin.getGameState().canChangeGameSetup && event.getPlayer().getWorld() == plugin.worldManager.stagingWorld
+		if ( game.getGameState().canChangeGameSetup && event.getPlayer().getWorld() == plugin.stagingWorld
 		  && event.getClickedBlock() != null && (event.getClickedBlock().getType() == Material.STONE_BUTTON || event.getClickedBlock().getType() == Material.STONE_PLATE) )
 		{
-			plugin.stagingWorldManager.setupButtonClicked(event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
+			plugin.stagingWorldManager.setupButtonClicked(game, event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
 			return;
 		}
 		
@@ -372,7 +402,7 @@ class EventListener implements Listener
     	}
     	
 		// eyes of ender can be made to seek out nether fortresses
-    	if ( plugin.isEnderEyeRecipeEnabled() && event.getPlayer().getWorld() == plugin.worldManager.netherWorld && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
+    	if ( game.isEnderEyeRecipeEnabled() && event.getPlayer().getWorld() == game.getNetherWorld() && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
     	{
 			if ( !plugin.worldManager.seekNearestNetherFortress(event.getPlayer()) )
 				event.getPlayer().sendMessage("No nether fortresses nearby");
@@ -386,18 +416,20 @@ class EventListener implements Listener
     	if(event.isCancelled())
     		return;
 
-	  	if(event.getClickedBlock().getType() == Material.STONE_PLATE && plugin.getGameMode().isOnPlinth(event.getClickedBlock().getLocation()))
-			plugin.getGameMode().playerActivatedPlinth(event.getPlayer());
+	  	if(event.getClickedBlock().getType() == Material.STONE_PLATE && game.getGameMode().isOnPlinth(event.getClickedBlock().getLocation()))
+			game.getGameMode().playerActivatedPlinth(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onItemDrop(PlayerDropItemEvent event)
     {
-		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
+    	World world = event.getPlayer().getWorld();
+    	Game game = plugin.getGameForWorld(world);
+    	if ( game == null && world != plugin.stagingWorld ) 
 			return;
-		
+    	
     	// spectators can't drop items
-    	if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld || plugin.playerManager.isSpectator(event.getPlayer().getName()) )
+    	if ( world == plugin.stagingWorld || plugin.playerManager.isSpectator(event.getPlayer().getName()) )
     		event.setCancelled(true);
     	
     }
@@ -405,12 +437,14 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onInventoryClick(InventoryClickEvent event)
     {
-    	if ( !plugin.isGameWorld(event.getWhoClicked().getWorld()) )
-			return;
-    	
     	Player player = (Player)event.getWhoClicked();
     	if ( player == null )
     		return;
+
+    	World world = player.getWorld();
+    	Game game = plugin.getGameForWorld(world);
+    	if ( game == null ) 
+			return;
     	
     	// spectators can't rearrange their inventory ... is that a bit mean?
     	if ( plugin.playerManager.isSpectator(player.getName()) )
@@ -421,9 +455,10 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityDamage(EntityDamageEvent event)
     {
-		if ( !plugin.isGameWorld(event.getEntity().getWorld()) )
+    	Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+    	if ( game == null ) 
 			return;
-		
+    	
         if ( event instanceof EntityDamageByEntityEvent )
         {
         	Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
@@ -446,43 +481,41 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
     {
-		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
+    	Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+    	if ( game == null ) 
 			return;
-		
+    	
 		Block affected = event.getBlockClicked().getRelative(event.getBlockFace());
-		if ( plugin.worldManager.isProtectedLocation(affected.getLocation()) )
+		if ( plugin.worldManager.isProtectedLocation(game, affected.getLocation()) )
 			event.setCancelled(true);
     }
     
     @EventHandler(priority = EventPriority.LOWEST)
     public void onCraftItem(CraftItemEvent event)
     {
-    	// killer recipes can only be crafter in killer worlds, or we could screw up the rest of the server
-    	if ( !plugin.isGameWorld(event.getWhoClicked().getWorld()) )
-    	{
-    		if ( 	(plugin.isDispenserRecipeEnabled() && plugin.isDispenserRecipe(event.getRecipe()))
-    			 || (plugin.isEnderEyeRecipeEnabled() && plugin.isEnderEyeRecipe(event.getRecipe()))
-    			 || (plugin.isMonsterEggRecipeEnabled() && plugin.isMonsterEggRecipe(event.getRecipe()))
-    			)
-    		{
-    			event.setCancelled(true);
-    		}
+    	Game game = plugin.getGameForWorld(event.getWhoClicked().getWorld());
+    	if ( game == null )
+    	{// killer recipes can only be crafter in killer worlds, or we could screw up the rest of the server
+    		if ( plugin.isDispenserRecipe(event.getRecipe()) || plugin.isEnderEyeRecipe(event.getRecipe()) || plugin.isMonsterEggRecipe(event.getRecipe()) )
+       			event.setCancelled(true);
     	}
     }
     
     @EventHandler(priority = EventPriority.LOWEST)
     public void onCreatureSpawn(CreatureSpawnEvent event)
     {
-    	if ( event.getLocation().getWorld() == plugin.worldManager.stagingWorld && event.getSpawnReason() == SpawnReason.NATURAL )
+    	if ( event.getLocation().getWorld() == plugin.stagingWorld && event.getSpawnReason() == SpawnReason.NATURAL )
     		event.setCancelled(true);
     }
     
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityTarget(EntityTargetEvent event)
     {
-		if ( !plugin.isGameWorld(event.getEntity().getWorld()) )
+    	World world = event.getEntity().getWorld();
+    	Game game = plugin.getGameForWorld(world);
+    	if ( game == null ) 
 			return;
-		
+    	
 		// monsters shouldn't target spectators
     	if( event.getTarget() != null && event.getTarget() instanceof Player && PlayerManager.instance.isSpectator(((Player)event.getTarget()).getName()))
     		event.setCancelled(true);
@@ -491,9 +524,11 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerChat(AsyncPlayerChatEvent event)
     {
-		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
+    	World world = event.getPlayer().getWorld();
+    	Game game = plugin.getGameForWorld(world);
+    	if ( game == null && world != plugin.stagingWorld ) 
 			return;
-		
+    	
     	if ( plugin.voteManager.isInVote() )
     	{
     		if ( event.getMessage().equalsIgnoreCase("Y") && plugin.voteManager.doVote(event.getPlayer(), true) )
@@ -512,7 +547,7 @@ class EventListener implements Listener
     	if ( event.getPlayer().isConversing() )
     		return;
     	
-    	if ( plugin.getGameState() == GameState.finished || !PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+    	if ( game.getGameState() == GameState.finished || !PlayerManager.instance.isSpectator(event.getPlayer().getName()))
 		{// colored player names shouldn't produce colored messages ... spectator chat isn't special when the game is in the "finished" state.
 			event.setMessage(ChatColor.RESET + event.getMessage());
     		return;

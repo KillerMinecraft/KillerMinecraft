@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Recipe;
 
-class Game
+public class Game
 {
 	Killer plugin;
 	private int number;
@@ -42,6 +42,8 @@ class Game
 	
 	public void start()
 	{
+		final Game game = this;
+		
 		// start sending out help messages explaining the game rules
 		helpMessageProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			public void run()
@@ -56,7 +58,7 @@ class Game
 	        	for ( Player player : getGameMode().getOnlinePlayers(true) )
 	        		if ( player.getInventory().contains(Material.COMPASS) )
 	        		{// does this need a null check on the target?
-	        			player.setCompassTarget(plugin.playerManager.getCompassTarget(player));
+	        			player.setCompassTarget(plugin.playerManager.getCompassTarget(game, player));
 	        		}
         	}
         }, 20, 10);
@@ -251,23 +253,21 @@ class Game
 		Iterator<Recipe> iterator = plugin.getServer().recipeIterator();
 		while (iterator.hasNext())
         {
-			if ( isMonsterEggRecipe(iterator.next()) )
+			if ( plugin.isMonsterEggRecipe(iterator.next()) )
             	iterator.remove();
     	}
 	}
 	
 	boolean isMonsterEggRecipeEnabled() { return monsterEggsEnabled; }
 	
-	boolean isMonsterEggRecipe(Recipe recipe)
-	{
-		return recipe.getResult().getType() == Material.MONSTER_EGG;
-	}
-	
 	private World mainWorld = null, netherWorld = null;
 	World getMainWorld() { return mainWorld; }
 	World getNetherWorld() { return netherWorld; }
-	void setMainWorld(World w) { mainWorld = w; }
-	void setNetherWorld(World w) { netherWorld = w; }
+	public void setMainWorld(World w) { mainWorld = w; }
+	public void setNetherWorld(World w) { netherWorld = w; }
+	
+	String getMainWorldName() { return Settings.killerWorldName + number + "_nether"; }
+	String getNetherWorldName() { return Settings.killerWorldName + number; }
 	
 	boolean forcedGameEnd = false;
 	void endGame(CommandSender actionedBy)
