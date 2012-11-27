@@ -41,7 +41,6 @@ public class Killer extends JavaPlugin
 	public static Killer instance;
 	public Logger log = Logger.getLogger("Minecraft");
 	
-
 	enum GameState
 	{
 		stagingWorldSetup(false, true), // in staging world, players need to choose mode/world

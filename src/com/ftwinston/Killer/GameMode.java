@@ -57,12 +57,24 @@ public abstract class GameMode implements Listener
 	}
 				
 	protected abstract Option[] setupOptions();
+	
+	public Environment[] getWorldsToGenerate() { return new Environment[] { NORMAL, NETHER }; }
+	public ChunkGenerator getCustomChunkGenerator(int worldNumber) { return null; }
+	public BlockPopulator[] getExtraBlockPopulators(int worldNumber) { return null; }
 
 	public abstract String getHelpMessage(int messageNum, int teamNum);
 	
 	private String getExtraHelpMessage(int messageNum)
 	{
-		boolean use1 = usesNether() && plugin.isEnderEyeRecipeEnabled();
+		boolean usesNether = false;
+		for ( Environment env : getWorldsToGenerate() )
+			if ( env == Environment.NETHER )
+			{
+				usesNether = true;
+				break;
+			}
+	
+		boolean use1 = usesNether && plugin.isEnderEyeRecipeEnabled();
 		boolean use2 = plugin.isMonsterEggRecipeEnabled();
 		boolean use3 = plugin.isDispenserRecipeEnabled();
 		
@@ -90,8 +102,6 @@ public abstract class GameMode implements Listener
 
 	public abstract boolean teamAllocationIsSecret();
 	
-
-	public abstract boolean usesNether(); // return false to stop nether generation, and prevent portals from working
 
 	public abstract void worldGenerationComplete(World main, World nether); // create plinth, etc.
 
@@ -649,17 +659,37 @@ public abstract class GameMode implements Listener
 	
 	protected final JavaPlugin getPlugin() { return plugin; }
 	
-	private World mainWorld, netherWorld;
-	protected final World getMainWorld() { return mainWorld; }
-	protected final World getNetherWorld() { return netherWorld; }
+	protected final int getNumWorlds() { return plugin.worldManager.getNumWorlds(); }
+	protected final World getWorld(int number) { return plugin.worldManager.getWorld(number); }
+	
+	public Location getPortalDestination(TeleportCause cause, Location entrance)
+	{
+		if ( cause != TeleportCause.NETHER_PORTAL || plugin.worldManager.getNumWorlds() < 2 )
+			return null;
+		
+		World toWorld;
+		double blockRatio;
+		
+		if ( entrance.getWorld() == plugin.worldManager.getWorld(0) )
+		{
+			toWorld = plugin.worldManager.getWorld(1);
+			blockRatio = 0.125;
+		}
+		else if ( entrance.getWorld() == plugin.worldManager.getWorld(1) )
+		{
+			toWorld = plugin.worldManager.getWorld(0);
+			blockRatio = 8;
+		}
+		else
+			return null;
+		
+		return new Location(toWorld, (entrance.getX() * blockRatio), entrance.getY(), (entrance.getZ() * blockRatio), entrance.getYaw(), entrance.getPitch());
+	}
 	
 	// methods to be used by external code for accessing the game modes, rather than going directly into the mode-specific functions
 	
 	public final void startGame()
-	{
-		mainWorld = plugin.worldManager.mainWorld;
-		netherWorld = plugin.worldManager.netherWorld;
-		
+	{	
 		plugin.forcedGameEnd = false;
 		plugin.playerManager.startGame();
 		gameStarted();

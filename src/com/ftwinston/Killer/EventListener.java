@@ -142,29 +142,10 @@ class EventListener implements Listener
     
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerPortal(PlayerPortalEvent event)
-	{// we're kinda doing the dirty work in making nether portals work, here
-		World fromWorld = event.getFrom().getWorld();
-		World toWorld;
-		double blockRatio;
-		
-		if ( fromWorld == plugin.worldManager.mainWorld )
-		{
-			toWorld = plugin.worldManager.netherWorld;
-			blockRatio = 0.125;
-		}
-		else if ( fromWorld == plugin.worldManager.netherWorld )
-		{
-			toWorld = plugin.worldManager.mainWorld;
-			blockRatio = 8;
-		}
-		else
-		{
-			plugin.log.warning("can't determine from world for PlayerPortalEvent");
-			return;
-		}
-		
-		Location playerLoc = event.getPlayer().getLocation();
-		event.setTo(new Location(toWorld, (playerLoc.getX() * blockRatio), playerLoc.getY(), (playerLoc.getZ() * blockRatio), playerLoc.getYaw(), playerLoc.getPitch()));
+	{
+		Location dest = plugin.getGameMode().getPortalDestination(event.getCause(), event.getFrom());
+		if ( dest != null )
+			event.setTo(dest);
 	}
 	
     // prevent spectators picking up anything

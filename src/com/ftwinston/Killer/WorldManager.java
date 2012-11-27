@@ -78,9 +78,11 @@ class WorldManager
 	private static HashMap regionfiles;
 	private static Field rafField;
 	
-	public World mainWorld;
 	public World stagingWorld;
-	public World netherWorld;
+	private List<World> worlds = new ArrayList<World>();
+	
+	public World getWorld(int number) { return worlds.get(number); }
+	public int getNumWorlds() { return worlds.size(); }
 	
 	public void hijackDefaultWorld(String name)
 	{
