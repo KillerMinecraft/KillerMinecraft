@@ -8,7 +8,6 @@ import net.minecraft.server.AxisAlignedBB;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World.Environment;
@@ -143,9 +142,14 @@ class EventListener implements Listener
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerPortal(PlayerPortalEvent event)
 	{
-		Location dest = plugin.getGameMode().getPortalDestination(event.getCause(), event.getFrom());
-		if ( dest != null )
-			event.setTo(dest);
+		if ( !plugin.isGameWorld(event.getFrom().getWorld()) )
+			return;
+		
+		PortalHelper helper = new PortalHelper(event.getPortalTravelAgent());
+		event.setCancelled(true); // we're going to handle implementing the portalling ourselves
+		
+		plugin.getGameMode().handlePortal(event.getCause(), event.getFrom(), helper); // see? I told you
+		helper.performTeleport(event.getCause(), event.getPlayer());
 	}
 	
     // prevent spectators picking up anything

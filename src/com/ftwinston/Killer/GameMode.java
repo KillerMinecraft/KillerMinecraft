@@ -666,10 +666,10 @@ public abstract class GameMode implements Listener
 	protected final int getNumWorlds() { return plugin.worldManager.worlds.size(); }
 	protected final World getWorld(int number) { return plugin.worldManager.worlds.get(number); }
 	
-	public Location getPortalDestination(TeleportCause cause, Location entrance)
+	public void handlePortal(TeleportCause cause, Location entrance, PortalHelper helper)
 	{
 		if ( cause != TeleportCause.NETHER_PORTAL || getNumWorlds() < 2 )
-			return null;
+			return;
 		
 		World toWorld;
 		double blockRatio;
@@ -685,9 +685,9 @@ public abstract class GameMode implements Listener
 			blockRatio = 8;
 		}
 		else
-			return null;
+			return;
 		
-		return new Location(toWorld, (entrance.getX() * blockRatio), entrance.getY(), (entrance.getZ() * blockRatio), entrance.getYaw(), entrance.getPitch());
+		helper.setupScaledDestination(toWorld, entrance, blockRatio);
 	}
 	
 	// methods to be used by external code for accessing the game modes, rather than going directly into the mode-specific functions
