@@ -20,6 +20,7 @@ import net.minecraft.server.MinecraftServer;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -111,7 +112,7 @@ public class Killer extends JavaPlugin
 					// don't waste memory on monsters in the staging world
 					stagingWorldManager.endMonsterArena();
 					
-					getGameMode().worldGenerationComplete(worldManager.mainWorld, worldManager.netherWorld);
+					getGameMode().worldGenerationComplete();
 					setGameState(GameState.active);
 					stagingWorldManager.showStartButtons(false);
 				}
@@ -124,10 +125,11 @@ public class Killer extends JavaPlugin
 				statsManager.gameFinished(getGameMode(), getGameMode().getOnlinePlayers(true).size(), 3, 0);
 			
 			if ( prevState.usesGameWorlds )
-			{
-				worldManager.removeAllItems(worldManager.mainWorld);
-				worldManager.mainWorld.setTime(0);
-			}
+				for ( World world : worldManager.worlds )
+				{
+					worldManager.removeAllItems(world);
+					world.setTime(0);
+				}
 			else
 				getServer().getPluginManager().registerEvents(getGameMode(), this);
 
@@ -411,8 +413,16 @@ public class Killer extends JavaPlugin
 			}
 			else if ( args[0].equalsIgnoreCase("nether") )
 			{
-				if ( worldManager.netherWorld != null )
-					playerManager.teleport(player, worldManager.netherWorld.getSpawnLocation());
+				World nether = null;
+				for ( World world : worldManager.worlds )
+					if ( world.getEnvironment() == Environment.NETHER )
+					{
+						nether = world;
+						break;
+					}
+				
+				if ( nether != null )
+					playerManager.teleport(player, nether.getSpawnLocation());
 				else
 					sender.sendMessage("Nether world not found, please try again");
 			}
@@ -678,7 +688,14 @@ public class Killer extends JavaPlugin
 	
 	boolean isGameWorld(World world)
 	{
-		return world == worldManager.mainWorld || world == worldManager.netherWorld || world == worldManager.stagingWorld;
+		if ( world == worldManager.stagingWorld )
+			return true;
+		
+		for( World w : worldManager.worlds )
+			if ( world == w )
+				return true;
+		
+		return false;
 	}
 	
 	final List<Player> getOnlinePlayers()

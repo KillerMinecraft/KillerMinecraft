@@ -11,7 +11,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
@@ -86,7 +86,7 @@ class EventListener implements Listener
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
 		
-		if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.mainWorld != null )
+		if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.worlds.size() > 0 )
 			event.setRespawnLocation(plugin.getGameMode().getSpawnLocation(event.getPlayer()));
 		else
 			event.setRespawnLocation(plugin.stagingWorldManager.getStagingWorldSpawnPoint());
@@ -351,7 +351,7 @@ class EventListener implements Listener
     	}
     	
 		// eyes of ender can be made to seek out nether fortresses
-    	if ( plugin.isEnderEyeRecipeEnabled() && event.getPlayer().getWorld() == plugin.worldManager.netherWorld && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
+    	if ( plugin.isEnderEyeRecipeEnabled() && event.getPlayer().getWorld().getEnvironment() == Environment.NETHER && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
     	{
 			if ( !plugin.worldManager.seekNearestNetherFortress(event.getPlayer()) )
 				event.getPlayer().sendMessage("No nether fortresses nearby");
@@ -516,7 +516,7 @@ class EventListener implements Listener
     			{
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
-    					if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.mainWorld != null )
+    					if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.worlds.size() > 0 )
     						plugin.playerManager.teleport(player, plugin.getGameMode().getSpawnLocation(player));
     					else
     						plugin.playerManager.teleport(player, plugin.stagingWorldManager.getStagingWorldSpawnPoint());
@@ -540,11 +540,11 @@ class EventListener implements Listener
 	private void playerJoined(Player player)
 	{
 		// if I log into the staging world (cos I logged out there), move me back to the main world's spawn and clear me out
-		if ( player.getWorld() == plugin.worldManager.stagingWorld && plugin.getGameState().usesGameWorlds && plugin.worldManager.mainWorld != null )
+		if ( player.getWorld() == plugin.worldManager.stagingWorld && plugin.getGameState().usesGameWorlds && plugin.worldManager.worlds.size() > 0 )
 		{
 			player.getInventory().clear();
 			player.setTotalExperience(0);
-			plugin.playerManager.teleport(player, plugin.worldManager.mainWorld.getSpawnLocation());
+			plugin.playerManager.teleport(player, plugin.worldManager.worlds.get(0).getSpawnLocation());
 		}
 		
     	plugin.playerManager.playerJoined(player);

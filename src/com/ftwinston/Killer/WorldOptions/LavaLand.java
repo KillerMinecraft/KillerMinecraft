@@ -24,7 +24,7 @@ public class LavaLand extends com.ftwinston.Killer.WorldOption implements Listen
 	public void createMainWorld(String name, Runnable runWhenDone)
 	{
 		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL);
-		setMainWorld(createWorld(wc, runWhenDone, new LavaSeaPopulator(), new ExtraLavaPopulator()));
+		registerWorld(createWorld(wc, runWhenDone, new LavaSeaPopulator(), new ExtraLavaPopulator()));
 	}
 	
 	public class LavaSeaPopulator extends BlockPopulator

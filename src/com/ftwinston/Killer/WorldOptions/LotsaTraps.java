@@ -22,7 +22,7 @@ public class LotsaTraps extends com.ftwinston.Killer.WorldOption implements List
 	public void createMainWorld(String name, Runnable runWhenDone)
 	{
 		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL);
-		setMainWorld(createWorld(wc, runWhenDone, new TrapPopulator()));
+		registerWorld(createWorld(wc, runWhenDone, new TrapPopulator()));
 	}
 	
 	public class TrapPopulator extends BlockPopulator

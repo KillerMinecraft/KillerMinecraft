@@ -79,10 +79,7 @@ class WorldManager
 	private static Field rafField;
 	
 	public World stagingWorld;
-	private List<World> worlds = new ArrayList<World>();
-	
-	public World getWorld(int number) { return worlds.get(number); }
-	public int getNumWorlds() { return worlds.size(); }
+	public List<World> worlds = new ArrayList<World>();
 	
 	public void hijackDefaultWorld(String name)
 	{
@@ -326,18 +323,8 @@ class WorldManager
 	public void deleteKillerWorlds(Runnable runWhenDone)
 	{
 		plugin.log.info("Clearing out old worlds...");
-		if ( mainWorld == null )
-			if ( netherWorld == null )
-				deleteWorlds(runWhenDone);
-			else
-				deleteWorlds(runWhenDone, netherWorld);
-		else if ( netherWorld == null )
-			deleteWorlds(runWhenDone, mainWorld);
-		else
-			deleteWorlds(runWhenDone, mainWorld, netherWorld);
-		
-		mainWorld = null;
-		netherWorld = null;
+		deleteWorlds(runWhenDone, worlds.toArray(new World[0]));
+		worlds.clear();
 	}
 	
 	public void deleteWorlds(Runnable runWhenDone, World... worlds)
@@ -408,10 +395,10 @@ class WorldManager
 	
 	public boolean seekNearestNetherFortress(Player player)
 	{
-		if ( netherWorld == null )
+		if ( player.getWorld().getEnvironment() != Environment.NETHER )
 			return false;
 		
-		WorldServer world = ((CraftWorld)netherWorld).getHandle();
+		WorldServer world = ((CraftWorld)player.getWorld()).getHandle();
 		
 		IChunkProvider chunkProvider;
 		try
@@ -463,43 +450,16 @@ class WorldManager
 	
 	public void generateWorlds(final WorldOption generator, final Runnable runWhenDone)
 	{
-		plugin.getGameMode().broadcastMessage(plugin.getGameMode().usesNether() ? "Preparing new worlds..." : "Preparing new world...");
+		plugin.getGameMode().broadcastMessage(plugin.getGameMode().getNumWorlds() == 1 ? "Preparing new world..." : "Preparing new worlds...");
 		
 		Runnable generationComplete = new Runnable() {
 			@Override
 			public void run()
 			{
-				// ensure those worlds are set to Hard difficulty
-				plugin.worldManager.mainWorld.setDifficulty(Difficulty.HARD);
-				if ( plugin.worldManager.netherWorld != null )
-					plugin.worldManager.netherWorld.setDifficulty(Difficulty.HARD);
-				
-				switch ( plugin.animalNumbers )
-				{
-				case 0:
-					mainWorld.setAnimalSpawnLimit(0);
-					mainWorld.setTicksPerAnimalSpawns(600);
-					break;
-				case 1:
-					mainWorld.setAnimalSpawnLimit(8);
-					mainWorld.setTicksPerAnimalSpawns(500);
-					break;
-				case 2: // mc defaults
-					mainWorld.setAnimalSpawnLimit(15);
-					mainWorld.setTicksPerAnimalSpawns(400);
-					break;
-				case 3:
-					mainWorld.setAnimalSpawnLimit(25);
-					mainWorld.setTicksPerAnimalSpawns(300);
-					break;
-				case 4:
-					mainWorld.setAnimalSpawnLimit(40);
-					mainWorld.setTicksPerAnimalSpawns(200);
-					break;
-				}
-
-				World[] worlds = netherWorld == null ? new World[] { mainWorld } : new World[] { mainWorld, netherWorld };
 				for ( World world : worlds )
+				{
+					world.setDifficulty(Difficulty.HARD);
+					
 					switch ( plugin.monsterNumbers )
 					{
 					case 0:
@@ -523,6 +483,32 @@ class WorldManager
 						world.setTicksPerMonsterSpawns(1);
 						break;
 					}
+					
+					if ( world.getEnvironment() == Environment.NORMAL )
+						switch ( plugin.animalNumbers )
+						{
+						case 0:
+							world.setAnimalSpawnLimit(0);
+							world.setTicksPerAnimalSpawns(600);
+							break;
+						case 1:
+							world.setAnimalSpawnLimit(8);
+							world.setTicksPerAnimalSpawns(500);
+							break;
+						case 2: // mc defaults
+							world.setAnimalSpawnLimit(15);
+							world.setTicksPerAnimalSpawns(400);
+							break;
+						case 3:
+							world.setAnimalSpawnLimit(25);
+							world.setTicksPerAnimalSpawns(300);
+							break;
+						case 4:
+							world.setAnimalSpawnLimit(40);
+							world.setTicksPerAnimalSpawns(200);
+							break;
+						}
+				}
 				
 				plugin.stagingWorldManager.removeWorldGenerationIndicator();
 				
@@ -538,7 +524,7 @@ class WorldManager
 		}
 		catch (ArrayIndexOutOfBoundsException ex)
 		{
-			plugin.log.warning("An crash occurred during world generation. This might be a bug with the selected world option, vanilla minecraft, bukkit, or killer itself.");
+			plugin.log.warning("An crash occurred during world generation. Aborting...");
 			plugin.getGameMode().broadcastMessage("An error occurred during world generation.\nPlease try again...");
 			
 			plugin.setGameState(GameState.worldDeletion);
@@ -661,22 +647,23 @@ class WorldManager
         craftServer.getPluginManager().callEvent(new WorldInitEvent(worldServer.getWorld()));
         System.out.print("Preparing start region for level " + (console.worlds.size() - 1) + " (Seed: " + worldServer.getSeed() + ")");
         
-        plugin.stagingWorldManager.showWorldGenerationIndicator(mainWorld == null ? 0f : 0.5f );
-        ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, plugin.getGameMode().usesNether(), mainWorld != null, runWhenDone);
+        int worldNumber = worlds.size(), numberOfWorlds = plugin.getGameMode().getWorldsToGenerate().length; 
+        plugin.stagingWorldManager.showWorldGenerationIndicator((float)worldNumber / (float)numberOfWorlds);
+        ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, worldNumber, numberOfWorlds, runWhenDone);
     	cb.taskID = craftServer.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);
     	return worldServer.getWorld();
     }
     
     class ChunkBuilder implements Runnable
     {
-    	public ChunkBuilder(int numChunksFromSpawn, CraftServer craftServer, WorldServer worldServer, boolean usesSecondaryWorld, boolean isSecondaryWorld, Runnable runWhenDone)
+    	public ChunkBuilder(int numChunksFromSpawn, CraftServer craftServer, WorldServer worldServer, int worldNumber, int numberOfWorlds, Runnable runWhenDone)
     	{
     		this.numChunksFromSpawn = numChunksFromSpawn;
     		sideLength = numChunksFromSpawn * 2 + 1;
     		numSteps = sideLength * sideLength;
     		
-    		this.usesSecondaryWorld = usesSecondaryWorld;
-    		this.isSecondaryWorld = isSecondaryWorld;
+    		this.worldNumber = worldNumber;
+    		this.numberOfWorlds = numberOfWorlds;
     		this.craftServer = craftServer;
     		this.worldServer = worldServer;
     		this.runWhenDone = runWhenDone;
@@ -688,7 +675,7 @@ class WorldManager
     	
     	int numChunksFromSpawn, stepNum = 0, sideLength, numSteps, spawnX, spawnZ;
         long reportTime = System.currentTimeMillis();
-        boolean usesSecondaryWorld, isSecondaryWorld;
+        int worldNumber, numberOfWorlds;
         public int taskID;
         CraftServer craftServer;
         WorldServer worldServer;
@@ -706,11 +693,10 @@ class WorldManager
             if (time > reportTime + 1000L) {
             	System.out.println("Preparing spawn area for " + worldServer.getWorld().getName() + ", " + (stepNum * 100 / numSteps) + "%");
             	float fraction = (float)stepNum/numSteps;
-            	if ( usesSecondaryWorld )
+            	if ( numberOfWorlds > 1 )
             	{
-            		fraction *= 0.5f;
-            		if ( isSecondaryWorld )
-            			fraction += 0.5f;
+            		fraction /= (float)numberOfWorlds;
+            		fraction += (float)worldNumber/(float)numberOfWorlds;
             	}
             	plugin.stagingWorldManager.showWorldGenerationIndicator(fraction);
                 reportTime = time;
@@ -726,7 +712,7 @@ class WorldManager
 
             	if ( stepNum >= numSteps )
             	{
-            		if ( isSecondaryWorld || !usesSecondaryWorld )
+            		if ( worldNumber >= numberOfWorlds - 1 )
             			plugin.stagingWorldManager.removeWorldGenerationIndicator();
             		craftServer.getPluginManager().callEvent(new WorldLoadEvent(worldServer.getWorld()));
             		craftServer.getScheduler().cancelTask(taskID);

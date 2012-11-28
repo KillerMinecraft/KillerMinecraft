@@ -89,16 +89,20 @@ public abstract class WorldOption
 		
 		createMainWorld(Settings.killerWorldName, doneMainWorld);
 	}
+
+	protected final void registerWorld(World world) { plugin.worldManager.worlds.add(world); }
 	
-	protected abstract void createMainWorld(String name, Runnable runWhenDone);
-	protected final void setMainWorld(World world) { plugin.worldManager.mainWorld = world; }
+	protected void createMainWorld(String name, Runnable runWhenDone)
+	{
+		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL);
+		registerWorld(createWorld(wc, runWhenDone));
+	}
 	
 	protected void createNetherWorld(String name, Runnable runWhenDone)
 	{
 		WorldCreator wc = new WorldCreator(name).environment(Environment.NETHER);
-		setNetherWorld(createWorld(wc, runWhenDone));
+		registerWorld(createWorld(wc, runWhenDone));
 	}
-	protected final void setNetherWorld(World world) { plugin.worldManager.netherWorld = world; }
 	
 	public abstract boolean isFixedWorld();
 }

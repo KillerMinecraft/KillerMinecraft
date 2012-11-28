@@ -16,6 +16,6 @@ public class Superflat extends com.ftwinston.Killer.WorldOption
 	public void createMainWorld(String name, Runnable runWhenDone)
 	{
 		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL).type(WorldType.FLAT);
-		setMainWorld(createWorld(wc, runWhenDone));
+		registerWorld(createWorld(wc, runWhenDone));
 	}
 }

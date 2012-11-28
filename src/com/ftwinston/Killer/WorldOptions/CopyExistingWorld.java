@@ -56,7 +56,7 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 					@Override
 					public void run()
 					{
-						setMainWorld(createWorld(new WorldCreator(name).environment(Environment.NORMAL), runWhenDone));
+						registerWorld(createWorld(new WorldCreator(name).environment(Environment.NORMAL), runWhenDone));
 					}
 				});
 			}
@@ -66,7 +66,7 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 	@Override
 	protected void createNetherWorld(String name, Runnable runWhenDone)
 	{
-		setNetherWorld(createWorld(new WorldCreator(name + "_nether").environment(Environment.NETHER), runWhenDone));
+		registerWorld(createWorld(new WorldCreator(name + "_nether").environment(Environment.NETHER), runWhenDone));
 	}
 	
 	private void copyFolder(File source, File dest) throws IOException

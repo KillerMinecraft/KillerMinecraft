@@ -13,6 +13,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
@@ -22,6 +23,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.generator.BlockPopulator;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -58,7 +62,7 @@ public abstract class GameMode implements Listener
 				
 	protected abstract Option[] setupOptions();
 	
-	public Environment[] getWorldsToGenerate() { return new Environment[] { NORMAL, NETHER }; }
+	public Environment[] getWorldsToGenerate() { return new Environment[] { Environment.NORMAL, Environment.NETHER }; }
 	public ChunkGenerator getCustomChunkGenerator(int worldNumber) { return null; }
 	public BlockPopulator[] getExtraBlockPopulators(int worldNumber) { return null; }
 
@@ -103,7 +107,7 @@ public abstract class GameMode implements Listener
 	public abstract boolean teamAllocationIsSecret();
 	
 
-	public abstract void worldGenerationComplete(World main, World nether); // create plinth, etc.
+	public void worldGenerationComplete() { } // create plinth, etc.
 
 	public abstract boolean isLocationProtected(Location l); // for protecting plinth, respawn points, etc.
 
@@ -659,25 +663,25 @@ public abstract class GameMode implements Listener
 	
 	protected final JavaPlugin getPlugin() { return plugin; }
 	
-	protected final int getNumWorlds() { return plugin.worldManager.getNumWorlds(); }
-	protected final World getWorld(int number) { return plugin.worldManager.getWorld(number); }
+	protected final int getNumWorlds() { return plugin.worldManager.worlds.size(); }
+	protected final World getWorld(int number) { return plugin.worldManager.worlds.get(number); }
 	
 	public Location getPortalDestination(TeleportCause cause, Location entrance)
 	{
-		if ( cause != TeleportCause.NETHER_PORTAL || plugin.worldManager.getNumWorlds() < 2 )
+		if ( cause != TeleportCause.NETHER_PORTAL || getNumWorlds() < 2 )
 			return null;
 		
 		World toWorld;
 		double blockRatio;
 		
-		if ( entrance.getWorld() == plugin.worldManager.getWorld(0) )
+		if ( entrance.getWorld() == getWorld(0) )
 		{
-			toWorld = plugin.worldManager.getWorld(1);
+			toWorld = getWorld(1);
 			blockRatio = 0.125;
 		}
-		else if ( entrance.getWorld() == plugin.worldManager.getWorld(1) )
+		else if ( entrance.getWorld() == getWorld(1) )
 		{
-			toWorld = plugin.worldManager.getWorld(0);
+			toWorld = getWorld(0);
 			blockRatio = 8;
 		}
 		else
