@@ -573,35 +573,29 @@ class WorldManager
 	}
 
 	// this is a clone of CraftServer.createWorld, amended to accept extra block populators
-	// it also creates only one chunk per tick, instead of locking up the server while it generates 
-    public World createWorld(WorldCreator creator, final Runnable runWhenDone, BlockPopulator... extraPopulators)
+	// it also spreads chunk creation across multiple ticks, instead of locking up the server while it generates 
+    public World createWorld(WorldHelper helper, final Runnable runWhenDone)
     {
-        if (creator == null) {
-            throw new IllegalArgumentException("Creator may not be null");
-        }
-
         final CraftServer craftServer = (CraftServer)plugin.getServer();
         MinecraftServer console = craftServer.getServer();
         
-        final String name = creator.name();
-        ChunkGenerator generator = creator.generator();
+        String name = helper.getName();
         File folder = new File(craftServer.getWorldContainer(), name);
         World world = craftServer.getWorld(name);
-        WorldType type = WorldType.getType(creator.type().getName());
-        boolean generateStructures = creator.generateStructures();
 
-        if (world != null) {
+        if (world != null)
             return world;
-        }
 
-        if ((folder.exists()) && (!folder.isDirectory())) {
+        if ((folder.exists()) && (!folder.isDirectory()))
             throw new IllegalArgumentException("File exists with the name '" + name + "' and isn't a folder");
-        }
 
-        if (generator == null) {
-            generator = craftServer.getGenerator(name);
-        }
+        ChunkGenerator generator = helper.getGenerator();
+        
+        if (generator == null)
+        	generator = craftServer.getGenerator(name);
 
+        WorldType type = WorldType.getType(helper.getWorldType().getName());
+        
         Convertable converter = new WorldLoaderServer(craftServer.getWorldContainer());
         if (converter.isConvertable(name)) {
         	craftServer.getLogger().info("Converting world '" + name + "'");
@@ -621,11 +615,10 @@ class WorldManager
         } while(used);
         boolean hardcore = false;
 
-        final WorldServer worldServer = new WorldServer(console, new ServerNBTManager(craftServer.getWorldContainer(), name, true), name, dimension, new WorldSettings(creator.seed(), EnumGamemode.a(craftServer.getDefaultGameMode().getValue()), generateStructures, hardcore, type), console.methodProfiler, creator.environment(), generator);
+        final WorldServer worldServer = new WorldServer(console, new ServerNBTManager(craftServer.getWorldContainer(), name, true), name, dimension, new WorldSettings(helper.getSeed(), EnumGamemode.a(craftServer.getDefaultGameMode().getValue()), helper.getGenerateStructures(), hardcore, type), console.methodProfiler, helper.getEnvironment(), generator);
 
-        if (craftServer.getWorld(name) == null) {
+        if (craftServer.getWorld(name) == null)
             return null;
-        }
 
         worldServer.worldMaps = console.worlds.get(0).worldMaps;
 
@@ -635,14 +628,11 @@ class WorldManager
         worldServer.setSpawnFlags(true, true);
         console.worlds.add(worldServer);
 
-        if (generator != null) {
+        if (generator != null)
         	worldServer.getWorld().getPopulators().addAll(generator.getDefaultPopulators(worldServer.getWorld()));
-        }
         
-        // use the extra block populators!
-        if ( extraPopulators != null )
-        	for ( int i=0; i<extraPopulators.length; i++ )
-        		worldServer.getWorld().getPopulators().add(extraPopulators[i]);
+        for ( BlockPopulator populator : helper.getExtraPopulators() )
+        	worldServer.getWorld().getPopulators().add(populator);
 
         craftServer.getPluginManager().callEvent(new WorldInitEvent(worldServer.getWorld()));
         System.out.print("Preparing start region for level " + (console.worlds.size() - 1) + " (Seed: " + worldServer.getSeed() + ")");

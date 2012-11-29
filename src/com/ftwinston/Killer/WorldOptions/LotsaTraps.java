@@ -6,9 +6,10 @@ import org.bukkit.World.Environment;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.WorldCreator;
 import org.bukkit.event.Listener;
 import org.bukkit.generator.BlockPopulator;
+
+import com.ftwinston.Killer.WorldHelper;
 
 public class LotsaTraps extends com.ftwinston.Killer.WorldOption implements Listener
 {
@@ -19,12 +20,15 @@ public class LotsaTraps extends com.ftwinston.Killer.WorldOption implements List
 	
 	public boolean isFixedWorld() { return false; }
 	
-	public void createMainWorld(String name, Runnable runWhenDone)
+	@Override
+	public void setupWorld(WorldHelper world, Runnable runWhenDone)
 	{
-		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL);
-		registerWorld(createWorld(wc, runWhenDone, new TrapPopulator()));
+		if ( world.getEnvironment() == Environment.NORMAL )
+			world.getExtraPopulators().add(new TrapPopulator());
+		
+		createWorld(world, runWhenDone);
 	}
-	
+		
 	public class TrapPopulator extends BlockPopulator
 	{
 		public void populate(World world, Random random, Chunk chunk)

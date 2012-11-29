@@ -7,8 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
+
+import com.ftwinston.Killer.WorldHelper;
 
 public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 {
@@ -19,8 +20,16 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 	
 	public boolean isFixedWorld() { return true; }
 	
-	public void createMainWorld(final String name, final Runnable runWhenDone)
+	@Override
+	public void setupWorld(final WorldHelper world, final Runnable runWhenDone)
 	{
+		if ( world.getEnvironment() != Environment.NORMAL )
+		{
+			createWorld(world, runWhenDone);
+			return;
+		}
+		
+		final String name = world.getName();
 		getPlugin().getServer().getScheduler().scheduleAsyncDelayedTask(getPlugin(), new Runnable() {
 			
 			@Override
@@ -56,17 +65,11 @@ public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 					@Override
 					public void run()
 					{
-						registerWorld(createWorld(new WorldCreator(name).environment(Environment.NORMAL), runWhenDone));
+						createWorld(world, runWhenDone);
 					}
 				});
 			}
 		});
-	}
-	
-	@Override
-	protected void createNetherWorld(String name, Runnable runWhenDone)
-	{
-		registerWorld(createWorld(new WorldCreator(name + "_nether").environment(Environment.NETHER), runWhenDone));
 	}
 	
 	private void copyFolder(File source, File dest) throws IOException
