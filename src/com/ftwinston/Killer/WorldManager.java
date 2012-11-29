@@ -1,6 +1,7 @@
 package com.ftwinston.Killer;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
@@ -220,6 +221,21 @@ class WorldManager
 			plugin.log.warning("Error binding to region file cache.");
 			t.printStackTrace();
 		}
+	}
+	
+	public void deleteWorldFolders(final String prefix)
+	{
+		File worldFolder = plugin.getServer().getWorldContainer();
+		
+		String[] killerFolders = worldFolder.list(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith(prefix) && dir.isDirectory();
+			}
+		});
+		
+		for ( String worldName : killerFolders )
+			deleteWorld(worldName);
 	}
 	
 	public boolean deleteWorld(String worldName)

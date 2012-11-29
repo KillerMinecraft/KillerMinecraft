@@ -211,8 +211,7 @@ public class Killer extends JavaPlugin
 		}
 		
 		// remove existing Killer world files
-		worldManager.deleteWorld(Settings.killerWorldName);
-		worldManager.deleteWorld(Settings.killerWorldName + "_nether");
+		worldManager.deleteWorldFolders(Settings.killerWorldName + "_");
 		
         // disable spawn protection
         getServer().setSpawnRadius(0);
