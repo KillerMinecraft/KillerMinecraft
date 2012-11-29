@@ -21,6 +21,7 @@ public class WorldHelper
 		this.generator = null;
 		this.extraPopulators = new ArrayList<BlockPopulator>();
 		this.generateStructures = true;
+		this.chunkGeneratorLocked = false;
 	}
 	
 	private static Random seedGen = new Random(); 
@@ -32,6 +33,7 @@ public class WorldHelper
 	private ChunkGenerator generator;
 	private List<BlockPopulator> extraPopulators;
 	private boolean generateStructures;
+	private boolean chunkGeneratorLocked;
 	
 	public String getName() {
 		return name;
@@ -66,9 +68,14 @@ public class WorldHelper
 	}
 
 	public void setGenerator(ChunkGenerator generator) {
-		this.generator = generator;
+		if ( !chunkGeneratorLocked )
+			this.generator = generator;
 	}
 
+	void lockChunkGenerator() {
+		chunkGeneratorLocked = true;
+	}
+	
 	public List<BlockPopulator> getExtraPopulators() {
 		return extraPopulators;
 	}

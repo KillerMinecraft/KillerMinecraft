@@ -7,6 +7,7 @@ import java.util.List;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.generator.BlockPopulator;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.ftwinston.Killer.WorldOptions.CopyExistingWorld;
@@ -113,7 +114,13 @@ public abstract class WorldOption
 			String worldName = Settings.killerWorldName + "_" + (num+1);
 			
 			WorldHelper helper = new WorldHelper(worldName, environment);
-			helper.setGenerator(gameMode.getCustomChunkGenerator(num));
+			
+			ChunkGenerator generator = gameMode.getCustomChunkGenerator(num);
+			if ( generator != null )
+			{
+				helper.setGenerator(generator);
+				helper.lockChunkGenerator(); // don't let it be changed again, the game mode insists we use this
+			}
 			
 			BlockPopulator[] populators = gameMode.getExtraBlockPopulators(num);
 			if ( populators != null )
