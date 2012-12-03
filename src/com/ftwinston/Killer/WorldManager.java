@@ -307,7 +307,7 @@ class WorldManager
 		else
 		{
 			for ( Player player : world.getPlayers() )
-				plugin.playerManager.teleport(player, plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+				plugin.playerManager.putPlayerInStagingWorld(player);
 		}
 		
 		// formerly used server.unloadWorld at this point. But it was failing, even when i force-cleared the player list

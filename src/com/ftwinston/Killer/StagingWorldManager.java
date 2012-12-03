@@ -424,8 +424,8 @@ class StagingWorldManager
 		else if ( z == StagingWorldGenerator.spleefPressurePlateZ )
 		{
 			PlayerInventory inv = player.getInventory();
-			inv.clear();
-			player.getInventory().addItem(new ItemStack(monsterArenaModeEnabled ? Material.IRON_SWORD : Material.DIAMOND_SPADE));
+			plugin.playerManager.removeInventoryItems(inv, Material.IRON_SWORD, Material.DIAMOND_SPADE);
+			inv.addItem(new ItemStack(monsterArenaModeEnabled ? Material.IRON_SWORD : Material.DIAMOND_SPADE));
 			
 			if ( monsterWaveNumber == 0 && countPlayersInArena() == 0 )
 			{

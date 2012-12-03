@@ -85,14 +85,25 @@ class EventListener implements Listener
 		if ( !plugin.isGameWorld(event.getPlayer().getWorld()) )
 			return;
 		
+    	final String playerName = event.getPlayer().getName();
+    	
 		if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.worlds.size() > 0 )
 			event.setRespawnLocation(plugin.getGameMode().getSpawnLocation(event.getPlayer()));
 		else
+		{
 			event.setRespawnLocation(plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+    			public void run()
+    			{
+    				Player player = plugin.getServer().getPlayerExact(playerName);
+    				if ( player != null )
+    					plugin.playerManager.giveStagingWorldInstructionBook(player);
+    			}
+    		});
+		}
 	
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     	{
-    		final String playerName = event.getPlayer().getName();
     		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
     			public void run()
     			{
@@ -136,7 +147,7 @@ class EventListener implements Listener
 			playerJoined(event.getPlayer());
 		
 		if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
-			plugin.playerManager.teleport(event.getPlayer(), plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+			plugin.playerManager.putPlayerInStagingWorld(event.getPlayer());
     }
     
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -523,7 +534,7 @@ class EventListener implements Listener
     					if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.worlds.size() > 0 )
     						plugin.playerManager.teleport(player, plugin.getGameMode().getSpawnLocation(player));
     					else
-    						plugin.playerManager.teleport(player, plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+    						plugin.playerManager.putPlayerInStagingWorld(player);
     			}
     		});
     	}

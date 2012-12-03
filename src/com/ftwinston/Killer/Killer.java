@@ -85,7 +85,7 @@ public class Killer extends JavaPlugin
 			
 			for ( Player player : getOnlinePlayers() )
 				if ( player.getWorld() != worldManager.stagingWorld )
-					playerManager.teleport(player, stagingWorldManager.getStagingWorldSpawnPoint());
+					playerManager.putPlayerInStagingWorld(player);
 			
 			playerManager.reset();
 			
