@@ -413,9 +413,15 @@ class PlayerManager
 		{
 			player.setAllowFlight(true);
 			player.setFlying(true);
-			inv.addItem(new ItemStack(Settings.teleportModeItem, 1));
-			inv.addItem(new ItemStack(Settings.followModeItem, 1));
 			makePlayerInvisibleToAll(player);
+			
+			NamedItemStack item = new NamedItemStack(new ItemStack(Settings.teleportModeItem, 1));
+			item.setName("Teleport mode");
+			inv.addItem(item.getItem());
+			
+			item = new NamedItemStack(new ItemStack(Settings.followModeItem, 1));
+			item.setName("Follow mode");
+			inv.addItem(item.getItem());
 			
 			player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Clicking has different effects depending on the selected item. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
 		}
