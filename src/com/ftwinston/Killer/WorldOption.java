@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.World;
-import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
 import org.bukkit.generator.BlockPopulator;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.ftwinston.Killer.WorldOptions.CopyExistingWorld;
@@ -73,31 +73,61 @@ public abstract class WorldOption
 	private Killer plugin;
 	protected final JavaPlugin getPlugin() { return plugin; }
 	
-	protected final World createWorld(WorldCreator wc, Runnable runWhenDone, BlockPopulator ... extraPopulators)
+	protected final World createWorld(WorldHelper worldHelper, Runnable runWhenDone)
 	{
-		return plugin.worldManager.createWorld(wc, runWhenDone, extraPopulators);
+		World world = plugin.worldManager.createWorld(worldHelper, runWhenDone);
+		plugin.worldManager.worlds.add(world);
+		return world;
 	}
 	
-	public final void createWorlds(final Game game, final Runnable runWhenDone)
+	final void createWorlds(final Game game, final Runnable runWhenDone)
 	{
-		Runnable doneMainWorld = game.getGameMode().usesNether() ? new Runnable()
-		{
-			public void run()
-			{
-				createNetherWorld(game, game.getNetherWorldName(), runWhenDone);
-			}
-		} : runWhenDone;
+		final Environment[] environments = game.getGameMode().getWorldsToGenerate();
 		
-		createMainWorld(game, game.getMainWorldName(), doneMainWorld);
+		for ( int i=environments.length-1; i>=0; i-- )
+			runWhenDone = new WorldSetupRunner(game, environments[i], i, runWhenDone);
+		
+		runWhenDone.run();
 	}
 	
-	protected abstract void createMainWorld(Game game, String name, Runnable runWhenDone);
-	
-	protected void createNetherWorld(Game game, String name, Runnable runWhenDone)
-	{
-		WorldCreator wc = new WorldCreator(name).environment(Environment.NETHER);
-		game.setNetherWorld(createWorld(wc, runWhenDone));
-	}
+	protected abstract void setupWorld(WorldHelper world, Runnable runWhenDone);
 	
 	public abstract boolean isFixedWorld();
+	
+	private class WorldSetupRunner implements Runnable
+	{
+		public WorldSetupRunner(Game game, Environment environment, int num, Runnable runNext)
+		{
+			this.game = game;
+			this.environment = environment;
+			this.num = num;
+			this.runNext = runNext;
+		}
+	
+		private Game game;
+		private Environment environment;
+		private int num;
+		private Runnable runNext;
+		
+		public void run()
+		{
+			String worldName = Settings.killerWorldName + "_" + (num+1);
+			
+			WorldHelper helper = new WorldHelper(game, worldName, environment);
+			
+			ChunkGenerator generator = gameMode.getCustomChunkGenerator(num);
+			if ( generator != null )
+			{
+				helper.setGenerator(generator);
+				helper.lockChunkGenerator(); // don't let it be changed again, the game mode insists we use this
+			}
+			
+			BlockPopulator[] populators = gameMode.getExtraBlockPopulators(num);
+			if ( populators != null )
+				for ( BlockPopulator populator : populators )
+					helper.getExtraPopulators().add(populator);
+			
+			setupWorld(helper, runNext);
+		}
+	}
 }

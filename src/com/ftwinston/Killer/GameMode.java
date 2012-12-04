@@ -13,6 +13,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
@@ -22,6 +23,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.generator.BlockPopulator;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -56,12 +60,24 @@ public abstract class GameMode implements Listener
 	}
 				
 	protected abstract Option[] setupOptions();
+	
+	public Environment[] getWorldsToGenerate() { return new Environment[] { Environment.NORMAL, Environment.NETHER }; }
+	public ChunkGenerator getCustomChunkGenerator(int worldNumber) { return null; }
+	public BlockPopulator[] getExtraBlockPopulators(int worldNumber) { return null; }
 
 	public abstract String getHelpMessage(int messageNum, int teamNum);
 	
 	private String getExtraHelpMessage(int messageNum)
 	{
-		boolean use1 = usesNether() && game.isEnderEyeRecipeEnabled();
+		boolean usesNether = false;
+		for ( Environment env : getWorldsToGenerate() )
+			if ( env == Environment.NETHER )
+			{
+				usesNether = true;
+				break;
+			}
+	
+		boolean use1 = usesNether && game.isEnderEyeRecipeEnabled();
 		boolean use2 = game.isMonsterEggRecipeEnabled();
 		boolean use3 = game.isDispenserRecipeEnabled();
 		
@@ -90,9 +106,7 @@ public abstract class GameMode implements Listener
 	public abstract boolean teamAllocationIsSecret();
 	
 
-	public abstract boolean usesNether(); // return false to stop nether generation, and prevent portals from working
-
-	public abstract void worldGenerationComplete(World main, World nether); // create plinth, etc.
+	public void worldGenerationComplete() { } // create plinth, etc.
 
 	public abstract boolean isLocationProtected(Location l); // for protecting plinth, respawn points, etc.
 
@@ -648,17 +662,37 @@ public abstract class GameMode implements Listener
 	
 	protected final JavaPlugin getPlugin() { return plugin; }
 	
-	private World mainWorld, netherWorld;
-	protected final World getMainWorld() { return mainWorld; }
-	protected final World getNetherWorld() { return netherWorld; }
+	protected final int getNumWorlds() { return plugin.worldManager.worlds.size(); }
+	protected final World getWorld(int number) { return plugin.worldManager.worlds.get(number); }
+	
+	public void handlePortal(TeleportCause cause, Location entrance, PortalHelper helper)
+	{
+		if ( cause != TeleportCause.NETHER_PORTAL || getNumWorlds() < 2 )
+			return;
+		
+		World toWorld;
+		double blockRatio;
+		
+		if ( entrance.getWorld() == getWorld(0) )
+		{
+			toWorld = getWorld(1);
+			blockRatio = 0.125;
+		}
+		else if ( entrance.getWorld() == getWorld(1) )
+		{
+			toWorld = getWorld(0);
+			blockRatio = 8;
+		}
+		else
+			return;
+		
+		helper.setupScaledDestination(toWorld, entrance, blockRatio);
+	}
 	
 	// methods to be used by external code for accessing the game modes, rather than going directly into the mode-specific functions
 	
 	public final void startGame()
-	{
-		mainWorld = plugin.worldManager.mainWorld;
-		netherWorld = plugin.worldManager.netherWorld;
-		
+	{	
 		game.forcedGameEnd = false;
 		plugin.playerManager.startGame();
 		gameStarted();

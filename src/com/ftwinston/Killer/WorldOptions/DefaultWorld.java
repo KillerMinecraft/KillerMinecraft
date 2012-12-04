@@ -1,9 +1,7 @@
 package com.ftwinston.Killer.WorldOptions;
 
-import com.ftwinston.Killer.Game;
+import com.ftwinston.Killer.WorldHelper;
 
-import org.bukkit.World.Environment;
-import org.bukkit.WorldCreator;
 
 public class DefaultWorld extends com.ftwinston.Killer.WorldOption
 {
@@ -12,11 +10,11 @@ public class DefaultWorld extends com.ftwinston.Killer.WorldOption
 		super("Normal");
 	}
 	
-	public boolean isFixedWorld() { return false; }
-	
-	public void createMainWorld(Game game, String name, Runnable runWhenDone)
-	{
-		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL);
-		game.setMainWorld(createWorld(wc, runWhenDone));
+	@Override
+	public void setupWorld(WorldHelper world, Runnable runWhenDone)
+	{	
+		createWorld(world, runWhenDone);
 	}
+	
+	public boolean isFixedWorld() { return false; }
 }

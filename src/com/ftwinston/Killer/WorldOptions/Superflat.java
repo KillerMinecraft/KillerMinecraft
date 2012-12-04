@@ -1,10 +1,9 @@
 package com.ftwinston.Killer.WorldOptions;
 
 import org.bukkit.World.Environment;
-import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
 
-import com.ftwinston.Killer.Game;
+import com.ftwinston.Killer.WorldHelper;
 
 public class Superflat extends com.ftwinston.Killer.WorldOption
 {
@@ -15,9 +14,12 @@ public class Superflat extends com.ftwinston.Killer.WorldOption
 	
 	public boolean isFixedWorld() { return false; }
 	
-	public void createMainWorld(Game game, String name, Runnable runWhenDone)
+	@Override
+	public void setupWorld(WorldHelper world, Runnable runWhenDone)
 	{
-		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL).type(WorldType.FLAT);
-		game.setMainWorld(createWorld(wc, runWhenDone));
+		if ( world.getEnvironment() == Environment.NORMAL )
+			world.setWorldType(WorldType.FLAT);
+		
+		createWorld(world, runWhenDone);
 	}
 }

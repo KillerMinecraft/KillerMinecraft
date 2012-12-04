@@ -20,6 +20,7 @@ import net.minecraft.server.MinecraftServer;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -109,8 +110,7 @@ public class Killer extends JavaPlugin
 		}
 		
 		// remove existing Killer world files
-		worldManager.deleteWorld(Settings.killerWorldName);
-		worldManager.deleteWorld(Settings.killerWorldName + "_nether");
+		worldManager.deleteWorldFolders(Settings.killerWorldName + "_");
 		
         // disable spawn protection
         getServer().setSpawnRadius(0);
@@ -249,8 +249,16 @@ public class Killer extends JavaPlugin
 			}
 			else if ( args[0].equalsIgnoreCase("nether") )
 			{
-				if ( game.getNetherWorld() != null )
-					playerManager.teleport(player, game.getNetherWorld().getSpawnLocation());
+				World nether = null;
+				for ( World world : game.getWorlds() )
+					if ( world.getEnvironment() == Environment.NETHER )
+					{
+						nether = world;
+						break;
+					}
+				
+				if ( nether != null )
+					playerManager.teleport(player, nether.getSpawnLocation());
 				else
 					sender.sendMessage("Nether world not found, please try again");
 			}

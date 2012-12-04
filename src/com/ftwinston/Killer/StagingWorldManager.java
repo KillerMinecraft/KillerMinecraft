@@ -36,7 +36,7 @@ class StagingWorldManager
 	Random random = new Random();
 	public Location getStagingWorldSpawnPoint()
 	{
-		return new Location(stagingWorld, -13.5f + random.nextDouble() * 4 - 2, StagingWorldGenerator.floorY + 1, 26.5f - random.nextDouble(), 180, 0);
+		return new Location(stagingWorld, -11.5f + random.nextDouble() * 2 - 1, StagingWorldGenerator.floorY + 1, 24f + random.nextDouble() * 3 - 1.5, 200, 0);
 	}
 
 	public enum StagingWorldOption
@@ -424,8 +424,8 @@ class StagingWorldManager
 		else if ( z == StagingWorldGenerator.spleefPressurePlateZ )
 		{
 			PlayerInventory inv = player.getInventory();
-			inv.clear();
-			player.getInventory().addItem(new ItemStack(monsterArenaModeEnabled ? Material.IRON_SWORD : Material.DIAMOND_SPADE));
+			plugin.playerManager.removeInventoryItems(inv, Material.IRON_SWORD, Material.DIAMOND_SPADE);
+			inv.addItem(new ItemStack(monsterArenaModeEnabled ? Material.IRON_SWORD : Material.DIAMOND_SPADE));
 			
 			if ( monsterWaveNumber == 0 && countPlayersInArena() == 0 )
 			{

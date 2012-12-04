@@ -1,6 +1,7 @@
 package com.ftwinston.Killer;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
@@ -220,6 +221,21 @@ class WorldManager
 		}
 	}
 	
+	public void deleteWorldFolders(final String prefix)
+	{
+		File worldFolder = plugin.getServer().getWorldContainer();
+		
+		String[] killerFolders = worldFolder.list(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith(prefix) && dir.isDirectory();
+			}
+		});
+		
+		for ( String worldName : killerFolders )
+			deleteWorld(worldName);
+	}
+	
 	public boolean deleteWorld(String worldName)
 	{
 		clearWorldReference(worldName);
@@ -289,7 +305,7 @@ class WorldManager
 		else
 		{
 			for ( Player player : world.getPlayers() )
-				plugin.playerManager.teleport(player, plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+				plugin.playerManager.putPlayerInStagingWorld(player);
 		}
 		
 		// formerly used server.unloadWorld at this point. But it was failing, even when i force-cleared the player list
@@ -321,18 +337,8 @@ class WorldManager
 	public void deleteKillerWorlds(Game game, Runnable runWhenDone)
 	{
 		plugin.log.info("Clearing out old worlds...");
-		if ( mainWorld == null )
-			if ( netherWorld == null )
-				deleteWorlds(runWhenDone);
-			else
-				deleteWorlds(runWhenDone, game.getNetherWorld());
-		else if ( netherWorld == null )
-			deleteWorlds(runWhenDone, game.getMainWorld());
-		else
-			deleteWorlds(runWhenDone, game.getMainWorld(), game.getNetherWorld());
-		
-		game.setMainWorld(null);
-		game.setNetherWorld(null);
+		deleteWorlds(runWhenDone, game.getWorlds().toArray(new World[0]));
+		game.getWorlds().clear();
 	}
 	
 	public void deleteWorlds(Runnable runWhenDone, World... worlds)
@@ -403,10 +409,10 @@ class WorldManager
 	
 	public boolean seekNearestNetherFortress(Player player)
 	{
-		if ( netherWorld == null )
+		if ( player.getWorld().getEnvironment() != Environment.NETHER )
 			return false;
 		
-		WorldServer world = ((CraftWorld)netherWorld).getHandle();
+		WorldServer world = ((CraftWorld)player.getWorld()).getHandle();
 		
 		IChunkProvider chunkProvider;
 		try
@@ -458,43 +464,16 @@ class WorldManager
 	
 	public void generateWorlds(final Game game, final WorldOption generator, final Runnable runWhenDone)
 	{
-		game.getGameMode().broadcastMessage(game.getGameMode().usesNether() ? "Preparing new worlds..." : "Preparing new world...");
+		game.getGameMode().broadcastMessage(game.getGameMode().getNumWorlds() == 1 ? "Preparing new world..." : "Preparing new worlds...");
 		
 		Runnable generationComplete = new Runnable() {
 			@Override
 			public void run()
 			{
-				// ensure those worlds are set to Hard difficulty
-				game.getMainWorld().setDifficulty(Difficulty.HARD);
-				if ( game.getNetherWorld() != null )
-					game.getNetherWorld().setDifficulty(Difficulty.HARD);
-				
-				switch ( game.animalNumbers )
+				for ( World world : game.getWorlds() )
 				{
-				case 0:
-					game.getMainWorld().setAnimalSpawnLimit(0);
-					game.getMainWorld().setTicksPerAnimalSpawns(600);
-					break;
-				case 1:
-					game.getMainWorld().setAnimalSpawnLimit(8);
-					game.getMainWorld().setTicksPerAnimalSpawns(500);
-					break;
-				case 2: // mc defaults
-					game.getMainWorld().setAnimalSpawnLimit(15);
-					game.getMainWorld().setTicksPerAnimalSpawns(400);
-					break;
-				case 3:
-					game.getMainWorld().setAnimalSpawnLimit(25);
-					game.getMainWorld().setTicksPerAnimalSpawns(300);
-					break;
-				case 4:
-					game.getMainWorld().setAnimalSpawnLimit(40);
-					game.getMainWorld().setTicksPerAnimalSpawns(200);
-					break;
-				}
-
-				World[] worlds = netherWorld == null ? new World[] { game.getMainWorld() } : new World[] { game.getMainWorld(), netherWorld };
-				for ( World world : worlds )
+					world.setDifficulty(Difficulty.HARD);
+					
 					switch ( game.monsterNumbers )
 					{
 					case 0:
@@ -518,6 +497,32 @@ class WorldManager
 						world.setTicksPerMonsterSpawns(1);
 						break;
 					}
+					
+					if ( world.getEnvironment() == Environment.NORMAL )
+						switch ( game.animalNumbers )
+						{
+						case 0:
+							world.setAnimalSpawnLimit(0);
+							world.setTicksPerAnimalSpawns(600);
+							break;
+						case 1:
+							world.setAnimalSpawnLimit(8);
+							world.setTicksPerAnimalSpawns(500);
+							break;
+						case 2: // mc defaults
+							world.setAnimalSpawnLimit(15);
+							world.setTicksPerAnimalSpawns(400);
+							break;
+						case 3:
+							world.setAnimalSpawnLimit(25);
+							world.setTicksPerAnimalSpawns(300);
+							break;
+						case 4:
+							world.setAnimalSpawnLimit(40);
+							world.setTicksPerAnimalSpawns(200);
+							break;
+						}
+				}
 				
 				plugin.stagingWorldManager.removeWorldGenerationIndicator();
 				
@@ -533,7 +538,7 @@ class WorldManager
 		}
 		catch (ArrayIndexOutOfBoundsException ex)
 		{
-			plugin.log.warning("An crash occurred during world generation. This might be a bug with the selected world option, vanilla minecraft, bukkit, or killer itself.");
+			plugin.log.warning("An crash occurred during world generation. Aborting...");
 			game.getGameMode().broadcastMessage("An error occurred during world generation.\nPlease try again...");
 			
 			game.setGameState(GameState.worldDeletion);
@@ -582,35 +587,29 @@ class WorldManager
 	}
 
 	// this is a clone of CraftServer.createWorld, amended to accept extra block populators
-	// it also creates only one chunk per tick, instead of locking up the server while it generates 
-    public World createWorld(WorldCreator creator, final Runnable runWhenDone, BlockPopulator... extraPopulators)
+	// it also spreads chunk creation across multiple ticks, instead of locking up the server while it generates 
+    public World createWorld(WorldHelper helper, final Runnable runWhenDone)
     {
-        if (creator == null) {
-            throw new IllegalArgumentException("Creator may not be null");
-        }
-
         final CraftServer craftServer = (CraftServer)plugin.getServer();
         MinecraftServer console = craftServer.getServer();
         
-        final String name = creator.name();
-        ChunkGenerator generator = creator.generator();
+        String name = helper.getName();
         File folder = new File(craftServer.getWorldContainer(), name);
         World world = craftServer.getWorld(name);
-        WorldType type = WorldType.getType(creator.type().getName());
-        boolean generateStructures = creator.generateStructures();
 
-        if (world != null) {
+        if (world != null)
             return world;
-        }
 
-        if ((folder.exists()) && (!folder.isDirectory())) {
+        if ((folder.exists()) && (!folder.isDirectory()))
             throw new IllegalArgumentException("File exists with the name '" + name + "' and isn't a folder");
-        }
 
-        if (generator == null) {
-            generator = craftServer.getGenerator(name);
-        }
+        ChunkGenerator generator = helper.getGenerator();
+        
+        if (generator == null)
+        	generator = craftServer.getGenerator(name);
 
+        WorldType type = WorldType.getType(helper.getWorldType().getName());
+        
         Convertable converter = new WorldLoaderServer(craftServer.getWorldContainer());
         if (converter.isConvertable(name)) {
         	craftServer.getLogger().info("Converting world '" + name + "'");
@@ -630,11 +629,10 @@ class WorldManager
         } while(used);
         boolean hardcore = false;
 
-        final WorldServer worldServer = new WorldServer(console, new ServerNBTManager(craftServer.getWorldContainer(), name, true), name, dimension, new WorldSettings(creator.seed(), EnumGamemode.a(craftServer.getDefaultGameMode().getValue()), generateStructures, hardcore, type), console.methodProfiler, creator.environment(), generator);
+        final WorldServer worldServer = new WorldServer(console, new ServerNBTManager(craftServer.getWorldContainer(), name, true), name, dimension, new WorldSettings(helper.getSeed(), EnumGamemode.a(craftServer.getDefaultGameMode().getValue()), helper.getGenerateStructures(), hardcore, type), console.methodProfiler, helper.getEnvironment(), generator);
 
-        if (craftServer.getWorld(name) == null) {
+        if (craftServer.getWorld(name) == null)
             return null;
-        }
 
         worldServer.worldMaps = console.worlds.get(0).worldMaps;
 
@@ -644,34 +642,32 @@ class WorldManager
         worldServer.setSpawnFlags(true, true);
         console.worlds.add(worldServer);
 
-        if (generator != null) {
+        if (generator != null)
         	worldServer.getWorld().getPopulators().addAll(generator.getDefaultPopulators(worldServer.getWorld()));
-        }
         
-        // use the extra block populators!
-        if ( extraPopulators != null )
-        	for ( int i=0; i<extraPopulators.length; i++ )
-        		worldServer.getWorld().getPopulators().add(extraPopulators[i]);
+        for ( BlockPopulator populator : helper.getExtraPopulators() )
+        	worldServer.getWorld().getPopulators().add(populator);
 
         craftServer.getPluginManager().callEvent(new WorldInitEvent(worldServer.getWorld()));
         System.out.print("Preparing start region for level " + (console.worlds.size() - 1) + " (Seed: " + worldServer.getSeed() + ")");
         
-        plugin.stagingWorldManager.showWorldGenerationIndicator(mainWorld == null ? 0f : 0.5f );
-        ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, plugin.getGameMode().usesNether(), mainWorld != null, runWhenDone);
+        int worldNumber = worlds.size(), numberOfWorlds = plugin.getGameMode().getWorldsToGenerate().length; 
+        plugin.stagingWorldManager.showWorldGenerationIndicator((float)worldNumber / (float)numberOfWorlds);
+        ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, worldNumber, numberOfWorlds, runWhenDone);
     	cb.taskID = craftServer.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);
     	return worldServer.getWorld();
     }
     
     class ChunkBuilder implements Runnable
     {
-    	public ChunkBuilder(int numChunksFromSpawn, CraftServer craftServer, WorldServer worldServer, boolean usesSecondaryWorld, boolean isSecondaryWorld, Runnable runWhenDone)
+    	public ChunkBuilder(int numChunksFromSpawn, CraftServer craftServer, WorldServer worldServer, int worldNumber, int numberOfWorlds, Runnable runWhenDone)
     	{
     		this.numChunksFromSpawn = numChunksFromSpawn;
     		sideLength = numChunksFromSpawn * 2 + 1;
     		numSteps = sideLength * sideLength;
     		
-    		this.usesSecondaryWorld = usesSecondaryWorld;
-    		this.isSecondaryWorld = isSecondaryWorld;
+    		this.worldNumber = worldNumber;
+    		this.numberOfWorlds = numberOfWorlds;
     		this.craftServer = craftServer;
     		this.worldServer = worldServer;
     		this.runWhenDone = runWhenDone;
@@ -683,7 +679,7 @@ class WorldManager
     	
     	int numChunksFromSpawn, stepNum = 0, sideLength, numSteps, spawnX, spawnZ;
         long reportTime = System.currentTimeMillis();
-        boolean usesSecondaryWorld, isSecondaryWorld;
+        int worldNumber, numberOfWorlds;
         public int taskID;
         CraftServer craftServer;
         WorldServer worldServer;
@@ -701,11 +697,10 @@ class WorldManager
             if (time > reportTime + 1000L) {
             	System.out.println("Preparing spawn area for " + worldServer.getWorld().getName() + ", " + (stepNum * 100 / numSteps) + "%");
             	float fraction = (float)stepNum/numSteps;
-            	if ( usesSecondaryWorld )
+            	if ( numberOfWorlds > 1 )
             	{
-            		fraction *= 0.5f;
-            		if ( isSecondaryWorld )
-            			fraction += 0.5f;
+            		fraction /= (float)numberOfWorlds;
+            		fraction += (float)worldNumber/(float)numberOfWorlds;
             	}
             	plugin.stagingWorldManager.showWorldGenerationIndicator(fraction);
                 reportTime = time;
@@ -721,7 +716,7 @@ class WorldManager
 
             	if ( stepNum >= numSteps )
             	{
-            		if ( isSecondaryWorld || !usesSecondaryWorld )
+            		if ( worldNumber >= numberOfWorlds - 1 )
             			plugin.stagingWorldManager.removeWorldGenerationIndicator();
             		craftServer.getPluginManager().callEvent(new WorldLoadEvent(worldServer.getWorld()));
             		craftServer.getScheduler().cancelTask(taskID);

@@ -8,10 +8,9 @@ import net.minecraft.server.AxisAlignedBB;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
@@ -96,14 +95,24 @@ class EventListener implements Listener
     	if ( game == null )
     		return;
     	
-		if ( game.getGameState().usesGameWorlds && game.getMainWorld() != null )
-			event.setRespawnLocation(game.getGameMode().getSpawnLocation(event.getPlayer()));
-		else
-			event.setRespawnLocation(plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+    	final String playerName = event.getPlayer().getName();
+    	
+	if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.worlds.size() > 0 )
+	else
+	{
+		event.setRespawnLocation(plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+    			public void run()
+    			{
+    				Player player = plugin.getServer().getPlayerExact(playerName);
+    				if ( player != null )
+    					plugin.playerManager.giveStagingWorldInstructionBook(player);
+    			}
+    		});
+	}
 	
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     	{
-    		final String playerName = event.getPlayer().getName();
     		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
     			public void run()
     			{
@@ -150,36 +159,21 @@ class EventListener implements Listener
 			playerJoined(event.getPlayer());
 		
 		if ( event.getPlayer().getWorld() == plugin.stagingWorld )
-			plugin.playerManager.teleport(event.getPlayer(), plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+			plugin.playerManager.putPlayerInStagingWorld(event.getPlayer());
     }
     
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerPortal(PlayerPortalEvent event)
-	{// we're kinda doing the dirty work in making nether portals work, here
-		World fromWorld = event.getFrom().getWorld();
-		World toWorld;
-		double blockRatio;
-		
-		Game game = plugin.getGameForWorld(fromWorld);
-		
-		if ( fromWorld == game.getMainWorld() )
-		{
-			toWorld = game.getNetherWorld();
-			blockRatio = 0.125;
-		}
-		else if ( fromWorld == game.getNetherWorld() )
-		{
-			toWorld = game.getMainWorld();
-			blockRatio = 8;
-		}
-		else
-			return;
-
-		if ( toWorld == null )
+	{
+		Game game = plugin.getGameForWorld(event.getFrom().getWorld());
+		if ( game == null )
 			return;
 		
-		Location playerLoc = event.getPlayer().getLocation();
-		event.setTo(new Location(toWorld, (playerLoc.getX() * blockRatio), playerLoc.getY(), (playerLoc.getZ() * blockRatio), playerLoc.getYaw(), playerLoc.getPitch()));
+		PortalHelper helper = new PortalHelper(event.getPortalTravelAgent());
+		event.setCancelled(true); // we're going to handle implementing the portalling ourselves
+		
+		game.getGameMode().handlePortal(event.getCause(), event.getFrom(), helper); // see? I told you
+		helper.performTeleport(event.getCause(), event.getPlayer());
 	}
 	
     // prevent spectators picking up anything
@@ -402,7 +396,7 @@ class EventListener implements Listener
     	}
     	
 		// eyes of ender can be made to seek out nether fortresses
-    	if ( game.isEnderEyeRecipeEnabled() && event.getPlayer().getWorld() == game.getNetherWorld() && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
+    	if ( game.isEnderEyeRecipeEnabled() && event.getPlayer().getWorld().getEnvironment() == Environment.NETHER && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
     	{
 			if ( !plugin.worldManager.seekNearestNetherFortress(event.getPlayer()) )
 				event.getPlayer().sendMessage("No nether fortresses nearby");
@@ -572,10 +566,10 @@ class EventListener implements Listener
     			{
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
-    					if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.mainWorld != null )
+    					if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.worlds.size() > 0 )
     						plugin.playerManager.teleport(player, plugin.getGameMode().getSpawnLocation(player));
     					else
-    						plugin.playerManager.teleport(player, plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+    						plugin.playerManager.putPlayerInStagingWorld(player);
     			}
     		});
     	}
@@ -596,11 +590,11 @@ class EventListener implements Listener
 	private void playerJoined(Player player)
 	{
 		// if I log into the staging world (cos I logged out there), move me back to the main world's spawn and clear me out
-		if ( player.getWorld() == plugin.worldManager.stagingWorld && plugin.getGameState().usesGameWorlds && plugin.worldManager.mainWorld != null )
+		if ( player.getWorld() == plugin.worldManager.stagingWorld && plugin.getGameState().usesGameWorlds && plugin.worldManager.worlds.size() > 0 )
 		{
 			player.getInventory().clear();
 			player.setTotalExperience(0);
-			plugin.playerManager.teleport(player, plugin.worldManager.mainWorld.getSpawnLocation());
+			plugin.playerManager.teleport(player, plugin.worldManager.worlds.get(0).getSpawnLocation());
 		}
 		
     	plugin.playerManager.playerJoined(player);

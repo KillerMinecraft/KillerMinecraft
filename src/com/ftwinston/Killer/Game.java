@@ -140,7 +140,7 @@ public class Game
 			
 			for ( Player player : getOnlinePlayers() )
 				if ( player.getWorld() != plugin.worldManager.stagingWorld )
-					plugin.playerManager.teleport(player, plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+					plugin.playerManager.putPlayerInStagingWorld(player);
 			
 			plugin.playerManager.reset(number); // fixmulti
 			
@@ -182,10 +182,11 @@ public class Game
 				plugin.statsManager.gameFinished(this, getGameMode().getOnlinePlayers(true).size(), 3, 0);
 			
 			if ( prevState.usesGameWorlds )
-			{
-				plugin.worldManager.removeAllItems(getMainWorld());
-				getMainWorld().setTime(0);
-			}
+				for ( World world : worlds )
+				{
+					worldManager.removeAllItems(world);
+					world.setTime(0);
+				}
 			else
 				plugin.getServer().getPluginManager().registerEvents(getGameMode(), plugin);
 
@@ -260,14 +261,10 @@ public class Game
 	
 	boolean isMonsterEggRecipeEnabled() { return monsterEggsEnabled; }
 	
-	private World mainWorld = null, netherWorld = null;
-	World getMainWorld() { return mainWorld; }
-	World getNetherWorld() { return netherWorld; }
-	public void setMainWorld(World w) { mainWorld = w; }
-	public void setNetherWorld(World w) { netherWorld = w; }
+	private List<World> worlds = new List<World>();
+	World getWorlds() { return worlds; }
 	
-	String getMainWorldName() { return Settings.killerWorldName + number + "_nether"; }
-	String getNetherWorldName() { return Settings.killerWorldName + number; }
+	String getWorldName() { return Settings.killerWorldName + number; }
 	
 	boolean forcedGameEnd = false;
 	void endGame(CommandSender actionedBy)
