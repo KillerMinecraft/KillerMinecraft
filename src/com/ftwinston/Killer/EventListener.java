@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.CraftWorld;
@@ -97,11 +98,12 @@ class EventListener implements Listener
     	
     	final String playerName = event.getPlayer().getName();
     	
-	if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.worlds.size() > 0 )
-	else
-	{
-		event.setRespawnLocation(plugin.stagingWorldManager.getStagingWorldSpawnPoint());
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+		if ( game.getGameState().usesGameWorlds && game.getWorlds().size() > 0 )
+			event.setRespawnLocation(game.getGameMode().getSpawnLocation(event.getPlayer()));
+		else
+		{
+			event.setRespawnLocation(plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
     			public void run()
     			{
     				Player player = plugin.getServer().getPlayerExact(playerName);
@@ -109,7 +111,7 @@ class EventListener implements Listener
     					plugin.playerManager.giveStagingWorldInstructionBook(player);
     			}
     		});
-	}
+		}
 	
     	if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
     	{

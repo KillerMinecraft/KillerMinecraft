@@ -261,8 +261,8 @@ public class Game
 	
 	boolean isMonsterEggRecipeEnabled() { return monsterEggsEnabled; }
 	
-	private List<World> worlds = new List<World>();
-	World getWorlds() { return worlds; }
+	private List<World> worlds = new ArrayList<World>();
+	List<World> getWorlds() { return worlds; }
 	
 	String getWorldName() { return Settings.killerWorldName + number; }
 	

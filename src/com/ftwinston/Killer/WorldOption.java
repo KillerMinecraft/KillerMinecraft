@@ -76,11 +76,11 @@ public abstract class WorldOption
 	protected final World createWorld(WorldHelper worldHelper, Runnable runWhenDone)
 	{
 		World world = plugin.worldManager.createWorld(worldHelper, runWhenDone);
-		plugin.worldManager.worlds.add(world);
+		worldHelper.getGame().getWorlds().add(world);
 		return world;
 	}
 	
-	final void createWorlds(final Game game, final Runnable runWhenDone)
+	final void createWorlds(Game game, Runnable runWhenDone)
 	{
 		final Environment[] environments = game.getGameMode().getWorldsToGenerate();
 		
@@ -115,14 +115,14 @@ public abstract class WorldOption
 			
 			WorldHelper helper = new WorldHelper(game, worldName, environment);
 			
-			ChunkGenerator generator = gameMode.getCustomChunkGenerator(num);
+			ChunkGenerator generator = game.getGameMode().getCustomChunkGenerator(num);
 			if ( generator != null )
 			{
 				helper.setGenerator(generator);
 				helper.lockChunkGenerator(); // don't let it be changed again, the game mode insists we use this
 			}
 			
-			BlockPopulator[] populators = gameMode.getExtraBlockPopulators(num);
+			BlockPopulator[] populators = game.getGameMode().getExtraBlockPopulators(num);
 			if ( populators != null )
 				for ( BlockPopulator populator : populators )
 					helper.getExtraPopulators().add(populator);
