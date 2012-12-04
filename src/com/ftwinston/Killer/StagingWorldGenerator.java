@@ -20,10 +20,10 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			Settings.allowRandomWorlds = true; // If no custom worlds (are left), always allow random worlds
 	}
 	
-	public static final int floorY = 32, ceilingY = 38, wallMaxX = -2, wallMinCorridorX = -8, wallMinInfoX = -13, backWallMinX = -19, wallMinCorridorZ = 1, wallMinInfoZ = 18, wallMaxZ = 27, buttonY = floorY + 2,
+	public static final int floorY = 32, ceilingY = 38, wallMaxX = -2, wallMinCorridorX = -8, wallMinInfoX = -13, backWallMinX = -19, wallMinCorridorZ = 1, wallMinInfoZ = 18, wallMaxZ = 26, buttonY = floorY + 2,
 			mainButtonX = wallMinCorridorX + 1, optionButtonX = wallMaxX - 1, gameModeButtonZ = wallMinInfoZ - 2, gameOptionButtonZ = gameModeButtonZ - 2, worldOptionButtonZ = gameOptionButtonZ - 3,
 			globalOptionButtonZ = worldOptionButtonZ - 2,  monstersButtonZ = globalOptionButtonZ - 3, animalsButtonZ = monstersButtonZ - 2, startButtonX = wallMaxX - 3, startButtonZ = wallMinCorridorZ + 1,
-			overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1, exitButtonX = -15,
+			overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1, exitButtonX = -12,
 			waitingButtonZ = wallMaxZ + 2, waitingSpleefButtonX = wallMaxX-3, waitingMonsterButtonX = waitingSpleefButtonX - 5,
 			spleefY = floorY-2, spleefMaxX = wallMaxX + 2, spleefMinX = spleefMaxX - 15, spleefMinZ = wallMaxZ + 9, spleefMaxZ = spleefMinZ + 15, spleefPressurePlateZ = spleefMinZ-2;
 	
@@ -565,22 +565,23 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			// "exit" sign & button
 			if ( !Killer.instance.stagingWorldIsServerDefault )
 			{
-				b = getBlockAbs(chunk, exitButtonX, buttonY+1, wallMaxZ-1);
+				int exitButtonZ = wallMaxZ - 4; 
+				b = getBlockAbs(chunk, exitButtonX, buttonY+1, exitButtonZ);
 				if ( b != null )
-					setupSign(b, (byte)0x2, "Push to exit", "Killer and", "return to the", "main world");
+					setupSign(b, (byte)0x5, "Push to exit", "Killer and", "return to the", "main world");
 				
-				b = getBlockAbs(chunk, exitButtonX, buttonY, wallMaxZ);
+				b = getBlockAbs(chunk, exitButtonX-1, buttonY, exitButtonZ);
 				if ( b != null )
 				{
 					b.setType(wool);
 					b.setData(colorExitButton);
 				}
 				
-				b = getBlockAbs(chunk, exitButtonX, buttonY, wallMaxZ-1);
+				b = getBlockAbs(chunk, exitButtonX, buttonY, exitButtonZ);
 				if ( b != null )
 				{
 					b.setType(button);
-					b.setData((byte)0x4);
+					b.setData((byte)0x1);
 				}
 			}
 		}
