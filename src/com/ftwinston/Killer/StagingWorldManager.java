@@ -36,7 +36,7 @@ class StagingWorldManager
 	Random random = new Random();
 	public Location getStagingWorldSpawnPoint()
 	{
-		return new Location(stagingWorld, -13.5f + random.nextDouble() * 4 - 2, StagingWorldGenerator.floorY + 1, 26.5f - random.nextDouble(), 180, 0);
+		return new Location(stagingWorld, -11.5f + random.nextDouble() * 2 - 1, StagingWorldGenerator.floorY + 1, 24.5f + random.nextDouble() * 4 - 2, 200, 0);
 	}
 
 	public enum StagingWorldOption
