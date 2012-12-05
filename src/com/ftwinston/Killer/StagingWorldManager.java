@@ -1,6 +1,5 @@
 package com.ftwinston.Killer;
 
-import java.util.List;
 import java.util.Random;
 
 import net.minecraft.server.NBTTagCompound;
@@ -107,13 +106,13 @@ class StagingWorldManager
 		case GAME_MODE_CONFIG:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.gameModeConfigButtonZ).setData(StagingWorldGenerator.colorOptionOn);
 			
-			List<GameMode.Option> options = plugin.getGameMode().getOptions();
-			labels = new String[options.size()];
-			values = new boolean[labels.length];
-			for ( int i=0; i<options.size(); i++ )
+			GameMode.Option[] options = plugin.getGameMode().getOptions();
+			labels = new String[options.length];
+			values = new boolean[options.length];
+			for ( int i=0; i<options.length; i++ )
 			{
-				labels[i] = options.get(i).getName();
-				values[i] = options.get(i).isEnabled();
+				labels[i] = options[i].getName();
+				values[i] = options[i].isEnabled();
 			}
 			showSetupOptionButtons("Mode option:", false, labels, values);
 			break;
@@ -513,12 +512,12 @@ class StagingWorldManager
 			case GAME_MODE_CONFIG:
 				// toggle this option
 				plugin.getGameMode().toggleOption(num);
-				List<GameMode.Option> options = plugin.getGameMode().getOptions();
+				GameMode.Option[] options = plugin.getGameMode().getOptions();
 				
 				// update block colors
-				newValues = new boolean[options.size()];
+				newValues = new boolean[options.length];
 				for ( int i=0; i<newValues.length; i++ )
-					newValues[i] = options.get(i).isEnabled();
+					newValues[i] = options[i].isEnabled();
 				updateSetupOptionButtons(newValues, false);
 				break;
 			case WORLD:
