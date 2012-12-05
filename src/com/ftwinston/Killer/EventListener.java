@@ -158,7 +158,7 @@ class EventListener implements Listener
 			}
 		}
 		else if ( nowInKiller )
-			playerJoined(event.getPlayer());
+			plugin.playerManager.playerJoined(event.getPlayer());
 		
 		if ( event.getPlayer().getWorld() == plugin.stagingWorld )
 			plugin.playerManager.putPlayerInStagingWorld(event.getPlayer());
@@ -560,7 +560,8 @@ class EventListener implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerJoin(PlayerJoinEvent event)
     {
-    	if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
+    	World world = event.getPlayer().getWorld();
+    	if ( world == plugin.stagingWorld )
     	{
     		final String playerName = event.getPlayer().getName();
     		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
@@ -568,40 +569,23 @@ class EventListener implements Listener
     			{
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
-    					if ( plugin.getGameState().usesGameWorlds && plugin.worldManager.worlds.size() > 0 )
-    						plugin.playerManager.teleport(player, plugin.getGameMode().getSpawnLocation(player));
-    					else
-    						plugin.playerManager.putPlayerInStagingWorld(player);
+						plugin.playerManager.putPlayerInStagingWorld(player);
     			}
     		});
     	}
-    	
-		if ( plugin.isGameWorld(event.getPlayer().getWorld()) )
-			playerJoined(event.getPlayer());
+    	else if ( plugin.isGameWorld(world) )
+    		plugin.playerManager.playerJoined(event.getPlayer());
 	}
 	
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerQuit(PlayerQuitEvent event)
     {
-    	if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
+    	if ( event.getPlayer().getWorld() == plugin.stagingWorld )
     		plugin.stagingWorldManager.stagingWorldPlayerKilled();
     	else if ( plugin.isGameWorld(event.getPlayer().getWorld()) )
 			playerQuit(event.getPlayer(), true);
 	}
 	
-	private void playerJoined(Player player)
-	{
-		// if I log into the staging world (cos I logged out there), move me back to the main world's spawn and clear me out
-		if ( player.getWorld() == plugin.worldManager.stagingWorld && plugin.getGameState().usesGameWorlds && plugin.worldManager.worlds.size() > 0 )
-		{
-			player.getInventory().clear();
-			player.setTotalExperience(0);
-			plugin.playerManager.teleport(player, plugin.worldManager.worlds.get(0).getSpawnLocation());
-		}
-		
-    	plugin.playerManager.playerJoined(player);
-    }
-    
 	private void playerQuit(Player player, boolean actuallyLeftServer)
 	{
 		if ( actuallyLeftServer ) // the quit message should be sent to the scoreboard of anyone who this player was invisible to
@@ -618,7 +602,7 @@ class EventListener implements Listener
     	if ( !plugin.isGameWorld(event.getEntity().getWorld()) )
     		return;
     	
-    	if ( event.getEntity().getWorld() == plugin.worldManager.stagingWorld )
+    	if ( event.getEntity().getWorld() == plugin.stagingWorld )
 		{
 			event.getDrops().clear();
     		event.setDroppedExp(0);
