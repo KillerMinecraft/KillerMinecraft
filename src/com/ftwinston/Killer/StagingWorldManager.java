@@ -43,11 +43,12 @@ class StagingWorldManager
 	{
 		NONE,
 		GAME_MODE,
-		GAME_MODE_OPTION,
-		WORLD_OPTION,
-		GLOBAL_OPTION,
+		GAME_MODE_CONFIG,
+		WORLD,
+		WORLD_CONFIG,
 		MONSTERS,
 		ANIMALS,
+		GLOBAL_OPTION,
 	}
 	
 	private StagingWorldOption currentOption = StagingWorldOption.NONE;
@@ -62,20 +63,23 @@ class StagingWorldManager
 		case GAME_MODE:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.gameModeButtonZ).setData(StagingWorldGenerator.colorOptionOff);
 			break;
-		case GAME_MODE_OPTION:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.gameOptionButtonZ).setData(StagingWorldGenerator.colorOptionOff);
+		case GAME_MODE_CONFIG:
+			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.gameModeConfigButtonZ).setData(StagingWorldGenerator.colorOptionOff);
 			break;
-		case WORLD_OPTION:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.worldOptionButtonZ).setData(StagingWorldGenerator.colorOptionOff);
+		case WORLD:
+			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.worldButtonZ).setData(StagingWorldGenerator.colorOptionOff);
 			break;
-		case GLOBAL_OPTION:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.globalOptionButtonZ).setData(StagingWorldGenerator.colorOptionOff);
+		case WORLD_CONFIG:
+			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.worldConfigButtonZ).setData(StagingWorldGenerator.colorOptionOff);
 			break;
 		case MONSTERS:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.monstersButtonZ).setData(StagingWorldGenerator.colorOptionOff);
 			break;
 		case ANIMALS:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.animalsButtonZ).setData(StagingWorldGenerator.colorOptionOff);
+			break;
+		case GLOBAL_OPTION:
+			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.globalOptionButtonZ).setData(StagingWorldGenerator.colorOptionOff);
 			break;
 		}
 		hideSetupOptionButtons();
@@ -100,8 +104,8 @@ class StagingWorldManager
 			}
 			showSetupOptionButtons("Game mode:", true, labels, values);
 			break;
-		case GAME_MODE_OPTION:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.gameOptionButtonZ).setData(StagingWorldGenerator.colorOptionOn);
+		case GAME_MODE_CONFIG:
+			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.gameModeConfigButtonZ).setData(StagingWorldGenerator.colorOptionOn);
 			
 			List<GameMode.Option> options = plugin.getGameMode().getOptions();
 			labels = new String[options.size()];
@@ -113,8 +117,8 @@ class StagingWorldManager
 			}
 			showSetupOptionButtons("Mode option:", false, labels, values);
 			break;
-		case WORLD_OPTION:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.worldOptionButtonZ).setData(StagingWorldGenerator.colorOptionOn);
+		case WORLD:
+			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.worldButtonZ).setData(StagingWorldGenerator.colorOptionOn);
 			
 			labels = new String[WorldOption.options.size()];
 			values = new boolean[labels.length];
@@ -124,13 +128,19 @@ class StagingWorldManager
 				labels[i] = worldOption.getName();
 				values[i] = worldOption == plugin.getWorldOption();
 			}
-			showSetupOptionButtons("World option:", false, labels, values);
+			showSetupOptionButtons("World:", false, labels, values);
 			break;
-		case GLOBAL_OPTION:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.globalOptionButtonZ).setData(StagingWorldGenerator.colorOptionOn);
-			labels = new String[] { "Craftable monster eggs", "Easier dispenser recipe", "Eyes of ender find nether fortresses" };
-			values = new boolean[] { true, true, true, true };
-			showSetupOptionButtons("Global option:", false, labels, values);
+		case WORLD_CONFIG:
+			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.worldConfigButtonZ).setData(StagingWorldGenerator.colorOptionOn);
+			
+			labels = new String[1];
+			values = new boolean[labels.length];
+			for ( int i=0; i<labels.length; i++ )
+			{
+				labels[i] = "Fake";
+				values[i] = false;
+			}
+			showSetupOptionButtons("World option:", false, labels, values);
 			break;
 		case MONSTERS:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.monstersButtonZ).setData(StagingWorldGenerator.colorOptionOn);
@@ -153,6 +163,13 @@ class StagingWorldManager
 				values[i] = i == plugin.animalNumbers;
 			}
 			showSetupOptionButtons("Animals:", false, labels, values);
+			break;
+		case GLOBAL_OPTION:
+			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.globalOptionButtonZ).setData(StagingWorldGenerator.colorOptionOn);
+			labels = new String[] { "Craftable monster eggs", "Easier dispenser recipe", "Eyes of ender find nether fortresses" };
+			values = new boolean[] { true, true, true, true };
+			showSetupOptionButtons("Global option:", false, labels, values);
+			break;
 		}
 	}
 	
@@ -454,16 +471,18 @@ class StagingWorldManager
 		{
 			if ( z == StagingWorldGenerator.gameModeButtonZ )
 				setCurrentOption(currentOption == StagingWorldOption.GAME_MODE ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE);
-			else if ( z == StagingWorldGenerator.gameOptionButtonZ )
-				setCurrentOption(currentOption == StagingWorldOption.GAME_MODE_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE_OPTION);
-			else if ( z == StagingWorldGenerator.worldOptionButtonZ )
-				setCurrentOption(currentOption == StagingWorldOption.WORLD_OPTION ? StagingWorldOption.NONE : StagingWorldOption.WORLD_OPTION);
-			else if ( z == StagingWorldGenerator.globalOptionButtonZ )
-				setCurrentOption(currentOption == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
+			else if ( z == StagingWorldGenerator.gameModeConfigButtonZ )
+				setCurrentOption(currentOption == StagingWorldOption.GAME_MODE_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE_CONFIG);
+			else if ( z == StagingWorldGenerator.worldButtonZ )
+				setCurrentOption(currentOption == StagingWorldOption.WORLD ? StagingWorldOption.NONE : StagingWorldOption.WORLD);
+			else if ( z == StagingWorldGenerator.worldConfigButtonZ )
+				setCurrentOption(currentOption == StagingWorldOption.WORLD_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.WORLD_CONFIG);
 			else if ( z == StagingWorldGenerator.monstersButtonZ )
 				setCurrentOption(currentOption == StagingWorldOption.MONSTERS ? StagingWorldOption.NONE : StagingWorldOption.MONSTERS);
 			else if ( z == StagingWorldGenerator.animalsButtonZ )
 				setCurrentOption(currentOption == StagingWorldOption.ANIMALS ? StagingWorldOption.NONE : StagingWorldOption.ANIMALS);
+			else if ( z == StagingWorldGenerator.globalOptionButtonZ )
+				setCurrentOption(currentOption == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
 		}
 		else if ( x == StagingWorldGenerator.optionButtonX )
 		{
@@ -491,7 +510,7 @@ class StagingWorldManager
 				StagingWorldGenerator.fitTextOnSign(s, gameMode.getName());
 				s.update();
 				break;
-			case GAME_MODE_OPTION:
+			case GAME_MODE_CONFIG:
 				// toggle this option
 				plugin.getGameMode().toggleOption(num);
 				List<GameMode.Option> options = plugin.getGameMode().getOptions();
@@ -502,7 +521,7 @@ class StagingWorldManager
 					newValues[i] = options.get(i).isEnabled();
 				updateSetupOptionButtons(newValues, false);
 				break;
-			case WORLD_OPTION:
+			case WORLD:
 				// change option
 				WorldOption option = WorldOption.get(num);
 				if ( plugin.getWorldOption() == option )
@@ -516,21 +535,13 @@ class StagingWorldManager
 				updateSetupOptionButtons(newValues, false);
 				
 				// update world option sign
-				b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, StagingWorldGenerator.buttonY+1, StagingWorldGenerator.worldOptionButtonZ-1);
+				b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, StagingWorldGenerator.buttonY+1, StagingWorldGenerator.worldButtonZ-1);
 				s = (Sign)b.getState();
 				StagingWorldGenerator.fitTextOnSign(s, option.getName());
 				s.update();
 				break;
-			case GLOBAL_OPTION:
-				if ( num == 0 )
-					plugin.toggleMonsterEggRecipes();
-				else if ( num == 1 )
-					plugin.toggleDispenserRecipe();
-				else if ( num == 2 )
-					plugin.toggleEnderEyeRecipe();
-
-				newValues = new boolean[] { plugin.isMonsterEggRecipeEnabled(), plugin.isDispenserRecipeEnabled(), plugin.isEnderEyeRecipeEnabled() };
-				updateSetupOptionButtons(newValues, false);
+			case WORLD_CONFIG:
+				
 				break;
 			case MONSTERS:
 				plugin.monsterNumbers = num;
@@ -561,6 +572,17 @@ class StagingWorldManager
 				s = (Sign)b.getState();
 				s.setLine(3, StagingWorldGenerator.padSignLeft(StagingWorldGenerator.getQuantityText(num)));
 				s.update();
+				break;
+			case GLOBAL_OPTION:
+				if ( num == 0 )
+					plugin.toggleMonsterEggRecipes();
+				else if ( num == 1 )
+					plugin.toggleDispenserRecipe();
+				else if ( num == 2 )
+					plugin.toggleEnderEyeRecipe();
+
+				newValues = new boolean[] { plugin.isMonsterEggRecipeEnabled(), plugin.isDispenserRecipeEnabled(), plugin.isEnderEyeRecipeEnabled() };
+				updateSetupOptionButtons(newValues, false);
 				break;
 			}
 		}

@@ -20,9 +20,9 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			Settings.allowRandomWorlds = true; // If no custom worlds (are left), always allow random worlds
 	}
 	
-	public static final int floorY = 32, ceilingY = 38, wallMaxX = -2, wallMinCorridorX = -8, wallMinInfoX = -13, backWallMinX = -19, wallMinCorridorZ = 1, wallMinInfoZ = 18, wallMaxZ = 26, buttonY = floorY + 2,
-			mainButtonX = wallMinCorridorX + 1, optionButtonX = wallMaxX - 1, gameModeButtonZ = wallMinInfoZ - 2, gameOptionButtonZ = gameModeButtonZ - 2, worldOptionButtonZ = gameOptionButtonZ - 3,
-			globalOptionButtonZ = worldOptionButtonZ - 2,  monstersButtonZ = globalOptionButtonZ - 3, animalsButtonZ = monstersButtonZ - 2, startButtonX = wallMaxX - 3, startButtonZ = wallMinCorridorZ + 1,
+	public static final int floorY = 32, ceilingY = 38, wallMaxX = -2, wallMinCorridorX = -8, wallMinInfoX = -12, backWallMinX = -19, wallMinCorridorZ = 1, wallMinInfoZ = 21, wallMaxZ = wallMinInfoZ + 8, buttonY = floorY + 2,
+			mainButtonX = wallMinCorridorX + 1, optionButtonX = wallMaxX - 1, gameModeButtonZ = wallMinInfoZ - 1, gameModeConfigButtonZ = gameModeButtonZ - 2, worldButtonZ = gameModeConfigButtonZ - 3,
+			worldConfigButtonZ = worldButtonZ - 2,  monstersButtonZ = worldConfigButtonZ - 3, animalsButtonZ = monstersButtonZ - 2, globalOptionButtonZ = animalsButtonZ - 3, startButtonX = wallMaxX - 3, startButtonZ = wallMinCorridorZ + 1,
 			overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1, exitButtonX = -12,
 			waitingButtonZ = wallMaxZ + 2, waitingSpleefButtonX = wallMaxX-3, waitingMonsterButtonX = waitingSpleefButtonX - 5,
 			spleefY = floorY-2, spleefMaxX = wallMaxX + 2, spleefMinX = spleefMaxX - 15, spleefMinZ = wallMaxZ + 9, spleefMaxZ = spleefMinZ + 15, spleefPressurePlateZ = spleefMinZ-2;
@@ -228,13 +228,13 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				b.setData((byte)0x1);
 			}
 			
-			b = getBlockAbs(chunk, wallMinCorridorX, buttonY, gameOptionButtonZ);
+			b = getBlockAbs(chunk, wallMinCorridorX, buttonY, gameModeConfigButtonZ);
 			if ( b != null )
 			{
 				b.setType(wool);
 				b.setData(colorOptionOff);
 			}
-			b = getBlockAbs(chunk, mainButtonX, buttonY, gameOptionButtonZ);
+			b = getBlockAbs(chunk, mainButtonX, buttonY, gameModeConfigButtonZ);
 			if ( b != null )
 			{
 				b.setType(button);
@@ -244,52 +244,52 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			for ( int y=floorY + 1; y < floorY + 4; y++ )
 			{
-				b = getBlockAbs(chunk, wallMinCorridorX, y, worldOptionButtonZ-1);
+				b = getBlockAbs(chunk, wallMinCorridorX, y, worldButtonZ-1);
 				if ( b != null )
 				{
 					b.setType(wool);
 					b.setData(signBackColor);
 				}
 			}
-			b = getBlockAbs(chunk, mainButtonX, buttonY+1, worldOptionButtonZ-1);
+			b = getBlockAbs(chunk, mainButtonX, buttonY+1, worldButtonZ-1);
 			if ( b != null )
 			{
 				b.setType(Material.WALL_SIGN);
 				b.setData((byte)0x5);
 				Sign s = (Sign)b.getState();
-				s.setLine(0, "World option:");
+				s.setLine(0, "World:");
 				
 				fitTextOnSign(s, Killer.instance.getWorldOption().getName());
 				s.update();
 			}
-			b = getBlockAbs(chunk, mainButtonX, buttonY, worldOptionButtonZ-1);
+			b = getBlockAbs(chunk, mainButtonX, buttonY, worldButtonZ-1);
 			if ( b != null )
-				setupSign(b, (byte)0x5, "<-- change     ", "", "global  ", "   options -->");
-			b = getBlockAbs(chunk, wallMinCorridorX, buttonY, worldOptionButtonZ);
+				setupSign(b, (byte)0x5, "<-- change     ", "", "", "  configure -->");
+			b = getBlockAbs(chunk, wallMinCorridorX, buttonY, worldButtonZ);
 			if ( b != null )
 			{
 				b.setType(wool);
 				b.setData(colorOptionOff);
 			}
-			b = getBlockAbs(chunk, mainButtonX, buttonY, worldOptionButtonZ);
+			b = getBlockAbs(chunk, mainButtonX, buttonY, worldButtonZ);
 			if ( b != null )
 			{
 				b.setType(button);
 				b.setData((byte)0x1);
 			}
 			
-			b = getBlockAbs(chunk, wallMinCorridorX, buttonY, globalOptionButtonZ);
+			b = getBlockAbs(chunk, wallMinCorridorX, buttonY, worldConfigButtonZ);
 			if ( b != null )
 			{
 				b.setType(wool);
 				b.setData(colorOptionOff);
 			}
-			b = getBlockAbs(chunk, mainButtonX, buttonY, globalOptionButtonZ);
+			b = getBlockAbs(chunk, mainButtonX, buttonY, worldConfigButtonZ);
 			if ( b != null )
 			{
 				b.setType(button);
 				b.setData((byte)0x1);
-			}			
+			}
 			
 			for ( int y=floorY + 1; y < floorY + 4; y++ )
 			{
@@ -326,6 +326,32 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				b.setData(colorOptionOff);
 			}
 			b = getBlockAbs(chunk, mainButtonX, buttonY, animalsButtonZ);
+			if ( b != null )
+			{
+				b.setType(button);
+				b.setData((byte)0x1);
+			}
+
+			for ( int y=floorY + 1; y < floorY + 4; y++ )
+			{
+				b = getBlockAbs(chunk, wallMinCorridorX, y, globalOptionButtonZ);
+				if ( b != null )
+				{
+					b.setType(wool);
+					b.setData(signBackColor);
+				}
+			}
+			b = getBlockAbs(chunk, mainButtonX, buttonY + 1, globalOptionButtonZ);
+			if ( b != null )
+				setupSign(b, (byte)0x5, "", "Global", "options");
+				
+			b = getBlockAbs(chunk, wallMinCorridorX, buttonY, globalOptionButtonZ);
+			if ( b != null )
+			{
+				b.setType(wool);
+				b.setData(colorOptionOff);
+			}
+			b = getBlockAbs(chunk, mainButtonX, buttonY, globalOptionButtonZ);
 			if ( b != null )
 			{
 				b.setType(button);
