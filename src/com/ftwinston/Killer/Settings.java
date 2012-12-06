@@ -36,7 +36,7 @@ public class Settings
 		stagingWorldName = readString(plugin, "stagingWorldName", "staging");
 		killerWorldName = readString(plugin, "killerWorldName", "killer");
 		defaultGameMode = readString(plugin, "defaultGameMode", "Mystery Killer");
-		defaultWorldOption = readString(plugin, "defaultWorldOption", "Normal");
+		defaultWorldOption = readString(plugin, "defaultWorldOption", "Default World");
 		
 		String restartAtEnd = readString(plugin, "restartAtEndOfGame", "vote");
 		if ( restartAtEnd.equalsIgnoreCase("vote") )
