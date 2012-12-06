@@ -10,9 +10,9 @@ import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 
 // similar to WorldCreator, but has list of extra block populators, and no pesky createWorld method
-public class WorldHelper
+public class WorldConfig
 {
-	public WorldHelper(String name, Environment env)
+	public WorldConfig(String name, Environment env)
 	{
 		this.name = name;
 		this.environment = env;

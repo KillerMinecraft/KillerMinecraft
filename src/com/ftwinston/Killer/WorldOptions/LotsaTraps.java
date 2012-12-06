@@ -9,19 +9,19 @@ import org.bukkit.World;
 import org.bukkit.event.Listener;
 import org.bukkit.generator.BlockPopulator;
 
-import com.ftwinston.Killer.WorldHelper;
+import com.ftwinston.Killer.Option;
+import com.ftwinston.Killer.WorldConfig;
 
 public class LotsaTraps extends com.ftwinston.Killer.WorldOption implements Listener
 {
-	public LotsaTraps()
+	@Override
+	public Option[] setupOptions()
 	{
-		super("Lotsa Traps");
+		return new Option[0];
 	}
 	
-	public boolean isFixedWorld() { return false; }
-	
 	@Override
-	public void setupWorld(WorldHelper world, Runnable runWhenDone)
+	public void setupWorld(WorldConfig world, Runnable runWhenDone)
 	{
 		if ( world.getEnvironment() == Environment.NORMAL )
 			world.getExtraPopulators().add(new TrapPopulator());

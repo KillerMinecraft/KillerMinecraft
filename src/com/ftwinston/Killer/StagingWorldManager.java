@@ -119,13 +119,13 @@ class StagingWorldManager
 		case WORLD:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.worldButtonZ).setData(StagingWorldGenerator.colorOptionOn);
 			
-			labels = new String[WorldOption.options.size()];
+			labels = new String[WorldOption.worldOptions.size()];
 			values = new boolean[labels.length];
 			for ( int i=0; i<labels.length; i++ )
 			{
-				WorldOption worldOption = WorldOption.options.get(i); 
+				WorldOptionPlugin worldOption = WorldOption.worldOptions.get(i); 
 				labels[i] = worldOption.getName();
-				values[i] = worldOption == plugin.getWorldOption();
+				values[i] = worldOption.getName().equals(plugin.getWorldOption().getName());
 			}
 			showSetupOptionButtons("World:", false, labels, values);
 			break;
@@ -522,13 +522,13 @@ class StagingWorldManager
 				break;
 			case WORLD:
 				// change option
-				WorldOption option = WorldOption.get(num);
-				if ( plugin.getWorldOption() == option )
+				WorldOptionPlugin worldOption = WorldOption.get(num);
+				if ( plugin.getWorldOption().getName().equals(worldOption.getName()) )
 					return;
-				plugin.setWorldOption(option);
+				plugin.setWorldOption(worldOption);
 				
 				// update block colors
-				newValues = new boolean[WorldOption.options.size()];
+				newValues = new boolean[WorldOption.worldOptions.size()];
 				for ( int i=0; i<newValues.length; i++ )
 					newValues[i] = i == num;
 				updateSetupOptionButtons(newValues, false);
@@ -536,7 +536,7 @@ class StagingWorldManager
 				// update world option sign
 				b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, StagingWorldGenerator.buttonY+1, StagingWorldGenerator.worldButtonZ-1);
 				s = (Sign)b.getState();
-				StagingWorldGenerator.fitTextOnSign(s, option.getName());
+				StagingWorldGenerator.fitTextOnSign(s, worldOption.getName());
 				s.update();
 				break;
 			case WORLD_CONFIG:

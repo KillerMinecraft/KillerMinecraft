@@ -1,6 +1,5 @@
 package com.ftwinston.Killer;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,57 +9,16 @@ import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.ftwinston.Killer.WorldOptions.CopyExistingWorld;
-import com.ftwinston.Killer.WorldOptions.DefaultWorld;
-import com.ftwinston.Killer.WorldOptions.LavaLand;
-import com.ftwinston.Killer.WorldOptions.LotsaTraps;
-import com.ftwinston.Killer.WorldOptions.Superflat;
-
 public abstract class WorldOption
 {
-	static List<WorldOption> options = new ArrayList<WorldOption>();
-	static WorldOption get(int num) { return options.get(num); }
+	static List<WorldOptionPlugin> worldOptions = new ArrayList<WorldOptionPlugin>();
+	static WorldOptionPlugin get(int num) { return worldOptions.get(num); }
 	
-	static void setup(Killer killer)
+	final void initialize(Killer killer, WorldOptionPlugin optionPlugin)
 	{
-		for ( int i=0; i<Settings.customWorldNames.size(); i++ )
-		{
-			String name = Settings.customWorldNames.get(i); 
-			// check the corresponding folder exists for each of these. Otherwise, delete
-			File folder = new File(killer.getServer().getWorldContainer() + File.separator + name);
-			if ( name.length() > 0 && folder.exists() && folder.isDirectory() )
-				continue;
-			
-			Settings.customWorldNames.remove(i);
-			i--;
-		}
-		
-		if ( Settings.customWorldNames.size() == 0 )
-			Settings.allowRandomWorlds = true;
-		
-		if ( Settings.allowRandomWorlds )
-		{
-			options.add(new DefaultWorld());
-			options.add(new Superflat());
-			
-			options.add(new LavaLand());
-			options.add(new LotsaTraps());
-		}
-		
-		for ( String name : Settings.customWorldNames )
-		{
-			options.add(new CopyExistingWorld(name));
-		}
-		
-		for ( WorldOption option : options )
-			option.plugin = killer;
-		
-		killer.setWorldOption(options.get(0));
-	}
-	
-	protected WorldOption(String name)
-	{
-		this.name = name;
+		plugin = killer;
+		name = optionPlugin.getName();
+		options = setupOptions();
 	}
 	
 	private String name;
@@ -72,9 +30,9 @@ public abstract class WorldOption
 	private Killer plugin;
 	protected final JavaPlugin getPlugin() { return plugin; }
 	
-	protected final World createWorld(WorldHelper worldHelper, Runnable runWhenDone)
+	protected final World createWorld(WorldConfig WorldConfig, Runnable runWhenDone)
 	{
-		World world = plugin.worldManager.createWorld(worldHelper, runWhenDone);
+		World world = plugin.worldManager.createWorld(WorldConfig, runWhenDone);
 		plugin.worldManager.worlds.add(world);
 		return world;
 	}
@@ -90,9 +48,7 @@ public abstract class WorldOption
 		runWhenDone.run();
 	}
 	
-	protected abstract void setupWorld(WorldHelper world, Runnable runWhenDone);
-	
-	public abstract boolean isFixedWorld();
+	protected abstract void setupWorld(WorldConfig world, Runnable runWhenDone);
 	
 	private class WorldSetupRunner implements Runnable
 	{
@@ -113,7 +69,7 @@ public abstract class WorldOption
 		{
 			String worldName = Settings.killerWorldName + "_" + (num+1);
 			
-			WorldHelper helper = new WorldHelper(worldName, environment);
+			WorldConfig helper = new WorldConfig(worldName, environment);
 			
 			ChunkGenerator generator = gameMode.getCustomChunkGenerator(num);
 			if ( generator != null )
@@ -129,5 +85,17 @@ public abstract class WorldOption
 			
 			setupWorld(helper, runNext);
 		}
+	}
+	
+	private Option[] options;
+	protected abstract Option[] setupOptions();
+	public final Option[] getOptions() { return options; }
+	public final Option getOption(int num) { return options[num]; }
+	public final int getNumOptions() { return options.length; }
+	
+	public void toggleOption(int num)
+	{
+		Option option = options[num];
+		option.setEnabled(!option.isEnabled());
 	}
 }

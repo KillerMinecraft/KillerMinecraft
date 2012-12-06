@@ -14,12 +14,6 @@ import org.bukkit.generator.BlockPopulator;
 
 class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 {
-	public StagingWorldGenerator()
-	{
-		if ( Settings.customWorldNames.size() == 0 )
-			Settings.allowRandomWorlds = true; // If no custom worlds (are left), always allow random worlds
-	}
-	
 	public static final int floorY = 32, ceilingY = 38, wallMaxX = -2, wallMinCorridorX = -8, wallMinInfoX = -13, backWallMinX = -19, wallMinCorridorZ = 1, wallMinInfoZ = 21, wallMaxZ = wallMinInfoZ + 8, buttonY = floorY + 2,
 			mainButtonX = wallMinCorridorX + 1, optionButtonX = wallMaxX - 1, gameModeButtonZ = wallMinInfoZ - 1, gameModeConfigButtonZ = gameModeButtonZ - 2, worldButtonZ = gameModeConfigButtonZ - 3,
 			worldConfigButtonZ = worldButtonZ - 2,  monstersButtonZ = worldConfigButtonZ - 3, animalsButtonZ = monstersButtonZ - 2, globalOptionButtonZ = animalsButtonZ - 3, startButtonX = wallMaxX - 3, startButtonZ = wallMinCorridorZ + 1,

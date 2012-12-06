@@ -11,24 +11,41 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.event.Listener;
 import org.bukkit.generator.BlockPopulator;
 
-import com.ftwinston.Killer.WorldHelper;
+import com.ftwinston.Killer.Option;
+import com.ftwinston.Killer.WorldConfig;
 
 public class LavaLand extends com.ftwinston.Killer.WorldOption implements Listener
 {
-	public LavaLand()
-	{
-		super("Lava Land");
-	}
-	
-	public boolean isFixedWorld() { return false; }
+	public static final int lavaSeas = 0, extraLavaOnLand = 1;
 	
 	@Override
-	public void setupWorld(WorldHelper world, Runnable runWhenDone)
+	public Option[] setupOptions()
+	{
+		Option[] options = {
+			new Option("Replace sea with lava", true),
+			new Option("Add extra lava on land", true),
+		};
+		
+		return options;
+	}
+	
+	@Override
+	public void toggleOption(int num)
+	{
+		super.toggleOption(num);
+		Option.ensureAtLeastOneEnabled(getOptions(), num, lavaSeas, extraLavaOnLand);
+	}
+	
+	@Override
+	public void setupWorld(WorldConfig world, Runnable runWhenDone)
 	{
 		if ( world.getEnvironment() == Environment.NORMAL )
 		{
-			world.getExtraPopulators().add(new LavaSeaPopulator());
-			world.getExtraPopulators().add(new ExtraLavaPopulator());
+			if ( getOption(lavaSeas).isEnabled() )
+				world.getExtraPopulators().add(new LavaSeaPopulator());
+			
+			if ( getOption(extraLavaOnLand).isEnabled() )
+				world.getExtraPopulators().add(new ExtraLavaPopulator());
 		}
 			
 		createWorld(world, runWhenDone);

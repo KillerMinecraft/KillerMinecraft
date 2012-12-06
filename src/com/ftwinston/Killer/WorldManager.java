@@ -566,31 +566,10 @@ class WorldManager
 		}
 		return k;
 	}
-	
-	public void generateCustomWorld(String name, String seed)
-	{
-		// ensure world folder doesn't already exist (we checked before calling this that there isn't an active world with this name)
-		deleteWorld(name); 
-	
-		long lSeed = getSeedFromString(seed);
-		// create the world
-		WorldCreator wc = new WorldCreator(name).environment(Environment.NORMAL);
-		wc.seed(lSeed);
-		World world = plugin.getServer().createWorld(wc);
-		
-		// unload the world - but don't delete
-		forceUnloadWorld(world);
-		clearWorldReference(name);
-		
-		// now add it to the config
-		Settings.addCustomWorld(name);
-		
-		// ... and update the staging world? We'll have to restart, otherwise
-	}
 
 	// this is a clone of CraftServer.createWorld, amended to accept extra block populators
 	// it also spreads chunk creation across multiple ticks, instead of locking up the server while it generates 
-    public World createWorld(WorldHelper helper, final Runnable runWhenDone)
+    public World createWorld(WorldConfig helper, final Runnable runWhenDone)
     {
         final CraftServer craftServer = (CraftServer)plugin.getServer();
         MinecraftServer console = craftServer.getServer();

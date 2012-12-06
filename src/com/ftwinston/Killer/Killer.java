@@ -157,7 +157,12 @@ public class Killer extends JavaPlugin
 	
 	private WorldOption worldOption = null;
 	WorldOption getWorldOption() { return worldOption; }
-	boolean setWorldOption(WorldOption w) { worldOption = w; return gameMode != null && worldOption != null; }
+	void setWorldOption(WorldOptionPlugin plugin)
+	{
+		WorldOption world = plugin.createInstance();
+		world.initialize(this, plugin);
+		worldOption = world;
+	}
 	
 	int monsterNumbers = 2, animalNumbers = 2;
 	
@@ -169,10 +174,7 @@ public class Killer extends JavaPlugin
 	public void onEnable()
 	{
         instance = this;
-        
         Settings.setup(this);
-        WorldOption.setup(this);
-		
 		createRecipes();
 		
         playerManager = new PlayerManager(this);
@@ -609,30 +611,6 @@ public class Killer extends JavaPlugin
 					getGameMode().gameFinished();
 					endGame(sender);
 				}
-			}
-			else if ( firstParam.equals("world") )
-			{
-				if ( args.length < 3 )
-				{
-					sender.sendMessage("Usage: /killer world <name> <seed>\nUse underlines instead of spaces in the name.");
-					return true;
-				}
-			
-				String name = args[1];
-				String seed = args[2];
-				for ( int i=3; i<args.length; i++ )
-					seed += " " + args[i];
-				
-				if ( getServer().getWorld(name) != null )
-				{
-					sender.sendMessage("Error: already got a world named '" + name + "'");
-					return true;
-				}
-				
-				sender.sendMessage("Generating world '" + name + "' using seed: '" + seed + "'");
-				getServer().broadcastMessage(sender.getName() + " is generating a custom world - expect a lag spike!");
-				worldManager.generateCustomWorld(name, seed);
-				return true;
 			}
 			else
 				sender.sendMessage("Invalid parameter: " + args[0] + " - type /killer to list allowed parameters");

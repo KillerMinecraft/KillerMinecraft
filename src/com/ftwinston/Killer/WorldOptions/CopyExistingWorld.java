@@ -9,19 +9,23 @@ import java.io.OutputStream;
 
 import org.bukkit.World.Environment;
 
-import com.ftwinston.Killer.WorldHelper;
+import com.ftwinston.Killer.Option;
+import com.ftwinston.Killer.WorldConfig;
 
 public class CopyExistingWorld extends com.ftwinston.Killer.WorldOption
 {
-	public CopyExistingWorld(String name)
+	@Override
+	public Option[] setupOptions()
 	{
-		super(name);
+		Option[] options = {
+			new Option("No custom worlds specified", true)
+		};
+		
+		return options;
 	}
 	
-	public boolean isFixedWorld() { return true; }
-	
 	@Override
-	public void setupWorld(final WorldHelper world, final Runnable runWhenDone)
+	public void setupWorld(final WorldConfig world, final Runnable runWhenDone)
 	{
 		if ( world.getEnvironment() != Environment.NORMAL )
 		{
