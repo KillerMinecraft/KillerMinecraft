@@ -57,8 +57,6 @@ public abstract class GameMode implements Listener
 	{
 		return name;
 	}
-				
-	protected abstract Option[] setupOptions();
 	
 	public Environment[] getWorldsToGenerate() { return new Environment[] { Environment.NORMAL, Environment.NETHER }; }
 	public ChunkGenerator getCustomChunkGenerator(int worldNumber) { return null; }
@@ -782,23 +780,8 @@ public abstract class GameMode implements Listener
 		return true;
 	}
 	
-	protected final class Option
-	{
-		public Option(String name, boolean enabledByDefault)
-		{
-			this.name = name;
-			this.enabled = enabledByDefault;
-		}
-		
-		private String name;
-		public String getName() { return name; }
-		
-		private boolean enabled;
-		public boolean isEnabled() { return enabled; }
-		public void setEnabled(boolean enabled) { this.enabled = enabled; }
-	}
-	
 	private Option[] options;
+	protected abstract Option[] setupOptions();
 	public final Option[] getOptions() { return options; }
 	public final Option getOption(int num) { return options[num]; }
 	public final int getNumOptions() { return options.length; }
@@ -807,66 +790,6 @@ public abstract class GameMode implements Listener
 	{
 		Option option = options[num];
 		option.setEnabled(!option.isEnabled());
-	}
-	
-	protected void toggleOption_ensureOnlyOneEnabled(int changedIndex, int... indices)
-	{
-		boolean careAboutChangedIndex = false;
-		for ( int index : indices )
-			if ( index == changedIndex )
-			{
-				careAboutChangedIndex = true;
-				break;
-			}
-		
-		if ( !careAboutChangedIndex )
-			return;
-		
-		if ( getOption(changedIndex).isEnabled() )
-		{// turned on; turn the others off
-			for ( int index : indices )
-				if ( index != changedIndex )
-					getOption(index).setEnabled(false);
-		}
-		else
-		{// turned off; if all are off, turn this one back on
-			boolean allOff = true;
-			for ( int index : indices )
-				if ( getOption(index).isEnabled() )
-				{
-					allOff = false;
-					break;
-				}
-			if ( allOff )
-				getOption(changedIndex).setEnabled(true);
-		}
-	}
-	
-	protected void toggleOption_ensureAtLeastOneEnabled(int changedIndex, int... indices)
-	{
-		boolean careAboutChangedIndex = false;
-		for ( int index : indices )
-			if ( index == changedIndex )
-			{
-				careAboutChangedIndex = true;
-				break;
-			}
-		
-		if ( !careAboutChangedIndex )
-			return;
-		
-		if ( !getOption(changedIndex).isEnabled() )
-		{// turned off; if all are off, turn this one back on
-			boolean allOff = true;
-			for ( int index : indices )
-				if ( getOption(index).isEnabled() )
-				{
-					allOff = false;
-					break;
-				}
-			if ( allOff )
-				getOption(changedIndex).setEnabled(true);
-		}
 	}
 	
 	// allows game modes to determine if an event is in their game world

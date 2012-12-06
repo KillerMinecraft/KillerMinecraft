@@ -106,7 +106,7 @@ class StagingWorldManager
 		case GAME_MODE_CONFIG:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.gameModeConfigButtonZ).setData(StagingWorldGenerator.colorOptionOn);
 			
-			GameMode.Option[] options = plugin.getGameMode().getOptions();
+			Option[] options = plugin.getGameMode().getOptions();
 			labels = new String[options.length];
 			values = new boolean[options.length];
 			for ( int i=0; i<options.length; i++ )
@@ -512,7 +512,7 @@ class StagingWorldManager
 			case GAME_MODE_CONFIG:
 				// toggle this option
 				plugin.getGameMode().toggleOption(num);
-				GameMode.Option[] options = plugin.getGameMode().getOptions();
+				Option[] options = plugin.getGameMode().getOptions();
 				
 				// update block colors
 				newValues = new boolean[options.length];
