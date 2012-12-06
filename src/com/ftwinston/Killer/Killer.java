@@ -207,6 +207,11 @@ public class Killer extends JavaPlugin
 						warnNoGameModes();
 						return;
 					}
+					if ( WorldOption.worldOptions.size() == 0 )
+					{
+						warnNoWorldOptions();
+						return;
+					}
 					worldManager.createStagingWorld(Settings.stagingWorldName); // staging world isn't server default, so create it as a new world
 				}
 			}, 1);
@@ -230,10 +235,21 @@ public class Killer extends JavaPlugin
 		plugin.initialize(instance);
 	}
 	
+	public static void registerWorldOption(WorldOptionPlugin plugin)
+	{
+		plugin.initialize(instance);
+	}
+	
 	void warnNoGameModes()
 	{
 		log.warning("Killer cannot start: No game modes have been loaded!");
 		log.warning("Add some game mode plugins to your server!");
+	}
+	
+	void warnNoWorldOptions()
+	{
+		log.warning("Killer cannot start: No world options have been loaded!");
+		log.warning("Add some world option plugins to your server!");
 	}
 	
 	List<Recipe> monsterRecipes = new ArrayList<Recipe>();

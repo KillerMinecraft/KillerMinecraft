@@ -71,6 +71,11 @@ class EventListener implements Listener
 						plugin.warnNoGameModes();
 						return;
 					}
+    				if ( WorldOption.worldOptions.size() == 0 )
+					{
+						plugin.warnNoWorldOptions();
+						return;
+					}
     				plugin.worldManager.createStagingWorld(Settings.stagingWorldName);
 					plugin.worldManager.deleteWorlds(null, event.getWorld());
     			}
