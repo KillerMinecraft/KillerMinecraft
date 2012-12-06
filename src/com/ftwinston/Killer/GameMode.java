@@ -45,9 +45,7 @@ public abstract class GameMode implements Listener
 		this.game = game;
 		plugin = game.plugin;
 		name = modePlugin.getName();
-
-		for ( Option option : setupOptions() )
-			options.add(option);
+		options = setupOptions();
 	}
 	
 	// methods to be overridden by each game mode
@@ -799,18 +797,75 @@ public abstract class GameMode implements Listener
 		public void setEnabled(boolean enabled) { this.enabled = enabled; }
 	}
 	
-	private List<Option> options = new ArrayList<Option>();
-	public final List<Option> getOptions() { return options; }
-	public final Option getOption(int num) { return options.get(num); }
+	private Option[] options;
+	public final Option[] getOptions() { return options; }
+	public final Option getOption(int num) { return options[num]; }
+	public final int getNumOptions() { return options.length; }
 	
-	public boolean toggleOption(int num)
+	public void toggleOption(int num)
 	{
-		Option option = getOptions().get(num);
-		if ( option == null )
-			return false;
-
+		Option option = options[num];
 		option.setEnabled(!option.isEnabled());
-		return option.isEnabled();
+	}
+	
+	protected void toggleOption_ensureOnlyOneEnabled(int changedIndex, int... indices)
+	{
+		boolean careAboutChangedIndex = false;
+		for ( int index : indices )
+			if ( index == changedIndex )
+			{
+				careAboutChangedIndex = true;
+				break;
+			}
+		
+		if ( !careAboutChangedIndex )
+			return;
+		
+		if ( getOption(changedIndex).isEnabled() )
+		{// turned on; turn the others off
+			for ( int index : indices )
+				if ( index != changedIndex )
+					getOption(index).setEnabled(false);
+		}
+		else
+		{// turned off; if all are off, turn this one back on
+			boolean allOff = true;
+			for ( int index : indices )
+				if ( getOption(index).isEnabled() )
+				{
+					allOff = false;
+					break;
+				}
+			if ( allOff )
+				getOption(changedIndex).setEnabled(true);
+		}
+	}
+	
+	protected void toggleOption_ensureAtLeastOneEnabled(int changedIndex, int... indices)
+	{
+		boolean careAboutChangedIndex = false;
+		for ( int index : indices )
+			if ( index == changedIndex )
+			{
+				careAboutChangedIndex = true;
+				break;
+			}
+		
+		if ( !careAboutChangedIndex )
+			return;
+		
+		if ( !getOption(changedIndex).isEnabled() )
+		{// turned off; if all are off, turn this one back on
+			boolean allOff = true;
+			for ( int index : indices )
+				if ( getOption(index).isEnabled() )
+				{
+					allOff = false;
+					break;
+				}
+			if ( allOff )
+				getOption(changedIndex).setEnabled(true);
+		}
 	}
 	
 	// allows game modes to determine if an event is in their game world
