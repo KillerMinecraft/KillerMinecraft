@@ -86,6 +86,7 @@ class StagingWorldManager
 		currentOption = option;
 		String[] labels;
 		boolean[] values;
+		Option[] options;
 		
 		// now set up the new option
 		switch ( currentOption )
@@ -106,7 +107,7 @@ class StagingWorldManager
 		case GAME_MODE_CONFIG:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.gameModeConfigButtonZ).setData(StagingWorldGenerator.colorOptionOn);
 			
-			Option[] options = plugin.getGameMode().getOptions();
+			options = plugin.getGameMode().getOptions();
 			labels = new String[options.length];
 			values = new boolean[options.length];
 			for ( int i=0; i<options.length; i++ )
@@ -132,12 +133,13 @@ class StagingWorldManager
 		case WORLD_CONFIG:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinCorridorX, StagingWorldGenerator.buttonY, StagingWorldGenerator.worldConfigButtonZ).setData(StagingWorldGenerator.colorOptionOn);
 			
-			labels = new String[1];
-			values = new boolean[labels.length];
-			for ( int i=0; i<labels.length; i++ )
+			options = plugin.getWorldOption().getOptions();
+			labels = new String[options.length];
+			values = new boolean[options.length];
+			for ( int i=0; i<options.length; i++ )
 			{
-				labels[i] = "Fake";
-				values[i] = false;
+				labels[i] = options[i].getName();
+				values[i] = options[i].isEnabled();
 			}
 			showSetupOptionButtons("World option:", false, labels, values);
 			break;
@@ -487,7 +489,7 @@ class StagingWorldManager
 		{
 			int num = StagingWorldGenerator.getOptionNumFromZ(z, currentOption == StagingWorldOption.GAME_MODE);
 			
-			boolean[] newValues; Block b; Sign s;
+			boolean[] newValues; Block b; Sign s; Option[] options;
 			switch ( currentOption )
 			{
 			case GAME_MODE:
@@ -512,7 +514,7 @@ class StagingWorldManager
 			case GAME_MODE_CONFIG:
 				// toggle this option
 				plugin.getGameMode().toggleOption(num);
-				Option[] options = plugin.getGameMode().getOptions();
+				options = plugin.getGameMode().getOptions();
 				
 				// update block colors
 				newValues = new boolean[options.length];
@@ -540,7 +542,15 @@ class StagingWorldManager
 				s.update();
 				break;
 			case WORLD_CONFIG:
+				// toggle this option
+				plugin.getWorldOption().toggleOption(num);
+				options = plugin.getWorldOption().getOptions();
 				
+				// update block colors
+				newValues = new boolean[options.length];
+				for ( int i=0; i<newValues.length; i++ )
+					newValues[i] = options[i].isEnabled();
+				updateSetupOptionButtons(newValues, false);
 				break;
 			case MONSTERS:
 				plugin.monsterNumbers = num;
