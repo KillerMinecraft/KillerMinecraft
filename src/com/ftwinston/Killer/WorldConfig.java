@@ -24,6 +24,26 @@ public class WorldConfig
 		this.chunkGeneratorLocked = false;
 	}
 	
+	public static long getSeedFromString(String str)
+	{// copied from how bukkit handles string seeds
+		long k = seedGen.nextLong();
+
+		if ( str != null && str.length() > 0)
+		{
+			try
+			{
+				long l = Long.parseLong(str);
+
+				if (l != 0L)
+					k = l;
+			} catch (NumberFormatException numberformatexception)
+			{
+				k = (long) str.hashCode();
+			}
+		}
+		return k;
+	}
+	
 	private static Random seedGen = new Random(); 
 	
 	private String name;

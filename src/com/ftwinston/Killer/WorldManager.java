@@ -546,26 +546,6 @@ class WorldManager
 			plugin.setGameState(GameState.worldDeletion);
 		}
 	}
-	
-	public static long getSeedFromString(String str)
-	{// copied from how bukkit handles string seeds
-		long k = (new Random()).nextLong();
-
-		if ( str != null && str.length() > 0)
-		{
-			try
-			{
-				long l = Long.parseLong(str);
-
-				if (l != 0L)
-					k = l;
-			} catch (NumberFormatException numberformatexception)
-			{
-				k = (long) str.hashCode();
-			}
-		}
-		return k;
-	}
 
 	// this is a clone of CraftServer.createWorld, amended to accept extra block populators
 	// it also spreads chunk creation across multiple ticks, instead of locking up the server while it generates 
