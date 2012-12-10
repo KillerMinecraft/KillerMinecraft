@@ -22,6 +22,7 @@ public class WorldConfig
 		this.extraPopulators = new ArrayList<BlockPopulator>();
 		this.generateStructures = true;
 		this.chunkGeneratorLocked = false;
+		this.generatorSettings = "";
 	}
 	
 	public static long getSeedFromString(String str)
@@ -54,6 +55,7 @@ public class WorldConfig
 	private List<BlockPopulator> extraPopulators;
 	private boolean generateStructures;
 	private boolean chunkGeneratorLocked;
+	private String generatorSettings;
 	
 	public String getName() {
 		return name;
@@ -110,4 +112,13 @@ public class WorldConfig
 	public void setGenerateStructures(boolean generateStructures) {
 		this.generateStructures = generateStructures;
 	}
+	
+	public String getGeneratorSettings() {
+		return generatorSettings;
+	}
+
+	public void setGeneratorSettings(String settings) {
+		this.generatorSettings = settings;
+	}
+
 }
