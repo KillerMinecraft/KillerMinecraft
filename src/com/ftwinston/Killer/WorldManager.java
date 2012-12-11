@@ -131,7 +131,6 @@ class WorldManager
 		});
 	}
 	
-	
 	public void createStagingWorld(final String name) 
 	{
 		stagingWorld = plugin.getServer().getWorld(name);
@@ -160,6 +159,16 @@ class WorldManager
 			{
 			}
 		}
+		
+		// ensure the end wall leaves enough room for all the options
+		int maxZ = StagingWorldGenerator.getWallMaxZ();
+		maxZ = Math.max(maxZ, StagingWorldGenerator.getOptionButtonZ(GameMode.gameModes.size(), true));
+		maxZ = Math.max(maxZ, StagingWorldGenerator.getOptionButtonZ(WorldOption.worldOptions.size(), false) + 1);
+		for ( GameModePlugin mode : GameMode.gameModes )
+			maxZ = Math.max(maxZ, StagingWorldGenerator.getOptionButtonZ(mode.createInstance().setupOptions().length, false));
+		for ( WorldOptionPlugin world : WorldOption.worldOptions )
+			maxZ = Math.max(maxZ, StagingWorldGenerator.getOptionButtonZ(world.createInstance().setupOptions().length, false));
+		StagingWorldGenerator.setWallMaxZ(maxZ + 1);
 		
 		// staging world must not be null when the init event is called, so we don't call this again
 		if ( plugin.stagingWorldIsServerDefault )
