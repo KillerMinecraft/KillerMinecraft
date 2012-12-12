@@ -25,6 +25,7 @@ import net.minecraft.server.IChunkProvider;
 import net.minecraft.server.IWorldAccess;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.RegionFile;
+import net.minecraft.server.ServerConfigurationManagerAbstract;
 import net.minecraft.server.ServerNBTManager;
 import net.minecraft.server.WorldGenNether;
 import net.minecraft.server.WorldLoaderServer;
@@ -129,6 +130,13 @@ class WorldManager
 				}
 			}
 		});
+	}
+	
+	public void accountForDefaultWorldDeletion()
+	{
+		// playerFileData in ServerConsfigurationManagerAbstract must point to that of the staging world instead of the deleted original world
+		ServerConfigurationManagerAbstract manager = plugin.getMinecraftServer().getServerConfigurationManager();
+		manager.playerFileData = ((CraftWorld)stagingWorld).getHandle().getDataManager().getPlayerFileData();
 	}
 	
 	public void createStagingWorld(final String name) 

@@ -78,6 +78,7 @@ class EventListener implements Listener
 					}
     				plugin.worldManager.createStagingWorld(Settings.stagingWorldName);
 					plugin.worldManager.deleteWorlds(null, event.getWorld());
+					plugin.worldManager.accountForDefaultWorldDeletion();
     			}
     		}, 1);
     	}
