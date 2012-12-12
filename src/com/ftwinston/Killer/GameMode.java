@@ -28,6 +28,7 @@ import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import com.ftwinston.Killer.Killer.GameState;
 import com.ftwinston.Killer.PlayerManager;
@@ -658,6 +659,7 @@ public abstract class GameMode implements Listener
 	}
 	
 	protected final JavaPlugin getPlugin() { return plugin; }
+	protected final BukkitScheduler getScheduler() { return plugin.getServer().getScheduler(); }
 	
 	protected final int getNumWorlds() { return plugin.worldManager.worlds.size(); }
 	protected final World getWorld(int number) { return plugin.worldManager.worlds.get(number); }
