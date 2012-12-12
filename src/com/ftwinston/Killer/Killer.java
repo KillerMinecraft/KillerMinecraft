@@ -106,6 +106,7 @@ public class Killer extends JavaPlugin
 		}
 		else if( newState == GameState.worldGeneration )
 		{
+			getServer().getPluginManager().registerEvents(getGameMode(), this);
 			worldManager.generateWorlds(worldOption, new Runnable() {
 				@Override
 				public void run() {
@@ -132,8 +133,6 @@ public class Killer extends JavaPlugin
 					worldManager.removeAllItems(world);
 					world.setTime(0);
 				}
-			else
-				getServer().getPluginManager().registerEvents(getGameMode(), this);
 
 			getGameMode().startGame();
 		}
