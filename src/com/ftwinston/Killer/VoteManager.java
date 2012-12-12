@@ -20,7 +20,7 @@ class VoteManager
 	private Killer plugin;
 	
 	private boolean inVote; 
-	public long voteDuration = 20 * 20; // 20 secs
+	public long voteDuration = 400; // 20 secs
 
 	private List<String> playersWhoCanVote = new ArrayList<String>();
 	private int numYesVotes, numNoVotes;
@@ -82,7 +82,7 @@ class VoteManager
 			}
 			else
 			{
-				plugin.getGameMode().broadcastMessage(ChatColor.YELLOW + "Vote drawn (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
+				plugin.getGameMode().broadcastMessage(ChatColor.YELLOW + "Vote tied (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
 				if ( runOnDraw != null )
 					runOnDraw.run();
 			}
