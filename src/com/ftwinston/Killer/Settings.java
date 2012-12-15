@@ -1,7 +1,6 @@
 package com.ftwinston.Killer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.Material;
@@ -21,7 +20,7 @@ public class Settings
 	defaultGameMode,
 	defaultWorldOption;
 	
-	public static Material[] winningItems, startingItems;
+	public static Material[] startingItems;
 	
 	public static Material teleportModeItem = Material.WATCH, followModeItem = Material.ARROW;
 	
@@ -55,7 +54,6 @@ public class Settings
 			autoRestartAtEndOfGame = false;
 		}
 		
-		winningItems = readMaterialList(plugin, "winningItems", Arrays.asList(Material.BLAZE_ROD.getId(), Material.GHAST_TEAR.getId()), Material.BLAZE_ROD);
 		startingItems = readMaterialList(plugin, "startingItems", new ArrayList<Integer>(), Material.STONE_PICKAXE);
 		
 		plugin.saveConfig();
