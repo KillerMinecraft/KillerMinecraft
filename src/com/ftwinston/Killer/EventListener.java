@@ -250,7 +250,7 @@ class EventListener implements Listener
     	
     	if ( event.getEntity().getWorld() == plugin.worldManager.stagingWorld )
     	{
-    		plugin.stagingWorldManager.stagingWorldMonsterKilled();
+    		plugin.arenaManager.monsterKilled();
     		event.setYield(0);
     	}
     }
@@ -553,7 +553,7 @@ class EventListener implements Listener
     public void onPlayerQuit(PlayerQuitEvent event)
     {
     	if ( event.getPlayer().getWorld() == plugin.worldManager.stagingWorld )
-    		plugin.stagingWorldManager.stagingWorldPlayerKilled();
+    		plugin.arenaManager.playerKilled();
     	else if ( plugin.isGameWorld(event.getPlayer().getWorld()) )
 			playerQuit(event.getPlayer(), true);
 	}
@@ -594,7 +594,7 @@ class EventListener implements Listener
 
         	if ( event instanceof PlayerDeathEvent )
         	{
-        		plugin.stagingWorldManager.stagingWorldPlayerKilled();
+        		plugin.arenaManager.playerKilled();
         		((PlayerDeathEvent) event).setDeathMessage(((PlayerDeathEvent) event).getDeathMessage().replace("hit the ground too hard", "fell out of the world"));
         		
         		final Player player = (Player)event.getEntity();
@@ -606,7 +606,7 @@ class EventListener implements Listener
 				}, 30);
         	}
         	else
-        		plugin.stagingWorldManager.stagingWorldMonsterKilled(); // entity killed ... if its a monster in arena mode in the staging world
+        		plugin.arenaManager.monsterKilled(); // entity killed ... if its a monster in arena mode in the staging world
         	
     		return;
     	}

@@ -111,7 +111,7 @@ public class Killer extends JavaPlugin
 				@Override
 				public void run() {
 					// don't waste memory on monsters in the staging world
-					stagingWorldManager.endMonsterArena();
+					arenaManager.endMonsterArena();
 					
 					getGameMode().worldGenerationComplete();
 					setGameState(GameState.active);
@@ -147,6 +147,7 @@ public class Killer extends JavaPlugin
 	private EventListener eventListener = new EventListener(this);
 	WorldManager worldManager;
 	StagingWorldManager stagingWorldManager;
+	ArenaManager arenaManager;
 	PlayerManager playerManager;
 	VoteManager voteManager;
 	StatsManager statsManager;

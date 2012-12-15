@@ -193,6 +193,7 @@ class WorldManager
 		stagingWorld.setAutoSave(false); // don't save changes to the staging world
 
 		plugin.stagingWorldManager = new StagingWorldManager(plugin, stagingWorld);
+		plugin.arenaManager = new ArenaManager(plugin, stagingWorld);
 		plugin.log.info("Staging world generated");
 	}
 	
