@@ -427,7 +427,7 @@ class StagingWorldManager
 				plugin.setGameState(GameState.worldGeneration);
 			}
 			else if ( x == StagingWorldGenerator.cancelButtonX )
-				plugin.setGameState(GameState.stagingWorldReady);
+				plugin.setGameState(GameState.stagingWorldSetup);
 		}
 		else if ( x == StagingWorldGenerator.exitButtonX )
 		{			

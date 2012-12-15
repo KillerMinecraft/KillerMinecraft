@@ -44,9 +44,8 @@ public class Killer extends JavaPlugin
 	
 	enum GameState
 	{
-		stagingWorldSetup(false, true), // in staging world, players need to choose mode/world
 		worldDeletion(false, true), // in staging world, hide start buttons, delete old world, then show start button again
-		stagingWorldReady(false, true), // in staging world, players need to push start
+		stagingWorldSetup(false, true), // in staging world, players need to choose stuff and start the game
 		stagingWorldConfirm(false, true), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
 		worldGeneration(false, false), // in staging world, game worlds are being generated
 		active(true, false), // game is active, in game world
@@ -67,11 +66,7 @@ public class Killer extends JavaPlugin
 		GameState prevState = gameState;
 		gameState = newState;
 		
-		if ( newState == GameState.stagingWorldSetup )
-		{
-			stagingWorldManager.showStartButtons(false);
-		}
-		else if ( newState == GameState.worldDeletion )
+		if ( newState == GameState.worldDeletion )
 		{
 			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 			if ( statsManager.isTracking )
@@ -92,11 +87,11 @@ public class Killer extends JavaPlugin
 			worldManager.deleteKillerWorlds(new Runnable() {
 				@Override
 				public void run() { // we need this to set the state to stagingWorldReady when done
-					setGameState(GameState.stagingWorldReady);
+					setGameState(GameState.stagingWorldSetup);
 				}
 			});
 		}
-		else if ( newState == GameState.stagingWorldReady )
+		else if ( newState == GameState.stagingWorldSetup )
 		{
 			stagingWorldManager.showStartButtons(false);
 		}
