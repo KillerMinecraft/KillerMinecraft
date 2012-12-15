@@ -28,7 +28,7 @@ class StatsManager
 		startedOn = new Date();
 	}
 	
-	public void gameFinished(GameMode mode, int numPlayersEnd, boolean abandoned)
+	public void gameFinished(GameMode mode, WorldOption world, int numPlayersEnd, boolean abandoned)
 	{
 		if ( !isTracking || !Settings.reportStats)
 			return;
@@ -40,10 +40,18 @@ class StatsManager
 		
 		plugin.log.info("Sending stats...");
 		
+		String modeOptions = "";
+		for ( Option option : mode.getOptions() )
+			modeOptions += option.getName() + ":" + (option.isEnabled() ? "1" : "0") + ";";
+		
+		String worldOptions = "";
+		for ( Option option : world.getOptions() )
+			worldOptions += option.getName() + ":" + (option.isEnabled() ? "1" : "0") + ";";
+		
 		final URL statsPage;
 		try
 		{
-			statsPage = new URL("http://killer.ftwinston.com/report/?m=" + URLEncoder.encode(mode.getName(), "UTF-8") + "&d=" + duration + "&v=" + version + "&ns=" + numPlayersStart + "&ne=" + numPlayersEnd + "&nl=" + numPlayersLateJoin + "&nq=" + numPlayersQuit + "&a=" + (abandoned ? "1" : "0"));
+			statsPage = new URL("http://killer.ftwinston.com/report/?m=" + URLEncoder.encode(mode.getName(), "UTF-8") + "&w=" + URLEncoder.encode(world.getName(), "UTF-8") + "&d=" + duration + "&v=" + version + "&ns=" + numPlayersStart + "&ne=" + numPlayersEnd + "&nl=" + numPlayersLateJoin + "&nq=" + numPlayersQuit + "&a=" + (abandoned ? "1" : "0") + "&mo=" + URLEncoder.encode(modeOptions, "UTF-8") + "&wo=" + URLEncoder.encode(worldOptions, "UTF-8"));
 		}
 		catch ( Exception ex )
 		{
