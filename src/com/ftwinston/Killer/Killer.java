@@ -102,13 +102,13 @@ public class Killer extends JavaPlugin
 		else if( newState == GameState.worldGeneration )
 		{
 			getServer().getPluginManager().registerEvents(getGameMode(), this);
+			getGameMode().initializeGame(true);
 			worldManager.generateWorlds(worldOption, new Runnable() {
 				@Override
 				public void run() {
 					// don't waste memory on monsters in the staging world
 					arenaManager.endMonsterArena();
 					
-					getGameMode().worldGenerationComplete();
 					setGameState(GameState.active);
 					stagingWorldManager.showStartButtons(false);
 				}
@@ -127,9 +127,10 @@ public class Killer extends JavaPlugin
 				{
 					worldManager.removeAllItems(world);
 					world.setTime(0);
+					getGameMode().initializeGame(false);
 				}
 
-			getGameMode().startGame();
+			getGameMode().startGame(!prevState.usesGameWorlds);
 		}
 		else if ( newState == GameState.finished )
 		{

@@ -102,9 +102,6 @@ public abstract class GameMode implements Listener
 	}
 
 	public abstract boolean teamAllocationIsSecret();
-	
-
-	public void worldGenerationComplete() { } // create plinth, etc.
 
 	public abstract boolean isLocationProtected(Location l); // for protecting plinth, respawn points, etc.
 
@@ -114,7 +111,9 @@ public abstract class GameMode implements Listener
 	public abstract Location getSpawnLocation(Player player); // where should this player spawn?
 
 
-	protected abstract void gameStarted(); // assign player teams if we do that immediately, etc
+	protected void initializeGame(boolean isNewWorlds) { };
+	
+	protected abstract void gameStarted(boolean isNewWorlds); // assign player teams if we do that immediately, etc
 
 	protected abstract void gameFinished(); // clean up scheduled tasks, etc
 
@@ -690,11 +689,11 @@ public abstract class GameMode implements Listener
 	
 	// methods to be used by external code for accessing the game modes, rather than going directly into the mode-specific functions
 	
-	public final void startGame()
+	public final void startGame(boolean isNewWorlds)
 	{	
 		plugin.forcedGameEnd = false;
 		plugin.playerManager.startGame();
-		gameStarted();
+		gameStarted(isNewWorlds);
 		
 		for ( Player player : getOnlinePlayers() )
 			player.teleport(getSpawnLocation(player));
