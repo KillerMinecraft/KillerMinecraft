@@ -42,11 +42,11 @@ class StatsManager
 		
 		String modeOptions = "";
 		for ( Option option : mode.getOptions() )
-			modeOptions += option.getName() + ":" + (option.isEnabled() ? "1" : "0") + ";";
+			modeOptions += option.getName().replace(":"," - ").replace(";"," - ") + ":" + (option.isEnabled() ? "1" : "0") + ";";
 		
 		String worldOptions = "";
 		for ( Option option : world.getOptions() )
-			worldOptions += option.getName() + ":" + (option.isEnabled() ? "1" : "0") + ";";
+			worldOptions += option.getName().replace(":"," - ").replace(";"," - ") + ":" + (option.isEnabled() ? "1" : "0") + ";";
 		
 		final URL statsPage;
 		try
