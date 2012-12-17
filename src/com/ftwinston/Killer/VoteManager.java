@@ -14,13 +14,14 @@ import org.bukkit.conversations.Prompt;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-class VoteManager
+public class VoteManager
 {
-	public static VoteManager instance;
+	static VoteManager instance;
+	public static VoteManager getInstance() { return instance; }
 	private Killer plugin;
 	
 	private boolean inVote; 
-	public long voteDuration = 400; // 20 secs
+	long voteDuration = 400; // 20 secs
 
 	private List<String> playersWhoCanVote = new ArrayList<String>();
 	private int numYesVotes, numNoVotes;
@@ -30,7 +31,7 @@ class VoteManager
 
 	private ConversationFactory voteConvFactory;
 	
-	public VoteManager(Killer _plugin)
+	VoteManager(Killer _plugin)
 	{
 		this.plugin = _plugin;
 		instance = this;
@@ -39,10 +40,13 @@ class VoteManager
         setupConversation();
 	}
 	
-	public boolean isInVote() { return inVote; }
+	public boolean isInVote() { return instance.inVote; }
 	
 	public void startVote(String question, Player initiatedBy, Runnable runOnYes, Runnable runOnNo, Runnable runOnDraw)
 	{
+		if ( isInVote() )
+			return;
+	
 		playersWhoCanVote.clear();
 		for ( Player player : plugin.getOnlinePlayers())
 			playersWhoCanVote.add(player.getName());
@@ -92,7 +96,7 @@ class VoteManager
 		}
 	}
 	
-	public boolean doVote(Player player, boolean choice)
+	boolean doVote(Player player, boolean choice)
 	{
 		if ( !isInVote() )
 			return false;
@@ -208,7 +212,7 @@ class VoteManager
 		}
 	}
 	
-	public void showVoteMenu(Player sender)
+	void showVoteMenu(Player sender)
 	{
 		Player player = (Player)sender;
 		Conversation convo = voteConvFactory.buildConversation(player);
