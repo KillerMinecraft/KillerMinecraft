@@ -33,6 +33,8 @@ public class PlayerFilter
 	private World world;
 	private Setting worldState = Setting.Ignored;
 	
+	private ArrayList<String> excludedPlayers = new ArrayList<String>();
+	
 	//private Game game = null;
 
 	public PlayerFilter alive()
@@ -87,6 +89,29 @@ public class PlayerFilter
 		return this;
 	}
 	
+	public PlayerFilter exclude(String... playerNames)
+	{
+		for ( String player : playerNames )
+			excludedPlayers.add(player);
+		return this;
+	}
+	
+	public PlayerFilter exclude(OfflinePlayer... players)
+	{
+		for ( OfflinePlayer player : players )
+			excludedPlayers.add(player.getName());
+		return this;
+	}
+	
+	private boolean matchesAny(String val, List<String> any)
+	{
+		for ( String test : any )
+			if ( val.equals(test) )
+				return true;
+		
+		return false;
+	}
+	
 	// not to be called directly by game modes (so that Game can be set by the GameMode), but to be returned by an equivalent method in GameMode
 	List<Player> getOnlinePlayers()
 	{
@@ -138,6 +163,9 @@ public class PlayerFilter
 					continue;
 				break;
 			}
+			
+			if ( matchesAny(info.getKey(), excludedPlayers) )
+				continue;
 			
 			players.add(p);
 		}
@@ -204,6 +232,9 @@ public class PlayerFilter
 					continue;
 				break;
 			}
+			
+			if ( matchesAny(info.getKey(), excludedPlayers) )
+				continue;
 			
 			players.add(op);
 		}
