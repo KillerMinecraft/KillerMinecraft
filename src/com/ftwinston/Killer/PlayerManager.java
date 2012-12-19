@@ -26,6 +26,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
+
 class PlayerManager
 {
 	public static PlayerManager instance;
@@ -168,7 +169,7 @@ class PlayerManager
 		compassProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
         	public void run()
         	{
-	        	for ( Player player : plugin.getGameMode().getOnlinePlayers(true) )
+	        	for ( Player player : plugin.getGameMode().getOnlinePlayers(new PlayerFilter().alive()) )
 	        		if ( player.getInventory().contains(Material.COMPASS) )
 	        		{// does this need a null check on the target?
 	        			player.setCompassTarget(getCompassTarget(player));
@@ -179,14 +180,14 @@ class PlayerManager
 		spectatorFollowProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
         	public void run()
         	{
-	        	for ( Player player : plugin.getGameMode().getOnlinePlayers(false) )
+	        	for ( Player player : plugin.getGameMode().getOnlinePlayers(new PlayerFilter().notAlive()) )
 	        	{
 	        		PlayerManager.Info info = getInfo(player.getName());
 	        		if (info.target != null )
 	        			checkFollowTarget(player, info.target);
 	        	}
         	}
-        }, 40, 40);
+        }, 41, 40);
 	}
 	
 	public void colorPlayerName(Player player, ChatColor color)

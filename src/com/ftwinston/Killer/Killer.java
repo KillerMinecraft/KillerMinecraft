@@ -70,7 +70,7 @@ public class Killer extends JavaPlugin
 		{
 			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 			if ( statsManager.isTracking )
-				statsManager.gameFinished(getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(true).size(), true);
+				statsManager.gameFinished(getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), true);
 			
 			HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
 
@@ -117,7 +117,7 @@ public class Killer extends JavaPlugin
 		else if ( newState == GameState.active )
 		{
 			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
-			int numPlayers = getGameMode().getOnlinePlayers(true).size();
+			int numPlayers = getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size();
 			if ( statsManager.isTracking )
 				statsManager.gameFinished(getGameMode(), getWorldOption(), numPlayers, true);
 			statsManager.gameStarted(numPlayers);
@@ -134,7 +134,7 @@ public class Killer extends JavaPlugin
 		}
 		else if ( newState == GameState.finished )
 		{
-			statsManager.gameFinished(getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(true).size(), false);
+			statsManager.gameFinished(getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), false);
 		}
 	}
 

@@ -49,6 +49,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.inventory.ItemStack;
 
+
 class EventListener implements Listener
 {
     public static Killer plugin;
