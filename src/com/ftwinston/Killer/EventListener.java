@@ -556,7 +556,7 @@ class EventListener implements Listener
 		if ( actuallyLeftServer ) // the quit message should be sent to the scoreboard of anyone who this player was invisible to
 			for ( Player online : plugin.getOnlinePlayers() )
 				if ( !online.canSee(player) )
-					plugin.playerManager.sendForScoreboard(online, player, false);
+					CraftBukkit.sendForScoreboard(online, player, false);
 		
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName(), true), 600);
     }
@@ -581,7 +581,7 @@ class EventListener implements Listener
         		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 					@Override
 					public void run() {
-		        		plugin.playerManager.forceRespawn(player);
+		        		CraftBukkit.forceRespawn(plugin, player);
 					}
 				}, 30);
         	}

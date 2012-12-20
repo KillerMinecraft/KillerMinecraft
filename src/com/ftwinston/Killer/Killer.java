@@ -8,14 +8,12 @@ package com.ftwinston.Killer;
  * Created 18/06/2012
  */
 
-import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.logging.Logger;
-
-import net.minecraft.server.v1_4_5.MinecraftServer;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -23,9 +21,6 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.v1_4_5.CraftServer;
-import org.bukkit.craftbukkit.v1_4_5.util.LazyPlayerSet;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -185,7 +180,7 @@ public class Killer extends JavaPlugin
         statsManager = new StatsManager(this);
         getServer().getPluginManager().registerEvents(eventListener, this);
 
-		String defaultLevelName = getMinecraftServer().getPropertyManager().getString("level-name", "world");
+		String defaultLevelName = CraftBukkit.getDefaultLevelName(this);
 		if ( defaultLevelName.equalsIgnoreCase(Settings.killerWorldName) )
 		{
 			stagingWorldIsServerDefault = true;
@@ -512,7 +507,7 @@ public class Killer extends JavaPlugin
 			PlayerManager.Info info = playerManager.getInfo(player.getName());
 		
 			// most of this code is a clone of the actual chat code in NetServerHandler.chat
-			AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(false, player, "ignored", new LazyPlayerSet());
+			AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(false, player, "ignored", new HashSet<Player>());
 			getServer().getPluginManager().callEvent(event);
 
 			if (event.isCancelled())
@@ -645,48 +640,6 @@ public class Killer extends JavaPlugin
 		}
 		
 		return false;
-	}
-
-	MinecraftServer getMinecraftServer()
-	{
-		try
-		{
-			CraftServer server = (CraftServer)getServer();
-			Field f = server.getClass().getDeclaredField("console");
-			f.setAccessible(true);
-			MinecraftServer console = (MinecraftServer)f.get(server);
-			f.setAccessible(false);
-			return console;
-		}
-		catch ( IllegalAccessException ex )
-		{
-		}
-		catch  ( NoSuchFieldException ex )
-		{
-		}
-		
-		return null;
-	}
-	
-	YamlConfiguration getBukkitConfiguration()
-	{
-		YamlConfiguration config = null;
-		try
-		{
-        	Field configField = CraftServer.class.getDeclaredField("configuration");
-        	configField.setAccessible(true);
-        	config = (YamlConfiguration)configField.get((CraftServer)getServer());
-			configField.setAccessible(false);
-		}
-		catch ( IllegalAccessException ex )
-		{
-			log.warning("Error removing world from bukkit master list: " + ex.getMessage());
-		}
-		catch  ( NoSuchFieldException ex )
-		{
-			log.warning("Error removing world from bukkit master list: " + ex.getMessage());
-		}
-		return config;
 	}
 	
 	boolean isGameWorld(World world)

@@ -8,16 +8,12 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 
-import net.minecraft.server.v1_4_5.Packet201PlayerInfo;
-import net.minecraft.server.v1_4_5.Packet205ClientCommand;
-
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_4_5.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -214,8 +210,8 @@ class PlayerManager
 		for ( Player online : plugin.getOnlinePlayers() )
 			if ( !online.canSee(player) )
 			{
-				sendForScoreboard(online, oldListName, false);
-				sendForScoreboard(online, player, true);
+				CraftBukkit.sendForScoreboard(online, oldListName, false);
+				CraftBukkit.sendForScoreboard(online, player, true);
 			}
 	}
 	
@@ -230,8 +226,8 @@ class PlayerManager
 		for ( Player online : plugin.getOnlinePlayers() )
 			if ( online != player && !online.canSee(player) )
 			{
-				sendForScoreboard(online, oldListName, false);
-				sendForScoreboard(online, player, true);
+				CraftBukkit.sendForScoreboard(online, oldListName, false);
+				CraftBukkit.sendForScoreboard(online, player, true);
 			}
 	}
 
@@ -285,7 +281,7 @@ class PlayerManager
 			// send this player to everyone else's scoreboards, because they're now invisible, and won't show otherwise
 			for ( Player online : plugin.getOnlinePlayers() )
 				if ( online != player && !online.canSee(player) )
-					sendForScoreboard(online, player, true);
+					CraftBukkit.sendForScoreboard(online, player, true);
 		}
 		else
 		{
@@ -443,17 +439,7 @@ class PlayerManager
 	public void hidePlayer(Player fromMe, Player hideMe)
 	{
 		fromMe.hidePlayer(hideMe);
-		sendForScoreboard(fromMe, hideMe, true); // hiding will take them out of the scoreboard, so put them back in again
-	}
-	
-	public void sendForScoreboard(Player viewer, String name, boolean show)
-	{
-		((CraftPlayer)viewer).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(name, show, 9999));
-	}
-	
-	public void sendForScoreboard(Player viewer, Player other, boolean show)
-	{
-		((CraftPlayer)viewer).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(other.getPlayerListName(), show, show ? ((CraftPlayer)other).getHandle().ping : 9999));
+		CraftBukkit.sendForScoreboard(fromMe, hideMe, true); // hiding will take them out of the scoreboard, so put them back in again
 	}
 	
 	public void makePlayerInvisibleToAll(Player player)
@@ -500,18 +486,6 @@ class PlayerManager
 		}
 		
 		clearPlayerNameColor(player);
-	}
-	
-    public void forceRespawn(final Player player)
-    {
-    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-            @Override
-            public void run() {
-                Packet205ClientCommand packet = new Packet205ClientCommand();
-                packet.a = 1;
-                ((CraftPlayer) player).getHandle().netServerHandler.a(packet);
-            }
-        }, 1);
 	}
 	
 	public String getFollowTarget(Player player)
@@ -796,7 +770,7 @@ class PlayerManager
 	public void teleport(Player player, Location loc)
 	{
 		if ( player.isDead() )
-			forceRespawn(player); // stop players getting stuck at the "you are dead" screen, unable to do anything except disconnect
+			CraftBukkit.forceRespawn(plugin, player); // stop players getting stuck at the "you are dead" screen, unable to do anything except disconnect
 		player.setVelocity(new Vector(0,0,0));
 		player.teleport(loc);
 	}

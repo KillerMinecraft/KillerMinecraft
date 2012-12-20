@@ -2,7 +2,6 @@ package com.ftwinston.Killer;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -95,7 +94,7 @@ class WorldManager
 		}
 		
 		// in the already-loaded server configuration, create/update an entry specifying the generator to be used for the default world
-		YamlConfiguration configuration = plugin.getBukkitConfiguration();
+		YamlConfiguration configuration = CraftBukkit.getBukkitConfiguration(plugin);
 		
 		ConfigurationSection section = configuration.getConfigurationSection("worlds");
 		if ( section == null )
@@ -108,26 +107,22 @@ class WorldManager
 		worldSection.set("generator", "Killer");
 		
 		// disable the end and the nether. We'll re-enable once this has generated.
-		final String prevAllowNether = plugin.getMinecraftServer().getPropertyManager().properties.getProperty("allow-nether", "true");
+		final String prevAllowNether = CraftBukkit.getServerProperty(plugin, "allow-nether", "true");
 		final boolean prevAllowEnd = configuration.getBoolean("settings.allow-end", true);
-		plugin.getMinecraftServer().getPropertyManager().properties.put("allow-nether", "false");			
+		CraftBukkit.setServerProperty(plugin, "allow-nether", "false");			
 		configuration.set("settings.allow-end", false);
 		
 		// restore server settings, once it's finished generating
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 			@Override
 			public void run() {
-				plugin.getMinecraftServer().getPropertyManager().properties.put("allow-nether", prevAllowNether);
-				plugin.getBukkitConfiguration().set("settings.allow-end", prevAllowEnd);
+				CraftBukkit.setServerProperty(plugin, "allow-nether", prevAllowNether);
+				YamlConfiguration configuration = CraftBukkit.getBukkitConfiguration(plugin);
 				
-				plugin.getMinecraftServer().getPropertyManager().savePropertiesFile();
-				try
-				{
-					plugin.getBukkitConfiguration().save((File)plugin.getMinecraftServer().options.valueOf("bukkit-settings"));
-				}
-				catch ( IOException ex )
-				{
-				}
+				configuration.set("settings.allow-end", prevAllowEnd);
+				
+				CraftBukkit.saveServerPropertiesFile(plugin);
+				CraftBukkit.saveBukkitConfiguration(plugin, configuration);
 			}
 		});
 	}
@@ -135,7 +130,7 @@ class WorldManager
 	public void accountForDefaultWorldDeletion()
 	{
 		// playerFileData in ServerConsfigurationManagerAbstract must point to that of the staging world instead of the deleted original world
-		ServerConfigurationManagerAbstract manager = plugin.getMinecraftServer().getServerConfigurationManager();
+		ServerConfigurationManagerAbstract manager = CraftBukkit.getServerConfigurationManager(plugin);
 		manager.playerFileData = ((CraftWorld)stagingWorld).getHandle().getDataManager().getPlayerFileData();
 	}
 	
@@ -350,7 +345,7 @@ class WorldManager
 			plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
 		}
 		
-		MinecraftServer ms = plugin.getMinecraftServer();
+		MinecraftServer ms = CraftBukkit.getMinecraftServer(plugin);
 		ms.worlds.remove(ms.worlds.indexOf(craftWorld.getHandle()));
 	}
 
