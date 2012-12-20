@@ -8,8 +8,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 
-import net.minecraft.server.Packet201PlayerInfo;
-import net.minecraft.server.Packet205ClientCommand;
+import net.minecraft.server.v1_4_5.Packet201PlayerInfo;
+import net.minecraft.server.v1_4_5.Packet205ClientCommand;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -17,11 +17,12 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_4_5.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
@@ -77,14 +78,20 @@ class PlayerManager
 		PlayerInventory inv = player.getInventory();
 		inv.clear();
 		
-		BookItem bi = new BookItem(new ItemStack(387));
-		bi.setAuthor("Killer Minecraft");
-		bi.setTitle("The Staging World");
-		bi.setPages("       Welcome to\n  §4§lKiller Minecraft§r§0\n\nThis is the staging world, where you can configure your next game.\n\nEach of the buttons on the left wall will show a different menu of options on the right wall when pressed.",
+		ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
+		
+		BookMeta bm = (BookMeta)book.getItemMeta();
+		bm.setDisplayName("Instructions");
+		
+		bm.setAuthor("Killer Minecraft");
+		bm.setTitle("The Staging World");
+		bm.setPages("       Welcome to\n  §4§lKiller Minecraft§r§0\n\nThis is the staging world, where you can configure your next game.\n\nEach of the buttons on the left wall will show a different menu of options on the right wall when pressed.",
 					"These let you select a game mode, configure any options it may have, choose world options, and more.\n\nTypically, only one option from a menu can be enabled at a time, but many game mode configuration options can be enabled or disabled simultaneously.",
 					"When you're ready to start a game, push the start button at the end of the corridor.\n\nThis will create the game world(s), and then move everyone into them.\n\nYou will be returned to the staging world when the game ends.",
 					"If you're waiting for other players to join, check out the arena behind the spawn point.\n\nThis can be set to play either spleef or a survival mode where you try to kill as many waves of monsters as possible.\n\n      §4§oHappy killing!");
-		inv.setItem(8, bi.getItemStack());
+		book.setItemMeta(bm);
+		
+		inv.setItem(8, book);
 	}
 	
 	public void removeInventoryItems(PlayerInventory inv, Material... typesToRemove)
@@ -320,10 +327,10 @@ class PlayerManager
 			return;
 		}
 		
-		plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new Runnable() {
+		plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
 			@Override
 			public void run() {
-				plugin.getGameMode().playerKilledOrQuit(player);				
+				plugin.getGameMode().playerKilledOrQuit(player);
 			}
 		}, 15); // game mode doesn't respond for short period, so as to be able to account for other deaths happening simultaneously (e.g. caused by the same explosion)
 		

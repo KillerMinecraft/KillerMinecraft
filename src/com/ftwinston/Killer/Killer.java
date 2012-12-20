@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.v1_4_5.MinecraftServer;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -24,8 +24,8 @@ import org.bukkit.World.Environment;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.CraftServer;
-import org.bukkit.craftbukkit.util.LazyPlayerSet;
+import org.bukkit.craftbukkit.v1_4_5.CraftServer;
+import org.bukkit.craftbukkit.v1_4_5.util.LazyPlayerSet;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -373,33 +373,41 @@ public class Killer extends JavaPlugin
 		enderRecipe.addIngredient(Material.SPIDER_EYE);
 		getServer().addRecipe(enderRecipe);
 		
-		short zero = 0;
-		
-		ShapelessRecipe recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SPIDER.getTypeId()));
+		ItemStack stack = new ItemStack(Material.MONSTER_EGG, 1);
+		stack.getData().setData((byte)EntityType.SPIDER.getTypeId());
+		ShapelessRecipe recipe = new ShapelessRecipe(stack);
 		recipe.addIngredient(Material.STRING);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		monsterRecipes.add(recipe);
 		
-		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.ZOMBIE.getTypeId()));
+		stack = new ItemStack(Material.MONSTER_EGG, 1);
+		stack.getData().setData((byte)EntityType.ZOMBIE.getTypeId());
+		recipe = new ShapelessRecipe(stack);
 		recipe.addIngredient(Material.ROTTEN_FLESH);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		monsterRecipes.add(recipe);
 		
-		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.CREEPER.getTypeId()));
+		stack = new ItemStack(Material.MONSTER_EGG, 1);
+		stack.getData().setData((byte)EntityType.CREEPER.getTypeId());
+		recipe = new ShapelessRecipe(stack);
 		recipe.addIngredient(Material.SULPHUR);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		monsterRecipes.add(recipe);
 		
-		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SKELETON.getTypeId()));
+		stack = new ItemStack(Material.MONSTER_EGG, 1);
+		stack.getData().setData((byte)EntityType.SKELETON.getTypeId());
+		recipe = new ShapelessRecipe(stack);
 		recipe.addIngredient(Material.BONE);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		monsterRecipes.add(recipe);
 		
-		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SLIME.getTypeId()));
+		stack = new ItemStack(Material.MONSTER_EGG, 1);
+		stack.getData().setData((byte)EntityType.SLIME.getTypeId());
+		recipe = new ShapelessRecipe(stack);
 		recipe.addIngredient(Material.SLIME_BALL);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);

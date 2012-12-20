@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import net.minecraft.server.NBTTagCompound;
-
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -13,13 +11,11 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.inventory.ItemStack;
 
 import com.ftwinston.Killer.PlayerManager.Info;
 
@@ -243,31 +239,6 @@ public class Helper
 		return b.getType() != Material.LAVA && b.getType() != Material.STATIONARY_LAVA;
 	}
 
-	public static ItemStack setArmorColor(ItemStack item, int color)
-	{
-        CraftItemStack craftStack = null;
-        net.minecraft.server.ItemStack itemStack = null;
-        if (item instanceof CraftItemStack) {
-            craftStack = (CraftItemStack) item;
-            itemStack = craftStack.getHandle();
-        }
-        else if (item instanceof ItemStack) {
-            craftStack = new CraftItemStack(item);
-            itemStack = craftStack.getHandle();
-        }
-        NBTTagCompound tag = itemStack.tag;
-        if (tag == null) {
-            tag = new NBTTagCompound();
-            tag.setCompound("display", new NBTTagCompound());
-            itemStack.tag = tag;
-        }
- 
-        tag = itemStack.tag.getCompound("display");
-        tag.setInt("color", color);
-        itemStack.tag.setCompound("display", tag);
-        return craftStack;
-    }
-	
 	public static Player getAttacker(EntityDamageEvent event)
 	{
 		Player attacker = null;

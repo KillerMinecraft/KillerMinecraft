@@ -1,19 +1,19 @@
 package com.ftwinston.Killer;
 
 import java.util.Random;
-
-import net.minecraft.server.NBTTagCompound;
-import net.minecraft.server.WorldServer;
+import net.minecraft.server.v1_4_5.WorldServer;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.CraftWorld;
-import org.bukkit.craftbukkit.entity.CraftSkeleton;
+import org.bukkit.craftbukkit.v1_4_5.CraftWorld;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Skeleton.SkeletonType;
+import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -148,15 +148,13 @@ class ArenaManager
 		{
 			numMonstersAlive = 2;
 			
-			CraftSkeleton skeleton = (CraftSkeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
-			skeleton.getHandle().setSkeletonType(1);
-			skeleton.getHandle().setEquipment(0, new net.minecraft.server.ItemStack(net.minecraft.server.Item.STONE_SWORD));
-			skeleton.getHandle().a(new NBTTagCompound()); // this triggers attack behaviour
+			Skeleton skelly = (Skeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
+			skelly.setSkeletonType(SkeletonType.NORMAL);
+			skelly.getEquipment().setItemInHand(new ItemStack(Material.BOW));
 			
-			skeleton = (CraftSkeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
-			skeleton.getHandle().setSkeletonType(0);
-			skeleton.getHandle().setEquipment(0, new net.minecraft.server.ItemStack(net.minecraft.server.Item.BOW));
-			skeleton.getHandle().a(new NBTTagCompound()); // this triggers attack behaviour
+			skelly = (Skeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
+			skelly.setSkeletonType(SkeletonType.WITHER);
+			skelly.getEquipment().setItemInHand(new ItemStack(Material.STONE_SWORD));
 			return;
 		}
 		
@@ -179,11 +177,9 @@ class ArenaManager
 				stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.ZOMBIE);
 				break;
 			case 2:
-				CraftSkeleton skeleton = (CraftSkeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
-				skeleton.getHandle().setSkeletonType(0);
-				skeleton.getHandle().setEquipment(0, new net.minecraft.server.ItemStack(net.minecraft.server.Item.BOW));
-				skeleton.getHandle().a(new NBTTagCompound()); // this triggers attack behaviour
-				
+				Skeleton skelly = (Skeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
+				skelly.setSkeletonType(SkeletonType.NORMAL);
+				skelly.getEquipment().setItemInHand(new ItemStack(Material.BOW));
 				break;
 			case 3:
 				stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.CREEPER);

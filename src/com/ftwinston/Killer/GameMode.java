@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -181,32 +182,32 @@ public abstract class GameMode implements Listener
 		}
 	}
 	
-	public int getTeamItemColor(int team)
+	public Color getTeamArmorColor(int team)
 	{
 		switch ( team )
 		{
 		case 0:
-			return 0x0066FF; // blue
+			return Color.fromRGB(0x0066FF); // blue
 		case 1:
-			return 0xFF0000; // red
+			return Color.RED; // Color.fromRGB(0xFF0000);
 		case 2:
-			return 0xDDDD00; // yellow
+			return Color.YELLOW; // Color.fromRGB(0xDDDD00);
 		case 3:
-			return 0x00CC00; // green
+			return Color.GREEN; // Color.fromRGB(0x00CC00);
 		case 4:
-			return 0xBE00BE; // purple
+			return Color.PURPLE; // Color.fromRGB(0xBE00BE);
 		case 5:
-			return 0x3FFEFE; // aqua
+			return Color.AQUA; // Color.fromRGB(0x3FFEFE);
 		case 6:
-			return 0xEEEEEE; // white
+			return Color.WHITE; // Color.fromRGB(0xEEEEEE);
 		case 7:
-			return 0x3F3F3F; // dark grey
+			return Color.fromRGB(0x3F3F3F); // dark grey
 		case 8:
-			return 0xBEBEBE; // light grey
+			return Color.fromRGB(0xBEBEBE); // light grey
 		case 9:
-			return 0xFE3FFE; // pink
+			return Color.fromRGB(0xFE3FFE); // pink
 		default:
-			return 0xFFFFFF;
+			return Color.WHITE; // Color.fromRGB(0xFFFFFF);
 		}
 	}
 	
@@ -413,7 +414,7 @@ public abstract class GameMode implements Listener
 		
 		if ( !plugin.forcedGameEnd )
 		{
-			plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new Runnable() {
+			plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
 				@Override
 				public void run() {
 					if ( Settings.voteRestartAtEndOfGame )

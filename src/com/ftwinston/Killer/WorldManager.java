@@ -12,26 +12,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import net.minecraft.server.ChunkCoordinates;
-import net.minecraft.server.ChunkPosition;
-import net.minecraft.server.ChunkProviderHell;
-import net.minecraft.server.ConvertProgressUpdater;
-import net.minecraft.server.Convertable;
-import net.minecraft.server.EntityEnderSignal;
-import net.minecraft.server.EntityHuman;
-import net.minecraft.server.EntityTracker;
-import net.minecraft.server.EnumGamemode;
-import net.minecraft.server.IChunkProvider;
-import net.minecraft.server.IWorldAccess;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.RegionFile;
-import net.minecraft.server.ServerConfigurationManagerAbstract;
-import net.minecraft.server.ServerNBTManager;
-import net.minecraft.server.WorldGenNether;
-import net.minecraft.server.WorldLoaderServer;
-import net.minecraft.server.WorldServer;
-import net.minecraft.server.WorldSettings;
-import net.minecraft.server.WorldType;
+import net.minecraft.server.v1_4_5.ChunkCoordinates;
+import net.minecraft.server.v1_4_5.ChunkPosition;
+import net.minecraft.server.v1_4_5.ChunkProviderHell;
+import net.minecraft.server.v1_4_5.ConvertProgressUpdater;
+import net.minecraft.server.v1_4_5.Convertable;
+import net.minecraft.server.v1_4_5.EntityEnderSignal;
+import net.minecraft.server.v1_4_5.EntityHuman;
+import net.minecraft.server.v1_4_5.EntityTracker;
+import net.minecraft.server.v1_4_5.EnumGamemode;
+import net.minecraft.server.v1_4_5.IChunkProvider;
+import net.minecraft.server.v1_4_5.IWorldAccess;
+import net.minecraft.server.v1_4_5.MinecraftServer;
+import net.minecraft.server.v1_4_5.RegionFile;
+import net.minecraft.server.v1_4_5.ServerConfigurationManagerAbstract;
+import net.minecraft.server.v1_4_5.ServerNBTManager;
+import net.minecraft.server.v1_4_5.WorldGenNether;
+import net.minecraft.server.v1_4_5.WorldLoaderServer;
+import net.minecraft.server.v1_4_5.WorldServer;
+import net.minecraft.server.v1_4_5.WorldSettings;
+import net.minecraft.server.v1_4_5.WorldType;
 
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
@@ -40,10 +40,10 @@ import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.CraftServer;
-import org.bukkit.craftbukkit.CraftWorld;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.craftbukkit.generator.NetherChunkGenerator;
+import org.bukkit.craftbukkit.v1_4_5.CraftServer;
+import org.bukkit.craftbukkit.v1_4_5.CraftWorld;
+import org.bukkit.craftbukkit.v1_4_5.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_4_5.generator.NetherChunkGenerator;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -227,10 +227,10 @@ class WorldManager
 	{
 		try
 		{
-			Field a = net.minecraft.server.RegionFileCache.class.getDeclaredField("a");
+			Field a = net.minecraft.server.v1_4_5.RegionFileCache.class.getDeclaredField("a");
 			a.setAccessible(true);
 			regionfiles = (HashMap) a.get(null);
-			rafField = net.minecraft.server.RegionFile.class.getDeclaredField("c");
+			rafField = net.minecraft.server.v1_4_5.RegionFile.class.getDeclaredField("c");
 			rafField.setAccessible(true);
 			plugin.log.info("Successfully bound to region file cache.");
 		}
@@ -371,7 +371,7 @@ class WorldManager
 		}
 		
 		// now we want to try to delete the world folders
-		plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new WorldDeleter(runWhenDone, worldNames), 80);
+		plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new WorldDeleter(runWhenDone, worldNames), 80);
 	}
 	
 	private class WorldDeleter implements Runnable
@@ -437,7 +437,7 @@ class WorldManager
 		IChunkProvider chunkProvider;
 		try
 		{
-			Field field = net.minecraft.server.ChunkProviderServer.class.getDeclaredField("chunkProvider");
+			Field field = net.minecraft.server.v1_4_5.ChunkProviderServer.class.getDeclaredField("chunkProvider");
 			field.setAccessible(true);
 			chunkProvider = (IChunkProvider)field.get(world.chunkProviderServer);
 			field.setAccessible(false);
@@ -454,7 +454,7 @@ class WorldManager
 		ChunkProviderHell hellCP;
 		try
 		{
-			Field field = org.bukkit.craftbukkit.generator.NormalChunkGenerator.class.getDeclaredField("provider");
+			Field field = org.bukkit.craftbukkit.v1_4_5.generator.NormalChunkGenerator.class.getDeclaredField("provider");
 			field.setAccessible(true);
 			hellCP = (ChunkProviderHell)field.get(ncg);
 			field.setAccessible(false);
@@ -619,7 +619,7 @@ class WorldManager
         worldServer.worldMaps = console.worlds.get(0).worldMaps;
 
         worldServer.tracker = new EntityTracker(worldServer);
-        worldServer.addIWorldAccess((IWorldAccess) new net.minecraft.server.WorldManager(console, worldServer));
+        worldServer.addIWorldAccess((IWorldAccess) new net.minecraft.server.v1_4_5.WorldManager(console, worldServer));
         worldServer.difficulty = 3;
         worldServer.setSpawnFlags(true, true);
         console.worlds.add(worldServer);
