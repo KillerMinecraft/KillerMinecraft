@@ -12,6 +12,7 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Skeleton.SkeletonType;
+import org.bukkit.entity.Witch;
 import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -117,6 +118,27 @@ class ArenaManager
 		return numPlayersInArena;
 	}
 	
+	private Player getRandomPlayerInArena()
+	{
+		int num = countPlayersInArena();
+		
+		int index = random.nextInt(num);
+		
+		num = 0;
+		for ( Player player : stagingWorld.getPlayers() )
+		{
+			Location loc = player.getLocation();
+			if ( loc.getBlockX() < StagingWorldGenerator.spleefMinX - 1 || loc.getBlockX() > StagingWorldGenerator.spleefMaxX + 1
+			  || loc.getBlockZ() < StagingWorldGenerator.spleefMinZ - 1 || loc.getBlockZ() > StagingWorldGenerator.spleefMaxZ + 1)
+				continue;
+			
+			if ( num == index )
+				return player;
+			num++;
+		}
+		return null;
+	}
+	
 	private static final int arenaScoreZ = StagingWorldGenerator.spleefMaxZ + 8, arenaScoreX = StagingWorldGenerator.waitingMonsterButtonX + 2;
 	public void prepareNextMonsterWave()
 	{
@@ -194,7 +216,8 @@ class ArenaManager
 			}
 			else
 			{
-				stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.WITCH);
+				Witch w = (Witch)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.WITCH);
+				w.setTarget(getRandomPlayerInArena());
 			}
 		}
 		stagingWorld.setMonsterSpawnLimit(numMonstersAlive);
