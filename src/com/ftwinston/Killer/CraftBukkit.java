@@ -2,22 +2,33 @@ package com.ftwinston.Killer;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import net.minecraft.server.v1_4_5.ChunkPosition;
 import net.minecraft.server.v1_4_5.ChunkProviderHell;
 import net.minecraft.server.v1_4_5.EntityEnderSignal;
 import net.minecraft.server.v1_4_5.EntityHuman;
+import net.minecraft.server.v1_4_5.EntityTracker;
+import net.minecraft.server.v1_4_5.EnumGamemode;
 import net.minecraft.server.v1_4_5.IChunkProvider;
+import net.minecraft.server.v1_4_5.IWorldAccess;
 import net.minecraft.server.v1_4_5.MinecraftServer;
 import net.minecraft.server.v1_4_5.Packet201PlayerInfo;
 import net.minecraft.server.v1_4_5.Packet205ClientCommand;
+import net.minecraft.server.v1_4_5.RegionFile;
 import net.minecraft.server.v1_4_5.ServerConfigurationManagerAbstract;
+import net.minecraft.server.v1_4_5.ServerNBTManager;
 import net.minecraft.server.v1_4_5.WorldGenNether;
 import net.minecraft.server.v1_4_5.WorldServer;
+import net.minecraft.server.v1_4_5.WorldSettings;
+import net.minecraft.server.v1_4_5.WorldType;
 
 import org.bukkit.Location;
+import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -26,6 +37,7 @@ import org.bukkit.craftbukkit.v1_4_5.CraftWorld;
 import org.bukkit.craftbukkit.v1_4_5.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_4_5.generator.NetherChunkGenerator;
 import org.bukkit.entity.Player;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
 
 // a holder for everything that dives into the versioned CraftBukkit code that will break with every minecraft update
@@ -136,6 +148,76 @@ class CraftBukkit
         }, 1);
 	}
 	
+	@SuppressWarnings("rawtypes")
+	private static HashMap regionfiles;
+	private static Field rafField;
+	
+	@SuppressWarnings("rawtypes")
+	public static void bindRegionFiles()
+	{
+		try
+		{
+			Field a = net.minecraft.server.v1_4_5.RegionFileCache.class.getDeclaredField("a");
+			a.setAccessible(true);
+			regionfiles = (HashMap) a.get(null);
+			rafField = net.minecraft.server.v1_4_5.RegionFile.class.getDeclaredField("c");
+			rafField.setAccessible(true);
+			plugin.getLogger().info("Successfully bound to region file cache.");
+		}
+		catch (Throwable t)
+		{
+			plugin.getLogger().warning("Error binding to region file cache.");
+			t.printStackTrace();
+		}
+	}
+	
+	public static void unbindRegionFiles()
+	{
+		regionfiles = null;
+		rafField = null;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static synchronized boolean clearWorldReference(String worldName)
+	{
+		if (regionfiles == null) return false;
+		if (rafField == null) return false;
+		
+		ArrayList<Object> removedKeys = new ArrayList<Object>();
+		try
+		{
+			for (Object o : regionfiles.entrySet())
+			{
+				Map.Entry e = (Map.Entry) o;
+				File f = (File) e.getKey();
+				
+				if (f.toString().startsWith("." + File.separator + worldName))
+				{
+					RegionFile file = (RegionFile) e.getValue();
+					try
+					{
+						RandomAccessFile raf = (RandomAccessFile) rafField.get(file);
+						raf.close();
+						removedKeys.add(f);
+					}
+					catch (Exception ex)
+					{
+						ex.printStackTrace();
+					}
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			plugin.getLogger().warning("Exception while removing world reference for '" + worldName + "'!");
+			ex.printStackTrace();
+		}
+		for (Object key : removedKeys)
+			regionfiles.remove(key);
+		
+		return true;
+	}
+	
 	public static void forceUnloadWorld(World world)
 	{
 		world.setAutoSave(false);
@@ -172,6 +254,60 @@ class CraftBukkit
 		ServerConfigurationManagerAbstract manager = CraftBukkit.getServerConfigurationManager();
 		manager.playerFileData = ((CraftWorld)newDefault).getHandle().getDataManager().getPlayerFileData();
 	}
+	
+	public static World createWorld(org.bukkit.WorldType type, Environment env, String name, long seed, ChunkGenerator generator, String generatorSettings, boolean generateStructures)
+    {
+        final Server server = plugin.getServer();
+        MinecraftServer console = CraftBukkit.getMinecraftServer();
+        
+        File folder = new File(server.getWorldContainer(), name);
+        World world = server.getWorld(name);
+
+        if (world != null)
+            return world;
+
+        if ((folder.exists()) && (!folder.isDirectory()))
+            throw new IllegalArgumentException("File exists with the name '" + name + "' and isn't a folder");
+
+        
+        WorldType worldType = WorldType.getType(type.getName());
+        
+        int dimension = 10 + console.worlds.size();
+        boolean used = false;
+        do {
+            for (WorldServer ws : console.worlds) {
+                used = ws.dimension == dimension;
+                if (used) {
+                    dimension++;
+                    break;
+                }
+            }
+        } while(used);
+        boolean hardcore = false;
+
+		WorldSettings worldSettings = new WorldSettings(seed, EnumGamemode.a(server.getDefaultGameMode().getValue()), generateStructures, hardcore, worldType);
+		worldSettings.a(generatorSettings);
+		
+        final WorldServer worldServer = new WorldServer(console, new ServerNBTManager(server.getWorldContainer(), name, true), name, dimension, worldSettings, console.methodProfiler, env, generator);
+
+        if (server.getWorld(name) == null)
+            return null;
+
+        worldServer.worldMaps = console.worlds.get(0).worldMaps;
+
+        worldServer.tracker = new EntityTracker(worldServer);
+        worldServer.addIWorldAccess((IWorldAccess) new net.minecraft.server.v1_4_5.WorldManager(console, worldServer));
+        worldServer.difficulty = 3;
+        worldServer.setSpawnFlags(true, true);
+        console.worlds.add(worldServer);
+
+        world = worldServer.getWorld();
+        
+        if (generator != null)
+        	world.getPopulators().addAll(generator.getDefaultPopulators(world));
+        
+        return world;
+    }
 	
 	public static Location findNearestNetherFortress(Location loc)
 	{

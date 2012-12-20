@@ -2,25 +2,10 @@ package com.ftwinston.Killer;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.RandomAccessFile;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-
-import net.minecraft.server.v1_4_5.ChunkCoordinates;
-import net.minecraft.server.v1_4_5.EntityTracker;
-import net.minecraft.server.v1_4_5.EnumGamemode;
-import net.minecraft.server.v1_4_5.IWorldAccess;
-import net.minecraft.server.v1_4_5.MinecraftServer;
-import net.minecraft.server.v1_4_5.RegionFile;
-import net.minecraft.server.v1_4_5.ServerNBTManager;
-import net.minecraft.server.v1_4_5.WorldServer;
-import net.minecraft.server.v1_4_5.WorldSettings;
-import net.minecraft.server.v1_4_5.WorldType;
 
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
@@ -36,7 +21,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BlockPopulator;
-import org.bukkit.generator.ChunkGenerator;
 
 import com.ftwinston.Killer.Killer.GameState;
 
@@ -51,20 +35,15 @@ class WorldManager
 		instance = this;
 		
 		seedGen = new Random();
-		bindRegionFiles();
+		CraftBukkit.bindRegionFiles();
 	}
 	
 	public void onDisable()
 	{
-		regionfiles = null;
-		rafField = null;
+		CraftBukkit.unbindRegionFiles();
 	}
 	
 	Random seedGen;
-	
-	@SuppressWarnings("rawtypes")
-	private static HashMap regionfiles;
-	private static Field rafField;
 	
 	public World stagingWorld;
 	public List<World> worlds = new ArrayList<World>();
@@ -130,7 +109,7 @@ class WorldManager
 			{
 			}
 			
-			clearWorldReference(name);
+			CraftBukkit.clearWorldReference(name);
 			
 			try
 			{
@@ -195,25 +174,6 @@ class WorldManager
 			return false;
 	}
 	
-	@SuppressWarnings("rawtypes")
-	private void bindRegionFiles()
-	{
-		try
-		{
-			Field a = net.minecraft.server.v1_4_5.RegionFileCache.class.getDeclaredField("a");
-			a.setAccessible(true);
-			regionfiles = (HashMap) a.get(null);
-			rafField = net.minecraft.server.v1_4_5.RegionFile.class.getDeclaredField("c");
-			rafField.setAccessible(true);
-			plugin.log.info("Successfully bound to region file cache.");
-		}
-		catch (Throwable t)
-		{
-			plugin.log.warning("Error binding to region file cache.");
-			t.printStackTrace();
-		}
-	}
-	
 	public void deleteWorldFolders(final String prefix)
 	{
 		File worldFolder = plugin.getServer().getWorldContainer();
@@ -231,7 +191,7 @@ class WorldManager
 	
 	public boolean deleteWorld(String worldName)
 	{
-		clearWorldReference(worldName);
+		CraftBukkit.clearWorldReference(worldName);
 		boolean allGood = true;
 		
 		File folder = new File(plugin.getServer().getWorldContainer() + File.separator + worldName);
@@ -248,47 +208,6 @@ class WorldManager
 		return allGood;
 	}
 		
-	@SuppressWarnings("rawtypes")
-	private synchronized boolean clearWorldReference(String worldName)
-	{
-		if (regionfiles == null) return false;
-		if (rafField == null) return false;
-		
-		ArrayList<Object> removedKeys = new ArrayList<Object>();
-		try
-		{
-			for (Object o : regionfiles.entrySet())
-			{
-				Map.Entry e = (Map.Entry) o;
-				File f = (File) e.getKey();
-				
-				if (f.toString().startsWith("." + File.separator + worldName))
-				{
-					RegionFile file = (RegionFile) e.getValue();
-					try
-					{
-						RandomAccessFile raf = (RandomAccessFile) rafField.get(file);
-						raf.close();
-						removedKeys.add(f);
-					}
-					catch (Exception ex)
-					{
-						ex.printStackTrace();
-					}
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			plugin.log.warning("Exception while removing world reference for '" + worldName + "'!");
-			ex.printStackTrace();
-		}
-		for (Object key : removedKeys)
-			regionfiles.remove(key);
-		
-		return true;
-	}
-
 	public void deleteKillerWorlds(Runnable runWhenDone)
 	{
 		plugin.log.info("Clearing out old worlds...");
@@ -451,70 +370,26 @@ class WorldManager
 	// it also spreads chunk creation across multiple ticks, instead of locking up the server while it generates 
     public World createWorld(WorldConfig config, final Runnable runWhenDone)
     {
-        final Server server = plugin.getServer();
-        MinecraftServer console = CraftBukkit.getMinecraftServer();
-        
-        String name = config.getName();
-        File folder = new File(server.getWorldContainer(), name);
-        World world = server.getWorld(name);
-
-        if (world != null)
-            return world;
-
-        if ((folder.exists()) && (!folder.isDirectory()))
-            throw new IllegalArgumentException("File exists with the name '" + name + "' and isn't a folder");
-
-        ChunkGenerator generator = config.getGenerator();
-        WorldType type = WorldType.getType(config.getWorldType().getName());
-        
-        int dimension = 10 + console.worlds.size();
-        boolean used = false;
-        do {
-            for (WorldServer ws : console.worlds) {
-                used = ws.dimension == dimension;
-                if (used) {
-                    dimension++;
-                    break;
-                }
-            }
-        } while(used);
-        boolean hardcore = false;
-
-		WorldSettings worldSettings = new WorldSettings(config.getSeed(), EnumGamemode.a(server.getDefaultGameMode().getValue()), config.getGenerateStructures(), hardcore, type);
-		worldSettings.a(config.getGeneratorSettings());
-		
-        final WorldServer worldServer = new WorldServer(console, new ServerNBTManager(server.getWorldContainer(), name, true), name, dimension, worldSettings, console.methodProfiler, config.getEnvironment(), generator);
-
-        if (server.getWorld(name) == null)
-            return null;
-
-        worldServer.worldMaps = console.worlds.get(0).worldMaps;
-
-        worldServer.tracker = new EntityTracker(worldServer);
-        worldServer.addIWorldAccess((IWorldAccess) new net.minecraft.server.v1_4_5.WorldManager(console, worldServer));
-        worldServer.difficulty = 3;
-        worldServer.setSpawnFlags(true, true);
-        console.worlds.add(worldServer);
-
-        if (generator != null)
-        	worldServer.getWorld().getPopulators().addAll(generator.getDefaultPopulators(worldServer.getWorld()));
-        
+    	World world = CraftBukkit.createWorld(config.getWorldType(), config.getEnvironment(), config.getName(), config.getSeed(), config.getGenerator(), config.getGeneratorSettings(), config.getGenerateStructures());
+    	
         for ( BlockPopulator populator : config.getExtraPopulators() )
-        	worldServer.getWorld().getPopulators().add(populator);
+        	world.getPopulators().add(populator);
 
-        server.getPluginManager().callEvent(new WorldInitEvent(worldServer.getWorld()));
-        System.out.print("Preparing start region for level " + (console.worlds.size() - 1) + " (Seed: " + worldServer.getSeed() + ")");
+        Server server = plugin.getServer();
+        		
+        server.getPluginManager().callEvent(new WorldInitEvent(world));
+        System.out.print("Preparing start region for level " + (server.getWorlds().size() - 1) + " (Seed: " + config.getSeed() + ")");
         
         int worldNumber = worlds.size(), numberOfWorlds = plugin.getGameMode().getWorldsToGenerate().length; 
         plugin.stagingWorldManager.showWorldGenerationIndicator((float)worldNumber / (float)numberOfWorlds);
-        ChunkBuilder cb = new ChunkBuilder(12, server, worldServer, worldNumber, numberOfWorlds, runWhenDone);
+        ChunkBuilder cb = new ChunkBuilder(12, server, world, worldNumber, numberOfWorlds, runWhenDone);
     	cb.taskID = server.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);
-    	return worldServer.getWorld();
+    	return world;
     }
     
     class ChunkBuilder implements Runnable
     {
-    	public ChunkBuilder(int numChunksFromSpawn, Server server, WorldServer worldServer, int worldNumber, int numberOfWorlds, Runnable runWhenDone)
+    	public ChunkBuilder(int numChunksFromSpawn, Server server, World world, int worldNumber, int numberOfWorlds, Runnable runWhenDone)
     	{
     		this.numChunksFromSpawn = numChunksFromSpawn;
     		sideLength = numChunksFromSpawn * 2 + 1;
@@ -523,12 +398,12 @@ class WorldManager
     		this.worldNumber = worldNumber;
     		this.numberOfWorlds = numberOfWorlds;
     		this.server = server;
-    		this.worldServer = worldServer;
+    		this.world = world;
     		this.runWhenDone = runWhenDone;
     		
-    		ChunkCoordinates spawnPos = worldServer.getSpawn();
-        	spawnX = worldServer.getChunkAtWorldCoords(spawnPos.x, spawnPos.z).x;
-        	spawnZ = worldServer.getChunkAtWorldCoords(spawnPos.x, spawnPos.z).z;
+    		Location spawnPos = world.getSpawnLocation();
+        	spawnX = spawnPos.getBlockX() >> 4;
+        	spawnZ = spawnPos.getBlockZ() >> 4;
     	}
     	
     	int numChunksFromSpawn, stepNum = 0, sideLength, numSteps, spawnX, spawnZ;
@@ -536,7 +411,7 @@ class WorldManager
         int worldNumber, numberOfWorlds;
         public int taskID;
         Server server;
-        WorldServer worldServer;
+        World world;
         Runnable runWhenDone;
         static final int chunksPerTick = 3; // how many chunks to generate each tick? 
     	
@@ -549,7 +424,7 @@ class WorldManager
             }
 
             if (time > reportTime + 1000L) {
-            	System.out.println("Preparing spawn area for " + worldServer.getWorld().getName() + ", " + (stepNum * 100 / numSteps) + "%");
+            	System.out.println("Preparing spawn area for " + world.getName() + ", " + (stepNum * 100 / numSteps) + "%");
             	float fraction = (float)stepNum/numSteps;
             	if ( numberOfWorlds > 1 )
             	{
@@ -566,13 +441,14 @@ class WorldManager
             	int offsetZ = stepNum % sideLength - numChunksFromSpawn;
 
             	stepNum++;
-            	worldServer.chunkProviderServer.getChunkAt(spawnX + offsetX, spawnZ + offsetZ);
+            	
+            	world.loadChunk(spawnX + offsetX, spawnZ + offsetZ);
 
             	if ( stepNum >= numSteps )
             	{
             		if ( worldNumber >= numberOfWorlds - 1 )
             			plugin.stagingWorldManager.removeWorldGenerationIndicator();
-            		server.getPluginManager().callEvent(new WorldLoadEvent(worldServer.getWorld()));
+            		server.getPluginManager().callEvent(new WorldLoadEvent(world));
             		server.getScheduler().cancelTask(taskID);
             		server.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
             		return;
