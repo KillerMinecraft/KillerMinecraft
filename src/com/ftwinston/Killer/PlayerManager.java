@@ -23,6 +23,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
@@ -423,8 +424,17 @@ class PlayerManager
 			player.setFlying(true);
 			makePlayerInvisibleToAll(player);
 			
-			inv.addItem(new ItemStack(Settings.teleportModeItem, 1));
-			inv.addItem(new ItemStack(Settings.followModeItem, 1));
+			ItemStack stack = new ItemStack(Settings.teleportModeItem, 1);
+			ItemMeta meta = stack.getItemMeta();
+			meta.setDisplayName("Teleport mode");
+			stack.setItemMeta(meta);
+			inv.addItem(stack);
+			
+			stack = new ItemStack(Settings.followModeItem, 1);
+			meta = stack.getItemMeta();
+			meta.setDisplayName("Follow mode");
+			stack.setItemMeta(meta);
+			inv.addItem(stack);
 			
 			player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Clicking has different effects depending on the selected item. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
 		}
