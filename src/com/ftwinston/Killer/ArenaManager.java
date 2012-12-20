@@ -5,6 +5,7 @@ import java.util.Random;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Monster;
@@ -138,54 +139,65 @@ class ArenaManager
 		}
 		
 		stagingWorld.setMonsterSpawnLimit(monsterWaveNumber);
+		numMonstersAlive = 0;
 		
-		// wither + normal skeleton
-		if ( monsterWaveNumber == 5 )
-		{
-			numMonstersAlive = 2;
-			
-			Skeleton skelly = (Skeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
-			skelly.setSkeletonType(SkeletonType.NORMAL);
-			skelly.getEquipment().setItemInHand(new ItemStack(Material.BOW));
-			
-			skelly = (Skeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
-			skelly.setSkeletonType(SkeletonType.WITHER);
-			skelly.getEquipment().setItemInHand(new ItemStack(Material.STONE_SWORD));
-			return;
-		}
+		// if 3 monster slots are still available, small chance of spawning wither skeleton
+		// otherwise:
 		
-		numMonstersAlive = monsterWaveNumber;
-		
-		if ( monsterWaveNumber % 10 == 0 )
-		{
-			// add a witch into the mix every 10th wave
-			stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.WITCH);
-		}
+		// equal chance of spawning spider, zombie, skeleton, creeper.
+		// if spawning spider, small chance of it being a cave spider
+		// if spawning zombie, small chance of it being a villager, tiny chance of it being a baby (can be both)
+		// if spawning creeper, tiny chance of it being charged ("powered")
 		
 		for ( int i=0; i<monsterWaveNumber; i++ )
 		{
-			switch ( random.nextInt(4) )
+			numMonstersAlive ++;
+			
+			// "tough" monsters count for multiple monsters, so we have to handle them first, on a separate counter
+			if ( i < monsterWaveNumber - 3 && random.nextInt(14) == 0 )
 			{
-			case 0:
-				stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SPIDER);
-				break;
-			case 1:
+				Skeleton skelly = (Skeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
+				skelly.setSkeletonType(SkeletonType.WITHER);
+				skelly.getEquipment().setItemInHand(new ItemStack(Material.STONE_SWORD));
+				
+				i+=2;
+				continue;
+			}
+			
+			int rand = random.nextInt(100);
+			if ( rand < 24 )
+			{
+				if ( rand < 4 )
+					stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.CAVE_SPIDER);
+				else
+					stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SPIDER);
+			}
+			else if ( rand < 48)
+			{
 				Zombie zomb = (Zombie)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.ZOMBIE);
 				if ( random.nextInt(16) == 0 )
 					zomb.setBaby(true);
 				if ( random.nextInt(6) == 0 )
 					zomb.setVillager(true);
-				break;
-			case 2:
+			}
+			else if ( rand < 72 )
+			{
 				Skeleton skelly = (Skeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
 				skelly.setSkeletonType(SkeletonType.NORMAL);
 				skelly.getEquipment().setItemInHand(new ItemStack(Material.BOW));
-				break;
-			case 3:
-				stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.CREEPER);
-				break;
+			}
+			else if ( rand < 96 )
+			{
+				Creeper creeper = (Creeper)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.CREEPER);
+				if ( random.nextInt(30) == 0 )
+					creeper.setPowered(true);
+			}
+			else
+			{
+				stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.WITCH);
 			}
 		}
+		stagingWorld.setMonsterSpawnLimit(numMonstersAlive);
 	}
 	
 	private Location getMonsterSpawnLocation()
