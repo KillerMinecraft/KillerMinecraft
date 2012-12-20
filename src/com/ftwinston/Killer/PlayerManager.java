@@ -214,7 +214,7 @@ class PlayerManager
 		for ( Player online : plugin.getOnlinePlayers() )
 			if ( !online.canSee(player) )
 			{
-				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999));
+				sendForScoreboard(online, oldListName, false);
 				sendForScoreboard(online, player, true);
 			}
 	}
@@ -230,7 +230,7 @@ class PlayerManager
 		for ( Player online : plugin.getOnlinePlayers() )
 			if ( online != player && !online.canSee(player) )
 			{
-				((CraftPlayer)online).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(oldListName, false, 9999));
+				sendForScoreboard(online, oldListName, false);
 				sendForScoreboard(online, player, true);
 			}
 	}
@@ -444,6 +444,11 @@ class PlayerManager
 	{
 		fromMe.hidePlayer(hideMe);
 		sendForScoreboard(fromMe, hideMe, true); // hiding will take them out of the scoreboard, so put them back in again
+	}
+	
+	public void sendForScoreboard(Player viewer, String name, boolean show)
+	{
+		((CraftPlayer)viewer).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(name, show, 9999));
 	}
 	
 	public void sendForScoreboard(Player viewer, Player other, boolean show)

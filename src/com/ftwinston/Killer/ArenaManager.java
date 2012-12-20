@@ -1,12 +1,10 @@
 package com.ftwinston.Killer;
 
 import java.util.Random;
-import net.minecraft.server.v1_4_5.WorldServer;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v1_4_5.CraftWorld;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Monster;
@@ -139,8 +137,6 @@ class ArenaManager
 			return;
 		}
 		
-		WorldServer ws = ((CraftWorld)stagingWorld).getHandle();
-		ws.allowMonsters = true;
 		stagingWorld.setMonsterSpawnLimit(monsterWaveNumber);
 		
 		// wither + normal skeleton
@@ -190,8 +186,6 @@ class ArenaManager
 				break;
 			}
 		}
-		
-		ws.allowMonsters = false;
 	}
 	
 	private Location getMonsterSpawnLocation()

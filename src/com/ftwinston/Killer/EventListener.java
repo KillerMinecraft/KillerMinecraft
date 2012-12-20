@@ -1,19 +1,15 @@
 package com.ftwinston.Killer;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import net.minecraft.server.v1_4_5.AxisAlignedBB;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_4_5.CraftWorld;
-import org.bukkit.craftbukkit.v1_4_5.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -340,36 +336,19 @@ class EventListener implements Listener
     	if ( !event.isCancelled() && event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null )
     	{
     		Block b = event.getClickedBlock().getRelative(event.getBlockFace());
+    		double minX = b.getX() - 1, maxX = b.getX() + 2,
+    			   minY = b.getY() - 2, maxY = b.getY() + 3,
+    			   minZ = b.getZ() - 1, maxZ = b.getZ() + 2;
     		
-    		AxisAlignedBB aabb = AxisAlignedBB.a(b.getX()-1, b.getY()-1, b.getZ()-1, b.getX()+2, b.getY()+2, b.getZ()+2);
-    		((CraftWorld)b.getWorld()).getHandle().getEntities(((CraftPlayer)event.getPlayer()).getHandle(), aabb);
-    		
-    		boolean onlySpectators = true;
-    		List<Player> spectators = new ArrayList<Player>();
-    		for ( Entity nearby : event.getPlayer().getNearbyEntities(4, 4, 4) )
-        	{
-    			if ( nearby == event.getPlayer() )
-    				continue;
-    			
-    			if ( !(nearby instanceof Player) )
-    			{
-    				onlySpectators = false;
-    				break;
-    			}
-    			
-    			Player player = (Player)nearby;
-    			if ( !plugin.playerManager.isSpectator(player.getName()) )
-    			{
-    				onlySpectators = false;
-    				break;
-    			}
-    			
-    			spectators.add(player);
-        	}
-    		
-    		if ( onlySpectators )
-    			for ( Player player : spectators )
-					player.teleport(player.getLocation().add(0, 3, 0)); // just teleport them upwards, out of the way of this block place
+    		List<Player> spectators = plugin.getGameMode().getOnlinePlayers(new PlayerFilter().notAlive().world(b.getWorld()).exclude(event.getPlayer()));
+    		for ( Player spectator : spectators )
+    		{
+    			Location loc = spectator.getLocation();
+    			if ( loc.getX() >= minX && loc.getX() <= maxX
+	    				&& loc.getY() >= minY && loc.getY() <= maxY
+						&& loc.getZ() >= minZ && loc.getZ() <= maxZ )
+    				spectator.teleport(spectator.getLocation().add(0, 5, 0)); // just teleport them upwards, out of the way of this block place
+    		}
     	}
     	
 		// eyes of ender can be made to seek out nether fortresses
