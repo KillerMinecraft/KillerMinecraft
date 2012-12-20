@@ -210,8 +210,8 @@ class PlayerManager
 		for ( Player online : plugin.getOnlinePlayers() )
 			if ( !online.canSee(player) )
 			{
-				CraftBukkit.sendForScoreboard(online, oldListName, false);
-				CraftBukkit.sendForScoreboard(online, player, true);
+				plugin.craftBukkit.sendForScoreboard(online, oldListName, false);
+				plugin.craftBukkit.sendForScoreboard(online, player, true);
 			}
 	}
 	
@@ -226,8 +226,8 @@ class PlayerManager
 		for ( Player online : plugin.getOnlinePlayers() )
 			if ( online != player && !online.canSee(player) )
 			{
-				CraftBukkit.sendForScoreboard(online, oldListName, false);
-				CraftBukkit.sendForScoreboard(online, player, true);
+				plugin.craftBukkit.sendForScoreboard(online, oldListName, false);
+				plugin.craftBukkit.sendForScoreboard(online, player, true);
 			}
 	}
 
@@ -281,7 +281,7 @@ class PlayerManager
 			// send this player to everyone else's scoreboards, because they're now invisible, and won't show otherwise
 			for ( Player online : plugin.getOnlinePlayers() )
 				if ( online != player && !online.canSee(player) )
-					CraftBukkit.sendForScoreboard(online, player, true);
+					plugin.craftBukkit.sendForScoreboard(online, player, true);
 		}
 		else
 		{
@@ -439,7 +439,7 @@ class PlayerManager
 	public void hidePlayer(Player fromMe, Player hideMe)
 	{
 		fromMe.hidePlayer(hideMe);
-		CraftBukkit.sendForScoreboard(fromMe, hideMe, true); // hiding will take them out of the scoreboard, so put them back in again
+		plugin.craftBukkit.sendForScoreboard(fromMe, hideMe, true); // hiding will take them out of the scoreboard, so put them back in again
 	}
 	
 	public void makePlayerInvisibleToAll(Player player)
@@ -770,7 +770,7 @@ class PlayerManager
 	public void teleport(Player player, Location loc)
 	{
 		if ( player.isDead() )
-			CraftBukkit.forceRespawn(player); // stop players getting stuck at the "you are dead" screen, unable to do anything except disconnect
+			plugin.craftBukkit.forceRespawn(player); // stop players getting stuck at the "you are dead" screen, unable to do anything except disconnect
 		player.setVelocity(new Vector(0,0,0));
 		player.teleport(loc);
 	}

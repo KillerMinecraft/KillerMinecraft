@@ -1,4 +1,4 @@
-package com.ftwinston.Killer;
+package com.ftwinston.Killer.CraftBukkit;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,32 +44,25 @@ import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
 
-// a holder for everything that dives into the versioned CraftBukkit code that will break with every minecraft update
-
-class CraftBukkit
+public class v1_4_5 extends CraftBukkitAccess
 {
-	private CraftBukkit() { }
+	public v1_4_5(Plugin plugin)
+	{
+		super(plugin);
+	}
 	
-	private static Plugin plugin;
-	public static void setPlugin(Plugin p) { plugin = p; }
-	
-	static MinecraftServer getMinecraftServer()
+	protected MinecraftServer getMinecraftServer()
 	{
 		CraftServer server = (CraftServer)plugin.getServer();
 		return server.getServer();
 	}
 
-	public static ServerConfigurationManagerAbstract getServerConfigurationManager()
-	{
-		return getMinecraftServer().getServerConfigurationManager();
-	}
-	
-	public static String getDefaultLevelName()
+	public String getDefaultLevelName()
 	{
 		return getMinecraftServer().getPropertyManager().getString("level-name", "world");
 	}
 
-	public static YamlConfiguration getBukkitConfiguration()
+	public YamlConfiguration getBukkitConfiguration()
 	{
 		YamlConfiguration config = null;
 		try
@@ -88,7 +81,7 @@ class CraftBukkit
 		return config;
 	}
 	
-	public static void saveBukkitConfiguration(YamlConfiguration configuration)
+	public void saveBukkitConfiguration(YamlConfiguration configuration)
 	{
 		try
 		{
@@ -99,33 +92,33 @@ class CraftBukkit
 		}
 	}
 	
-	public static String getServerProperty(String name, String defaultVal)
+	public String getServerProperty(String name, String defaultVal)
 	{
 		return getMinecraftServer().getPropertyManager().properties.getProperty(name, defaultVal);
 	}
 	
-	public static void setServerProperty(String name, String value)
+	public void setServerProperty(String name, String value)
 	{
 		getMinecraftServer().getPropertyManager().properties.put(name, value);
 	}
 	
-	public static void saveServerPropertiesFile()
+	public void saveServerPropertiesFile()
 	{
 		getMinecraftServer().getPropertyManager().savePropertiesFile();
 	}
 	
 	
-	public static void sendForScoreboard(Player viewer, String name, boolean show)
+	public void sendForScoreboard(Player viewer, String name, boolean show)
 	{
 		((CraftPlayer)viewer).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(name, show, 9999));
 	}
 	
-	public static void sendForScoreboard(Player viewer, Player other, boolean show)
+	public void sendForScoreboard(Player viewer, Player other, boolean show)
 	{
 		((CraftPlayer)viewer).getHandle().netServerHandler.sendPacket(new Packet201PlayerInfo(other.getPlayerListName(), show, show ? ((CraftPlayer)other).getHandle().ping : 9999));
 	}
 	
-	public static void forceRespawn(final Player player)
+	public void forceRespawn(final Player player)
     {
     	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
             @Override
@@ -138,11 +131,7 @@ class CraftBukkit
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private static HashMap regionfiles;
-	private static Field rafField;
-	
-	@SuppressWarnings("rawtypes")
-	public static void bindRegionFiles()
+	public void bindRegionFiles()
 	{
 		try
 		{
@@ -160,14 +149,14 @@ class CraftBukkit
 		}
 	}
 	
-	public static void unbindRegionFiles()
+	public void unbindRegionFiles()
 	{
 		regionfiles = null;
 		rafField = null;
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public static synchronized boolean clearWorldReference(String worldName)
+	public synchronized boolean clearWorldReference(String worldName)
 	{
 		if (regionfiles == null) return false;
 		if (rafField == null) return false;
@@ -207,7 +196,7 @@ class CraftBukkit
 		return true;
 	}
 	
-	public static void forceUnloadWorld(World world)
+	public void forceUnloadWorld(World world)
 	{
 		world.setAutoSave(false);
 		for ( Player player : world.getPlayers() )
@@ -237,14 +226,14 @@ class CraftBukkit
 		ms.worlds.remove(ms.worlds.indexOf(craftWorld.getHandle()));
 	}
 	
-	public static void accountForDefaultWorldDeletion(World newDefault)
+	public void accountForDefaultWorldDeletion(World newDefault)
 	{
 		// playerFileData in ServerConsfigurationManagerAbstract must point to that of the new default world, instead of the deleted original world
-		ServerConfigurationManagerAbstract manager = getServerConfigurationManager();
+		ServerConfigurationManagerAbstract manager = getMinecraftServer().getServerConfigurationManager();
 		manager.playerFileData = ((CraftWorld)newDefault).getHandle().getDataManager().getPlayerFileData();
 	}
 	
-	public static World createWorld(org.bukkit.WorldType type, Environment env, String name, long seed, ChunkGenerator generator, String generatorSettings, boolean generateStructures)
+	public World createWorld(org.bukkit.WorldType type, Environment env, String name, long seed, ChunkGenerator generator, String generatorSettings, boolean generateStructures)
     {
         final Server server = plugin.getServer();
         MinecraftServer console = getMinecraftServer();
@@ -298,7 +287,7 @@ class CraftBukkit
         return world;
     }
 	
-	public static Location findNearestNetherFortress(Location loc)
+	public Location findNearestNetherFortress(Location loc)
 	{
 		if ( loc.getWorld().getEnvironment() != Environment.NETHER )
 			return null;
@@ -343,7 +332,7 @@ class CraftBukkit
 		return new Location(loc.getWorld(), pos.x, pos.y, pos.z);
 	}
 	
-	public static boolean createFlyingEnderEye(Player player, Location target)
+	public boolean createFlyingEnderEye(Player player, Location target)
 	{
 		WorldServer world = ((CraftWorld)target.getWorld()).getHandle();
 		

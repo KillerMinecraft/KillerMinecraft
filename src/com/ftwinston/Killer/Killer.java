@@ -32,9 +32,12 @@ import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.ftwinston.Killer.CraftBukkit.CraftBukkitAccess;
+
 public class Killer extends JavaPlugin
 {
 	public static Killer instance;
+	CraftBukkitAccess craftBukkit;
 	public Logger log = Logger.getLogger("Minecraft");
 	
 	enum GameState
@@ -170,9 +173,14 @@ public class Killer extends JavaPlugin
 	
 	public void onEnable()
 	{
-		CraftBukkit.setPlugin(this);
-		
         instance = this;
+        craftBukkit = CraftBukkitAccess.createCorrectVersion(this);
+        if ( craftBukkit == null )
+        {
+        	setEnabled(false);
+        	return;
+        }
+        
         Settings.setup(this);
 		createRecipes();
 		
@@ -182,7 +190,7 @@ public class Killer extends JavaPlugin
         statsManager = new StatsManager(this);
         getServer().getPluginManager().registerEvents(eventListener, this);
 
-		String defaultLevelName = CraftBukkit.getDefaultLevelName();
+		String defaultLevelName = craftBukkit.getDefaultLevelName();
 		if ( defaultLevelName.equalsIgnoreCase(Settings.killerWorldName) )
 		{
 			stagingWorldIsServerDefault = true;

@@ -35,12 +35,12 @@ class WorldManager
 		instance = this;
 		
 		seedGen = new Random();
-		CraftBukkit.bindRegionFiles();
+		plugin.craftBukkit.bindRegionFiles();
 	}
 	
 	public void onDisable()
 	{
-		CraftBukkit.unbindRegionFiles();
+		plugin.craftBukkit.unbindRegionFiles();
 	}
 	
 	Random seedGen;
@@ -60,7 +60,7 @@ class WorldManager
 		}
 		
 		// in the already-loaded server configuration, create/update an entry specifying the generator to be used for the default world
-		YamlConfiguration configuration = CraftBukkit.getBukkitConfiguration();
+		YamlConfiguration configuration = plugin.craftBukkit.getBukkitConfiguration();
 		
 		ConfigurationSection section = configuration.getConfigurationSection("worlds");
 		if ( section == null )
@@ -73,22 +73,22 @@ class WorldManager
 		worldSection.set("generator", "Killer");
 		
 		// disable the end and the nether. We'll re-enable once this has generated.
-		final String prevAllowNether = CraftBukkit.getServerProperty("allow-nether", "true");
+		final String prevAllowNether = plugin.craftBukkit.getServerProperty("allow-nether", "true");
 		final boolean prevAllowEnd = configuration.getBoolean("settings.allow-end", true);
-		CraftBukkit.setServerProperty("allow-nether", "false");			
+		plugin.craftBukkit.setServerProperty("allow-nether", "false");			
 		configuration.set("settings.allow-end", false);
 		
 		// restore server settings, once it's finished generating
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 			@Override
 			public void run() {
-				CraftBukkit.setServerProperty("allow-nether", prevAllowNether);
-				YamlConfiguration configuration = CraftBukkit.getBukkitConfiguration();
+				plugin.craftBukkit.setServerProperty("allow-nether", prevAllowNether);
+				YamlConfiguration configuration = plugin.craftBukkit.getBukkitConfiguration();
 				
 				configuration.set("settings.allow-end", prevAllowEnd);
 				
-				CraftBukkit.saveServerPropertiesFile();
-				CraftBukkit.saveBukkitConfiguration(configuration);
+				plugin.craftBukkit.saveServerPropertiesFile();
+				plugin.craftBukkit.saveBukkitConfiguration(configuration);
 			}
 		});
 	}
@@ -100,7 +100,7 @@ class WorldManager
 		{// staging world already existed; delete it, because we might want to reset it back to its default state
 			plugin.log.info("Deleting staging world, because it already exists...");
 			
-			CraftBukkit.forceUnloadWorld(stagingWorld);
+			plugin.craftBukkit.forceUnloadWorld(stagingWorld);
 			try
 			{
 				Thread.sleep(200);
@@ -109,7 +109,7 @@ class WorldManager
 			{
 			}
 			
-			CraftBukkit.clearWorldReference(name);
+			plugin.craftBukkit.clearWorldReference(name);
 			
 			try
 			{
@@ -133,7 +133,7 @@ class WorldManager
 		// staging world must not be null when the init event is called, so we don't call this again
 		if ( plugin.stagingWorldIsServerDefault )
 			stagingWorld = plugin.getServer().getWorlds().get(0);
-		
+
 		stagingWorld = new WorldCreator(name)
 			.generator(new StagingWorldGenerator())
 			.environment(Environment.THE_END)
@@ -191,7 +191,7 @@ class WorldManager
 	
 	public boolean deleteWorld(String worldName)
 	{
-		CraftBukkit.clearWorldReference(worldName);
+		plugin.craftBukkit.clearWorldReference(worldName);
 		boolean allGood = true;
 		
 		File folder = new File(plugin.getServer().getWorldContainer() + File.separator + worldName);
@@ -223,7 +223,7 @@ class WorldManager
 			worldNames[i] = worlds[i].getName();
 			for ( Player player : worlds[i].getPlayers() )
 				plugin.playerManager.putPlayerInStagingWorld(player);
-			CraftBukkit.forceUnloadWorld(worlds[i]);
+			plugin.craftBukkit.forceUnloadWorld(worlds[i]);
 		}
 		
 		// now we want to try to delete the world folders
@@ -370,7 +370,7 @@ class WorldManager
 	// it also spreads chunk creation across multiple ticks, instead of locking up the server while it generates 
     public World createWorld(WorldConfig config, final Runnable runWhenDone)
     {
-    	World world = CraftBukkit.createWorld(config.getWorldType(), config.getEnvironment(), config.getName(), config.getSeed(), config.getGenerator(), config.getGeneratorSettings(), config.getGenerateStructures());
+    	World world = plugin.craftBukkit.createWorld(config.getWorldType(), config.getEnvironment(), config.getName(), config.getSeed(), config.getGenerator(), config.getGeneratorSettings(), config.getGenerateStructures());
     	
         for ( BlockPopulator populator : config.getExtraPopulators() )
         	world.getPopulators().add(populator);

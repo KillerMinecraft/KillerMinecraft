@@ -75,7 +75,7 @@ class EventListener implements Listener
 					}
     				plugin.worldManager.createStagingWorld(Settings.stagingWorldName);
 					plugin.worldManager.deleteWorlds(null, event.getWorld());
-					CraftBukkit.accountForDefaultWorldDeletion(plugin.worldManager.stagingWorld);
+					plugin.craftBukkit.accountForDefaultWorldDeletion(plugin.worldManager.stagingWorld);
     			}
     		}, 1);
     	}
@@ -354,12 +354,12 @@ class EventListener implements Listener
 		// eyes of ender can be made to seek out nether fortresses
     	if ( plugin.isEnderEyeRecipeEnabled() && event.getPlayer().getWorld().getEnvironment() == Environment.NETHER && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
     	{
-			Location target = CraftBukkit.findNearestNetherFortress(event.getPlayer().getLocation());
+			Location target = plugin.craftBukkit.findNearestNetherFortress(event.getPlayer().getLocation());
 			if ( target == null )
 				event.getPlayer().sendMessage("No nether fortresses nearby");
 			else
 			{
-				CraftBukkit.createFlyingEnderEye(event.getPlayer(), target);
+				plugin.craftBukkit.createFlyingEnderEye(event.getPlayer(), target);
 				event.getPlayer().getItemInHand().setAmount(event.getPlayer().getItemInHand().getAmount() - 1);				
 			}
     		
@@ -560,7 +560,7 @@ class EventListener implements Listener
 		if ( actuallyLeftServer ) // the quit message should be sent to the scoreboard of anyone who this player was invisible to
 			for ( Player online : plugin.getOnlinePlayers() )
 				if ( !online.canSee(player) )
-					CraftBukkit.sendForScoreboard(online, player, false);
+					plugin.craftBukkit.sendForScoreboard(online, player, false);
 		
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName(), true), 600);
     }
@@ -585,7 +585,7 @@ class EventListener implements Listener
         		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 					@Override
 					public void run() {
-		        		CraftBukkit.forceRespawn(player);
+		        		plugin.craftBukkit.forceRespawn(player);
 					}
 				}, 30);
         	}
