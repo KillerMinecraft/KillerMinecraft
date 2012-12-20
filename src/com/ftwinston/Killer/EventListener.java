@@ -75,7 +75,7 @@ class EventListener implements Listener
 					}
     				plugin.worldManager.createStagingWorld(Settings.stagingWorldName);
 					plugin.worldManager.deleteWorlds(null, event.getWorld());
-					plugin.worldManager.accountForDefaultWorldDeletion();
+					CraftBukkit.accountForDefaultWorldDeletion(plugin.worldManager.stagingWorld);
     			}
     		}, 1);
     	}
@@ -337,7 +337,7 @@ class EventListener implements Listener
     	{
     		Block b = event.getClickedBlock().getRelative(event.getBlockFace());
     		double minX = b.getX() - 1, maxX = b.getX() + 2,
-    			   minY = b.getY() - 2, maxY = b.getY() + 3,
+    			   minY = b.getY() - 2, maxY = b.getY() + 1,
     			   minZ = b.getZ() - 1, maxZ = b.getZ() + 2;
     		
     		List<Player> spectators = plugin.getGameMode().getOnlinePlayers(new PlayerFilter().notAlive().world(b.getWorld()).exclude(event.getPlayer()));
@@ -347,17 +347,21 @@ class EventListener implements Listener
     			if ( loc.getX() >= minX && loc.getX() <= maxX
 	    				&& loc.getY() >= minY && loc.getY() <= maxY
 						&& loc.getZ() >= minZ && loc.getZ() <= maxZ )
-    				spectator.teleport(spectator.getLocation().add(0, 5, 0)); // just teleport them upwards, out of the way of this block place
+    				spectator.teleport(spectator.getLocation().add(0, 3, 0)); // just teleport them upwards, out of the way of this block place
     		}
     	}
     	
 		// eyes of ender can be made to seek out nether fortresses
     	if ( plugin.isEnderEyeRecipeEnabled() && event.getPlayer().getWorld().getEnvironment() == Environment.NETHER && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
     	{
-			if ( !plugin.worldManager.seekNearestNetherFortress(event.getPlayer()) )
+			Location target = CraftBukkit.findNearestNetherFortress(event.getPlayer().getLocation());
+			if ( target == null )
 				event.getPlayer().sendMessage("No nether fortresses nearby");
 			else
+			{
+				CraftBukkit.createFlyingEnderEye(event.getPlayer(), target);
 				event.getPlayer().getItemInHand().setAmount(event.getPlayer().getItemInHand().getAmount() - 1);				
+			}
     		
     		event.setCancelled(true);
     		return;
@@ -581,7 +585,7 @@ class EventListener implements Listener
         		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 					@Override
 					public void run() {
-		        		CraftBukkit.forceRespawn(plugin, player);
+		        		CraftBukkit.forceRespawn(player);
 					}
 				}, 30);
         	}

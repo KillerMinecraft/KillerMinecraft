@@ -12,37 +12,24 @@ import java.util.Map;
 import java.util.Random;
 
 import net.minecraft.server.v1_4_5.ChunkCoordinates;
-import net.minecraft.server.v1_4_5.ChunkPosition;
-import net.minecraft.server.v1_4_5.ChunkProviderHell;
-import net.minecraft.server.v1_4_5.ConvertProgressUpdater;
-import net.minecraft.server.v1_4_5.Convertable;
-import net.minecraft.server.v1_4_5.EntityEnderSignal;
-import net.minecraft.server.v1_4_5.EntityHuman;
 import net.minecraft.server.v1_4_5.EntityTracker;
 import net.minecraft.server.v1_4_5.EnumGamemode;
-import net.minecraft.server.v1_4_5.IChunkProvider;
 import net.minecraft.server.v1_4_5.IWorldAccess;
 import net.minecraft.server.v1_4_5.MinecraftServer;
 import net.minecraft.server.v1_4_5.RegionFile;
-import net.minecraft.server.v1_4_5.ServerConfigurationManagerAbstract;
 import net.minecraft.server.v1_4_5.ServerNBTManager;
-import net.minecraft.server.v1_4_5.WorldGenNether;
-import net.minecraft.server.v1_4_5.WorldLoaderServer;
 import net.minecraft.server.v1_4_5.WorldServer;
 import net.minecraft.server.v1_4_5.WorldSettings;
 import net.minecraft.server.v1_4_5.WorldType;
 
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
+import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.v1_4_5.CraftServer;
-import org.bukkit.craftbukkit.v1_4_5.CraftWorld;
-import org.bukkit.craftbukkit.v1_4_5.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_4_5.generator.NetherChunkGenerator;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -94,7 +81,7 @@ class WorldManager
 		}
 		
 		// in the already-loaded server configuration, create/update an entry specifying the generator to be used for the default world
-		YamlConfiguration configuration = CraftBukkit.getBukkitConfiguration(plugin);
+		YamlConfiguration configuration = CraftBukkit.getBukkitConfiguration();
 		
 		ConfigurationSection section = configuration.getConfigurationSection("worlds");
 		if ( section == null )
@@ -107,31 +94,24 @@ class WorldManager
 		worldSection.set("generator", "Killer");
 		
 		// disable the end and the nether. We'll re-enable once this has generated.
-		final String prevAllowNether = CraftBukkit.getServerProperty(plugin, "allow-nether", "true");
+		final String prevAllowNether = CraftBukkit.getServerProperty("allow-nether", "true");
 		final boolean prevAllowEnd = configuration.getBoolean("settings.allow-end", true);
-		CraftBukkit.setServerProperty(plugin, "allow-nether", "false");			
+		CraftBukkit.setServerProperty("allow-nether", "false");			
 		configuration.set("settings.allow-end", false);
 		
 		// restore server settings, once it's finished generating
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 			@Override
 			public void run() {
-				CraftBukkit.setServerProperty(plugin, "allow-nether", prevAllowNether);
-				YamlConfiguration configuration = CraftBukkit.getBukkitConfiguration(plugin);
+				CraftBukkit.setServerProperty("allow-nether", prevAllowNether);
+				YamlConfiguration configuration = CraftBukkit.getBukkitConfiguration();
 				
 				configuration.set("settings.allow-end", prevAllowEnd);
 				
-				CraftBukkit.saveServerPropertiesFile(plugin);
-				CraftBukkit.saveBukkitConfiguration(plugin, configuration);
+				CraftBukkit.saveServerPropertiesFile();
+				CraftBukkit.saveBukkitConfiguration(configuration);
 			}
 		});
-	}
-	
-	public void accountForDefaultWorldDeletion()
-	{
-		// playerFileData in ServerConsfigurationManagerAbstract must point to that of the staging world instead of the deleted original world
-		ServerConfigurationManagerAbstract manager = CraftBukkit.getServerConfigurationManager(plugin);
-		manager.playerFileData = ((CraftWorld)stagingWorld).getHandle().getDataManager().getPlayerFileData();
 	}
 	
 	public void createStagingWorld(final String name) 
@@ -139,11 +119,9 @@ class WorldManager
 		stagingWorld = plugin.getServer().getWorld(name);
 		if ( stagingWorld != null )
 		{// staging world already existed; delete it, because we might want to reset it back to its default state
+			plugin.log.info("Deleting staging world, because it already exists...");
 			
-			plugin.log.info("Deleting staging world, cos it already exists...");
-			
-			
-			forceUnloadWorld(stagingWorld);
+			CraftBukkit.forceUnloadWorld(stagingWorld);
 			try
 			{
 				Thread.sleep(200);
@@ -310,44 +288,6 @@ class WorldManager
 		
 		return true;
 	}
-	
-	private void forceUnloadWorld(World world)
-	{
-		world.setAutoSave(false);
-		if ( world == stagingWorld )
-			for ( Player player : world.getPlayers() )
-				player.kickPlayer("Staging world is being regenerated... and you were in it!");
-		else
-		{
-			for ( Player player : world.getPlayers() )
-				plugin.playerManager.putPlayerInStagingWorld(player);
-		}
-		
-		// formerly used server.unloadWorld at this point. But it was failing, even when i force-cleared the player list
-		CraftServer server = (CraftServer)plugin.getServer();
-		CraftWorld craftWorld = (CraftWorld)world;
-		
-		try
-		{
-			Field f = server.getClass().getDeclaredField("worlds");
-			f.setAccessible(true);
-			@SuppressWarnings("unchecked")
-			Map<String, World> worlds = (Map<String, World>)f.get(server);
-			worlds.remove(world.getName().toLowerCase());
-			f.setAccessible(false);
-		}
-		catch ( IllegalAccessException ex )
-		{
-			plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
-		}
-		catch  ( NoSuchFieldException ex )
-		{
-			plugin.log.warning("Error removing world from bukkit master list: " + ex.getMessage());
-		}
-		
-		MinecraftServer ms = CraftBukkit.getMinecraftServer(plugin);
-		ms.worlds.remove(ms.worlds.indexOf(craftWorld.getHandle()));
-	}
 
 	public void deleteKillerWorlds(Runnable runWhenDone)
 	{
@@ -362,7 +302,9 @@ class WorldManager
 		for ( int i=0; i<worlds.length; i++ )
 		{
 			worldNames[i] = worlds[i].getName();
-			forceUnloadWorld(worlds[i]);
+			for ( Player player : worlds[i].getPlayers() )
+				plugin.playerManager.putPlayerInStagingWorld(player);
+			CraftBukkit.forceUnloadWorld(worlds[i]);
 		}
 		
 		// now we want to try to delete the world folders
@@ -420,61 +362,6 @@ class WorldManager
 					//plugin.log.warning("Failed to delete file: " + f.getName());
 				}
 		return folder.delete() && retVal;
-	}
-	
-	public boolean seekNearestNetherFortress(Player player)
-	{
-		if ( player.getWorld().getEnvironment() != Environment.NETHER )
-			return false;
-		
-		WorldServer world = ((CraftWorld)player.getWorld()).getHandle();
-		
-		IChunkProvider chunkProvider;
-		try
-		{
-			Field field = net.minecraft.server.v1_4_5.ChunkProviderServer.class.getDeclaredField("chunkProvider");
-			field.setAccessible(true);
-			chunkProvider = (IChunkProvider)field.get(world.chunkProviderServer);
-			field.setAccessible(false);
-		}
-		catch (Throwable t)
-		{
-			return false;
-		}
-		
-		if ( chunkProvider == null )
-			return false;
-		
-		NetherChunkGenerator ncg = (NetherChunkGenerator)chunkProvider;
-		ChunkProviderHell hellCP;
-		try
-		{
-			Field field = org.bukkit.craftbukkit.v1_4_5.generator.NormalChunkGenerator.class.getDeclaredField("provider");
-			field.setAccessible(true);
-			hellCP = (ChunkProviderHell)field.get(ncg);
-			field.setAccessible(false);
-		}
-		catch (Throwable t)
-		{
-			return false;
-		}
-		
-		Location playerLoc = player.getLocation();
-		
-		WorldGenNether fortressGenerator = (WorldGenNether)hellCP.c;
-		ChunkPosition pos = fortressGenerator.getNearestGeneratedFeature(world, playerLoc.getBlockX(), playerLoc.getBlockY(), playerLoc.getBlockZ());
-		if ( pos == null )
-			return false; // this just means there isn't one nearby
-		
-		EntityEnderSignal entityendersignal = new EntityEnderSignal(world, playerLoc.getX(), playerLoc.getY() + player.getEyeHeight() - 0.2, playerLoc.getZ());
-
-		entityendersignal.a((double) pos.x, pos.y, (double) pos.z);
-		world.addEntity(entityendersignal);
-		world.makeSound(((CraftPlayer)player).getHandle(), "random.bow", 0.5F, 0.4F /*/ (d.nextFloat() * 0.4F + 0.8F)*/);
-		world.a((EntityHuman) null, 1002, playerLoc.getBlockX(), playerLoc.getBlockY(), playerLoc.getBlockZ(), 0);
-		
-		//player.sendMessage("Nearest nether fortress is at " + pos.x + ", " + pos.y + ", " + pos.z);
-		return true;
 	}
 	
 	public void generateWorlds(final WorldOption generator, final Runnable runWhenDone)
@@ -551,9 +438,9 @@ class WorldManager
 		{
 			generator.createWorlds(generationComplete);
 		}
-		catch (ArrayIndexOutOfBoundsException ex)
+		catch (Exception ex)
 		{
-			plugin.log.warning("An crash occurred during world generation. Aborting...");
+			plugin.log.warning("A crash occurred during world generation. Aborting...");
 			plugin.getGameMode().broadcastMessage("An error occurred during world generation.\nPlease try again...");
 			
 			plugin.setGameState(GameState.worldDeletion);
@@ -564,12 +451,12 @@ class WorldManager
 	// it also spreads chunk creation across multiple ticks, instead of locking up the server while it generates 
     public World createWorld(WorldConfig config, final Runnable runWhenDone)
     {
-        final CraftServer craftServer = (CraftServer)plugin.getServer();
-        MinecraftServer console = craftServer.getServer();
+        final Server server = plugin.getServer();
+        MinecraftServer console = CraftBukkit.getMinecraftServer();
         
         String name = config.getName();
-        File folder = new File(craftServer.getWorldContainer(), name);
-        World world = craftServer.getWorld(name);
+        File folder = new File(server.getWorldContainer(), name);
+        World world = server.getWorld(name);
 
         if (world != null)
             return world;
@@ -578,23 +465,13 @@ class WorldManager
             throw new IllegalArgumentException("File exists with the name '" + name + "' and isn't a folder");
 
         ChunkGenerator generator = config.getGenerator();
-        
-        if (generator == null)
-        	generator = craftServer.getGenerator(name);
-
         WorldType type = WorldType.getType(config.getWorldType().getName());
         
-        Convertable converter = new WorldLoaderServer(craftServer.getWorldContainer());
-        if (converter.isConvertable(name)) {
-        	craftServer.getLogger().info("Converting world '" + name + "'");
-            converter.convert(name, new ConvertProgressUpdater(console));
-        }
-
         int dimension = 10 + console.worlds.size();
         boolean used = false;
         do {
-            for (WorldServer server : console.worlds) {
-                used = server.dimension == dimension;
+            for (WorldServer ws : console.worlds) {
+                used = ws.dimension == dimension;
                 if (used) {
                     dimension++;
                     break;
@@ -603,12 +480,12 @@ class WorldManager
         } while(used);
         boolean hardcore = false;
 
-		WorldSettings worldSettings = new WorldSettings(config.getSeed(), EnumGamemode.a(craftServer.getDefaultGameMode().getValue()), config.getGenerateStructures(), hardcore, type);
+		WorldSettings worldSettings = new WorldSettings(config.getSeed(), EnumGamemode.a(server.getDefaultGameMode().getValue()), config.getGenerateStructures(), hardcore, type);
 		worldSettings.a(config.getGeneratorSettings());
 		
-        final WorldServer worldServer = new WorldServer(console, new ServerNBTManager(craftServer.getWorldContainer(), name, true), name, dimension, worldSettings, console.methodProfiler, config.getEnvironment(), generator);
+        final WorldServer worldServer = new WorldServer(console, new ServerNBTManager(server.getWorldContainer(), name, true), name, dimension, worldSettings, console.methodProfiler, config.getEnvironment(), generator);
 
-        if (craftServer.getWorld(name) == null)
+        if (server.getWorld(name) == null)
             return null;
 
         worldServer.worldMaps = console.worlds.get(0).worldMaps;
@@ -625,19 +502,19 @@ class WorldManager
         for ( BlockPopulator populator : config.getExtraPopulators() )
         	worldServer.getWorld().getPopulators().add(populator);
 
-        craftServer.getPluginManager().callEvent(new WorldInitEvent(worldServer.getWorld()));
+        server.getPluginManager().callEvent(new WorldInitEvent(worldServer.getWorld()));
         System.out.print("Preparing start region for level " + (console.worlds.size() - 1) + " (Seed: " + worldServer.getSeed() + ")");
         
         int worldNumber = worlds.size(), numberOfWorlds = plugin.getGameMode().getWorldsToGenerate().length; 
         plugin.stagingWorldManager.showWorldGenerationIndicator((float)worldNumber / (float)numberOfWorlds);
-        ChunkBuilder cb = new ChunkBuilder(12, craftServer, worldServer, worldNumber, numberOfWorlds, runWhenDone);
-    	cb.taskID = craftServer.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);
+        ChunkBuilder cb = new ChunkBuilder(12, server, worldServer, worldNumber, numberOfWorlds, runWhenDone);
+    	cb.taskID = server.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);
     	return worldServer.getWorld();
     }
     
     class ChunkBuilder implements Runnable
     {
-    	public ChunkBuilder(int numChunksFromSpawn, CraftServer craftServer, WorldServer worldServer, int worldNumber, int numberOfWorlds, Runnable runWhenDone)
+    	public ChunkBuilder(int numChunksFromSpawn, Server server, WorldServer worldServer, int worldNumber, int numberOfWorlds, Runnable runWhenDone)
     	{
     		this.numChunksFromSpawn = numChunksFromSpawn;
     		sideLength = numChunksFromSpawn * 2 + 1;
@@ -645,7 +522,7 @@ class WorldManager
     		
     		this.worldNumber = worldNumber;
     		this.numberOfWorlds = numberOfWorlds;
-    		this.craftServer = craftServer;
+    		this.server = server;
     		this.worldServer = worldServer;
     		this.runWhenDone = runWhenDone;
     		
@@ -658,7 +535,7 @@ class WorldManager
         long reportTime = System.currentTimeMillis();
         int worldNumber, numberOfWorlds;
         public int taskID;
-        CraftServer craftServer;
+        Server server;
         WorldServer worldServer;
         Runnable runWhenDone;
         static final int chunksPerTick = 3; // how many chunks to generate each tick? 
@@ -695,9 +572,9 @@ class WorldManager
             	{
             		if ( worldNumber >= numberOfWorlds - 1 )
             			plugin.stagingWorldManager.removeWorldGenerationIndicator();
-            		craftServer.getPluginManager().callEvent(new WorldLoadEvent(worldServer.getWorld()));
-            		craftServer.getScheduler().cancelTask(taskID);
-            		craftServer.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
+            		server.getPluginManager().callEvent(new WorldLoadEvent(worldServer.getWorld()));
+            		server.getScheduler().cancelTask(taskID);
+            		server.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
             		return;
             	}
             }

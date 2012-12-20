@@ -770,7 +770,7 @@ class PlayerManager
 	public void teleport(Player player, Location loc)
 	{
 		if ( player.isDead() )
-			CraftBukkit.forceRespawn(plugin, player); // stop players getting stuck at the "you are dead" screen, unable to do anything except disconnect
+			CraftBukkit.forceRespawn(player); // stop players getting stuck at the "you are dead" screen, unable to do anything except disconnect
 		player.setVelocity(new Vector(0,0,0));
 		player.teleport(loc);
 	}

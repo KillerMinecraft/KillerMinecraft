@@ -170,6 +170,8 @@ public class Killer extends JavaPlugin
 	
 	public void onEnable()
 	{
+		CraftBukkit.setPlugin(this);
+		
         instance = this;
         Settings.setup(this);
 		createRecipes();
@@ -180,7 +182,7 @@ public class Killer extends JavaPlugin
         statsManager = new StatsManager(this);
         getServer().getPluginManager().registerEvents(eventListener, this);
 
-		String defaultLevelName = CraftBukkit.getDefaultLevelName(this);
+		String defaultLevelName = CraftBukkit.getDefaultLevelName();
 		if ( defaultLevelName.equalsIgnoreCase(Settings.killerWorldName) )
 		{
 			stagingWorldIsServerDefault = true;
