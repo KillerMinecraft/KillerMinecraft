@@ -10,6 +10,7 @@ import java.util.Map;
 
 import net.minecraft.server.v1_4_5.ChunkPosition;
 import net.minecraft.server.v1_4_5.ChunkProviderHell;
+import net.minecraft.server.v1_4_5.ChunkProviderServer;
 import net.minecraft.server.v1_4_5.EntityEnderSignal;
 import net.minecraft.server.v1_4_5.EntityHuman;
 import net.minecraft.server.v1_4_5.EntityTracker;
@@ -20,9 +21,11 @@ import net.minecraft.server.v1_4_5.MinecraftServer;
 import net.minecraft.server.v1_4_5.Packet201PlayerInfo;
 import net.minecraft.server.v1_4_5.Packet205ClientCommand;
 import net.minecraft.server.v1_4_5.RegionFile;
+import net.minecraft.server.v1_4_5.RegionFileCache;
 import net.minecraft.server.v1_4_5.ServerConfigurationManagerAbstract;
 import net.minecraft.server.v1_4_5.ServerNBTManager;
 import net.minecraft.server.v1_4_5.WorldGenNether;
+import net.minecraft.server.v1_4_5.WorldManager;
 import net.minecraft.server.v1_4_5.WorldServer;
 import net.minecraft.server.v1_4_5.WorldSettings;
 import net.minecraft.server.v1_4_5.WorldType;
@@ -36,6 +39,7 @@ import org.bukkit.craftbukkit.v1_4_5.CraftServer;
 import org.bukkit.craftbukkit.v1_4_5.CraftWorld;
 import org.bukkit.craftbukkit.v1_4_5.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_4_5.generator.NetherChunkGenerator;
+import org.bukkit.craftbukkit.v1_4_5.generator.NormalChunkGenerator;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
@@ -51,23 +55,8 @@ class CraftBukkit
 	
 	static MinecraftServer getMinecraftServer()
 	{
-		try
-		{
-			CraftServer server = (CraftServer)plugin.getServer();
-			Field f = server.getClass().getDeclaredField("console");
-			f.setAccessible(true);
-			MinecraftServer console = (MinecraftServer)f.get(server);
-			f.setAccessible(false);
-			return console;
-		}
-		catch ( IllegalAccessException ex )
-		{
-		}
-		catch  ( NoSuchFieldException ex )
-		{
-		}
-		
-		return null;
+		CraftServer server = (CraftServer)plugin.getServer();
+		return server.getServer();
 	}
 
 	public static ServerConfigurationManagerAbstract getServerConfigurationManager()
@@ -103,7 +92,7 @@ class CraftBukkit
 	{
 		try
 		{
-			configuration.save((File)CraftBukkit.getMinecraftServer().options.valueOf("bukkit-settings"));
+			configuration.save((File)getMinecraftServer().options.valueOf("bukkit-settings"));
 		}
 		catch ( IOException ex )
 		{
@@ -143,7 +132,7 @@ class CraftBukkit
             public void run() {
                 Packet205ClientCommand packet = new Packet205ClientCommand();
                 packet.a = 1;
-                ((CraftPlayer) player).getHandle().netServerHandler.a(packet);
+                ((CraftPlayer) player).getHandle().netServerHandler.a(packet); // obfuscated
             }
         }, 1);
 	}
@@ -157,10 +146,10 @@ class CraftBukkit
 	{
 		try
 		{
-			Field a = net.minecraft.server.v1_4_5.RegionFileCache.class.getDeclaredField("a");
+			Field a = RegionFileCache.class.getDeclaredField("a"); // obfuscated
 			a.setAccessible(true);
 			regionfiles = (HashMap) a.get(null);
-			rafField = net.minecraft.server.v1_4_5.RegionFile.class.getDeclaredField("c");
+			rafField = RegionFile.class.getDeclaredField("c"); // obfuscated
 			rafField.setAccessible(true);
 			plugin.getLogger().info("Successfully bound to region file cache.");
 		}
@@ -244,21 +233,21 @@ class CraftBukkit
 		{
 		}
 		
-		MinecraftServer ms = CraftBukkit.getMinecraftServer();
+		MinecraftServer ms = getMinecraftServer();
 		ms.worlds.remove(ms.worlds.indexOf(craftWorld.getHandle()));
 	}
 	
 	public static void accountForDefaultWorldDeletion(World newDefault)
 	{
 		// playerFileData in ServerConsfigurationManagerAbstract must point to that of the new default world, instead of the deleted original world
-		ServerConfigurationManagerAbstract manager = CraftBukkit.getServerConfigurationManager();
+		ServerConfigurationManagerAbstract manager = getServerConfigurationManager();
 		manager.playerFileData = ((CraftWorld)newDefault).getHandle().getDataManager().getPlayerFileData();
 	}
 	
 	public static World createWorld(org.bukkit.WorldType type, Environment env, String name, long seed, ChunkGenerator generator, String generatorSettings, boolean generateStructures)
     {
         final Server server = plugin.getServer();
-        MinecraftServer console = CraftBukkit.getMinecraftServer();
+        MinecraftServer console = getMinecraftServer();
         
         File folder = new File(server.getWorldContainer(), name);
         World world = server.getWorld(name);
@@ -285,8 +274,8 @@ class CraftBukkit
         } while(used);
         boolean hardcore = false;
 
-		WorldSettings worldSettings = new WorldSettings(seed, EnumGamemode.a(server.getDefaultGameMode().getValue()), generateStructures, hardcore, worldType);
-		worldSettings.a(generatorSettings);
+		WorldSettings worldSettings = new WorldSettings(seed, EnumGamemode.a(server.getDefaultGameMode().getValue()), generateStructures, hardcore, worldType); // obfuscated
+		worldSettings.a(generatorSettings); // obfuscated
 		
         final WorldServer worldServer = new WorldServer(console, new ServerNBTManager(server.getWorldContainer(), name, true), name, dimension, worldSettings, console.methodProfiler, env, generator);
 
@@ -296,7 +285,7 @@ class CraftBukkit
         worldServer.worldMaps = console.worlds.get(0).worldMaps;
 
         worldServer.tracker = new EntityTracker(worldServer);
-        worldServer.addIWorldAccess((IWorldAccess) new net.minecraft.server.v1_4_5.WorldManager(console, worldServer));
+        worldServer.addIWorldAccess((IWorldAccess) new WorldManager(console, worldServer));
         worldServer.difficulty = 3;
         worldServer.setSpawnFlags(true, true);
         console.worlds.add(worldServer);
@@ -319,7 +308,7 @@ class CraftBukkit
 		IChunkProvider chunkProvider;
 		try
 		{
-			Field field = net.minecraft.server.v1_4_5.ChunkProviderServer.class.getDeclaredField("chunkProvider");
+			Field field = ChunkProviderServer.class.getDeclaredField("chunkProvider");
 			field.setAccessible(true);
 			chunkProvider = (IChunkProvider)field.get(world.chunkProviderServer);
 			field.setAccessible(false);
@@ -336,7 +325,7 @@ class CraftBukkit
 		ChunkProviderHell hellCP;
 		try
 		{
-			Field field = org.bukkit.craftbukkit.v1_4_5.generator.NormalChunkGenerator.class.getDeclaredField("provider");
+			Field field = NormalChunkGenerator.class.getDeclaredField("provider");
 			field.setAccessible(true);
 			hellCP = (ChunkProviderHell)field.get(ncg);
 			field.setAccessible(false);
@@ -346,7 +335,7 @@ class CraftBukkit
 			return null;
 		}
 		
-		WorldGenNether fortressGenerator = (WorldGenNether)hellCP.c;
+		WorldGenNether fortressGenerator = (WorldGenNether)hellCP.c; // obfuscated
 		ChunkPosition pos = fortressGenerator.getNearestGeneratedFeature(world, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 		if ( pos == null )
 			return null; // this just means there isn't one nearby
@@ -361,10 +350,10 @@ class CraftBukkit
 		Location playerLoc = player.getLocation();
 		EntityEnderSignal entityendersignal = new EntityEnderSignal(world, playerLoc.getX(), playerLoc.getY() + player.getEyeHeight() - 0.2, playerLoc.getZ());
 
-		entityendersignal.a(target.getX(), target.getBlockY(), target.getZ());
+		entityendersignal.a(target.getX(), target.getBlockY(), target.getZ()); // obfuscated
 		world.addEntity(entityendersignal);
-		world.makeSound(((CraftPlayer)player).getHandle(), "random.bow", 0.5F, 0.4F /*/ (d.nextFloat() * 0.4F + 0.8F)*/);
-		world.a((EntityHuman) null, 1002, playerLoc.getBlockX(), playerLoc.getBlockY(), playerLoc.getBlockZ(), 0);
+		world.makeSound(((CraftPlayer)player).getHandle(), "random.bow", 0.5F, 0.4F);
+		world.a((EntityHuman) null, 1002, playerLoc.getBlockX(), playerLoc.getBlockY(), playerLoc.getBlockZ(), 0); // obfuscated
 		return true;
 	}
 }
