@@ -174,7 +174,11 @@ class ArenaManager
 				stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SPIDER);
 				break;
 			case 1:
-				stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.ZOMBIE);
+				Zombie zomb = (Zombie)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.ZOMBIE);
+				if ( random.nextInt(16) == 0 )
+					zomb.setBaby(true);
+				if ( random.nextInt(6) == 0 )
+					zomb.setVillager(true);
 				break;
 			case 2:
 				Skeleton skelly = (Skeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
