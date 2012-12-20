@@ -9,8 +9,10 @@ import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Monster;
+import org.bukkit.entity.PigZombie;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Wolf;
 import org.bukkit.entity.Skeleton.SkeletonType;
 import org.bukkit.entity.Witch;
 import org.bukkit.entity.Zombie;
@@ -98,7 +100,7 @@ class ArenaManager
 	public void endMonsterArena()
 	{
 		for ( Entity entity : stagingWorld.getEntities() )
-			if ( entity instanceof Monster )
+			if ( entity instanceof Monster || entity instanceof Wolf )
 				entity.remove();
 		monsterWaveNumber = 0; numMonstersAlive = 0;
 		stagingWorld.setMonsterSpawnLimit(0);
@@ -175,44 +177,72 @@ class ArenaManager
 		{
 			numMonstersAlive ++;
 			
-			// "tough" monsters count for multiple monsters, so we have to handle them first, on a separate counter
-			if ( i < monsterWaveNumber - 3 && random.nextInt(14) == 0 )
+			// wither skeletons are "tough" - they count for two monsters, so we have to handle them first, on a separate counter
+			if ( i < monsterWaveNumber - 2 && random.nextInt(14) == 0 )
 			{
 				Skeleton skelly = (Skeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
 				skelly.setSkeletonType(SkeletonType.WITHER);
 				skelly.getEquipment().setItemInHand(new ItemStack(Material.STONE_SWORD));
 				
-				i+=2;
+				i+=1;
 				continue;
 			}
 			
-			int rand = random.nextInt(100);
-			if ( rand < 24 )
+			int rand = random.nextInt(52);
+			if ( rand < 10 )
 			{
 				if ( rand < 4 )
 					stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.CAVE_SPIDER);
 				else
 					stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SPIDER);
 			}
-			else if ( rand < 48)
+			else if ( rand < 20)
 			{
-				Zombie zomb = (Zombie)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.ZOMBIE);
+				Zombie zombie;
+				
+				switch ( random.nextInt(4) )
+				{
+				case 0:
+					zombie = (Zombie)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.ZOMBIE);
+					zombie.setVillager(true);
+					break;
+				case 1:
+					zombie = (PigZombie)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.PIG_ZOMBIE);
+					break;
+				default:
+					zombie = (Zombie)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.ZOMBIE);
+					break;
+				}
+				
 				if ( random.nextInt(16) == 0 )
-					zomb.setBaby(true);
-				if ( random.nextInt(6) == 0 )
-					zomb.setVillager(true);
+					zombie.setBaby(true);
 			}
-			else if ( rand < 72 )
+			else if ( rand < 30 )
 			{
 				Skeleton skelly = (Skeleton)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.SKELETON);
 				skelly.setSkeletonType(SkeletonType.NORMAL);
 				skelly.getEquipment().setItemInHand(new ItemStack(Material.BOW));
 			}
-			else if ( rand < 96 )
+			else if ( rand < 40 )
 			{
 				Creeper creeper = (Creeper)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.CREEPER);
-				if ( random.nextInt(30) == 0 )
+				if ( random.nextInt(45) == 0 )
 					creeper.setPowered(true);
+			}
+			else if ( rand < 50 )
+			{
+				numMonstersAlive ++; // we spawn two wolves
+				
+				for ( int j=0; j<2; j++ )
+				{
+					Wolf w = (Wolf)stagingWorld.spawnEntity(getMonsterSpawnLocation(), EntityType.WOLF);
+					w.setTamed(false);
+					w.setAngry(true);
+					w.setTarget(getRandomPlayerInArena());
+					
+					if ( random.nextInt(30) == 0 )
+						w.setBaby();
+				}
 			}
 			else
 			{
