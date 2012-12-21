@@ -30,7 +30,7 @@ public abstract class CraftBukkitAccess
         if ( version.equals("craftbukkit"))
         	plugin.getLogger().warning("Killer minecraft requires at least CraftBukkit 1.4.5-R1.0 to function. Sorry.");
         else
-        	plugin.getLogger().warning("This version of Killer minecraft is not compatible with your server's version of CraftBukkit! (" + version + ")");
+        	plugin.getLogger().warning("This version of Killer minecraft is not compatible with your server's version of CraftBukkit! (" + version + ") Please download a newer version of Killer minecraft.");
         return null;
 	}
 	
