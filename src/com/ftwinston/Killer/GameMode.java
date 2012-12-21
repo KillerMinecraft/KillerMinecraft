@@ -7,7 +7,6 @@ import java.util.Random;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
@@ -113,11 +112,7 @@ public abstract class GameMode implements Listener
 
 	public abstract void playerKilledOrQuit(OfflinePlayer player);
 
-
 	protected abstract Location getCompassTarget(Player player); // if compasses should follow someone / something, control that here
-	
-	public void playerActivatedPlinth(Player player) { }
-	
 	
 	// helper methods that exist to help out the game modes	
 	protected final List<Player> getOnlinePlayers()
@@ -268,79 +263,6 @@ public abstract class GameMode implements Listener
 		}
 	}
 	
-	private Location plinthLoc = null;
-	protected final Location generatePlinth(World world)
-	{
-		return generatePlinth(new Location(world, world.getSpawnLocation().getX() + 20,
-												  world.getSpawnLocation().getY(),
-												  world.getSpawnLocation().getZ()));
-	}
-	
-	protected final Location generatePlinth(Location loc)
-	{
-		World world = loc.getWorld();
-		int x = loc.getBlockX(), z = loc.getBlockZ();
-		
-		final int plinthPeakHeight = 76, spaceBetweenPlinthAndGlowstone = 4;
-		
-		// a 3x3 column from bedrock to the plinth height
-		for ( int y = 0; y < plinthPeakHeight; y++ )
-			for ( int ix = x - 1; ix < x + 2; ix++ )
-				for ( int iz = z - 1; iz < z + 2; iz++ )
-				{
-					Block b = world.getBlockAt(ix, y, iz);
-					b.setType(Material.BEDROCK);
-				}
-		
-		// with one block sticking up from it
-		int y = plinthPeakHeight;
-		for ( int ix = x - 1; ix < x + 2; ix++ )
-				for ( int iz = z - 1; iz < z + 2; iz++ )
-				{
-					Block b = world.getBlockAt(ix, y, iz);
-					b.setType(ix == x && iz == z ? Material.BEDROCK : Material.AIR);
-				}
-		
-		// that has a pressure plate on it
-		y = plinthPeakHeight + 1;
-		plinthLoc = new Location(world, x, y, z);
-		for ( int ix = x - 1; ix < x + 2; ix++ )
-				for ( int iz = z - 1; iz < z + 2; iz++ )
-				{
-					Block b = world.getBlockAt(ix, y, iz);
-					b.setType(ix == x && iz == z ? Material.STONE_PLATE : Material.AIR);
-				}
-				
-		// then a space
-		for ( y = plinthPeakHeight + 2; y <= plinthPeakHeight + spaceBetweenPlinthAndGlowstone; y++ )
-			for ( int ix = x - 1; ix < x + 2; ix++ )
-				for ( int iz = z - 1; iz < z + 2; iz++ )
-				{
-					Block b = world.getBlockAt(ix, y, iz);
-					b.setType(Material.AIR);
-				}
-		
-		// and then a 1x1 pillar of glowstone, up to max height
-		for ( y = plinthPeakHeight + spaceBetweenPlinthAndGlowstone + 1; y < world.getMaxHeight(); y++ )
-			for ( int ix = x - 1; ix < x + 2; ix++ )
-				for ( int iz = z - 1; iz < z + 2; iz++ )
-				{
-					Block b = world.getBlockAt(ix, y, iz);
-					b.setType(ix == x && iz == z ? Material.GLOWSTONE : Material.AIR);
-				}
-		
-		return plinthLoc;
-	}
-	
-	protected final boolean isOnPlinth(Location loc)
-	{
-		return  plinthLoc != null && loc.getWorld() == plinthLoc.getWorld()
-	            && loc.getX() >= plinthLoc.getBlockX() - 1
-	            && loc.getX() <= plinthLoc.getBlockX() + 1
-	            && loc.getZ() >= plinthLoc.getBlockZ() - 1
-	            && loc.getZ() <= plinthLoc.getBlockZ() + 1;
-	}
-	
 	protected final void setPlayerVisibility(Player player, boolean visible)
 	{
 		if ( visible )
@@ -407,7 +329,6 @@ public abstract class GameMode implements Listener
 			return;
 		
 		gameFinished();
-		plinthLoc = null;
 		
 		plugin.setGameState(GameState.finished);
 		

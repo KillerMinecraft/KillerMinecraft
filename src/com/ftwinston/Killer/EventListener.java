@@ -366,12 +366,6 @@ class EventListener implements Listener
     		event.setCancelled(true);
     		return;
     	}
-
-    	if(event.isCancelled())
-    		return;
-
-	  	if(event.getClickedBlock().getType() == Material.STONE_PLATE && plugin.getGameMode().isOnPlinth(event.getClickedBlock().getLocation()))
-			plugin.getGameMode().playerActivatedPlinth(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

@@ -239,6 +239,48 @@ public class Helper
 		return b.getType() != Material.LAVA && b.getType() != Material.STATIONARY_LAVA;
 	}
 
+	public static int getHighestBlockYAt(Chunk c, int x, int z)
+	{
+		return c.getWorld().getHighestBlockYAt(c.getX() * 16 + x, c.getZ() * 16 + z);
+	}
+	
+	public static int getHighestGroundYAt(Chunk c, int x, int z)
+	{	
+		int y = getHighestBlockYAt(c, x, z);
+		x = x & 15; z = z & 15;
+		Block b = c.getBlock(x, y, z);
+		
+		int seaLevel = c.getWorld().getSeaLevel();
+		while ( y > seaLevel )
+		{
+			if ( b.getType() == Material.GRASS || b.getType() == Material.DIRT || b.getType() == Material.STONE || b.getType() == Material.SAND || b.getType() == Material.GRAVEL || b.getType() == Material.BEDROCK )
+				break;
+
+			y--;
+			b = c.getBlock(x, y, z);
+		}
+
+		return y;
+	}
+	
+	public static int getHighestGroundYAt(World w, int x, int z)
+	{	
+		int y = w.getHighestBlockYAt(x, z);
+		Block b = w.getBlockAt(x, y, z);
+		
+		int seaLevel = w.getSeaLevel();
+		while ( y > seaLevel )
+		{
+			if ( b.getType() == Material.GRASS || b.getType() == Material.DIRT || b.getType() == Material.STONE || b.getType() == Material.SAND || b.getType() == Material.GRAVEL || b.getType() == Material.BEDROCK )
+				break;
+
+			y--;
+			b = w.getBlockAt(x, y, z);
+		}
+
+		return y;
+	}
+
 	public static Player getAttacker(EntityDamageEvent event)
 	{
 		Player attacker = null;
@@ -256,5 +298,77 @@ public class Helper
 				}
 		}
 		return attacker;
+	}
+	
+	public static Location generatePlinth(World world)
+	{
+		return generatePlinth(new Location(world, world.getSpawnLocation().getX() + 20,
+												  world.getSpawnLocation().getY(),
+												  world.getSpawnLocation().getZ()));
+	}
+	
+	public static Location generatePlinth(Location loc)
+	{
+		World world = loc.getWorld();
+		int x = loc.getBlockX(), z = loc.getBlockZ();
+		
+		int highestGround = world.getSeaLevel();		
+		for ( int testX = x-1; testX <= x+1; testX++ )
+			for ( int testZ = z-1; testZ <= z+1; testZ++ )
+			{
+				int groundY = Helper.getHighestGroundYAt(world, testX, testZ);
+				if ( groundY > highestGround )
+					highestGround = groundY;
+			}
+		
+		int plinthPeakHeight = highestGround + 12, spaceBetweenPlinthAndGlowstone = 4;
+		
+		// a 3x3 column from bedrock to the plinth height
+		for ( int y = 0; y < plinthPeakHeight; y++ )
+			for ( int ix = x - 1; ix < x + 2; ix++ )
+				for ( int iz = z - 1; iz < z + 2; iz++ )
+				{
+					Block b = world.getBlockAt(ix, y, iz);
+					b.setType(Material.BEDROCK);
+				}
+		
+		// with one block sticking up from it
+		int y = plinthPeakHeight;
+		for ( int ix = x - 1; ix < x + 2; ix++ )
+				for ( int iz = z - 1; iz < z + 2; iz++ )
+				{
+					Block b = world.getBlockAt(ix, y, iz);
+					b.setType(ix == x && iz == z ? Material.BEDROCK : Material.AIR);
+				}
+		
+		// that has a pressure plate on it
+		y = plinthPeakHeight + 1;
+		Location plinthLoc = new Location(world, x, y, z);
+		for ( int ix = x - 1; ix < x + 2; ix++ )
+				for ( int iz = z - 1; iz < z + 2; iz++ )
+				{
+					Block b = world.getBlockAt(ix, y, iz);
+					b.setType(ix == x && iz == z ? Material.STONE_PLATE : Material.AIR);
+				}
+				
+		// then a space
+		for ( y = plinthPeakHeight + 2; y <= plinthPeakHeight + spaceBetweenPlinthAndGlowstone; y++ )
+			for ( int ix = x - 1; ix < x + 2; ix++ )
+				for ( int iz = z - 1; iz < z + 2; iz++ )
+				{
+					Block b = world.getBlockAt(ix, y, iz);
+					b.setType(Material.AIR);
+				}
+		
+		// and then a 1x1 pillar of glowstone, up to max height
+		for ( y = plinthPeakHeight + spaceBetweenPlinthAndGlowstone + 1; y < world.getMaxHeight(); y++ )
+			for ( int ix = x - 1; ix < x + 2; ix++ )
+				for ( int iz = z - 1; iz < z + 2; iz++ )
+				{
+					Block b = world.getBlockAt(ix, y, iz);
+					b.setType(ix == x && iz == z ? Material.GLOWSTONE : Material.AIR);
+				}
+		
+		return plinthLoc;
 	}
 }
