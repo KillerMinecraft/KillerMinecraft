@@ -146,11 +146,10 @@ public abstract class GameMode implements Listener
 			player.sendMessage(message);
 	}
 	
-	protected final void broadcastMessage(Player notToMe, String message)
+	protected final void broadcastMessage(PlayerFilter recipients, String message)
 	{
-		for ( Player player : getOnlinePlayers() )
-			if ( player != notToMe )
-				player.sendMessage(message);
+		for ( Player player : getOnlinePlayers(recipients) )
+			player.sendMessage(message);
 	}
 		
 	public ChatColor getTeamChatColor(int team)
