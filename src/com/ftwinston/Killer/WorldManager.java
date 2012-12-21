@@ -378,7 +378,7 @@ class WorldManager
         Server server = plugin.getServer();
         		
         server.getPluginManager().callEvent(new WorldInitEvent(world));
-        System.out.print("Preparing start region for level " + (server.getWorlds().size() - 1) + " (Seed: " + config.getSeed() + ")");
+        System.out.print("Preparing start region for world: " + world.getName() + " (Seed: " + config.getSeed() + ")");
         
         int worldNumber = worlds.size(), numberOfWorlds = plugin.getGameMode().getWorldsToGenerate().length; 
         plugin.stagingWorldManager.showWorldGenerationIndicator((float)worldNumber / (float)numberOfWorlds);
@@ -423,8 +423,8 @@ class WorldManager
                 reportTime = time;
             }
 
-            if (time > reportTime + 1000L) {
-            	System.out.println("Preparing spawn area for " + world.getName() + ", " + (stepNum * 100 / numSteps) + "%");
+            if (time > reportTime + 500L)
+            {
             	float fraction = (float)stepNum/numSteps;
             	if ( numberOfWorlds > 1 )
             	{
@@ -451,6 +451,8 @@ class WorldManager
             		server.getPluginManager().callEvent(new WorldLoadEvent(world));
             		server.getScheduler().cancelTask(taskID);
             		server.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
+            		
+            		System.out.println("Finished generating world: " + world.getName());
             		return;
             	}
             }
