@@ -298,6 +298,8 @@ class StagingWorldManager
 				setCurrentOption(currentOption == StagingWorldOption.ANIMALS ? StagingWorldOption.NONE : StagingWorldOption.ANIMALS);
 			else if ( z == StagingWorldGenerator.globalOptionButtonZ )
 				setCurrentOption(currentOption == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
+			else if ( z == StagingWorldGenerator.exitButtonZ )
+				plugin.playerManager.movePlayerOutOfKillerGame(player);
 		}
 		else if ( x == StagingWorldGenerator.optionButtonX )
 		{
@@ -428,10 +430,6 @@ class StagingWorldManager
 			}
 			else if ( x == StagingWorldGenerator.cancelButtonX )
 				plugin.setGameState(GameState.stagingWorldSetup);
-		}
-		else if ( x == StagingWorldGenerator.exitButtonX )
-		{			
-			plugin.playerManager.movePlayerOutOfKillerGame(player);
 		}
 	}
 	

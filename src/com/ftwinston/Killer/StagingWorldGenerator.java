@@ -18,9 +18,9 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			buttonY = floorY + 2, startButtonZ = wallMinZ + 1, mainButtonX = wallMinX + 1, optionButtonX = wallMaxX - 1,
 			globalOptionButtonZ = startButtonZ + 3, animalsButtonZ = globalOptionButtonZ + 3, monstersButtonZ = animalsButtonZ + 2, 
 			worldConfigButtonZ = monstersButtonZ + 3, worldButtonZ = worldConfigButtonZ  + 2, gameModeConfigButtonZ = worldButtonZ + 3,
-			gameModeButtonZ = gameModeConfigButtonZ + 2, startButtonX = wallMaxX - 3, overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1,exitButtonX = -12,
+			gameModeButtonZ = gameModeConfigButtonZ + 2, startButtonX = wallMaxX - 3, overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1,
 			waitingSpleefButtonX = wallMaxX - 1, waitingMonsterButtonX = wallMinX + 1, spleefY = floorY-3, spleefMaxX = startButtonX + 8, spleefMinX = spleefMaxX - 16;
-	public static int waitingButtonZ, spleefMinZ, spleefMaxZ, spleefPressurePlateZ;
+	public static int waitingButtonZ, spleefMinZ, spleefMaxZ, spleefPressurePlateZ, exitButtonZ;
 	
 	public static final byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
 		colorStartButton = 4 /* yellow */, colorOverrideButton = 1 /* orange */, colorCancelButton = 9 /* teal */,
@@ -35,7 +35,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	public static void setWallMaxZ(int max)
 	{
 		wallMaxZ = max;
-		waitingButtonZ = wallMaxZ + 2; spleefMinZ = wallMaxZ + 9; spleefMaxZ = spleefMinZ + 16; spleefPressurePlateZ = spleefMinZ-2;
+		waitingButtonZ = wallMaxZ + 2; spleefMinZ = wallMaxZ + 9; spleefMaxZ = spleefMinZ + 16; spleefPressurePlateZ = spleefMinZ-2; exitButtonZ = wallMaxZ - 2;
 	}
 	
 	@Override
@@ -548,20 +548,19 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			// "exit" sign & button
 			if ( !Killer.instance.stagingWorldIsServerDefault )
-			{
-				int exitButtonZ = getWallMaxZ() - 4; 
-				b = getBlockAbs(chunk, exitButtonX, buttonY+1, exitButtonZ);
+			{ 
+				b = getBlockAbs(chunk, mainButtonX, buttonY+1, exitButtonZ);
 				if ( b != null )
 					setupWallSign(b, (byte)0x5, "Push to exit", "Killer and", "return to the", "main world");
 				
-				b = getBlockAbs(chunk, exitButtonX-1, buttonY, exitButtonZ);
+				b = getBlockAbs(chunk, mainButtonX-1, buttonY, exitButtonZ);
 				if ( b != null )
 				{
 					b.setType(wool);
 					b.setData(colorExitButton);
 				}
 				
-				b = getBlockAbs(chunk, exitButtonX, buttonY, exitButtonZ);
+				b = getBlockAbs(chunk, mainButtonX, buttonY, exitButtonZ);
 				if ( b != null )
 				{
 					b.setType(button);
