@@ -397,8 +397,9 @@ class PlayerManager
 		else
 			wasAlive = info.isAlive();
 
-		Inventory inv = player.getInventory(); 
-		inv.clear();
+		Inventory inv = player.getInventory();
+		if ( !bAlive || !wasAlive )
+			inv.clear();
 		
 		info.setAlive(bAlive);
 		if ( bAlive )
