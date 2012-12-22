@@ -2,7 +2,6 @@ package com.ftwinston.Killer;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -92,12 +91,12 @@ class WorldManager
 	
 	public void createStagingWorld(final String name) 
 	{
-		stagingWorld = plugin.getServer().getWorld(name);
-		if ( stagingWorld != null )
+		plugin.stagingWorld = plugin.getServer().getWorld(name);
+		if ( plugin.stagingWorld != null )
 		{// staging world already existed; delete it, because we might want to reset it back to its default state
 			plugin.log.info("Deleting staging world, because it already exists...");
 			
-			plugin.craftBukkit.forceUnloadWorld(stagingWorld);
+			plugin.craftBukkit.forceUnloadWorld(plugin.stagingWorld);
 			try
 			{
 				Thread.sleep(200);
@@ -129,20 +128,20 @@ class WorldManager
 		
 		// staging world must not be null when the init event is called, so we don't call this again
 		if ( plugin.stagingWorldIsServerDefault )
-			stagingWorld = plugin.getServer().getWorlds().get(0);
+			plugin.stagingWorld = plugin.getServer().getWorlds().get(0);
 
-		stagingWorld = new WorldCreator(name)
+		plugin.stagingWorld = new WorldCreator(name)
 			.generator(new StagingWorldGenerator())
 			.environment(Environment.THE_END)
 			.createWorld();
 		
-		stagingWorld.setSpawnFlags(false, false);
-		stagingWorld.setDifficulty(Difficulty.HARD);
-		stagingWorld.setPVP(false);
-		stagingWorld.setAutoSave(false); // don't save changes to the staging world
+		plugin.stagingWorld.setSpawnFlags(false, false);
+		plugin.stagingWorld.setDifficulty(Difficulty.HARD);
+		plugin.stagingWorld.setPVP(false);
+		plugin.stagingWorld.setAutoSave(false); // don't save changes to the staging world
 
-		plugin.stagingWorldManager = new StagingWorldManager(plugin, stagingWorld);
-		plugin.arenaManager = new ArenaManager(plugin, stagingWorld);
+		plugin.stagingWorldManager = new StagingWorldManager(plugin, plugin.stagingWorld);
+		plugin.arenaManager = new ArenaManager(plugin, plugin.stagingWorld);
 		plugin.log.info("Staging world generated");
 	}
 	
@@ -378,7 +377,7 @@ class WorldManager
         server.getPluginManager().callEvent(new WorldInitEvent(world));
         System.out.print("Preparing start region for world: " + world.getName() + " (Seed: " + config.getSeed() + ")");
         
-        int worldNumber = worlds.size(), numberOfWorlds = plugin.getGameMode().getWorldsToGenerate().length; 
+        int worldNumber = config.getGame().getWorlds().size(), numberOfWorlds = config.getGame().getGameMode().getWorldsToGenerate().length; 
         plugin.stagingWorldManager.showWorldGenerationIndicator((float)worldNumber / (float)numberOfWorlds);
         ChunkBuilder cb = new ChunkBuilder(12, server, world, worldNumber, numberOfWorlds, runWhenDone);
     	cb.taskID = server.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);

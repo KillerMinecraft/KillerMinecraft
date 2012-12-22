@@ -35,8 +35,16 @@ public class PlayerFilter
 	
 	private ArrayList<String> excludedPlayers = new ArrayList<String>();
 	
-	//private Game game = null;
+	private Game game = null;
 
+	PlayerFilter setGame(Game game)
+	{
+		this.game = game;
+		return this;
+	}
+	
+	Game getGame() { return game; }
+	
 	public PlayerFilter alive()
 	{
 		aliveState = Setting.Required;
@@ -179,6 +187,9 @@ public class PlayerFilter
 		for ( Map.Entry<String, Info> info : Killer.instance.playerManager.getPlayerInfo() )
 		{
 			Info infoVal = info.getValue();
+			
+			if ( game != null && info.getGame() != game )
+				continue;
 			
 			switch ( aliveState )
 			{

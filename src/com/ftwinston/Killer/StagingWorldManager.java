@@ -123,7 +123,7 @@ class StagingWorldManager
 		case WORLD_CONFIG:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, StagingWorldGenerator.buttonY, StagingWorldGenerator.worldConfigButtonZ).setData(StagingWorldGenerator.colorOptionOn);
 			
-			options = plugin.getWorldOption().getOptions();
+			options = game.getWorldOption().getOptions();
 			labels = new String[options.length];
 			values = new boolean[options.length];
 			for ( int i=0; i<options.length; i++ )
@@ -359,8 +359,8 @@ class StagingWorldManager
 				break;
 			case WORLD_CONFIG:
 				// toggle this option
-				plugin.getWorldOption().toggleOption(num);
-				options = plugin.getWorldOption().getOptions();
+				game.getWorldOption().toggleOption(num);
+				options = game.getWorldOption().getOptions();
 				
 				// update block colors
 				newValues = new boolean[options.length];
@@ -415,7 +415,7 @@ class StagingWorldManager
 		{
 			if ( x == StagingWorldGenerator.startButtonX )
 			{
-				if ( plugin.getOnlinePlayers().size() >= game.getGameMode().getMinPlayers() )
+				if ( game.getOnlinePlayers().size() >= game.getGameMode().getMinPlayers() )
 				{
 					setCurrentOption(game, StagingWorldOption.NONE);
 					game.setGameState(GameState.worldGeneration);

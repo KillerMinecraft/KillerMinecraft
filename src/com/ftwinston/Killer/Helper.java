@@ -46,7 +46,7 @@ public class Helper
 		
 		Player target = Killer.instance.getServer().getPlayerExact(info.target);
 		
-		if ( isAlive(target) && Killer.instance.isGameWorld(target.getWorld()))
+		if ( isAlive(target) && Killer.instance.getGameForPlayer(target) == info.getGame() )
 			return target;
 		
 		return null;

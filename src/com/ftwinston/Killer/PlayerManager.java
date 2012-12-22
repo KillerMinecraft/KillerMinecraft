@@ -100,7 +100,7 @@ class PlayerManager
 	
 	public class Info
 	{
-		public Info(boolean alive) { a = alive; t = -1; target = null; }
+		public Info(Game game, boolean alive) { this.game = game; a = alive; t = -1; target = null; }
 		
 		private boolean a;
 		private int t;
@@ -119,6 +119,10 @@ class PlayerManager
 			a = b;
 		}
 		
+		private Game game;
+		public Game getGame() { return game; }
+		public void setGame(Game g) { game = g; }
+		
 		// spectator target, and also kill target in Contract Killer mode
 		public String target;
 		
@@ -135,11 +139,11 @@ class PlayerManager
 			info.setTeam(teamNum);
 	}
 
-	public void reset()
+	public void reset(Game game)
 	{
 		playerInfo.clear();
 		
-		for ( Player player : plugin.getOnlinePlayers() )
+		for ( Player player : game.getOnlinePlayers() )
 		{
 			resetPlayer(player);
 			setAlive(player, true);
@@ -150,9 +154,9 @@ class PlayerManager
 				player.setBanned(false);
 	}
 	
-	public void startGame()
+	public void startGame(Game game)
 	{
-		reset();
+		reset(game);
 	}
 	
 	public void colorPlayerName(Player player, ChatColor color)
@@ -194,20 +198,22 @@ class PlayerManager
 
 	public void playerJoined(Player player)
 	{
+		Game game = plugin.getGameForPlayer(player);
 		Info info = playerInfo.get(player.getName());
 		boolean isNewPlayer;
 		if ( info == null )
 		{
 			isNewPlayer = true;
 			
-			if ( !plugin.getGameState().usesGameWorlds )
-				info = new Info(true);
+			if ( game == null || !game.getGameState().usesGameWorlds )
+				info = new Info(game, true);
 			else if ( Settings.lateJoinersStartAsSpectator )
-				info = new Info(false);
+				info = new Info(game, false);
 			else
 			{
-				info = new Info(true);
-				plugin.statsManager.playerJoinedLate();
+				info = new Info(game, true);
+				if ( game != null )
+					plugin.statsManager.playerJoinedLate(game.getNumber());
 			}
 			playerInfo.put(player.getName(), info);
 			
@@ -217,19 +223,14 @@ class PlayerManager
 		else
 			isNewPlayer = false;
 		
-		if ( !plugin.getGameState().usesGameWorlds )
+		if ( game == null || !game.getGameState().usesGameWorlds )
 			return;
 
 		// hide all spectators from this player
-		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
-			if ( !entry.getValue().isAlive() && !entry.getKey().equals(player.getName()) )
-			{
-				Player other = plugin.getServer().getPlayerExact(entry.getKey());
-				if ( other != null && other.isOnline() && plugin.isGameWorld(other.getWorld()) )
-					hidePlayer(player, other);
-			}
+		for ( Player spectator : game.getOnlinePlayers(new PlayerFilter().notAlive().exclude(player)) )
+			hidePlayer(player, spectator);
 
-		plugin.getGameMode().playerJoinedLate(player, isNewPlayer);
+		game.getGameMode().playerJoinedLate(player, isNewPlayer);
 		
 		if ( !info.isAlive() )
 		{
@@ -240,7 +241,7 @@ class PlayerManager
 			setAlive(player, false);
 			
 			// send this player to everyone else's scoreboards, because they're now invisible, and won't show otherwise
-			for ( Player online : plugin.getOnlinePlayers() )
+			for ( Player online : game.getOnlinePlayers() )
 				if ( online != player && !online.canSee(player) )
 					plugin.craftBukkit.sendForScoreboard(online, player, true);
 		}
@@ -250,7 +251,7 @@ class PlayerManager
 			{
 				setAlive(player, true);
 				
-				if ( !plugin.getGameMode().teamAllocationIsSecret() )
+				if ( !game.getGameMode().teamAllocationIsSecret() )
 					colorPlayerName(player, info.getTeam() == 1 ? ChatColor.RED : ChatColor.BLUE);
 			}
 			else
@@ -260,11 +261,11 @@ class PlayerManager
 			}
 		}
 		if ( isNewPlayer );
-			plugin.getGameMode().sendGameModeHelpMessage(player);
+		game.getGameMode().sendGameModeHelpMessage(player);
 			
 		if ( player.getInventory().contains(Material.COMPASS) )
 		{// does this need a null check on the target?
-			player.setCompassTarget(getCompassTarget(player));
+			player.setCompassTarget(getCompassTarget(game, player));
 		}
 	}
 	

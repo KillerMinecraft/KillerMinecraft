@@ -116,22 +116,22 @@ public abstract class GameMode implements Listener
 	// helper methods that exist to help out the game modes	
 	protected final List<Player> getOnlinePlayers()
 	{		
-		return getOnlinePlayers(new PlayerFilter());
+		return game.getOnlinePlayers(new PlayerFilter());
 	}
 	
 	protected final List<Player> getOnlinePlayers(PlayerFilter filter)
-	{		
-		return filter.getOnlinePlayers();
+	{
+		return game.getOnlinePlayers(filter);
 	}
 	
 	protected final List<OfflinePlayer> getOfflinePlayers(PlayerFilter filter)
 	{		
-		return filter.offline().getPlayers();
+		return game.getOfflinePlayers(filter);
 	}
 	
 	protected final List<OfflinePlayer> getPlayers(PlayerFilter filter)
 	{		
-		return filter.getPlayers();
+		return game.getPlayers(filter);
 	}
 	
 	protected final void broadcastMessage(String message)
@@ -278,8 +278,8 @@ public abstract class GameMode implements Listener
 	protected final JavaPlugin getPlugin() { return plugin; }
 	protected final BukkitScheduler getScheduler() { return plugin.getServer().getScheduler(); }
 	
-	protected final int getNumWorlds() { return plugin.worldManager.worlds.size(); }
-	protected final World getWorld(int number) { return plugin.worldManager.worlds.get(number); }
+	protected final int getNumWorlds() { return game.getWorlds().size(); }
+	protected final World getWorld(int number) { return game.getWorlds().get(number); }
 	
 	public void handlePortal(TeleportCause cause, Location entrance, PortalHelper helper)
 	{
@@ -310,7 +310,7 @@ public abstract class GameMode implements Listener
 	public final void startGame(boolean isNewWorlds)
 	{	
 		game.forcedGameEnd = false;
-		plugin.playerManager.startGame();
+		plugin.playerManager.startGame(game);
 		gameStarted(isNewWorlds);
 		
 		for ( Player player : getOnlinePlayers() )
@@ -413,24 +413,24 @@ public abstract class GameMode implements Listener
 	// allows game modes to determine if an event is in their game world
 	protected final boolean shouldIgnoreEvent(Entity e)
 	{
-		return !plugin.isGameWorld(e.getWorld());
+		return plugin.getGameForWorld(e.getWorld()) != game;
 	}
 	
 	// allows events to determine if an event is in their game world
 	protected final boolean shouldIgnoreEvent(Block b)
 	{
-		return !plugin.isGameWorld(b.getWorld());
+		return plugin.getGameForWorld(b.getWorld()) != game;
 	}
 	
 	// allows events to determine if an event is in their game world
 	protected final boolean shouldIgnoreEvent(World w)
 	{
-		return !plugin.isGameWorld(w);
+		return plugin.getGameForWorld(w) != game;
 	}
 	
 	// allows events to determine if an event is in their game world
 	protected final boolean shouldIgnoreEvent(Location l)
 	{
-		return !plugin.isGameWorld(l.getWorld());
+		return plugin.getGameForWorld(l.getWorld()) != game;
 	}
 }

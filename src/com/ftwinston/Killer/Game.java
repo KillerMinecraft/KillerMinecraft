@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -143,7 +144,7 @@ public class Game
 				if ( player.getWorld() != plugin.stagingWorld )
 					plugin.playerManager.putPlayerInStagingWorld(player);
 			
-			plugin.playerManager.reset(number); // fixmulti
+			plugin.playerManager.reset(this); // fixmulti
 			
 			plugin.worldManager.deleteKillerWorlds(this, new Runnable() {
 				@Override
@@ -295,5 +296,25 @@ public class Game
 			getGameMode().broadcastMessage("Game is restarting...");
 		
 		setGameState(GameState.active);
+	}
+
+	public List<Player> getOnlinePlayers()
+	{		
+		return getOnlinePlayers(new PlayerFilter().setGame(this));
+	}
+	
+	public List<Player> getOnlinePlayers(PlayerFilter filter)
+	{
+		return filter.setGame(this).getOnlinePlayers();
+	}
+	
+	protected final List<OfflinePlayer> getOfflinePlayers(PlayerFilter filter)
+	{		
+		return filter.offline().setGame(this).getPlayers();
+	}
+	
+	protected final List<OfflinePlayer> getPlayers(PlayerFilter filter)
+	{		
+		return filter.setGame(this).getPlayers();
 	}
 }
