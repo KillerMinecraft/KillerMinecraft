@@ -71,7 +71,7 @@ class StagingWorldManager
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, StagingWorldGenerator.buttonY, StagingWorldGenerator.globalOptionButtonZ).setData(StagingWorldGenerator.colorOptionOff);
 			break;
 		}
-		hideSetupOptionButtons();
+		hideSetupOptionButtons(game);
 		
 		currentOption = option;
 		String[] labels;
@@ -227,7 +227,7 @@ class StagingWorldManager
 		}
 	}
 
-	private void hideSetupOptionButtons()
+	private void hideSetupOptionButtons(Game game)
 	{
 		Block b;
 		int minZ = StagingWorldGenerator.getOptionButtonZ(0, false);
@@ -247,7 +247,7 @@ class StagingWorldManager
 			}
 	}
 	
-	private void updateSetupOptionButtons(boolean[] values, boolean forGameMode)
+	private void updateSetupOptionButtons(Game game, boolean[] values, boolean forGameMode)
 	{
 		Block b;
 		for ( int i=0; i<values.length; i++ )
@@ -319,7 +319,7 @@ class StagingWorldManager
 				newValues = new boolean[GameMode.gameModes.size()];
 				for ( int i=0; i<newValues.length; i++ )
 					newValues[i] = i == num;
-				updateSetupOptionButtons(newValues, true);
+				updateSetupOptionButtons(game, newValues, true);
 				
 				// update game mode sign
 				b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, StagingWorldGenerator.buttonY+1, StagingWorldGenerator.gameModeButtonZ-1);
@@ -336,7 +336,7 @@ class StagingWorldManager
 				newValues = new boolean[options.length];
 				for ( int i=0; i<newValues.length; i++ )
 					newValues[i] = options[i].isEnabled();
-				updateSetupOptionButtons(newValues, false);
+				updateSetupOptionButtons(game, newValues, false);
 				break;
 			case WORLD:
 				// change option
@@ -349,7 +349,7 @@ class StagingWorldManager
 				newValues = new boolean[WorldOption.worldOptions.size()];
 				for ( int i=0; i<newValues.length; i++ )
 					newValues[i] = i == num;
-				updateSetupOptionButtons(newValues, false);
+				updateSetupOptionButtons(game, newValues, false);
 				
 				// update world option sign
 				b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, StagingWorldGenerator.buttonY+1, StagingWorldGenerator.worldButtonZ-1);
@@ -366,7 +366,7 @@ class StagingWorldManager
 				newValues = new boolean[options.length];
 				for ( int i=0; i<newValues.length; i++ )
 					newValues[i] = options[i].isEnabled();
-				updateSetupOptionButtons(newValues, false);
+				updateSetupOptionButtons(game, newValues, false);
 				break;
 			case MONSTERS:
 				game.monsterNumbers = num;
@@ -375,7 +375,7 @@ class StagingWorldManager
 				newValues = new boolean[5];
 				for ( int i=0; i<newValues.length; i++ )
 					newValues[i] = i == num;
-				updateSetupOptionButtons(newValues, false);
+				updateSetupOptionButtons(game, newValues, false);
 				
 				// update main sign
 				b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, StagingWorldGenerator.buttonY+1, StagingWorldGenerator.monstersButtonZ-1);
@@ -390,7 +390,7 @@ class StagingWorldManager
 				newValues = new boolean[5];
 				for ( int i=0; i<newValues.length; i++ )
 					newValues[i] = i == num;
-				updateSetupOptionButtons(newValues, false);
+				updateSetupOptionButtons(game, newValues, false);
 				
 				// update main sign
 				b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, StagingWorldGenerator.buttonY+1, StagingWorldGenerator.monstersButtonZ-1);
@@ -407,7 +407,7 @@ class StagingWorldManager
 					game.toggleEnderEyeRecipe();
 
 				newValues = new boolean[] { game.isMonsterEggRecipeEnabled(), game.isDispenserRecipeEnabled(), game.isEnderEyeRecipeEnabled() };
-				updateSetupOptionButtons(newValues, false);
+				updateSetupOptionButtons(game, newValues, false);
 				break;
 			}
 		}
@@ -513,7 +513,7 @@ class StagingWorldManager
 		}
 	}
 	
-	public void showWaitForDeletion()
+	public void showWaitForDeletion(Game game)
 	{
 		Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, StagingWorldGenerator.buttonY + 1, StagingWorldGenerator.startButtonZ);
 			
@@ -552,7 +552,7 @@ class StagingWorldManager
 		backCancel.setData(StagingWorldGenerator.colorOptionOff);
 	}
 	
-	public void showWorldGenerationIndicator(float completion)
+	public void showWorldGenerationIndicator(Game game, float completion)
 	{
 		int minZ = StagingWorldGenerator.wallMinZ + 2, maxZ = StagingWorldGenerator.getWallMaxZ() - 2;
 		int maxCompleteZ = (int)((maxZ - minZ) * completion + 0.5f) + minZ;
@@ -571,7 +571,7 @@ class StagingWorldManager
 		}
 	}
 	
-	public void removeWorldGenerationIndicator()
+	public void removeWorldGenerationIndicator(Game game)
 	{
 		int minZ = StagingWorldGenerator.wallMinZ + 2, maxZ = StagingWorldGenerator.getWallMaxZ() - 2;
 		

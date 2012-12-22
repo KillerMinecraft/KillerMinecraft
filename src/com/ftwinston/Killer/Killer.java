@@ -123,8 +123,16 @@ public class Killer extends JavaPlugin
 	
 	public void onDisable()
 	{
-		playerManager.reset();
+		for ( Game game : games )
+			playerManager.reset(game);
+		
 		worldManager.onDisable();
+		
+		craftBukkit = null;
+        playerManager = null;
+        worldManager = null;
+        voteManager = null;
+        statsManager = null;
 	}
 	
 	public static void registerGameMode(GameModePlugin plugin)

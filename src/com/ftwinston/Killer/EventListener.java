@@ -346,14 +346,14 @@ class EventListener implements Listener
         		
     			if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
         		{
-    				String target = plugin.playerManager.getNextFollowTarget(event.getPlayer(), info.target, true);
+    				String target = plugin.playerManager.getNextFollowTarget(game, event.getPlayer(), info.target, true);
     				plugin.playerManager.setFollowTarget(event.getPlayer(), target);
     				plugin.playerManager.checkFollowTarget(event.getPlayer(), target);
     				event.getPlayer().sendMessage("Following " + info.target);
         		}
     			else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
         		{
-    				String target = plugin.playerManager.getNextFollowTarget(event.getPlayer(), info.target, false);
+    				String target = plugin.playerManager.getNextFollowTarget(game, event.getPlayer(), info.target, false);
     				plugin.playerManager.setFollowTarget(event.getPlayer(), target);
     				plugin.playerManager.checkFollowTarget(event.getPlayer(), target);
     				event.getPlayer().sendMessage("Following " + info.target);

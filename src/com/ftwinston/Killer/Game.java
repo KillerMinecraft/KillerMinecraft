@@ -140,7 +140,7 @@ public class Game
 			plugin.stagingWorldManager.showWaitForDeletion(this);
 			plugin.stagingWorldManager.removeWorldGenerationIndicator(this);
 			
-			for ( Player player : gameMode.getOnlinePlayers() )
+			for ( Player player : getOnlinePlayers() )
 				if ( player.getWorld() != plugin.stagingWorld )
 					plugin.playerManager.putPlayerInStagingWorld(player);
 			
@@ -308,13 +308,25 @@ public class Game
 		return filter.setGame(this).getOnlinePlayers();
 	}
 	
-	protected final List<OfflinePlayer> getOfflinePlayers(PlayerFilter filter)
+	public List<OfflinePlayer> getOfflinePlayers(PlayerFilter filter)
 	{		
 		return filter.offline().setGame(this).getPlayers();
 	}
 	
-	protected final List<OfflinePlayer> getPlayers(PlayerFilter filter)
+	public List<OfflinePlayer> getPlayers(PlayerFilter filter)
 	{		
 		return filter.setGame(this).getPlayers();
+	}
+	
+	public void broadcastMessage(String message)
+	{
+		for ( Player player : getOnlinePlayers() )
+			player.sendMessage(message);
+	}
+	
+	public void broadcastMessage(PlayerFilter recipients, String message)
+	{
+		for ( Player player : getOnlinePlayers(recipients) )
+			player.sendMessage(message);
 	}
 }

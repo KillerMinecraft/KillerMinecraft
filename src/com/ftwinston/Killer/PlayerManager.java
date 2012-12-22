@@ -3,6 +3,7 @@ package com.ftwinston.Killer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -59,10 +60,18 @@ class PlayerManager
 	public void movePlayerIntoKillerGame(Player player)
 	{
 		previousLocations.put(player.getName(), player.getLocation());
-		if ( plugin.getGameState().usesGameWorlds )
-			teleport(player, plugin.getGameMode().getSpawnLocation(player));
-		else
-			putPlayerInStagingWorld(player);
+		
+		if ( plugin.games.length == 1 )
+		{
+			Game game = plugin.games[0];
+			if ( game.getGameState().usesGameWorlds )
+			{
+				teleport(player, game.getGameMode().getSpawnLocation(player));
+				return;
+			}
+		}
+		
+		putPlayerInStagingWorld(player);
 	}
 	
 	public void putPlayerInStagingWorld(Player player)
@@ -162,7 +171,7 @@ class PlayerManager
 	public void colorPlayerName(Player player, ChatColor color)
 	{
 		String oldListName = player.getPlayerListName();
-	
+		Game game = plugin.getGameForPlayer(player);
 		player.setDisplayName(color + ChatColor.stripColor(player.getDisplayName()));
 		
 		// mustn't be > 16 chars, or it throws an exception
@@ -172,7 +181,7 @@ class PlayerManager
 		player.setPlayerListName(color + name);
 		
 		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
-		for ( Player online : plugin.getOnlinePlayers() )
+		for ( Player online : game.getOnlinePlayers() )
 			if ( !online.canSee(player) )
 			{
 				plugin.craftBukkit.sendForScoreboard(online, oldListName, false);
@@ -183,12 +192,13 @@ class PlayerManager
 	public void clearPlayerNameColor(Player player)
 	{
 		String oldListName = player.getPlayerListName();
+		Game game = plugin.getGameForPlayer(player);
 		
 		player.setDisplayName(ChatColor.stripColor(player.getDisplayName()));
 		player.setPlayerListName(ChatColor.stripColor(player.getPlayerListName()));
 		
 		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
-		for ( Player online : plugin.getOnlinePlayers() )
+		for ( Player online : game.getOnlinePlayers() )
 			if ( online != player && !online.canSee(player) )
 			{
 				plugin.craftBukkit.sendForScoreboard(online, oldListName, false);
@@ -350,20 +360,19 @@ class PlayerManager
 	{
 		boolean wasAlive;
 		Info info = playerInfo.get(player.getName());
-		if ( info == null )
-		{
-			info = new Info(bAlive);
-			playerInfo.put(player.getName(), info);
-			wasAlive = true;
-		}
-		else
-			wasAlive = info.isAlive();
+		wasAlive = info.isAlive();
 
 		Inventory inv = player.getInventory();
 		if ( !bAlive || !wasAlive )
 			inv.clear();
 		
+		Game game = plugin.getGameForPlayer(player);
+		
 		info.setAlive(bAlive);
+
+		if ( game == null )
+			return;
+		
 		if ( bAlive )
 		{
 			// you shouldn't stop being able to fly in creative mode, cos you're (hopefully) only there for testing
@@ -372,7 +381,7 @@ class PlayerManager
 				player.setFlying(false);
 				player.setAllowFlight(false);
 			}
-			makePlayerVisibleToAll(player);
+			makePlayerVisibleToAll(game, player);
 			
 			if ( !wasAlive && !player.isDead() )
 				player.sendMessage("You are no longer a spectator.");
@@ -381,7 +390,7 @@ class PlayerManager
 		{
 			player.setAllowFlight(true);
 			player.setFlying(true);
-			makePlayerInvisibleToAll(player);
+			makePlayerInvisibleToAll(game, player);
 			
 			ItemStack stack = new ItemStack(Settings.teleportModeItem, 1);
 			ItemMeta meta = stack.getItemMeta();
@@ -405,16 +414,16 @@ class PlayerManager
 		plugin.craftBukkit.sendForScoreboard(fromMe, hideMe, true); // hiding will take them out of the scoreboard, so put them back in again
 	}
 	
-	public void makePlayerInvisibleToAll(Player player)
+	public void makePlayerInvisibleToAll(Game game, Player player)
 	{
-		for(Player p : plugin.getOnlinePlayers())
+		for(Player p : game.getOnlinePlayers())
 			if (p != player && p.canSee(player))
 				hidePlayer(p, player);
 	}
 	
-	public void makePlayerVisibleToAll(Player player)
+	public void makePlayerVisibleToAll(Game game, Player player)
 	{
-		for(Player p : plugin.getOnlinePlayers())
+		for(Player p : game.getOnlinePlayers())
 			if (p != player && !p.canSee(player))
 				p.showPlayer(player);
 	}
@@ -470,10 +479,12 @@ class PlayerManager
 	
 	public void checkFollowTarget(Player player, String targetName)
 	{
+		Game game = plugin.getGameForPlayer(player);
+		
 		Player target = targetName == null ? null : plugin.getServer().getPlayerExact(targetName);
-		if ( targetName == null || target == null || !isAlive(targetName) || !target.isOnline() || !plugin.isGameWorld(target.getWorld()) )
+		if ( targetName == null || target == null || !isAlive(targetName) || !target.isOnline() || plugin.getGameForWorld(target.getWorld()) != game )
 		{
-			targetName = getNearestFollowTarget(player);
+			targetName = getNearestFollowTarget(game, player);
 			setFollowTarget(player, targetName);
 			if ( targetName == null )
 				return; // if there isn't a valid follow target, don't let it try to move them to it
@@ -610,70 +621,57 @@ class PlayerManager
 	public String getNearestFollowTarget(Game game, Player lookFor)
 	{
 		double nearestDistSq = Double.MAX_VALUE;
-		String nearestName = null, firstName = null;
+		String nearestName = null;
 		
-		for ( Map.Entry<String, Info> entry : getPlayerInfo() )
+		for ( Player player : game.getOnlinePlayers(new PlayerFilter().alive().exclude(lookFor).world(lookFor.getWorld())) )
 		{
-			if ( !entry.getValue().isAlive() )
-				continue;
-			
-			Player player = plugin.getServer().getPlayerExact(entry.getKey());
-			if ( player != null && player.isOnline() )
+			double testDistSq = player.getLocation().distanceSquared(lookFor.getLocation());
+			if ( testDistSq < nearestDistSq )
 			{
-				if ( firstName == null && plugin.isGameWorld(player.getWorld()) )
-					firstName = player.getName();
-				
-				if ( lookFor.getWorld() == player.getWorld() )
-				{
-					double testDistSq = player.getLocation().distanceSquared(lookFor.getLocation());
-					if ( testDistSq < nearestDistSq )
-					{
-						nearestName = player.getName();
-						nearestDistSq = testDistSq;
-					}
-				}
+				nearestName = player.getName();
+				nearestDistSq = testDistSq;
 			}
 		}
 		
 		if ( nearestName != null )
 			return nearestName;
 		
-		return firstName;
+		List<Player> playersInOtherWorlds = game.getOnlinePlayers(new PlayerFilter().alive().exclude(lookFor));;
+		return playersInOtherWorlds.size() > 0 ? playersInOtherWorlds.get(0).getName() : null;
 	}
 	
-	public String getNextFollowTarget(Player lookFor, String currentTargetName, boolean forwards)
+	public String getNextFollowTarget(Game game, Player lookFor, String currentTargetName, boolean forwards)
 	{
-		Set<Map.Entry<String, Info>> players = forwards ? playerInfo.entrySet() : playerInfo.descendingMap().entrySet();
+		List<Player> validTargets = game.getOnlinePlayers(new PlayerFilter().alive().exclude(lookFor));
+		if ( validTargets.size() == 0 )
+			return null;
+		
+		int start, end, increment;
+		if ( forwards )
+		{
+			start = 0;
+			end = validTargets.size();
+			increment = 1;
+		}
+		else
+		{
+			start = validTargets.size()-1;
+			end = -1;
+			increment = -1;
+		}
+		
 		boolean useNextTarget = false;
-		
-		for ( Map.Entry<String, Info> entry : players )
+		for ( int i = start; i != end; i += increment )
 		{
-			if ( !useNextTarget && entry.getKey().equals(currentTargetName) )
-			{
+			if ( useNextTarget )
+				return validTargets.get(i).getName();
+			
+			if ( validTargets.get(i).getName().equals(currentTargetName) )
 				useNextTarget = true;
-				continue;
-			}
-			if ( !entry.getValue().isAlive() || !useNextTarget )
-				continue;
-			
-			Player player = plugin.getServer().getPlayerExact(entry.getKey());
-			if ( player != null && player.isOnline() && plugin.isGameWorld(player.getWorld()) )
-				return entry.getKey();
 		}
-				
-		// couldn't find one, or ran off the end of the list, so start again at the beginning, and use the first valid one
-		for ( Map.Entry<String, Info> entry : players )
-		{
-			if ( !entry.getValue().isAlive() )
-				continue;
-			
-			Player player = plugin.getServer().getPlayerExact(entry.getKey());
-			if ( player != null && player.isOnline() && plugin.isGameWorld(player.getWorld()) )
-				return entry.getKey();
-		}
-		
-		// there really just wasn't one
-		return null;
+						
+		// ran off the end of the list, so use the "first" one from the list
+		return validTargets.get(start).getName();
 	}
 
 	private Location findSpaceForPlayer(Player player, Location targetLoc, Vector dir, int maxDist, boolean seekClosest, boolean abortOnAnySolid)

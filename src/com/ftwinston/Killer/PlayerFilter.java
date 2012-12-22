@@ -188,7 +188,7 @@ public class PlayerFilter
 		{
 			Info infoVal = info.getValue();
 			
-			if ( game != null && info.getGame() != game )
+			if ( game != null && infoVal.getGame() != game )
 				continue;
 			
 			switch ( aliveState )

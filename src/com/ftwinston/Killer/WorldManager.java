@@ -342,7 +342,7 @@ class WorldManager
 						}
 				}
 				
-				plugin.stagingWorldManager.removeWorldGenerationIndicator();
+				plugin.stagingWorldManager.removeWorldGenerationIndicator(game);
 				
 				// run whatever task was passed in
 				if ( runWhenDone != null )
@@ -378,20 +378,21 @@ class WorldManager
         System.out.print("Preparing start region for world: " + world.getName() + " (Seed: " + config.getSeed() + ")");
         
         int worldNumber = config.getGame().getWorlds().size(), numberOfWorlds = config.getGame().getGameMode().getWorldsToGenerate().length; 
-        plugin.stagingWorldManager.showWorldGenerationIndicator((float)worldNumber / (float)numberOfWorlds);
-        ChunkBuilder cb = new ChunkBuilder(12, server, world, worldNumber, numberOfWorlds, runWhenDone);
+        plugin.stagingWorldManager.showWorldGenerationIndicator(config.getGame(), (float)worldNumber / (float)numberOfWorlds);
+        ChunkBuilder cb = new ChunkBuilder(config.getGame(), 12, server, world, worldNumber, numberOfWorlds, runWhenDone);
     	cb.taskID = server.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);
     	return world;
     }
     
     class ChunkBuilder implements Runnable
     {
-    	public ChunkBuilder(int numChunksFromSpawn, Server server, World world, int worldNumber, int numberOfWorlds, Runnable runWhenDone)
+    	public ChunkBuilder(Game game, int numChunksFromSpawn, Server server, World world, int worldNumber, int numberOfWorlds, Runnable runWhenDone)
     	{
     		this.numChunksFromSpawn = numChunksFromSpawn;
     		sideLength = numChunksFromSpawn * 2 + 1;
     		numSteps = sideLength * sideLength;
     		
+    		this.game = game;
     		this.worldNumber = worldNumber;
     		this.numberOfWorlds = numberOfWorlds;
     		this.server = server;
@@ -403,6 +404,7 @@ class WorldManager
         	spawnZ = spawnPos.getBlockZ() >> 4;
     	}
     	
+    	Game game;
     	int numChunksFromSpawn, stepNum = 0, sideLength, numSteps, spawnX, spawnZ;
         long reportTime = System.currentTimeMillis();
         int worldNumber, numberOfWorlds;
@@ -428,7 +430,7 @@ class WorldManager
             		fraction /= (float)numberOfWorlds;
             		fraction += (float)worldNumber/(float)numberOfWorlds;
             	}
-            	plugin.stagingWorldManager.showWorldGenerationIndicator(fraction);
+            	plugin.stagingWorldManager.showWorldGenerationIndicator(game, fraction);
                 reportTime = time;
             }
 
@@ -444,7 +446,7 @@ class WorldManager
             	if ( stepNum >= numSteps )
             	{
             		if ( worldNumber >= numberOfWorlds - 1 )
-            			plugin.stagingWorldManager.removeWorldGenerationIndicator();
+            			plugin.stagingWorldManager.removeWorldGenerationIndicator(game);
             		server.getPluginManager().callEvent(new WorldLoadEvent(world));
             		server.getScheduler().cancelTask(taskID);
             		server.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);

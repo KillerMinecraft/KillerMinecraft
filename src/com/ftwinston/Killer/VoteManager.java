@@ -42,51 +42,53 @@ public class VoteManager
 	
 	public boolean isInVote() { return instance.inVote; }
 	
-	public void startVote(String question, Player initiatedBy, Runnable runOnYes, Runnable runOnNo, Runnable runOnDraw)
+	public void startVote(Game game, String question, Player initiatedBy, Runnable runOnYes, Runnable runOnNo, Runnable runOnDraw)
 	{
 		if ( isInVote() )
 			return;
 	
 		playersWhoCanVote.clear();
-		for ( Player player : plugin.getOnlinePlayers())
+		for ( Player player : game.getOnlinePlayers())
 			playersWhoCanVote.add(player.getName());
 		numYesVotes = numNoVotes = 0;
 		inVote = true;
 		
-		plugin.getGameMode().broadcastMessage(ChatColor.YELLOW + (initiatedBy == null ? "Vote started: " : initiatedBy.getName() + " started a vote: ") + ChatColor.RESET + question + ChatColor.YELLOW + "\nSay " + ChatColor.GREEN + "Y" + ChatColor.YELLOW + " to vote yes, or " + ChatColor.RED + "N" + ChatColor.YELLOW + " to vote no.");
+		game.broadcastMessage(ChatColor.YELLOW + (initiatedBy == null ? "Vote started: " : initiatedBy.getName() + " started a vote: ") + ChatColor.RESET + question + ChatColor.YELLOW + "\nSay " + ChatColor.GREEN + "Y" + ChatColor.YELLOW + " to vote yes, or " + ChatColor.RED + "N" + ChatColor.YELLOW + " to vote no.");
 		
-		voteResult = new VoteResult(runOnYes, runOnNo, runOnDraw);
+		voteResult = new VoteResult(game, runOnYes, runOnNo, runOnDraw);
 		voteResultProcessID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, voteResult, voteDuration);
 	}
 	
 	class VoteResult implements Runnable
 	{
-		public VoteResult(Runnable onYes, Runnable onNo, Runnable onDraw)
+		public VoteResult(Game game, Runnable onYes, Runnable onNo, Runnable onDraw)
 		{
+			this.game = game;
 			runOnYes = onYes;
 			runOnNo = onNo;
 			runOnDraw = onDraw;
 		}
 		
+		private Game game;
 		private Runnable runOnYes, runOnNo, runOnDraw;
 		
 		public void run()
 		{
 			if ( numYesVotes > numNoVotes )
 			{
-				plugin.getGameMode().broadcastMessage(ChatColor.YELLOW +"Vote succeeded (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
+				game.broadcastMessage(ChatColor.YELLOW +"Vote succeeded (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
 				if ( runOnYes != null )
 					runOnYes.run();
 			}
 			else if ( numNoVotes > numYesVotes )
 			{
-				plugin.getGameMode().broadcastMessage(ChatColor.YELLOW + "Vote failed (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
+				game.broadcastMessage(ChatColor.YELLOW + "Vote failed (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
 				if ( runOnNo != null )
 					runOnNo.run();
 			}
 			else
 			{
-				plugin.getGameMode().broadcastMessage(ChatColor.YELLOW + "Vote tied (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
+				game.broadcastMessage(ChatColor.YELLOW + "Vote tied (" + ChatColor.GREEN + numYesVotes + ChatColor.YELLOW + " for, " + ChatColor.RED + numNoVotes + ChatColor.YELLOW + " against)");
 				if ( runOnDraw != null )
 					runOnDraw.run();
 			}
@@ -159,6 +161,7 @@ public class VoteManager
 			protected Prompt acceptValidatedInput(ConversationContext context, Number val)
 			{
 				Player player = context.getForWhom() instanceof Player ? (Player)context.getForWhom() : null;
+				final Game game = plugin.getGameForPlayer(player);
 				
 				if ( isInVote() )
 					return cantVotePrompt;
@@ -166,22 +169,22 @@ public class VoteManager
 				int choice = val.intValue();
 				
 				if ( choice == 1 )
-					startVote("Restart the current game?", player, new Runnable() {
+					startVote(game, "Restart the current game?", player, new Runnable() {
 						public void run()
 						{
-							plugin.forcedGameEnd = true;
-							plugin.getGameMode().gameFinished();
-							plugin.restartGame(null);
+							game.forcedGameEnd = true;
+							game.getGameMode().finishGame();
+							game.restartGame(null);
 						}
 					}, null, null);
 				
 				else if ( choice == 2 )
-					startVote("End the current game?", player, new Runnable() {
+					startVote(game, "End the current game?", player, new Runnable() {
 						public void run()
 						{
-							plugin.forcedGameEnd = true;
-							plugin.getGameMode().gameFinished();
-							plugin.endGame(null);
+							game.forcedGameEnd = true;
+							game.getGameMode().finishGame();
+							game.endGame(null);
 						}
 					}, null, null);
 				

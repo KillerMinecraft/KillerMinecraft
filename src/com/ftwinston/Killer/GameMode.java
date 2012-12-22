@@ -136,14 +136,12 @@ public abstract class GameMode implements Listener
 	
 	protected final void broadcastMessage(String message)
 	{
-		for ( Player player : getOnlinePlayers() )
-			player.sendMessage(message);
+		game.broadcastMessage(message);
 	}
 	
 	protected final void broadcastMessage(PlayerFilter recipients, String message)
 	{
-		for ( Player player : getOnlinePlayers(recipients) )
-			player.sendMessage(message);
+		game.broadcastMessage(recipients, message);
 	}
 		
 	public ChatColor getTeamChatColor(int team)
@@ -265,9 +263,9 @@ public abstract class GameMode implements Listener
 	protected final void setPlayerVisibility(Player player, boolean visible)
 	{
 		if ( visible )
-			plugin.playerManager.makePlayerVisibleToAll(player);
+			plugin.playerManager.makePlayerVisibleToAll(game, player);
 		else
-			plugin.playerManager.makePlayerInvisibleToAll(player);
+			plugin.playerManager.makePlayerInvisibleToAll(game, player);
 	}
 	
 	protected final void hidePlayer(Player player, Player looker)
@@ -337,7 +335,7 @@ public abstract class GameMode implements Listener
 				@Override
 				public void run() {
 					if ( Settings.voteRestartAtEndOfGame )
-						plugin.voteManager.startVote("Play another game in the same world?", null, new Runnable() {
+						plugin.voteManager.startVote(game, "Play another game in the same world?", null, new Runnable() {
 							public void run()
 							{
 								game.restartGame(null);
