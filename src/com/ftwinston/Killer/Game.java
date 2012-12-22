@@ -61,7 +61,7 @@ public class Game
 		compassProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
         	public void run()
         	{
-	        	for ( Player player : getGameMode().getOnlinePlayers(true) )
+	        	for ( Player player : getGameMode().getOnlinePlayers(new PlayerFilter().alive()) )
 	        		if ( player.getInventory().contains(Material.COMPASS) )
 	        		{// does this need a null check on the target?
 	        			player.setCompassTarget(plugin.playerManager.getCompassTarget(game, player));
@@ -72,7 +72,7 @@ public class Game
 		spectatorFollowProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
         	public void run()
         	{
-	        	for ( Player player : getGameMode().getOnlinePlayers(false) )
+	        	for ( Player player : getGameMode().getOnlinePlayers(new PlayerFilter().notAlive()) )
 	        	{
 	        		PlayerManager.Info info = plugin.playerManager.getInfo(player.getName());
 	        		if (info.target != null )

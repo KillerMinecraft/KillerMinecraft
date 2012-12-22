@@ -9,7 +9,6 @@ package com.ftwinston.Killer;
  */
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
@@ -23,7 +22,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.ItemStack;
@@ -31,7 +29,6 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
-import com.ftwinston.Killer.Game.GameState;
 
 import com.ftwinston.Killer.CraftBukkit.CraftBukkitAccess;
 
@@ -56,7 +53,7 @@ public class Killer extends JavaPlugin
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
-		return worldManager.stagingWorld == null ? new EmptyWorldGenerator() : null;
+		return stagingWorld == null ? new EmptyWorldGenerator() : null;
 	}
 	
 	public void onEnable()
@@ -260,19 +257,16 @@ public class Killer extends JavaPlugin
 			}
 			Player player = (Player)sender;
 			
-			if ( !playerManager.isSpectator(sender.getName()) || !isGameWorld(player.getWorld()) )
+			Game game = getGameForWorld(player.getWorld());
+			if ( !playerManager.isSpectator(sender.getName()) || game == null )
 			{
 				sender.sendMessage("Only spectators can use this command");
 				return true;
 			}
 			
-			Game game = getGameForPlayer(player);
-			if ( game == null )
-				return true;
-			
 			if ( args[0].equalsIgnoreCase("main") )
 			{
-				playerManager.teleport(player, game.getSpawnLocation(player));
+				playerManager.teleport(player, game.getGameMode().getSpawnLocation(player));
 			}
 			else if ( args[0].equalsIgnoreCase("nether") )
 			{
@@ -394,9 +388,10 @@ public class Killer extends JavaPlugin
 							sender.sendMessage("Only players can run this command");
 							return true;
 						}
-						if ( isGameWorld(player.getWorld()) )
+						Game game = getGameForWorld(player.getWorld());
+						if ( player.getWorld() == stagingWorld || game == null )
 						{
-							sender.sendMessage("You are already part of a Killer game, you can't join again!");
+							sender.sendMessage("You are already in Killer Minecraft, so you can't join again!");
 							return true;
 						}
 						
@@ -416,9 +411,10 @@ public class Killer extends JavaPlugin
 							sender.sendMessage("Only players can run this command");
 							return true;
 						}
-						if ( !isGameWorld(player.getWorld()) )
+						Game game = getGameForWorld(player.getWorld());
+						if ( player.getWorld() != stagingWorld && game == null )
 						{
-							sender.sendMessage("You are not part of the Killer game, so you can't quit!");
+							sender.sendMessage("You are not in Killer Minecraft, so you can't quit!");
 							return true;
 						}
 						
@@ -483,7 +479,8 @@ public class Killer extends JavaPlugin
 	Game getGameForWorld(World w)
 	{
 		for ( Game game : games )
-			if ( w == game.getMainWorld() || w == game.getNetherWorld() )
+			for ( World world : game.getWorlds() )
+			if ( w == world )
 				return game;
 		
 		return null;
@@ -493,7 +490,7 @@ public class Killer extends JavaPlugin
 	{
 		World w = player.getWorld();
 		
-		if ( w == worldManager.stagingWorld )
+		if ( w == stagingWorld )
 		{
 			// based on player y position
 			
@@ -502,16 +499,16 @@ public class Killer extends JavaPlugin
 		
 		return getGameForWorld(w);
 	}
-
+	/*
 	final List<Player> getOnlinePlayers()
 	{
 		ArrayList<Player> players = new ArrayList<Player>();
 		for ( Player player : getServer().getOnlinePlayers() )
-			if ( isGameWorld(player.getWorld()) )
+			if ( getGameForWorld(player.getWorld()) != null )
 				players.add(player);
 		return players;
 	}
-	
+	*/
 	class EmptyWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	{	
 	    @Override

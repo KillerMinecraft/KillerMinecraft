@@ -77,7 +77,7 @@ class EventListener implements Listener
 					}
     				plugin.worldManager.createStagingWorld(Settings.stagingWorldName);
 					plugin.worldManager.deleteWorlds(null, event.getWorld());
-					plugin.craftBukkit.accountForDefaultWorldDeletion(plugin.worldManager.stagingWorld);
+					plugin.craftBukkit.accountForDefaultWorldDeletion(plugin.stagingWorld);
     			}
     		}, 1);
     	}
@@ -155,7 +155,7 @@ class EventListener implements Listener
 			}
 			else
 			{
-				playerQuit(event.getPlayer(), false);
+				playerQuit(fromGame, event.getPlayer(), false);
 				plugin.playerManager.previousLocations.remove(event.getPlayer().getName()); // they left Killer, so forget where they should be put on leaving
 			}
 		}
@@ -371,7 +371,7 @@ class EventListener implements Listener
     			   minY = b.getY() - 2, maxY = b.getY() + 1,
     			   minZ = b.getZ() - 1, maxZ = b.getZ() + 2;
     		
-    		List<Player> spectators = plugin.getGameMode().getOnlinePlayers(new PlayerFilter().notAlive().world(b.getWorld()).exclude(event.getPlayer()));
+    		List<Player> spectators = game.getGameMode().getOnlinePlayers(new PlayerFilter().notAlive().world(b.getWorld()).exclude(event.getPlayer()));
     		for ( Player spectator : spectators )
     		{
     			Location loc = spectator.getLocation();
@@ -556,35 +556,42 @@ class EventListener implements Listener
     			}
     		});
     	}
-    	else if ( plugin.isGameWorld(world) )
-    		plugin.playerManager.playerJoined(event.getPlayer());
+    	else
+    	{
+    		Game game = plugin.getGameForWorld(world);
+    		 if ( game != null )
+    			 plugin.playerManager.playerJoined(event.getPlayer());    		
+    	}
+    		
 	}
 	
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerQuit(PlayerQuitEvent event)
     {
-    	if ( event.getPlayer().getWorld() == plugin.stagingWorld )
+    	World world = event.getPlayer().getWorld();
+    	if ( world == plugin.stagingWorld )
     		plugin.arenaManager.playerKilled();
-    	else if ( plugin.isGameWorld(event.getPlayer().getWorld()) )
-			playerQuit(event.getPlayer(), true);
+    	else
+    	{
+    		Game game = plugin.getGameForWorld(world);
+   		 	if ( game != null )
+    			playerQuit(game, event.getPlayer(), true);
+    	}
 	}
 	
-	private void playerQuit(Player player, boolean actuallyLeftServer)
+	private void playerQuit(Game game, Player player, boolean actuallyLeftServer)
 	{
 		if ( actuallyLeftServer ) // the quit message should be sent to the scoreboard of anyone who this player was invisible to
 			for ( Player online : plugin.getOnlinePlayers() )
 				if ( !online.canSee(player) )
 					plugin.craftBukkit.sendForScoreboard(online, player, false);
 		
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName(), true), 600);
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(game, player.getName(), true), 600);
     }
     
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityDeath(EntityDeathEvent event)
     {
-    	if ( !plugin.isGameWorld(event.getEntity().getWorld()) )
-    		return;
-    	
     	if ( event.getEntity().getWorld() == plugin.stagingWorld )
 		{
 			event.getDrops().clear();
@@ -612,25 +619,31 @@ class EventListener implements Listener
     	if ( !(event instanceof PlayerDeathEvent) )
     		return;
     	
+    	Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+	 	if ( game == null )
+	 		return;
+    	
     	PlayerDeathEvent pEvent = (PlayerDeathEvent)event;
 		
     	Player player = pEvent.getEntity();
 		if ( player == null )
 			return;
 		
-		if ( plugin.getGameMode().useDiscreetDeathMessages() )
+		if ( game.getGameMode().useDiscreetDeathMessages() )
 			pEvent.setDeathMessage(ChatColor.RED + player.getName() + " died");	
 		
 		// the only reason this is delayed is to avoid banning the player before they properly die, if we're banning players on death
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(player.getName(), false), 10);
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(game, player.getName(), false), 10);
 	}
     
     class DelayedDeathEffect implements Runnable
     {
+    	Game game;
     	String name;
 		boolean checkDisconnected;
-    	public DelayedDeathEffect(String playerName, boolean disconnect)
+    	public DelayedDeathEffect(Game game, String playerName, boolean disconnect)
 		{
+    		this.game = game;
 			name = playerName;
 			checkDisconnected = disconnect;
 		}
@@ -649,7 +662,7 @@ class EventListener implements Listener
 				if ( plugin.playerManager.isAlive(name) )
 					plugin.statsManager.playerQuit();
 			}
-    		plugin.playerManager.playerKilled(player);
+    		plugin.playerManager.playerKilled(game, player);
     	}
     }
 }
