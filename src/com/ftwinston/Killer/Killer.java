@@ -338,21 +338,20 @@ public class Killer extends JavaPlugin
 				message += " " + args[i];
 			
 			PlayerManager.Info info = playerManager.getInfo(player.getName());
-		
+			List<Player> recipients = game.getOnlinePlayers(new PlayerFilter().team(info.getTeam()));
+			
 			// most of this code is a clone of the actual chat code in NetServerHandler.chat
-			AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(false, player, "ignored", new HashSet<Player>());
+			AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(false, player, "ignored", new HashSet<Player>(recipients));
 			getServer().getPluginManager().callEvent(event);
 
 			if (event.isCancelled())
 				return true;
 		
-			// fixmulti
 			message = String.format(event.getFormat(), player.getDisplayName(), message);
 			getServer().getConsoleSender().sendMessage(message);
 			
 			for (Player recipient : event.getRecipients())
-                if ( playerManager.getTeam(recipient.getName()) == info.getTeam() )
-					recipient.sendMessage(message);
+				recipient.sendMessage(message);
 			
 			return true;
 		}

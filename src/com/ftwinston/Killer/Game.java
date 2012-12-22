@@ -144,7 +144,7 @@ public class Game
 				if ( player.getWorld() != plugin.stagingWorld )
 					plugin.playerManager.putPlayerInStagingWorld(player);
 			
-			plugin.playerManager.reset(this); // fixmulti
+			plugin.playerManager.reset(this);
 			
 			plugin.worldManager.deleteKillerWorlds(this, new Runnable() {
 				@Override
