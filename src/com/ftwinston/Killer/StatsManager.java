@@ -3,8 +3,8 @@ package com.ftwinston.Killer;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Date;
 
 class StatsManager
@@ -16,19 +16,19 @@ class StatsManager
 		isTracking = false;
 	}
 
-	private static final int version = 2;
+	private static final int version = 3;
 	public boolean isTracking;
 	private Date startedOn;
-	private int numPlayersStart, numPlayersLateJoin, numPlayersQuit, numKillers, numKillersAdminAdded;
+	private int numPlayersStart, numPlayersLateJoin, numPlayersQuit;
 	
 	public void gameStarted(int numPlayers)
 	{
 		isTracking = true;
-		numPlayersStart = numPlayers; numPlayersLateJoin = 0; numPlayersQuit = 0; numKillers = 0; numKillersAdminAdded = 0;
+		numPlayersStart = numPlayers; numPlayersLateJoin = 0; numPlayersQuit = 0;
 		startedOn = new Date();
 	}
 	
-	public void gameFinished(GameMode mode, int numPlayers, int outcome, int winningItemID)
+	public void gameFinished(GameMode mode, WorldOption world, int numPlayersEnd, boolean abandoned)
 	{
 		if ( !isTracking || !Settings.reportStats)
 			return;
@@ -40,18 +40,26 @@ class StatsManager
 		
 		plugin.log.info("Sending stats...");
 		
+		String modeOptions = "";
+		for ( Option option : mode.getOptions() )
+			modeOptions += option.getName().replace(":"," - ").replace(";"," - ") + ":" + (option.isEnabled() ? "1" : "0") + ";";
+		
+		String worldOptions = "";
+		for ( Option option : world.getOptions() )
+			worldOptions += option.getName().replace(":"," - ").replace(";"," - ") + ":" + (option.isEnabled() ? "1" : "0") + ";";
+		
 		final URL statsPage;
 		try
 		{
-			statsPage = new URL("http://killer.ftwinston.com/?m=" + getNumberForMode(mode) + "&d=" + duration + "&v=" + version + "&o=" + outcome + "&i=" + winningItemID + "&ns=" + numPlayersStart + "&ne=" + numPlayers + "&nl=" + numPlayersLateJoin + "&nq=" + numPlayersQuit + "&nk=" + numKillers + "&na=" + numKillersAdminAdded);
+			statsPage = new URL("http://killer.ftwinston.com/report/?m=" + URLEncoder.encode(mode.getName(), "UTF-8") + "&w=" + URLEncoder.encode(world.getName(), "UTF-8") + "&d=" + duration + "&v=" + version + "&ns=" + numPlayersStart + "&ne=" + numPlayersEnd + "&nl=" + numPlayersLateJoin + "&nq=" + numPlayersQuit + "&a=" + (abandoned ? "1" : "0") + "&mo=" + URLEncoder.encode(modeOptions, "UTF-8") + "&wo=" + URLEncoder.encode(worldOptions, "UTF-8"));
 		}
-		catch ( MalformedURLException ex )
+		catch ( Exception ex )
 		{
 			plugin.log.info("Error generating stats URL, unable to send stats");
 			return;
 		}
 		
-		plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new Runnable() {
+		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new Runnable() {
 			@Override
 			public void run() {
 				try
@@ -69,22 +77,6 @@ class StatsManager
 		});
 	}
 	
-	private int getNumberForMode(GameMode mode)
-	{
-		if ( mode.getName().equals("Mystery Killer") )
-			return 1;
-		if ( mode.getName().equals("Invisible Killer") )
-			return 2;
-		if ( mode.getName().equals("Crazy Killer") )
-			return 3;
-		if ( mode.getName().equals("Team Killer") )
-			return 4;
-		if ( mode.getName().equals("Contract Killer") )
-			return 5;
-		
-		return 0; // error
-	}
-	
 	public void playerJoinedLate()
 	{
 		numPlayersLateJoin++;
@@ -93,15 +85,5 @@ class StatsManager
 	public void playerQuit()
 	{
 		numPlayersQuit++;
-	}
-	
-	public void killerAdded()
-	{
-		numKillers++;
-	}
-	
-	public void killerAddedByAdmin()
-	{
-		numKillersAdminAdded++;
 	}
 }

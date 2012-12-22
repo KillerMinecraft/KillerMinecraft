@@ -36,9 +36,15 @@ public class Game
 	
 	private WorldOption worldOption = null;
 	WorldOption getWorldOption() { return worldOption; }
-	boolean setWorldOption(WorldOption w) { worldOption = w; return gameMode != null && worldOption != null; }
+	void setWorldOption(WorldOptionPlugin plugin)
+	{
+		WorldOption world = plugin.createInstance();
+		world.initialize(this, plugin);
+		worldOption = world;
+	}
 	
-	int monsterNumbers = 2, animalNumbers = 2;
+	static final int defaultMonsterNumbers = 2, defaultAnimalNumbers = 2; 
+	int monsterNumbers = defaultMonsterNumbers, animalNumbers = defaultAnimalNumbers;
 	
 	public void start()
 	{
@@ -101,7 +107,6 @@ public class Game
 	{
 		stagingWorldSetup(false, true), // in staging world, players need to choose mode/world
 		worldDeletion(false, true), // in staging world, hide start buttons, delete old world, then show start button again
-		stagingWorldReady(false, true), // in staging world, players need to push start
 		stagingWorldConfirm(false, true), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
 		worldGeneration(false, false), // in staging world, game worlds are being generated
 		active(true, false), // game is active, in game world
@@ -122,15 +127,11 @@ public class Game
 		GameState prevState = gameState;
 		gameState = newState;
 		
-		if ( newState == GameState.stagingWorldSetup )
-		{
-			plugin.stagingWorldManager.showStartButtons(this, false);
-		}
-		else if ( newState == GameState.worldDeletion )
+		if ( newState == GameState.worldDeletion )
 		{
 			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 			if ( plugin.statsManager.isTracking(number) )
-				plugin.statsManager.gameFinished(this, getGameMode().getOnlinePlayers(true).size(), 3, 0);
+				plugin.statsManager.gameFinished(getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), true);
 			
 			HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
 
@@ -138,8 +139,8 @@ public class Game
 			plugin.stagingWorldManager.showWaitForDeletion(this);
 			plugin.stagingWorldManager.removeWorldGenerationIndicator(this);
 			
-			for ( Player player : getOnlinePlayers() )
-				if ( player.getWorld() != plugin.worldManager.stagingWorld )
+			for ( Player player : gameMode.getOnlinePlayers() )
+				if ( player.getWorld() != plugin.stagingWorld )
 					plugin.playerManager.putPlayerInStagingWorld(player);
 			
 			plugin.playerManager.reset(number); // fixmulti
@@ -147,11 +148,11 @@ public class Game
 			plugin.worldManager.deleteKillerWorlds(this, new Runnable() {
 				@Override
 				public void run() { // we need this to set the state to stagingWorldReady when done
-					setGameState(GameState.stagingWorldReady);
+					setGameState(GameState.stagingWorldSetup);
 				}
 			});
 		}
-		else if ( newState == GameState.stagingWorldReady )
+		else if ( newState == GameState.stagingWorldSetup )
 		{
 			plugin.stagingWorldManager.showStartButtons(this, false);
 		}
@@ -161,15 +162,17 @@ public class Game
 		}
 		else if( newState == GameState.worldGeneration )
 		{
+			plugin.getServer().getPluginManager().registerEvents(getGameMode(), plugin);
+			getGameMode().initializeGame(true);
+			
 			final Game game = this;
 			plugin.worldManager.generateWorlds(this, worldOption, new Runnable() {
 				@Override
 				public void run() {
 					// don't waste memory on monsters in the staging world
-					if ( plugin.stagingWorldManager.countPlayersInArena() == 0 )
-						plugin.stagingWorldManager.endMonsterArena();
+					if ( plugin.arenaManager.countPlayersInArena() == 0 )
+						plugin.arenaManager.endMonsterArena();
 					
-					getGameMode().worldGenerationComplete(getMainWorld(), getNetherWorld());
 					setGameState(GameState.active);
 					plugin.stagingWorldManager.showStartButtons(game, false);
 				}
@@ -178,19 +181,26 @@ public class Game
 		else if ( newState == GameState.active )
 		{
 			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
+			int numPlayers = getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size();
 			if ( plugin.statsManager.isTracking(number) )
-				plugin.statsManager.gameFinished(this, getGameMode().getOnlinePlayers(true).size(), 3, 0);
+				plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), numPlayers, true);
+			plugin.statsManager.gameStarted(number, numPlayers);
 			
 			if ( prevState.usesGameWorlds )
+			{
 				for ( World world : worlds )
 				{
-					worldManager.removeAllItems(world);
+					plugin.worldManager.removeAllItems(world);
 					world.setTime(0);
 				}
-			else
-				plugin.getServer().getPluginManager().registerEvents(getGameMode(), plugin);
+				getGameMode().initializeGame(false);
+			}
 
-			getGameMode().startGame();
+			getGameMode().startGame(!prevState.usesGameWorlds);
+		}
+		else if ( newState == GameState.finished )
+		{
+			plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), false);
 		}
 	}
 	
@@ -274,7 +284,7 @@ public class Game
 		else
 			getGameMode().broadcastMessage("The game has ended. You've been moved to the staging world to allow you to set up a new one...");
 		
-		setGameState(GameState.worldDeletion); // stagingWorldReady cos the options from last time will still be selected
+		setGameState(GameState.worldDeletion);
 	}
 	
 	void restartGame(CommandSender actionedBy)

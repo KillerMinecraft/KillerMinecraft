@@ -8,14 +8,12 @@ package com.ftwinston.Killer;
  * Created 18/06/2012
  */
 
-import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.logging.Logger;
-
-import net.minecraft.server.MinecraftServer;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -23,9 +21,6 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.CraftServer;
-import org.bukkit.craftbukkit.util.LazyPlayerSet;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -38,9 +33,12 @@ import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.ftwinston.Killer.Game.GameState;
 
+import com.ftwinston.Killer.CraftBukkit.CraftBukkitAccess;
+
 public class Killer extends JavaPlugin
 {
 	public static Killer instance;
+	CraftBukkitAccess craftBukkit;
 	public Logger log = Logger.getLogger("Minecraft");
 
 	boolean stagingWorldIsServerDefault;
@@ -48,6 +46,7 @@ public class Killer extends JavaPlugin
 	private EventListener eventListener = new EventListener(this);
 	WorldManager worldManager;
 	StagingWorldManager stagingWorldManager;
+	ArenaManager arenaManager;
 	PlayerManager playerManager;
 	VoteManager voteManager;
 	StatsManager statsManager;
@@ -63,6 +62,12 @@ public class Killer extends JavaPlugin
 	public void onEnable()
 	{
         instance = this;
+        craftBukkit = CraftBukkitAccess.createCorrectVersion(this);
+        if ( craftBukkit == null )
+        {
+        	setEnabled(false);
+        	return;
+        }
         
         Settings.setup(this);
         
@@ -70,8 +75,6 @@ public class Killer extends JavaPlugin
         for ( int i=0; i<games.length; i++ )
         	games[i] = new Game(this, i);
         
-        WorldOption.setup(this);
-		
 		createRecipes();
 		
         playerManager = new PlayerManager(this);
@@ -80,11 +83,11 @@ public class Killer extends JavaPlugin
         statsManager = new StatsManager(this);
         getServer().getPluginManager().registerEvents(eventListener, this);
 
-		String defaultLevelName = getMinecraftServer().getPropertyManager().getString("level-name", "world");
+		String defaultLevelName = craftBukkit.getDefaultLevelName();
 		if ( defaultLevelName.equalsIgnoreCase(Settings.killerWorldName) )
 		{
 			stagingWorldIsServerDefault = true;
-			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be an 'end' world, so create an empty world first until we can create that
+			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
 		}
 		else if ( defaultLevelName.equalsIgnoreCase(Settings.stagingWorldName) )
 		{
@@ -102,6 +105,11 @@ public class Killer extends JavaPlugin
 					if ( GameMode.gameModes.size() == 0 )
 					{
 						warnNoGameModes();
+						return;
+					}
+					if ( WorldOption.worldOptions.size() == 0 )
+					{
+						warnNoWorldOptions();
 						return;
 					}
 					worldManager.createStagingWorld(Settings.stagingWorldName); // staging world isn't server default, so create it as a new world
@@ -127,10 +135,21 @@ public class Killer extends JavaPlugin
 		plugin.initialize(instance);
 	}
 	
+	public static void registerWorldOption(WorldOptionPlugin plugin)
+	{
+		plugin.initialize(instance);
+	}
+	
 	void warnNoGameModes()
 	{
 		log.warning("Killer cannot start: No game modes have been loaded!");
 		log.warning("Add some game mode plugins to your server!");
+	}
+	
+	void warnNoWorldOptions()
+	{
+		log.warning("Killer cannot start: No world options have been loaded!");
+		log.warning("Add some world option plugins to your server!");
 	}
 	
 	List<Recipe> monsterRecipes = new ArrayList<Recipe>();
@@ -186,33 +205,41 @@ public class Killer extends JavaPlugin
 		enderRecipe.addIngredient(Material.SPIDER_EYE);
 		getServer().addRecipe(enderRecipe);
 		
-		short zero = 0;
-		
-		ShapelessRecipe recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SPIDER.getTypeId()));
+		ItemStack stack = new ItemStack(Material.MONSTER_EGG, 1);
+		stack.getData().setData((byte)EntityType.SPIDER.getTypeId());
+		ShapelessRecipe recipe = new ShapelessRecipe(stack);
 		recipe.addIngredient(Material.STRING);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		monsterRecipes.add(recipe);
 		
-		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.ZOMBIE.getTypeId()));
+		stack = new ItemStack(Material.MONSTER_EGG, 1);
+		stack.getData().setData((byte)EntityType.ZOMBIE.getTypeId());
+		recipe = new ShapelessRecipe(stack);
 		recipe.addIngredient(Material.ROTTEN_FLESH);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		monsterRecipes.add(recipe);
 		
-		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.CREEPER.getTypeId()));
+		stack = new ItemStack(Material.MONSTER_EGG, 1);
+		stack.getData().setData((byte)EntityType.CREEPER.getTypeId());
+		recipe = new ShapelessRecipe(stack);
 		recipe.addIngredient(Material.SULPHUR);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		monsterRecipes.add(recipe);
 		
-		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SKELETON.getTypeId()));
+		stack = new ItemStack(Material.MONSTER_EGG, 1);
+		stack.getData().setData((byte)EntityType.SKELETON.getTypeId());
+		recipe = new ShapelessRecipe(stack);
 		recipe.addIngredient(Material.BONE);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
 		monsterRecipes.add(recipe);
 		
-		recipe = new ShapelessRecipe(new ItemStack(Material.MONSTER_EGG, 1, zero, (byte)EntityType.SLIME.getTypeId()));
+		stack = new ItemStack(Material.MONSTER_EGG, 1);
+		stack.getData().setData((byte)EntityType.SLIME.getTypeId());
+		recipe = new ShapelessRecipe(stack);
 		recipe.addIngredient(Material.SLIME_BALL);
 		recipe.addIngredient(Material.IRON_INGOT);
 		getServer().addRecipe(recipe);
@@ -311,7 +338,7 @@ public class Killer extends JavaPlugin
 			PlayerManager.Info info = playerManager.getInfo(player.getName());
 		
 			// most of this code is a clone of the actual chat code in NetServerHandler.chat
-			AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(false, player, "ignored", new LazyPlayerSet());
+			AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(false, player, "ignored", new HashSet<Player>());
 			getServer().getPluginManager().callEvent(event);
 
 			if (event.isCancelled())
@@ -444,30 +471,6 @@ public class Killer extends JavaPlugin
 					game.endGame(sender);
 				}
 			}
-			else if ( firstParam.equals("world") )
-			{
-				if ( args.length < 3 )
-				{
-					sender.sendMessage("Usage: /killer world <name> <seed>\nUse underlines instead of spaces in the name.");
-					return true;
-				}
-			
-				String name = args[1];
-				String seed = args[2];
-				for ( int i=3; i<args.length; i++ )
-					seed += " " + args[i];
-				
-				if ( getServer().getWorld(name) != null )
-				{
-					sender.sendMessage("Error: already got a world named '" + name + "'");
-					return true;
-				}
-				
-				sender.sendMessage("Generating world '" + name + "' using seed: '" + seed + "'");
-				getServer().broadcastMessage(sender.getName() + " is generating a custom world - expect a lag spike!");
-				worldManager.generateCustomWorld(name, seed);
-				return true;
-			}
 			else
 				sender.sendMessage("Invalid parameter: " + args[0] + " - type /killer to list allowed parameters");
 			
@@ -500,48 +503,6 @@ public class Killer extends JavaPlugin
 		return getGameForWorld(w);
 	}
 
-	MinecraftServer getMinecraftServer()
-	{
-		try
-		{
-			CraftServer server = (CraftServer)getServer();
-			Field f = server.getClass().getDeclaredField("console");
-			f.setAccessible(true);
-			MinecraftServer console = (MinecraftServer)f.get(server);
-			f.setAccessible(false);
-			return console;
-		}
-		catch ( IllegalAccessException ex )
-		{
-		}
-		catch  ( NoSuchFieldException ex )
-		{
-		}
-		
-		return null;
-	}
-	
-	YamlConfiguration getBukkitConfiguration()
-	{
-		YamlConfiguration config = null;
-		try
-		{
-        	Field configField = CraftServer.class.getDeclaredField("configuration");
-        	configField.setAccessible(true);
-        	config = (YamlConfiguration)configField.get((CraftServer)getServer());
-			configField.setAccessible(false);
-		}
-		catch ( IllegalAccessException ex )
-		{
-			log.warning("Error removing world from bukkit master list: " + ex.getMessage());
-		}
-		catch  ( NoSuchFieldException ex )
-		{
-			log.warning("Error removing world from bukkit master list: " + ex.getMessage());
-		}
-		return config;
-	}
-	
 	final List<Player> getOnlinePlayers()
 	{
 		ArrayList<Player> players = new ArrayList<Player>();

@@ -10,9 +10,9 @@ import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 
 // similar to WorldCreator, but has list of extra block populators, and no pesky createWorld method
-public class WorldHelper
+public class WorldConfig
 {
-	public WorldHelper(Game game, String name, Environment env)
+	public WorldConfig(Game game, String name, Environment env)
 	{
 		this.game = game;
 		this.name = name;
@@ -23,6 +23,27 @@ public class WorldHelper
 		this.extraPopulators = new ArrayList<BlockPopulator>();
 		this.generateStructures = true;
 		this.chunkGeneratorLocked = false;
+		this.generatorSettings = "";
+	}
+	
+	public static long getSeedFromString(String str)
+	{// copied from how bukkit handles string seeds
+		long k = seedGen.nextLong();
+
+		if ( str != null && str.length() > 0)
+		{
+			try
+			{
+				long l = Long.parseLong(str);
+
+				if (l != 0L)
+					k = l;
+			} catch (NumberFormatException numberformatexception)
+			{
+				k = (long) str.hashCode();
+			}
+		}
+		return k;
 	}
 	
 	private static Random seedGen = new Random(); 
@@ -36,9 +57,10 @@ public class WorldHelper
 	private List<BlockPopulator> extraPopulators;
 	private boolean generateStructures;
 	private boolean chunkGeneratorLocked;
+	private String generatorSettings;
 	
 	public Game getGame() {
-		return name;
+		return game;
 	}
 	
 	public String getName() {
@@ -96,4 +118,13 @@ public class WorldHelper
 	public void setGenerateStructures(boolean generateStructures) {
 		this.generateStructures = generateStructures;
 	}
+	
+	public String getGeneratorSettings() {
+		return generatorSettings;
+	}
+
+	public void setGeneratorSettings(String settings) {
+		this.generatorSettings = settings;
+	}
+
 }

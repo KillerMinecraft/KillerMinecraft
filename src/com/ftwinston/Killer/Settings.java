@@ -1,7 +1,6 @@
 package com.ftwinston.Killer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.Material;
@@ -14,18 +13,16 @@ public class Settings
 	lateJoinersStartAsSpectator,
 	banOnDeath,
 	reportStats,
-	allowRandomWorlds,
 	autoRestartAtEndOfGame,
 	voteRestartAtEndOfGame;
 	
 	public static String
 	stagingWorldName,
 	killerWorldName,
-	defaultGameMode;
+	defaultGameMode,
+	defaultWorldOption;
 	
-	public static List<String> customWorldNames;
-	
-	public static Material[] winningItems, startingItems;
+	public static Material[] startingItems;
 	
 	public static Material teleportModeItem = Material.WATCH, followModeItem = Material.ARROW;
 	
@@ -42,11 +39,11 @@ public class Settings
 		lateJoinersStartAsSpectator = readBoolean(plugin, "lateJoinersStartAsSpectator", false);
 		banOnDeath = readBoolean(plugin, "banOnDeath", false);
 		reportStats = readBoolean(plugin, "reportStats", true);
-		allowRandomWorlds = readBoolean(plugin, "allowRandomWorldGeneration", true);
 		
 		stagingWorldName = readString(plugin, "stagingWorldName", "staging");
 		killerWorldName = readString(plugin, "killerWorldName", "killer");
 		defaultGameMode = readString(plugin, "defaultGameMode", "Mystery Killer");
+		defaultWorldOption = readString(plugin, "defaultWorldOption", "Default World");
 		
 		String restartAtEnd = readString(plugin, "restartAtEndOfGame", "vote");
 		if ( restartAtEnd.equalsIgnoreCase("vote") )
@@ -64,11 +61,7 @@ public class Settings
 			voteRestartAtEndOfGame = false;
 			autoRestartAtEndOfGame = false;
 		}
-
-		plugin.getConfig().addDefault("customWorlds", new ArrayList<String>());
-		customWorldNames = plugin.getConfig().getStringList("customWorlds");
 		
-		winningItems = readMaterialList(plugin, "winningItems", Arrays.asList(Material.BLAZE_ROD.getId(), Material.GHAST_TEAR.getId()), Material.BLAZE_ROD);		
 		startingItems = readMaterialList(plugin, "startingItems", new ArrayList<Integer>(), Material.STONE_PICKAXE);
 		
 		plugin.saveConfig();
@@ -110,12 +103,5 @@ public class Settings
 		}
 		
 		return retVal;
-	}
-	
-	public static void addCustomWorld(String name)
-	{
-		//customWorldNames.add(name); // only do this if we update the staging world without restarting the server
-		Killer.instance.getConfig().getStringList("customWorlds").add(name);
-		Killer.instance.saveConfig();
 	}
 }

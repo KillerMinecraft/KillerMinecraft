@@ -11,8 +11,11 @@ public abstract class GameModePlugin extends JavaPlugin
 	{
 		String name = getName();
 		if ( GameMode.gameModes.size() == 0 || name.equals(Settings.defaultGameMode) )
+		{
+			defaultMode = this;
 			for ( Game game : plugin.games )
 				game.setGameMode(this);
+		}
 				
 		// keep the game modes in alphabetic order
 		for ( int i=0; i<GameMode.gameModes.size(); i++ )
@@ -23,4 +26,7 @@ public abstract class GameModePlugin extends JavaPlugin
 			}
 		GameMode.gameModes.add(this);
 	}
+	
+	private static GameModePlugin defaultMode;
+	static GameModePlugin getDefault() { return defaultMode; }
 }
