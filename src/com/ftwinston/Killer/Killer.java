@@ -77,7 +77,7 @@ public class Killer extends JavaPlugin
         playerManager = new PlayerManager(this);
         worldManager = new WorldManager(this);
         voteManager = new VoteManager(this);
-        statsManager = new StatsManager(this);
+        statsManager = new StatsManager(this, games.length);
         getServer().getPluginManager().registerEvents(eventListener, this);
 
 		String defaultLevelName = craftBukkit.getDefaultLevelName();

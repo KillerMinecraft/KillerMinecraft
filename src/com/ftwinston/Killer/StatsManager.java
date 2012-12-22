@@ -10,33 +10,69 @@ import java.util.Date;
 class StatsManager
 {
 	Killer plugin;
-	public StatsManager(Killer plugin)
+	public StatsManager(Killer plugin, int numGames)
 	{
 		this.plugin = plugin;
-		isTracking = false;
+		games = new GameInfo[numGames];
+	}
+	
+	class GameInfo
+	{
+		public GameInfo()
+		{
+			isTracking = false;
+		}
+		
+		public void started(int numPlayers)
+		{
+			isTracking = true;
+			numPlayersStart = numPlayers; numPlayersLateJoin = 0; numPlayersQuit = 0;
+			startedOn = new Date();
+		}
+		
+		public void finished()
+		{
+			isTracking = false;
+		}
+		
+		public void playerJoinedLate()
+		{
+			numPlayersLateJoin++;
+		}
+		
+		public void playerQuit()
+		{
+			numPlayersQuit++;
+		}
+		
+		private boolean isTracking;
+		private Date startedOn;
+		private int numPlayersStart, numPlayersLateJoin, numPlayersQuit;		
 	}
 
+	GameInfo[] games;
 	private static final int version = 3;
-	public boolean isTracking;
-	private Date startedOn;
-	private int numPlayersStart, numPlayersLateJoin, numPlayersQuit;
 	
-	public void gameStarted(int numPlayers)
+	public boolean isTracking(int gameNum)
 	{
-		isTracking = true;
-		numPlayersStart = numPlayers; numPlayersLateJoin = 0; numPlayersQuit = 0;
-		startedOn = new Date();
+		return games[gameNum].isTracking;
 	}
 	
-	public void gameFinished(GameMode mode, WorldOption world, int numPlayersEnd, boolean abandoned)
+	public void gameStarted(int gameNum, int numPlayers)
 	{
-		if ( !isTracking || !Settings.reportStats)
+		games[gameNum].started(numPlayers);
+	}
+	
+	public void gameFinished(int gameNum, GameMode mode, WorldOption world, int numPlayersEnd, boolean abandoned)
+	{
+		GameInfo game = games[gameNum];
+		if ( !game.isTracking || !Settings.reportStats)
 			return;
 	
-		isTracking = false;
+		game.finished();
 		
 		Date finishedOn = new Date();
-		int duration = (int)(finishedOn.getTime() - startedOn.getTime()) / 1000;	
+		int duration = (int)(finishedOn.getTime() - game.startedOn.getTime()) / 1000;	
 		
 		plugin.log.info("Sending stats...");
 		
@@ -51,7 +87,7 @@ class StatsManager
 		final URL statsPage;
 		try
 		{
-			statsPage = new URL("http://killer.ftwinston.com/report/?m=" + URLEncoder.encode(mode.getName(), "UTF-8") + "&w=" + URLEncoder.encode(world.getName(), "UTF-8") + "&d=" + duration + "&v=" + version + "&ns=" + numPlayersStart + "&ne=" + numPlayersEnd + "&nl=" + numPlayersLateJoin + "&nq=" + numPlayersQuit + "&a=" + (abandoned ? "1" : "0") + "&mo=" + URLEncoder.encode(modeOptions, "UTF-8") + "&wo=" + URLEncoder.encode(worldOptions, "UTF-8"));
+			statsPage = new URL("http://killer.ftwinston.com/report/?m=" + URLEncoder.encode(mode.getName(), "UTF-8") + "&w=" + URLEncoder.encode(world.getName(), "UTF-8") + "&d=" + duration + "&v=" + version + "&ns=" + game.numPlayersStart + "&ne=" + numPlayersEnd + "&nl=" + game.numPlayersLateJoin + "&nq=" + game.numPlayersQuit + "&a=" + (abandoned ? "1" : "0") + "&mo=" + URLEncoder.encode(modeOptions, "UTF-8") + "&wo=" + URLEncoder.encode(worldOptions, "UTF-8"));
 		}
 		catch ( Exception ex )
 		{
@@ -77,13 +113,13 @@ class StatsManager
 		});
 	}
 	
-	public void playerJoinedLate()
+	public void playerJoinedLate(int gameNum)
 	{
-		numPlayersLateJoin++;
+		games[gameNum].playerJoinedLate();
 	}
 	
-	public void playerQuit()
+	public void playerQuit(int gameNum)
 	{
-		numPlayersQuit++;
+		games[gameNum].playerQuit();
 	}
 }

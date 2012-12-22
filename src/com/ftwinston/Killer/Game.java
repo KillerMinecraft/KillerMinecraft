@@ -132,7 +132,7 @@ public class Game
 		{
 			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 			if ( plugin.statsManager.isTracking(number) )
-				plugin.statsManager.gameFinished(getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), true);
+				plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), true);
 			
 			HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
 

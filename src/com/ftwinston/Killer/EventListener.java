@@ -582,7 +582,7 @@ class EventListener implements Listener
 	private void playerQuit(Game game, Player player, boolean actuallyLeftServer)
 	{
 		if ( actuallyLeftServer ) // the quit message should be sent to the scoreboard of anyone who this player was invisible to
-			for ( Player online : plugin.getOnlinePlayers() )
+			for ( Player online : game.getOnlinePlayers() )
 				if ( !online.canSee(player) )
 					plugin.craftBukkit.sendForScoreboard(online, player, false);
 		
@@ -660,7 +660,7 @@ class EventListener implements Listener
 					return; // player has reconnected, so don't do anything
 				
 				if ( plugin.playerManager.isAlive(name) )
-					plugin.statsManager.playerQuit();
+					plugin.statsManager.playerQuit(game.getNumber());
 			}
     		plugin.playerManager.playerKilled(game, player);
     	}
