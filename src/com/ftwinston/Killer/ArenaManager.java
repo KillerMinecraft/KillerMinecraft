@@ -44,7 +44,7 @@ class ArenaManager
 
 			// clear the world writing
 			for ( int x=arenaScoreX - 25; x<arenaScoreX + 25; x++ )
-				for ( int y=StagingWorldGenerator.floorY+3; y<StagingWorldGenerator.floorY+8; y++ )
+				for ( int y=StagingWorldGenerator.spleefY+6; y<StagingWorldGenerator.spleefY+11; y++ )
 					stagingWorld.getBlockAt(x, y, arenaScoreZ).setType(Material.AIR);
 			
 			if ( monsterArenaModeEnabled )
@@ -148,7 +148,7 @@ class ArenaManager
 		
 		// write the wave number into the world
 		boolean[][] text = StagingWorldGenerator.writeBlockText("WAVE " + monsterWaveNumber);
-		int xMin = arenaScoreX + text.length/2, yMin = StagingWorldGenerator.floorY + 3;
+		int xMin = arenaScoreX + text.length/2, yMin = StagingWorldGenerator.spleefY + 6;
 		for ( int i=0; i<text.length; i++ )
 			for ( int j=0; j<text[i].length; j++ )
 				stagingWorld.getBlockAt(xMin-i, yMin + j, arenaScoreZ).setType(text[i][j] ? Material.SNOW_BLOCK : Material.AIR);
