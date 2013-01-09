@@ -442,7 +442,7 @@ class StagingWorldManager
 		}
 	}
 	
-	public void playerInteracted(Game game, int x, int z, Player player)
+	public void playerInteracted(Game game, int x, int z, final Player player)
 	{
 		if ( z == StagingWorldGenerator.spleefPressurePlateZ )
 		{
@@ -453,25 +453,41 @@ class StagingWorldManager
 			for ( int i=0; i<Settings.maxSimultaneousGames; i++ )
 				if ( x == StagingWorldGenerator.getGamePortalX(i) )
 				{
-					game = plugin.games[i];
-					if ( game.getGameState().usesGameWorlds )
-					{
-						plugin.playerManager.resetPlayer(player);
-						plugin.playerManager.setAlive(player, !Settings.lateJoinersStartAsSpectator);
-						plugin.playerManager.teleport(player, game.getGameMode().getSpawnLocation(player));
-					}
-					else
-						plugin.playerManager.teleport(player, getGameSetupSpawnLocation(i));
+
+					final Game game2 = plugin.games[i];
+					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,  new Runnable() {
+						@Override
+						public void run() {
+							if ( game2.getGameState().usesGameWorlds )
+							{
+								plugin.playerManager.resetPlayer(player);
+								plugin.playerManager.setAlive(player, !Settings.lateJoinersStartAsSpectator);
+								plugin.playerManager.teleport(player, game2.getGameMode().getSpawnLocation(player));
+							}
+							else
+								player.teleport(getGameSetupSpawnLocation(game2.getNumber()));
+						}
+					});
 					break;
 				}
 		}
-		else if ( game != null && Settings.maxSimultaneousGames != 1 )
+		else if ( z == StagingWorldGenerator.getWallMaxZ() + 1 && game != null && Settings.maxSimultaneousGames != 1 )
 		{// exit this game, back to the staging world spawn
-			plugin.playerManager.teleport(player, getStagingWorldSpawnPoint());
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,  new Runnable() {
+				@Override
+				public void run() {
+					player.teleport(getStagingWorldSpawnPoint());
+				}
+			});
 		}
 		else if ( !plugin.stagingWorldIsServerDefault )
 		{// exit killer minecraft altogether
-			plugin.playerManager.movePlayerOutOfKillerGame(player);
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,  new Runnable() {
+				@Override
+				public void run() {
+					plugin.playerManager.movePlayerOutOfKillerGame(player);
+				}
+			});
 		}
 	}
 

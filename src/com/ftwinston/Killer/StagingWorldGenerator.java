@@ -305,7 +305,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				}
 				
 				// start button and red surround
-				for ( int x = wallMaxX+1; x>wallMinX; x-- )
+				for ( int x = wallMaxX-1; x>wallMinX; x-- )
 					for ( int z = wallMinZ; z>wallMinZ-2; z-- )
 						for ( int y=floorY+1; y<ceilingY; y++ )
 						{
@@ -357,15 +357,77 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				// if there's only one setup room, it links to the spleef arena. Otherwise, they're all separate.
 				if ( Settings.maxSimultaneousGames != 1 )
 				{
+					int wallMaxZ = getWallMaxZ();
 					// fill in end wall
 					for ( int x=wallMaxX+1; x>=wallMinX-1; x-- )
-						for ( int z=getWallMaxZ(); z<getWallMaxZ()+4; z++ )
+						for ( int z=wallMaxZ; z<wallMaxZ+4; z++ )
 							for ( int y=floorY+1; y<ceilingY; y++ )
 							{
 								b = getBlockAbs(chunk, x, y, z);
 								if ( b != null )
 									b.setType(wall);
 							}
+					
+					// set up an exit portal
+					for ( int z=wallMaxZ+1; z<wallMaxZ+3; z++ )
+						for ( int y=floorY; y<floorY+4; y++ )
+						{
+							for ( int x=startButtonX-2; x<=startButtonX+2; x++ )
+							{
+								b = getBlockAbs(chunk, x, y, z);
+								if ( b != null )
+								{
+									b.setType(wool);
+									b.setData(colorDoorway);
+								}
+							}
+						}
+					for ( int y=floorY-1; y<floorY+8; y++ )
+					{
+						for ( int x=startButtonX-4; x<=startButtonX+4; x++ )
+						{
+							b = getBlockAbs(chunk, x, y, wallMaxZ+3);
+							if ( b != null )
+							{
+								b.setType(wool);
+								b.setData(colorDoorway);
+							}
+						}
+					}
+					
+					for ( int z=wallMaxZ; z<wallMaxZ+3; z++ )
+						for ( int y=floorY+1; y<floorY+3; y++ )
+						{
+							b = getBlockAbs(chunk, startButtonX, y, z);
+							if ( b != null )
+								b.setType(Material.AIR);
+						}
+					
+					for ( int x=startButtonX-1; x<=startButtonX+1; x++ )
+					{
+						b = getBlockAbs(chunk, x, floorY+1, wallMaxZ+1);
+						if ( b != null )
+							b.setType(Material.TRIPWIRE);
+					}
+					b = getBlockAbs(chunk, startButtonX+2, floorY+1, wallMaxZ+1);
+					if ( b != null )
+					{
+						b.setType(Material.TRIPWIRE_HOOK);
+						b.setData((byte)15);	
+					}
+					b = getBlockAbs(chunk, startButtonX-2, floorY+1, wallMaxZ+1);
+					if ( b != null )
+					{
+						b.setType(Material.TRIPWIRE_HOOK);
+						b.setData((byte)13);
+					}
+					
+					b = getBlockAbs(chunk, startButtonX, floorY+3, wallMaxZ-1);
+					if ( b != null )
+						if ( Killer.instance.stagingWorldIsServerDefault)
+							setupWallSign(b, (byte)0x2, "Arena", "and", "game selection");
+						else
+							setupWallSign(b, (byte)0x2, "Arena,", "game selection", "and exit to", "main world");
 					
 					// game number
 					boolean[][] text = writeBlockText(Integer.toString(game + 1));
