@@ -47,6 +47,11 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		wallMaxZ = max;
 		waitingButtonZ = wallMaxZ + 2; spleefMinZ = wallMaxZ + 9; spleefMaxZ = spleefMinZ + 16; spleefPressurePlateZ = spleefMinZ-2; exitPortalZ = wallMaxZ - 2;
 	}
+
+	public static int getGamePortalX(int i)
+	{
+		return startButtonX - (Settings.maxSimultaneousGames * 3 + Settings.maxSimultaneousGames + 1)/2 + 4 * i + 2;
+	}
 	
 	public static int getGamePortalZ() { return getWallMaxZ() - 13; }
 	
@@ -456,8 +461,8 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			if ( Settings.maxSimultaneousGames != 1 )
 			{// game selection room
 				int selectionWallMinZ = getGamePortalZ()+1;
-				int roomWidth = Settings.maxSimultaneousGames * 3 + Settings.maxSimultaneousGames + 1;
-				selectionWallMinX = startButtonX-roomWidth/2; int selectionWallMaxX = startButtonX+roomWidth/2;
+				selectionWallMinX = startButtonX-(Settings.maxSimultaneousGames * 3 + Settings.maxSimultaneousGames + 1)/2;
+				int selectionWallMaxX = selectionWallMinX + Settings.maxSimultaneousGames * 3 + Settings.maxSimultaneousGames + 1;
 				backWallMinX = Math.min(selectionWallMinX-1, backWallMinX);
 				backWallMaxX = Math.max(selectionWallMaxX+1, backWallMaxX);
 				
@@ -523,7 +528,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				// doorways
 				for ( int i=0; i<Settings.maxSimultaneousGames; i++ )
 				{
-					int doorX = selectionWallMinX + 4 * i + 2;
+					int doorX = getGamePortalX(i);
 					for ( int z=selectionWallMinZ; z>selectionWallMinZ-3; z-- )
 						for ( int y=floorY+1; y<=floorY+2; y++ )
 						{
@@ -845,12 +850,6 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			if ( b != null )
 				setupWallSign(b, (byte)0x5, "Exit Killer", "and return to", "the server's", "main world");
 		}
-	}
-
-	public static int getGamePortalX(int i)
-	{
-		// TODO Auto-generated method stub
-		return 0;
 	}
 	
 	public static void setupFloorSign(Block b, byte orientation, String... lines)

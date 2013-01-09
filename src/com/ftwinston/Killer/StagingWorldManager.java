@@ -452,7 +452,6 @@ class StagingWorldManager
 			for ( int i=0; i<Settings.maxSimultaneousGames; i++ )
 				if ( x == StagingWorldGenerator.getGamePortalX(i) )
 				{
-
 					final Game game2 = plugin.games[i];
 					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,  new Runnable() {
 						@Override
