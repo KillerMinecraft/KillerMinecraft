@@ -367,6 +367,19 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 									b.setType(wall);
 							}
 					
+					// game number
+					boolean[][] text = writeBlockText(Integer.toString(game + 1));
+					int yMin = floorY + 1, zMax = gameModeButtonZ + text.length;
+					for ( int i=0; i<text.length; i++ )
+						for ( int j=0; j<text[i].length; j++ )
+						{
+							if ( !text[i][j] )
+								continue;
+							b = getBlockAbs(chunk, wallMinX, yMin + j, zMax - i);
+							if ( b != null )
+								b.setType(Material.IRON_BLOCK);
+						}
+					
 					// help signs on the floor
 					b = getBlockAbs(chunk, startButtonX - 1, floorY + 1, gameModeButtonZ + 5);
 					if ( b != null )
