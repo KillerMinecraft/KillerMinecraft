@@ -366,6 +366,30 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 								if ( b != null )
 									b.setType(wall);
 							}
+					
+					// help signs on the floor
+					b = getBlockAbs(chunk, startButtonX - 1, floorY + 1, gameModeButtonZ + 5);
+					if ( b != null )
+						setupFloorSign(b, (byte)0xF, "This is the", "setup room.", "Configure your", "game here.");
+					
+					b = getBlockAbs(chunk, startButtonX + 1, floorY + 1, gameModeButtonZ + 5);
+					if ( b != null )
+						setupFloorSign(b, (byte)0x1, "Read your", "instruction", "book if you", "need any help.");
+				}
+				else
+				{
+					// help signs on the floor
+					b = getBlockAbs(chunk, startButtonX, floorY + 1, gameModeButtonZ + 4);
+					if ( b != null )
+						setupFloorSign(b, (byte)0x0, "Welcome to", "Killer", "Minecraft!");
+					
+					b = getBlockAbs(chunk, startButtonX - 2, floorY + 1, gameModeButtonZ + 5);
+					if ( b != null )
+						setupFloorSign(b, (byte)0xF, "This is the", "staging world.", "It's used to", "set up games.");
+					
+					b = getBlockAbs(chunk, startButtonX + 2, floorY + 1, gameModeButtonZ + 5);
+					if ( b != null )
+						setupFloorSign(b, (byte)0x1, "Read your", "instruction", "book if you", "need any help.");
 				}
 			}
 
@@ -476,22 +500,22 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(Material.TRIPWIRE_HOOK);
 					b.setData((byte)13);
 				}
+				
+				// help signs on the floor
+				b = getBlockAbs(chunk, startButtonX, floorY + 1, gameModeButtonZ + 4);
+				if ( b != null )
+					setupFloorSign(b, (byte)0x0, "Welcome to", "Killer", "Minecraft!");
+				
+				b = getBlockAbs(chunk, startButtonX - 2, floorY + 1, gameModeButtonZ + 5);
+				if ( b != null )
+					setupFloorSign(b, (byte)0xF, "Each door ahead", "of you leads to", "a different", "Killer game.");
+				
+				b = getBlockAbs(chunk, startButtonX + 2, floorY + 1, gameModeButtonZ + 5);
+				if ( b != null )
+					setupFloorSign(b, (byte)0x1, "If a game isn't", "active, you'll", "be taken to the", "game setup room");
 			}
 			
-			// now the welcome signs and spleef arena, which are in the same place, regardless
-
-			// help signs on the floor
-			b = getBlockAbs(chunk, startButtonX, floorY + 1, gameModeButtonZ + 4);
-			if ( b != null )
-				setupFloorSign(b, (byte)0x0, "Welcome to", "Killer", "Minecraft!");
-			
-			b = getBlockAbs(chunk, startButtonX - 2, floorY + 1, gameModeButtonZ + 5);
-			if ( b != null )
-				setupFloorSign(b, (byte)0xF, "This is the", "staging world.", "It's used to", "set up games.");
-			
-			b = getBlockAbs(chunk, startButtonX + 2, floorY + 1, gameModeButtonZ + 5);
-			if ( b != null )
-				setupFloorSign(b, (byte)0x1, "Read your", "instruction", "book if you", "need any help.");
+			// now the spleef arena, which are in the same place, regardless
 			
 			// longer walls next to the spleef arena
 			for ( int x=backWallMaxX; x>=backWallMinX; x-- )
