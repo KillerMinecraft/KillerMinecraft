@@ -140,8 +140,8 @@ class EventListener implements Listener
     	Game fromGame = plugin.getGameForWorld(event.getFrom());
     	Game toGame = plugin.getGameForWorld(event.getPlayer().getWorld());
     	
-    	boolean wasInKiller = fromGame == null;
-    	boolean nowInKiller = toGame == null;
+    	boolean wasInKiller = fromGame != null;
+    	boolean nowInKiller = toGame != null;
     	
 		if ( wasInKiller )
 		{

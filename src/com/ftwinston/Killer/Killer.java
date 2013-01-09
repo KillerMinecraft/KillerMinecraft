@@ -396,7 +396,7 @@ public class Killer extends JavaPlugin
 							return true;
 						}
 						Game game = getGameForWorld(player.getWorld());
-						if ( player.getWorld() == stagingWorld || game == null )
+						if ( player.getWorld() == stagingWorld || game != null )
 						{
 							sender.sendMessage("You are already in Killer Minecraft, so you can't join again!");
 							return true;

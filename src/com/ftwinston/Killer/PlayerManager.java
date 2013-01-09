@@ -197,6 +197,9 @@ class PlayerManager
 		player.setDisplayName(ChatColor.stripColor(player.getDisplayName()));
 		player.setPlayerListName(ChatColor.stripColor(player.getPlayerListName()));
 		
+		if ( game == null )
+			return;
+		
 		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
 		for ( Player online : game.getOnlinePlayers() )
 			if ( online != player && !online.canSee(player) )
