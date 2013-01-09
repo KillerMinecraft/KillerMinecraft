@@ -48,6 +48,8 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		waitingButtonZ = wallMaxZ + 2; spleefMinZ = wallMaxZ + 9; spleefMaxZ = spleefMinZ + 16; spleefPressurePlateZ = spleefMinZ-2; exitButtonZ = wallMaxZ - 2;
 	}
 	
+	public static int getGamePortalZ() { return getWallMaxZ() - 13; }
+	
 	@Override
     public List<BlockPopulator> getDefaultPopulators(World world) {
         return Arrays.asList((BlockPopulator)new StagingWorldPopulator(this));
@@ -371,7 +373,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			int backWallMinX = wallMinX - 10, backWallMaxX = wallMaxX + 10;
 			if ( Settings.maxSimultaneousGames != 1 )
 			{// game selection room
-				int selectionWallMinZ = getWallMaxZ()-12;
+				int selectionWallMinZ = getGamePortalZ()+1;
 				int roomWidth = Settings.maxSimultaneousGames * 3 + Settings.maxSimultaneousGames + 1;
 				int selectionWallMinX = startButtonX-roomWidth/2, selectionWallMaxX = startButtonX+roomWidth/2;
 				backWallMinX = Math.min(selectionWallMinX-1, backWallMinX);
@@ -710,6 +712,12 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		}
 	}
 
+	public static int getGamePortalX(int i)
+	{
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
 	public static void setupFloorSign(Block b, byte orientation, String... lines)
 	{
 		b.setType(Material.SIGN_POST);

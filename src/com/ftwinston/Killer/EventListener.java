@@ -316,16 +316,22 @@ class EventListener implements Listener
     public void onPlayerInteract(PlayerInteractEvent event)
     {
     	Game game = plugin.getGameForPlayer(event.getPlayer());
+    	
+    	if ( event.getPlayer().getWorld() == plugin.stagingWorld && event.getClickedBlock() != null )
+    		if ( event.getClickedBlock().getType() == Material.TRIPWIRE || event.getClickedBlock().getType() == Material.STONE_PLATE )
+    		{
+    			plugin.stagingWorldManager.playerInteracted(game, event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
+				return;
+    		}
+	    	else if ( game.getGameState().canChangeGameSetup && event.getClickedBlock().getType() == Material.STONE_BUTTON )
+			{
+				plugin.stagingWorldManager.setupButtonClicked(game, event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
+				return;
+			}
+		
     	if ( game == null ) 
 			return;
-		
-		if ( game.getGameState().canChangeGameSetup && event.getPlayer().getWorld() == plugin.stagingWorld
-		  && event.getClickedBlock() != null && (event.getClickedBlock().getType() == Material.STONE_BUTTON || event.getClickedBlock().getType() == Material.STONE_PLATE) )
-		{
-			plugin.stagingWorldManager.setupButtonClicked(game, event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
-			return;
-		}
-		
+    	
     	// spectators can't interact with anything, but they do use clicking to handle their spectator stuff
     	String playerName = event.getPlayer().getName();
     	if ( plugin.playerManager.isSpectator(playerName) )

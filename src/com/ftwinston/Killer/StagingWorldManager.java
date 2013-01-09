@@ -28,6 +28,12 @@ class StagingWorldManager
 		return new Location(stagingWorld, StagingWorldGenerator.startButtonX + random.nextDouble() * 3 - 1, StagingWorldGenerator.baseFloorY + 1, StagingWorldGenerator.gameModeButtonZ + 8.5 - random.nextDouble() * 1.5, 180, 0);
 	}
 
+	private Location getGameSetupSpawnLocation(int i)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	public enum StagingWorldOption
 	{
 		NONE,
@@ -285,10 +291,6 @@ class StagingWorldManager
 			
 			plugin.arenaManager.endMonsterArena();
 		}
-		else if ( z == StagingWorldGenerator.spleefPressurePlateZ )
-		{
-			plugin.arenaManager.pressurePlatePressed(player);
-		}
 		else if ( x == StagingWorldGenerator.mainButtonX )
 		{
 			if ( z == StagingWorldGenerator.gameModeButtonZ )
@@ -440,6 +442,39 @@ class StagingWorldManager
 		}
 	}
 	
+	public void playerInteracted(Game game, int x, int z, Player player)
+	{
+		if ( z == StagingWorldGenerator.spleefPressurePlateZ )
+		{
+			plugin.arenaManager.pressurePlatePressed(player);
+		}
+		else if ( z == StagingWorldGenerator.getGamePortalZ() )
+		{
+			for ( int i=0; i<Settings.maxSimultaneousGames; i++ )
+				if ( x == StagingWorldGenerator.getGamePortalX(i) )
+				{
+					game = plugin.games[i];
+					if ( game.getGameState().usesGameWorlds )
+					{
+						plugin.playerManager.resetPlayer(player);
+						plugin.playerManager.setAlive(player, !Settings.lateJoinersStartAsSpectator);
+						plugin.playerManager.teleport(player, game.getGameMode().getSpawnLocation(player));
+					}
+					else
+						plugin.playerManager.teleport(player, getGameSetupSpawnLocation(i));
+					break;
+				}
+		}
+		else if ( game != null && Settings.maxSimultaneousGames != 1 )
+		{// exit this game, back to the staging world spawn
+			plugin.playerManager.teleport(player, getStagingWorldSpawnPoint());
+		}
+		else if ( !plugin.stagingWorldIsServerDefault )
+		{// exit killer minecraft altogether
+			plugin.playerManager.movePlayerOutOfKillerGame(player);
+		}
+	}
+
 	public void showStartButtons(Game game, boolean confirm)
 	{
 		int buttonY = StagingWorldGenerator.getButtonY(game.getNumber());
