@@ -157,7 +157,9 @@ class PlayerManager
 
 	public void reset(Game game)
 	{
-		playerInfo.clear();
+		for ( Map.Entry<String, Info> info : playerInfo.entrySet() )
+			if ( info.getValue().game == game )
+				playerInfo.remove(info.getKey());
 		
 		for ( Player player : game.getOnlinePlayers() )
 		{

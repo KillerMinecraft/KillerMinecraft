@@ -14,6 +14,8 @@ class StatsManager
 	{
 		this.plugin = plugin;
 		games = new GameInfo[numGames];
+		for ( int i=0; i<numGames; i++ )
+			games[i] = new GameInfo();
 	}
 	
 	class GameInfo

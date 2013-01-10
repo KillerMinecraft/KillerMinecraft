@@ -560,7 +560,6 @@ class EventListener implements Listener
     				if ( player != null )
 					{
 						plugin.playerManager.putPlayerInStagingWorld(player);
-						plugin.stagingWorldManager.updateGameInfoSigns(plugin.getGameForPlayer(player));
 					}
     			}
     		});
