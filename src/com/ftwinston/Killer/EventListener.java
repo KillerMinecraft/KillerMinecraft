@@ -209,7 +209,7 @@ class EventListener implements Listener
     	if ( game == null && world != plugin.stagingWorld ) 
 			return;
 
-    	if ( PlayerManager.instance.isSpectator(event.getPlayer().getName()) || plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) )
+    	if ( (world != plugin.stagingWorld && PlayerManager.instance.isSpectator(event.getPlayer().getName())) || plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) )
     		event.setCancelled(true);
     }
     
