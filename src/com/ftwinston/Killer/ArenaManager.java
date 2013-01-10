@@ -141,7 +141,7 @@ class ArenaManager
 		return null;
 	}
 	
-	private static final int arenaScoreZ = StagingWorldGenerator.spleefMaxZ + 8, arenaScoreX = StagingWorldGenerator.waitingMonsterButtonX + 2;
+	private static final int arenaScoreZ = StagingWorldGenerator.spleefMaxZ + 8, arenaScoreX = StagingWorldGenerator.arenaMonsterButtonX + 2;
 	public void prepareNextMonsterWave()
 	{
 		monsterWaveNumber++;

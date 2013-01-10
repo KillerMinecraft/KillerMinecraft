@@ -274,22 +274,22 @@ class StagingWorldManager
 	
 	public void setupButtonClicked(Game game, int x, int z, Player player)
 	{
-		int buttonY = StagingWorldGenerator.getButtonY(game.getNumber());
-		if ( z == StagingWorldGenerator.waitingButtonZ )
+		int buttonY = StagingWorldGenerator.getButtonY(game == null ? -1 : game.getNumber());
+		if ( z == StagingWorldGenerator.arenaButtonZ )
 		{
-			if ( x == StagingWorldGenerator.waitingSpleefButtonX )
+			if ( x == StagingWorldGenerator.arenaSpleefButtonX )
 			{
-				stagingWorld.getBlockAt(StagingWorldGenerator.waitingSpleefButtonX+1, buttonY, z).setData(StagingWorldGenerator.colorOptionOn);
-				stagingWorld.getBlockAt(StagingWorldGenerator.waitingMonsterButtonX-1, buttonY, z).setData(StagingWorldGenerator.colorOptionOff);
+				stagingWorld.getBlockAt(StagingWorldGenerator.arenaSpleefButtonX+1, buttonY, z).setData(StagingWorldGenerator.colorOptionOn);
+				stagingWorld.getBlockAt(StagingWorldGenerator.arenaMonsterButtonX-1, buttonY, z).setData(StagingWorldGenerator.colorOptionOff);
 				plugin.arenaManager.monsterArenaModeEnabled = false;
 			}
-			else if ( x == StagingWorldGenerator.waitingMonsterButtonX )
+			else if ( x == StagingWorldGenerator.arenaMonsterButtonX )
 			{
-				stagingWorld.getBlockAt(StagingWorldGenerator.waitingSpleefButtonX+1, buttonY, z).setData(StagingWorldGenerator.colorOptionOff);
-				stagingWorld.getBlockAt(StagingWorldGenerator.waitingMonsterButtonX-1, buttonY, z).setData(StagingWorldGenerator.colorOptionOn);
+				stagingWorld.getBlockAt(StagingWorldGenerator.arenaSpleefButtonX+1, buttonY, z).setData(StagingWorldGenerator.colorOptionOff);
+				stagingWorld.getBlockAt(StagingWorldGenerator.arenaMonsterButtonX-1, buttonY, z).setData(StagingWorldGenerator.colorOptionOn);
 				plugin.arenaManager.monsterArenaModeEnabled = true;
 			}
-			
+				
 			plugin.arenaManager.endMonsterArena();
 		}
 		else if ( x == StagingWorldGenerator.mainButtonX )

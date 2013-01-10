@@ -18,9 +18,9 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			optionButtonX = wallMaxX - 1, globalOptionButtonZ = startButtonZ + 3, animalsButtonZ = globalOptionButtonZ + 3,
 			monstersButtonZ = animalsButtonZ + 2, worldConfigButtonZ = monstersButtonZ + 3, worldButtonZ = worldConfigButtonZ + 2,
 			gameModeConfigButtonZ = worldButtonZ + 3, gameModeButtonZ = gameModeConfigButtonZ + 2, startButtonX = wallMaxX - 3,
-			overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1, waitingSpleefButtonX = wallMaxX - 1,
-			waitingMonsterButtonX = wallMinX + 1, spleefY = 29, spleefMaxX = startButtonX + 8, spleefMinX = spleefMaxX - 16;
-	public static int waitingButtonZ, spleefMinZ, spleefMaxZ, spleefPressurePlateZ, exitPortalZ;
+			overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1, arenaSpleefButtonX = startButtonX + 2,
+			arenaMonsterButtonX = startButtonX - 2, spleefY = 29, spleefMaxX = startButtonX + 8, spleefMinX = spleefMaxX - 16;
+	public static int arenaButtonZ, spleefMinZ, spleefMaxZ, spleefPressurePlateZ, exitPortalZ;
 	
 	public static final byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
 		colorStartButton = 4 /* yellow */, colorOverrideButton = 1 /* orange */, colorCancelButton = 9 /* teal */,
@@ -45,7 +45,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	public static void setWallMaxZ(int max)
 	{
 		wallMaxZ = max;
-		waitingButtonZ = wallMaxZ + 2; spleefMinZ = wallMaxZ + 9; spleefMaxZ = spleefMinZ + 16; spleefPressurePlateZ = spleefMinZ-2; exitPortalZ = wallMaxZ - 2;
+		arenaButtonZ = wallMaxZ + 2; spleefMinZ = wallMaxZ + 9; spleefMaxZ = spleefMinZ + 16; spleefPressurePlateZ = spleefMinZ-2; exitPortalZ = wallMaxZ - 2;
 	}
 
 	public static int getGamePortalX(int i)
@@ -604,7 +604,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				createExitPortal(chunk, selectionWallMinX, floorY, exitPortalZ);
 			
 			// spleef arena setup room
-			for ( int x=waitingSpleefButtonX; x>=waitingMonsterButtonX; x-- )
+			for ( int x=arenaSpleefButtonX; x>=arenaMonsterButtonX; x-- )
 				for ( int z=getWallMaxZ()+1; z<getWallMaxZ()+4; z++ )
 					for ( int y=floorY+1; y<ceilingY; y++ )
 					{
@@ -630,23 +630,23 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			// spleef setup buttons
 			for ( int y=floorY + 1; y < floorY + 4; y++ )
 			{
-				b = getBlockAbs(chunk, waitingSpleefButtonX+1, y, waitingButtonZ);
+				b = getBlockAbs(chunk, arenaSpleefButtonX+1, y, arenaButtonZ);
 				if ( b != null )
 				{
 					b.setType(wool);
 					b.setData(signBackColor);
 				}
 			}
-			b = getBlockAbs(chunk, waitingSpleefButtonX, buttonY+1, waitingButtonZ);
+			b = getBlockAbs(chunk, arenaSpleefButtonX, buttonY+1, arenaButtonZ);
 			if ( b != null )
 				setupWallSign(b, (byte)0x4, "", "Spleef", "Arena");
-			b = getBlockAbs(chunk, waitingSpleefButtonX+1, buttonY, waitingButtonZ);
+			b = getBlockAbs(chunk, arenaSpleefButtonX+1, buttonY, arenaButtonZ);
 			if ( b != null )
 			{
 				b.setType(wool);
 				b.setData(colorOptionOn);
 			}
-			b = getBlockAbs(chunk, waitingSpleefButtonX, buttonY, waitingButtonZ);
+			b = getBlockAbs(chunk, arenaSpleefButtonX, buttonY, arenaButtonZ);
 			if ( b != null )
 			{
 				b.setType(button);
@@ -655,23 +655,23 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			for ( int y=floorY + 1; y < floorY + 4; y++ )
 			{
-				b = getBlockAbs(chunk, waitingMonsterButtonX-1, y, waitingButtonZ);
+				b = getBlockAbs(chunk, arenaMonsterButtonX-1, y, arenaButtonZ);
 				if ( b != null )
 				{
 					b.setType(wool);
 					b.setData(signBackColor);
 				}
 			}
-			b = getBlockAbs(chunk, waitingMonsterButtonX, buttonY+1, waitingButtonZ);
+			b = getBlockAbs(chunk, arenaMonsterButtonX, buttonY+1, arenaButtonZ);
 			if ( b != null )
 				setupWallSign(b, (byte)0x5, "", "Monster", "Arena");
-			b = getBlockAbs(chunk, waitingMonsterButtonX-1, buttonY, waitingButtonZ);
+			b = getBlockAbs(chunk, arenaMonsterButtonX-1, buttonY, arenaButtonZ);
 			if ( b != null )
 			{
 				b.setType(wool);
 				b.setData(colorOptionOff);
 			}
-			b = getBlockAbs(chunk, waitingMonsterButtonX, buttonY, waitingButtonZ);
+			b = getBlockAbs(chunk, arenaMonsterButtonX, buttonY, arenaButtonZ);
 			if ( b != null )
 			{
 				b.setType(button);
