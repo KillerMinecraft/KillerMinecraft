@@ -47,13 +47,15 @@ class PlayerManager
 	public Map<String, Location> previousLocations = new HashMap<String, Location>();
 	public void movePlayerOutOfKillerGame(Player player)
 	{
-		Game game = plugin.getGameForPlayer(player);
-		
 		Location exitPoint = previousLocations.get(player.getName());
 		if ( exitPoint == null )
 			exitPoint = plugin.getServer().getWorlds().get(0).getSpawnLocation();
 
-		game.getGameMode().broadcastMessage(player.getName() + " quit the game");
+		Game game = plugin.getGameForPlayer(player);
+		if ( game != null )
+			game.getGameMode().broadcastMessage(player.getName() + " quit the game");
+		
+		resetPlayer(player);
 		teleport(player, exitPoint);
 	}
 	
@@ -66,6 +68,8 @@ class PlayerManager
 			Game game = plugin.games[0];
 			if ( game.getGameState().usesGameWorlds )
 			{
+				resetPlayer(player);
+				setAlive(player, !Settings.lateJoinersStartAsSpectator);
 				teleport(player, game.getGameMode().getSpawnLocation(player));
 				return;
 			}

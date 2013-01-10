@@ -20,7 +20,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			gameModeConfigButtonZ = worldButtonZ + 3, gameModeButtonZ = gameModeConfigButtonZ + 2, startButtonX = wallMaxX - 3,
 			overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1, waitingSpleefButtonX = wallMaxX - 1,
 			waitingMonsterButtonX = wallMinX + 1, spleefY = 29, spleefMaxX = startButtonX + 8, spleefMinX = spleefMaxX - 16;
-	public static int waitingButtonZ, spleefMinZ, spleefMaxZ, spleefPressurePlateZ, exitButtonZ;
+	public static int waitingButtonZ, spleefMinZ, spleefMaxZ, spleefPressurePlateZ, exitPortalZ;
 	
 	public static final byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
 		colorStartButton = 4 /* yellow */, colorOverrideButton = 1 /* orange */, colorCancelButton = 9 /* teal */,
@@ -45,7 +45,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	public static void setWallMaxZ(int max)
 	{
 		wallMaxZ = max;
-		waitingButtonZ = wallMaxZ + 2; spleefMinZ = wallMaxZ + 9; spleefMaxZ = spleefMinZ + 16; spleefPressurePlateZ = spleefMinZ-2; exitButtonZ = wallMaxZ - 2;
+		waitingButtonZ = wallMaxZ + 2; spleefMinZ = wallMaxZ + 9; spleefMaxZ = spleefMinZ + 16; spleefPressurePlateZ = spleefMinZ-2; exitPortalZ = wallMaxZ - 2;
 	}
 	
 	public static int getGamePortalZ() { return getWallMaxZ() - 13; }
@@ -332,27 +332,6 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setData((byte)0x3);
 				}
 				
-				// "exit" sign & button
-				if ( !Killer.instance.stagingWorldIsServerDefault )
-				{ 
-					b = getBlockAbs(chunk, mainButtonX, buttonY+1, exitButtonZ);
-					if ( b != null )
-						setupWallSign(b, (byte)0x5, "Push to exit", "Killer and", "return to the", "main world");
-					
-					b = getBlockAbs(chunk, mainButtonX-1, buttonY, exitButtonZ);
-					if ( b != null )
-					{
-						b.setType(wool);
-						b.setData(colorDoorway);
-					}
-					
-					b = getBlockAbs(chunk, mainButtonX, buttonY, exitButtonZ);
-					if ( b != null )
-					{
-						b.setType(button);
-						b.setData((byte)0x1);
-					}
-				}
 				
 				// if there's only one setup room, it links to the spleef arena. Otherwise, they're all separate.
 				if ( Settings.maxSimultaneousGames != 1 )
@@ -413,13 +392,13 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					if ( b != null )
 					{
 						b.setType(Material.TRIPWIRE_HOOK);
-						b.setData((byte)15);	
+						b.setData((byte)5);
 					}
 					b = getBlockAbs(chunk, startButtonX-2, floorY+1, wallMaxZ+1);
 					if ( b != null )
 					{
 						b.setType(Material.TRIPWIRE_HOOK);
-						b.setData((byte)13);
+						b.setData((byte)7);
 					}
 					
 					b = getBlockAbs(chunk, startButtonX, floorY+3, wallMaxZ-1);
@@ -453,6 +432,10 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				}
 				else
 				{
+					// "exit" portal
+					if ( !Killer.instance.stagingWorldIsServerDefault )
+						createExitPortal(chunk, wallMinX, floorY, exitPortalZ);
+					
 					// help signs on the floor
 					b = getBlockAbs(chunk, startButtonX, floorY + 1, gameModeButtonZ + 4);
 					if ( b != null )
@@ -469,12 +452,12 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			}
 
 			int floorY = baseFloorY, buttonY = floorY + buttonOffset, ceilingY = floorY + ceilingOffset;
-			int backWallMinX = wallMinX - 10, backWallMaxX = wallMaxX + 10;
+			int backWallMinX = wallMinX - 10, backWallMaxX = wallMaxX + 10, selectionWallMinX = backWallMinX;
 			if ( Settings.maxSimultaneousGames != 1 )
 			{// game selection room
 				int selectionWallMinZ = getGamePortalZ()+1;
 				int roomWidth = Settings.maxSimultaneousGames * 3 + Settings.maxSimultaneousGames + 1;
-				int selectionWallMinX = startButtonX-roomWidth/2, selectionWallMaxX = startButtonX+roomWidth/2;
+				selectionWallMinX = startButtonX-roomWidth/2; int selectionWallMaxX = startButtonX+roomWidth/2;
 				backWallMinX = Math.min(selectionWallMinX-1, backWallMinX);
 				backWallMaxX = Math.max(selectionWallMaxX+1, backWallMaxX);
 				
@@ -566,14 +549,14 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				if ( b != null )
 				{
 					b.setType(Material.TRIPWIRE_HOOK);
-					b.setData((byte)15);
+					b.setData((byte)7);
 				}
 				
 				b = getBlockAbs(chunk, selectionWallMaxX, floorY+1, selectionWallMinZ-1);
 				if ( b != null )
 				{
 					b.setType(Material.TRIPWIRE_HOOK);
-					b.setData((byte)13);
+					b.setData((byte)5);
 				}
 				
 				// help signs on the floor
@@ -610,6 +593,10 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						if ( b != null )
 							b.setType(ceiling);
 					}
+
+			// "exit" portal
+			if ( !Killer.instance.stagingWorldIsServerDefault && Settings.maxSimultaneousGames != 1 )
+				createExitPortal(chunk, selectionWallMinX, floorY, exitPortalZ);
 			
 			// spleef arena setup room
 			for ( int x=waitingSpleefButtonX; x>=waitingMonsterButtonX; x-- )
@@ -808,6 +795,55 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			b = getBlockAbs(chunk, startButtonX, floorY+1, spleefPressurePlateZ);
 			if ( b != null )
 				b.setType(Material.STONE_PLATE);
+		}
+
+		private void createExitPortal(Chunk chunk, int wallX, int floorY,int portalZ)
+		{
+			Block b;
+			for ( int x=wallX-1; x>wallX-4; x-- )
+				for ( int y=floorY; y<floorY+4; y++ )
+				{
+					for ( int z=portalZ-2; z<=portalZ+2; z++ )
+					{
+						b = getBlockAbs(chunk, x, y, z);
+						if ( b != null )
+						{
+							b.setType(Material.WOOL);
+							b.setData(colorDoorway);
+						}
+					}
+				}
+			
+			for ( int x=wallX; x>wallX-3; x-- )
+				for ( int y=floorY+1; y<floorY+3; y++ )
+				{
+					b = getBlockAbs(chunk, x, y, portalZ);
+					if ( b != null )
+						b.setType(Material.AIR);
+				}
+			
+			for ( int z=portalZ-1; z<=portalZ+1; z++ )
+			{
+				b = getBlockAbs(chunk, wallX-1, floorY+1, z);
+				if ( b != null )
+					b.setType(Material.TRIPWIRE);
+			}
+			b = getBlockAbs(chunk, wallX-1, floorY+1, portalZ+2);
+			if ( b != null )
+			{
+				b.setType(Material.TRIPWIRE_HOOK);
+				b.setData((byte)6);	
+			}
+			b = getBlockAbs(chunk, wallX-1, floorY+1, portalZ-2);
+			if ( b != null )
+			{
+				b.setType(Material.TRIPWIRE_HOOK);
+				b.setData((byte)4);
+			}
+			
+			b = getBlockAbs(chunk, wallX+1, floorY+3, portalZ);
+			if ( b != null )
+				setupWallSign(b, (byte)0x5, "Exit Killer", "and return to", "the server's", "main world");
 		}
 	}
 

@@ -307,8 +307,6 @@ class StagingWorldManager
 				setCurrentOption(game, currentOption == StagingWorldOption.ANIMALS ? StagingWorldOption.NONE : StagingWorldOption.ANIMALS);
 			else if ( z == StagingWorldGenerator.globalOptionButtonZ )
 				setCurrentOption(game, currentOption == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
-			else if ( z == StagingWorldGenerator.exitButtonZ )
-				plugin.playerManager.movePlayerOutOfKillerGame(player);
 		}
 		else if ( x == StagingWorldGenerator.optionButtonX )
 		{
@@ -480,7 +478,7 @@ class StagingWorldManager
 				}
 			});
 		}
-		else if ( !plugin.stagingWorldIsServerDefault )
+		else if ( z == StagingWorldGenerator.exitPortalZ && !plugin.stagingWorldIsServerDefault )
 		{// exit killer minecraft altogether
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,  new Runnable() {
 				@Override
