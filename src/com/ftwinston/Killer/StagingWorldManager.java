@@ -441,7 +441,7 @@ class StagingWorldManager
 		}
 	}
 	
-	public void playerInteracted(final Game game, int x, int z, final Player player)
+	public void playerInteracted(final Game game, final int x, final int y, final int z, final Player player)
 	{
 		if ( z == StagingWorldGenerator.spleefPressurePlateZ )
 		{
@@ -465,6 +465,7 @@ class StagingWorldManager
 							else
 								player.teleport(getGameSetupSpawnLocation(game2.getNumber()));
 							
+							resetTripWire(x, y, z, true);
 							updateGameInfoSigns(game2);
 						}
 					});
@@ -478,6 +479,7 @@ class StagingWorldManager
 				public void run() {
 					player.teleport(getStagingWorldSpawnPoint());
 					updateGameInfoSigns(game);
+					resetTripWire(x, y, z, true);
 				}
 			});
 		}
@@ -487,6 +489,7 @@ class StagingWorldManager
 				@Override
 				public void run() {
 					plugin.playerManager.movePlayerOutOfKillerGame(player);
+					resetTripWire(x, y, z, false);
 				}
 			});
 		}
@@ -680,5 +683,10 @@ class StagingWorldManager
 		
 		b = stagingWorld.getBlockAt(portalX+1, StagingWorldGenerator.baseFloorY+2, signZ);
 		StagingWorldGenerator.setupWallSign(b, (byte)0x3, "", "enter portal to", actionStr);
+	}
+	
+	private void resetTripWire(int x, int y, int z, boolean xDir)
+	{
+		stagingWorld.getBlockAt(x,y,z).setData((byte)0);
 	}
 }

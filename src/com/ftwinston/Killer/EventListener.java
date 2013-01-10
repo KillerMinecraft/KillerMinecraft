@@ -318,9 +318,9 @@ class EventListener implements Listener
     	Game game = plugin.getGameForPlayer(event.getPlayer());
     	
     	if ( event.getPlayer().getWorld() == plugin.stagingWorld && event.getClickedBlock() != null )
-    		if ( event.getClickedBlock().getType() == Material.TRIPWIRE || event.getClickedBlock().getType() == Material.STONE_PLATE )
+    		if ( event.getAction() == Action.PHYSICAL && (event.getClickedBlock().getType() == Material.TRIPWIRE || event.getClickedBlock().getType() == Material.STONE_PLATE) )
     		{
-    			plugin.stagingWorldManager.playerInteracted(game, event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
+    			plugin.stagingWorldManager.playerInteracted(game, event.getClickedBlock().getLocation().getBlockX(),  event.getClickedBlock().getLocation().getBlockY(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
 				return;
     		}
 	    	else if ( game != null && game.getGameState().canChangeGameSetup && event.getClickedBlock().getType() == Material.STONE_BUTTON )
