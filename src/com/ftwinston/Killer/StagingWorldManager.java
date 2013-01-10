@@ -28,10 +28,11 @@ class StagingWorldManager
 		return new Location(stagingWorld, StagingWorldGenerator.startButtonX + random.nextDouble() * 3 - 1, StagingWorldGenerator.baseFloorY + 1, StagingWorldGenerator.gameModeButtonZ + 8.5 - random.nextDouble() * 1.5, 180, 0);
 	}
 
-	private Location getGameSetupSpawnLocation(int i)
+	private Location getGameSetupSpawnLocation(int gameNum)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		Location loc = getStagingWorldSpawnPoint();
+		loc.setY(StagingWorldGenerator.getFloorY(gameNum) + 1);
+		return loc;
 	}
 
 	public enum StagingWorldOption

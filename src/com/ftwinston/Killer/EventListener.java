@@ -323,7 +323,7 @@ class EventListener implements Listener
     			plugin.stagingWorldManager.playerInteracted(game, event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
 				return;
     		}
-	    	else if ( game.getGameState().canChangeGameSetup && event.getClickedBlock().getType() == Material.STONE_BUTTON )
+	    	else if ( game != null && game.getGameState().canChangeGameSetup && event.getClickedBlock().getType() == Material.STONE_BUTTON )
 			{
 				plugin.stagingWorldManager.setupButtonClicked(game, event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
 				return;
@@ -532,7 +532,7 @@ class EventListener implements Listener
     	if ( event.getPlayer().isConversing() )
     		return;
     	
-    	if ( game.getGameState() == GameState.finished || !PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+    	if ( game == null || game.getGameState() == GameState.finished || !PlayerManager.instance.isSpectator(event.getPlayer().getName()))
 		{// colored player names shouldn't produce colored messages ... spectator chat isn't special when the game is in the "finished" state.
 			event.setMessage(ChatColor.RESET + event.getMessage());
     		return;
