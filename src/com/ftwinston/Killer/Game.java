@@ -128,6 +128,9 @@ public class Game
 		GameState prevState = gameState;
 		gameState = newState;
 		
+		if ( prevState.usesGameWorlds != newState.usesGameWorlds )
+			plugin.stagingWorldManager.updateGameInfoSigns(this);
+		
 		if ( newState == GameState.worldDeletion )
 		{
 			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game

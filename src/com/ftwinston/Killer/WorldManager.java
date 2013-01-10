@@ -142,6 +142,10 @@ class WorldManager
 
 		plugin.stagingWorldManager = new StagingWorldManager(plugin, plugin.stagingWorld);
 		plugin.arenaManager = new ArenaManager(plugin, plugin.stagingWorld);
+		
+		for ( Game game : plugin.games )
+			plugin.stagingWorldManager.updateGameInfoSigns(game);
+		
 		plugin.log.info("Staging world generated");
 	}
 	

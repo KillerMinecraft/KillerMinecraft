@@ -53,7 +53,10 @@ class PlayerManager
 
 		Game game = plugin.getGameForPlayer(player);
 		if ( game != null )
+		{
 			game.getGameMode().broadcastMessage(player.getName() + " quit the game");
+			plugin.stagingWorldManager.updateGameInfoSigns(game);
+		}
 		
 		resetPlayer(player);
 		teleport(player, exitPoint);

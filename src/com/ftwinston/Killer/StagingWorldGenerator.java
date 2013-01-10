@@ -887,6 +887,27 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			return;
 		}
 		
+		String[] lines = splitTextForSign(text);
+		
+		if ( lines[2] != null )
+		{
+			s.setLine(1, lines[0]);
+			s.setLine(2, lines[1]);
+			s.setLine(3, lines[2]);
+		}
+		else
+		{
+			s.setLine(1, "");
+			s.setLine(2, lines[0]);
+			if ( lines[1] != null )
+				s.setLine(3, lines[1]);
+			else
+				s.setLine(3, "");
+		}
+	}
+	
+	public static String[] splitTextForSign(String text)
+	{
 		String[] words = text.split(" ");
 		String[] lines = new String[3];
 		int lineNum = -1;
@@ -905,21 +926,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				lines[lineNum] += " " + word;
 		}
 		
-		if ( lines[2] != null )
-		{
-			s.setLine(1, lines[0]);
-			s.setLine(2, lines[1]);
-			s.setLine(3, lines[2]);
-		}
-		else
-		{
-			s.setLine(1, "");
-			s.setLine(2, lines[0]);
-			if ( lines[1] != null )
-				s.setLine(3, lines[1]);
-			else
-				s.setLine(3, "");
-		}
+		return lines;
 	}
 	
 	public static String padSignLeft(String text)

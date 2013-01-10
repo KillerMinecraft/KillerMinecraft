@@ -441,7 +441,7 @@ class StagingWorldManager
 		}
 	}
 	
-	public void playerInteracted(Game game, int x, int z, final Player player)
+	public void playerInteracted(final Game game, int x, int z, final Player player)
 	{
 		if ( z == StagingWorldGenerator.spleefPressurePlateZ )
 		{
@@ -464,6 +464,8 @@ class StagingWorldManager
 							}
 							else
 								player.teleport(getGameSetupSpawnLocation(game2.getNumber()));
+							
+							updateGameInfoSigns(game2);
 						}
 					});
 					break;
@@ -475,6 +477,7 @@ class StagingWorldManager
 				@Override
 				public void run() {
 					player.teleport(getStagingWorldSpawnPoint());
+					updateGameInfoSigns(game);
 				}
 			});
 		}
@@ -640,5 +643,42 @@ class StagingWorldManager
 			Block b = stagingWorld.getBlockAt(x, y, z);
 			b.setType(Material.SMOOTH_BRICK);
 		}
+	}
+	
+	public void updateGameInfoSigns(Game game)
+	{
+		if ( Settings.maxSimultaneousGames == 1 || game == null )
+			return;
+		
+		int portalX = StagingWorldGenerator.getGamePortalX(game.getNumber());
+		int signZ = StagingWorldGenerator.getGamePortalZ() + 2;
+		
+		Block b = stagingWorld.getBlockAt(portalX-1, StagingWorldGenerator.baseFloorY+2, signZ);
+		
+		int numPlayers = game.getOnlinePlayers().size();
+		if ( game.getGameState().usesGameWorlds )
+		{
+			String[] mode = StagingWorldGenerator.splitTextForSign(game.getGameMode().getName());
+			
+			StagingWorldGenerator.setupWallSign(b, (byte)0x3, numPlayers + " players", "* In Progress *", mode.length == 1 ? "" : mode[0], mode[mode.length > 1 ? 1 : 0]);
+		}
+		else if ( numPlayers > 0 )
+			StagingWorldGenerator.setupWallSign(b, (byte)0x3, numPlayers + " players", "", "* In Setup *");
+		else
+			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "0 players", "", "* Vacant *");
+		
+		String actionStr;
+		if ( game.getGameState().usesGameWorlds )
+		{
+			if ( Settings.lateJoinersStartAsSpectator /*|| game.isAllowedToJoin(null)*/ )
+				actionStr = "spectate game";
+			else
+				actionStr = "join game";
+		}
+		else
+			actionStr = "set up a game";
+		
+		b = stagingWorld.getBlockAt(portalX+1, StagingWorldGenerator.baseFloorY+2, signZ);
+		StagingWorldGenerator.setupWallSign(b, (byte)0x3, "", "enter portal to", actionStr);
 	}
 }

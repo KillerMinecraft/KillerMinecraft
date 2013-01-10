@@ -558,15 +558,21 @@ class EventListener implements Listener
     			{
     				Player player = plugin.getServer().getPlayerExact(playerName);
     				if ( player != null )
+					{
 						plugin.playerManager.putPlayerInStagingWorld(player);
+						plugin.stagingWorldManager.updateGameInfoSigns(plugin.getGameForPlayer(player));
+					}
     			}
     		});
     	}
     	else
     	{
-    		Game game = plugin.getGameForWorld(world);
-    		 if ( game != null )
-    			 plugin.playerManager.playerJoined(event.getPlayer());    		
+			Game game = plugin.getGameForWorld(world);
+			if ( game != null )
+			{
+				plugin.playerManager.playerJoined(event.getPlayer());
+				plugin.stagingWorldManager.updateGameInfoSigns(game);
+			}
     	}
     		
 	}
@@ -576,7 +582,10 @@ class EventListener implements Listener
     {
     	World world = event.getPlayer().getWorld();
     	if ( world == plugin.stagingWorld )
+		{
     		plugin.arenaManager.playerKilled();
+			plugin.stagingWorldManager.updateGameInfoSigns(plugin.getGameForPlayer(event.getPlayer()));
+		}
     	else
     	{
     		Game game = plugin.getGameForWorld(world);
@@ -587,6 +596,7 @@ class EventListener implements Listener
 	
 	private void playerQuit(Game game, Player player, boolean actuallyLeftServer)
 	{
+		plugin.stagingWorldManager.updateGameInfoSigns(game);
 		if ( actuallyLeftServer ) // the quit message should be sent to the scoreboard of anyone who this player was invisible to
 			for ( Player online : game.getOnlinePlayers() )
 				if ( !online.canSee(player) )
