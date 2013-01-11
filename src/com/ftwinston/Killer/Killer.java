@@ -528,12 +528,12 @@ public class Killer extends JavaPlugin
 				
 			// otherwise, determine game based on player y position
 			int y = player.getLocation().getBlockY();
-			for ( int i=0; i<=games.length; i++ )
-				if ( y < StagingWorldGenerator.getFloorY(i) )
-					if ( i == 0 )
-						return null; // below the lowest setup room: not in any game's world
-					else
-						return games[i-1];
+			if ( y < StagingWorldGenerator.getFloorY(0) )
+				return null;
+			
+			for ( int i=0; i<games.length; i++ )
+				if ( y < StagingWorldGenerator.getFloorY(i+1) )
+					return games[i];
 			
 			return null;
 		}
