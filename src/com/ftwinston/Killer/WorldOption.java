@@ -5,8 +5,6 @@ import java.util.List;
 
 import org.bukkit.World;
 import org.bukkit.World.Environment;
-import org.bukkit.generator.BlockPopulator;
-import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public abstract class WorldOption
@@ -69,21 +67,15 @@ public abstract class WorldOption
 		{
 			String worldName = Settings.killerWorldName + "_" + (num+1);
 			
-			WorldConfig helper = new WorldConfig(game, worldName, environment);
+			final WorldConfig helper = new WorldConfig(game, worldName, environment);
 			
-			ChunkGenerator generator = game.getGameMode().getCustomChunkGenerator(num);
-			if ( generator != null )
-			{
-				helper.setGenerator(generator);
-				helper.lockChunkGenerator(); // don't let it be changed again, the game mode insists we use this
-			}
-			
-			BlockPopulator[] populators = game.getGameMode().getExtraBlockPopulators(num);
-			if ( populators != null )
-				for ( BlockPopulator populator : populators )
-					helper.getExtraPopulators().add(populator);
-			
-			setupWorld(helper, runNext);
+			setupWorld(helper, new Runnable() {
+				public void run()
+				{
+					game.getGameMode().beforeWorldGeneration(num, helper);
+					runNext.run();
+				}
+			});
 		}
 	}
 	

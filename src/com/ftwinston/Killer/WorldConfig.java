@@ -22,7 +22,6 @@ public class WorldConfig
 		this.generator = null;
 		this.extraPopulators = new ArrayList<BlockPopulator>();
 		this.generateStructures = true;
-		this.chunkGeneratorLocked = false;
 		this.generatorSettings = "";
 	}
 	
@@ -56,7 +55,6 @@ public class WorldConfig
 	private ChunkGenerator generator;
 	private List<BlockPopulator> extraPopulators;
 	private boolean generateStructures;
-	private boolean chunkGeneratorLocked;
 	private String generatorSettings;
 	
 	public Game getGame() {
@@ -96,12 +94,7 @@ public class WorldConfig
 	}
 
 	public void setGenerator(ChunkGenerator generator) {
-		if ( !chunkGeneratorLocked )
-			this.generator = generator;
-	}
-
-	void lockChunkGenerator() {
-		chunkGeneratorLocked = true;
+		this.generator = generator;
 	}
 	
 	public List<BlockPopulator> getExtraPopulators() {
