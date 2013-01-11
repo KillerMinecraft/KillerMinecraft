@@ -15,6 +15,7 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
@@ -521,35 +522,32 @@ public class Killer extends JavaPlugin
 		World w = player.getWorld();
 		
 		if ( w == stagingWorld )
-		{
-			// if only one game, they're always part of that if they're in the staging world
-			if ( games.length == 1 )
-				return games[0];
-				
-			// otherwise, determine game based on player y position
-			int y = player.getLocation().getBlockY();
-			if ( y < StagingWorldGenerator.getFloorY(0) )
-				return null;
-			
-			for ( int i=0; i<games.length; i++ )
-				if ( y < StagingWorldGenerator.getFloorY(i+1) )
-					return games[i];
-			
-			return null;
-		}
+			return getGameForStagingWorldLocation(player.getLocation());
 		
 		return getGameForWorld(w);
 	}
-	/*
-	final List<Player> getOnlinePlayers()
+	
+	Game getGameForStagingWorldLocation(Location loc)
 	{
-		ArrayList<Player> players = new ArrayList<Player>();
-		for ( Player player : getServer().getOnlinePlayers() )
-			if ( getGameForWorld(player.getWorld()) != null )
-				players.add(player);
-		return players;
+		if ( loc.getWorld() != stagingWorld )
+			return null;
+		
+		// if only one game, they're always part of that if they're in the staging world
+		if ( games.length == 1 )
+			return games[0];
+			
+		// otherwise, determine game based on player y position
+		int y = loc.getBlockY();
+		if ( y < StagingWorldGenerator.getFloorY(0) )
+			return null;
+		
+		for ( int i=0; i<games.length; i++ )
+			if ( y < StagingWorldGenerator.getFloorY(i+1) )
+				return games[i];
+		
+		return null;
 	}
-	*/
+	
 	class EmptyWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	{	
 	    @Override

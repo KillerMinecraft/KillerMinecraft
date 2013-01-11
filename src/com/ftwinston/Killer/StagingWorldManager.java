@@ -463,7 +463,7 @@ class StagingWorldManager
 							}
 							else
 								player.teleport(getGameSetupSpawnLocation(game2.getNumber()));
-							
+							plugin.playerManager.putPlayerInGame(player, game2);
 							resetTripWire(x, y, z, true);
 							updateGameInfoSigns(game2);
 						}
@@ -476,6 +476,7 @@ class StagingWorldManager
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,  new Runnable() {
 				@Override
 				public void run() {
+					plugin.playerManager.removePlayerFromGame(player, game);
 					player.teleport(getStagingWorldSpawnPoint());
 					updateGameInfoSigns(game);
 					resetTripWire(x, y, z, true);

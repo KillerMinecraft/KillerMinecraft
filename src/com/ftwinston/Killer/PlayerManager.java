@@ -56,6 +56,7 @@ class PlayerManager
 			plugin.stagingWorldManager.updateGameInfoSigns(game);
 		}
 		
+		playerKilled(game, player);
 		resetPlayer(game, player);
 		teleport(player, exitPoint);
 	}
@@ -71,7 +72,6 @@ class PlayerManager
 			{
 				resetPlayer(game, player);
 				putPlayerInGame(player, game);
-				setAlive(game, player, !Settings.lateJoinersStartAsSpectator);
 				teleport(player, game.getGameMode().getSpawnLocation(player));
 				return;
 			}
@@ -151,13 +151,8 @@ class PlayerManager
 	
 	public void startGame(Game game)
 	{
-		reset(game);
-
 		for ( Player player : game.getOnlinePlayers() )
-		{
 			resetPlayer(game, player);
-			putPlayerInGame(player, game);
-		}
 	}
 	
 	public void colorPlayerName(Player player, ChatColor color)
@@ -199,16 +194,6 @@ class PlayerManager
 				plugin.craftBukkit.sendForScoreboard(online, oldListName, false);
 				plugin.craftBukkit.sendForScoreboard(online, player, true);
 			}
-	}
-
-	public void playerJoined(Player player)
-	{
-		if ( player.getWorld() == plugin.stagingWorld )
-			return;
-		
-		Game game = plugin.getGameForPlayer(player);
-		if ( game != null )
-			putPlayerInGame(player, game);
 	}
 	
 	public void putPlayerInGame(Player player, Game game)
@@ -274,6 +259,11 @@ class PlayerManager
 		{// does this need a null check on the target?
 			player.setCompassTarget(getCompassTarget(game, player));
 		}
+	}
+	
+	public void removePlayerFromGame(Player player, Game game)
+	{
+		game.getPlayerInfo().remove(player.getName());
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time

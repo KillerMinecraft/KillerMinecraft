@@ -43,6 +43,8 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -134,7 +136,6 @@ class EventListener implements Listener
 		}
 	}
 	
-	// spectators moving between worlds
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void OnPlayerChangedWorld(PlayerChangedWorldEvent event)
 	{
@@ -171,10 +172,23 @@ class EventListener implements Listener
 			}
 		}
 		else if ( nowInKiller )
-			plugin.playerManager.playerJoined(event.getPlayer());
+		{
+			plugin.playerManager.putPlayerInGame(event.getPlayer(), toGame);
+		}
 		
 		if ( event.getPlayer().getWorld() == plugin.stagingWorld )
 			plugin.playerManager.putPlayerInStagingWorld(event.getPlayer());
+		
+		if ( event.getFrom() == plugin.stagingWorld )
+		{
+			// remove them from every game that is currently in setup, in case they teleported out of its setup room
+			for ( int i=0; i<plugin.games.length; i++ )
+				if ( !plugin.games[i].getGameState().usesGameWorlds )
+				{
+					plugin.games[i].getPlayerInfo().remove(event.getPlayer().getName());
+					plugin.stagingWorldManager.updateGameInfoSigns(plugin.games[i]);
+				}
+		}
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -189,6 +203,29 @@ class EventListener implements Listener
 		
 		game.getGameMode().handlePortal(event.getCause(), event.getFrom(), helper); // see? I told you
 		helper.performTeleport(event.getCause(), event.getPlayer());
+	}
+	
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onPlayerTeleport(PlayerTeleportEvent event)
+	{
+		if ( event.getCause() != TeleportCause.COMMAND && event.getCause() != TeleportCause.PLUGIN )
+			return;
+		
+		// only handling non-portal teleporting within the staging world
+		if ( event.getTo().getWorld() == plugin.stagingWorld && event.getFrom().getWorld() == plugin.stagingWorld )
+		{
+			Game from = plugin.getGameForStagingWorldLocation(event.getFrom());
+			Game to = plugin.getGameForStagingWorldLocation(event.getTo());
+			
+			if ( from != to )
+			{
+				if ( from != null && !from.getGameState().usesGameWorlds )
+					plugin.playerManager.removePlayerFromGame(event.getPlayer(), from);
+				
+				if ( to != null && !to.getGameState().usesGameWorlds )
+					plugin.playerManager.putPlayerInGame(event.getPlayer(), to);
+			}
+		}
 	}
 	
 	// prevent spectators picking up anything
@@ -579,11 +616,10 @@ class EventListener implements Listener
 			Game game = plugin.getGameForWorld(world);
 			if ( game != null )
 			{
-				plugin.playerManager.playerJoined(event.getPlayer());
+				plugin.playerManager.putPlayerInGame(event.getPlayer(), game);
 				plugin.stagingWorldManager.updateGameInfoSigns(game);
 			}
 		}
-			
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST)
