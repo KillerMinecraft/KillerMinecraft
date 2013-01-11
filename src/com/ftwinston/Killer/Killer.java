@@ -428,6 +428,29 @@ public class Killer extends JavaPlugin
 						playerManager.movePlayerOutOfKillerGame(player);
 						return true;
 					}
+					else if ( firstParam.equals("game") )
+					{
+						if ( player == null )
+						{
+							sender.sendMessage("Only players can run this command");
+							return true;
+						}
+						
+						Game game = getGameForPlayer(player);
+						if ( game == null )
+						{
+							if ( player.getWorld() == stagingWorld )
+								sender.sendMessage("You're in the Killer staging world, but you're not in a game");
+							else
+								sender.sendMessage("You're not in a Killer game");
+						}	
+						else if ( player.getWorld() == stagingWorld )
+							sender.sendMessage("You're in the the setup room for Killer game #" + (game.getNumber()+1));
+						else
+							sender.sendMessage("You're in Killer game #" + (game.getNumber()+1));
+						
+						return true;
+					}
 				}
 				if ( player != null && !player.isOp() )
 				{
@@ -447,9 +470,9 @@ public class Killer extends JavaPlugin
 			if ( args.length == 0 )
 			{
 				if ( !stagingWorldIsServerDefault && player != null )
-					sender.sendMessage("Usage: /killer join, /killer quit, /killer restart, /killer end, /killer world");
+					sender.sendMessage("Usage: /killer join, /killer quit, /killer game, /killer restart, /killer end");
 				else
-					sender.sendMessage("Usage: /killer restart, /killer end, /killer world");
+					sender.sendMessage("Usage: /killer restart, /killer end");
 				return true;
 			}
 			
