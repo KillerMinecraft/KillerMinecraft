@@ -6,8 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
-import java.util.TreeMap;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -58,7 +56,7 @@ class PlayerManager
 			plugin.stagingWorldManager.updateGameInfoSigns(game);
 		}
 		
-		resetPlayer(player);
+		resetPlayer(game, player);
 		teleport(player, exitPoint);
 	}
 	
@@ -71,8 +69,9 @@ class PlayerManager
 			Game game = plugin.games[0];
 			if ( game.getGameState().usesGameWorlds )
 			{
-				resetPlayer(player);
-				setAlive(player, !Settings.lateJoinersStartAsSpectator);
+				resetPlayer(game, player);
+				putPlayerInGame(player, game);
+				setAlive(game, player, !Settings.lateJoinersStartAsSpectator);
 				teleport(player, game.getGameMode().getSpawnLocation(player));
 				return;
 			}
@@ -116,7 +115,7 @@ class PlayerManager
 	
 	public class Info
 	{
-		public Info(Game game, boolean alive) { this.game = game; a = alive; t = -1; target = null; }
+		public Info(boolean alive) { a = alive; t = -1; target = null; }
 		
 		private boolean a;
 		private int t;
@@ -135,37 +134,15 @@ class PlayerManager
 			a = b;
 		}
 		
-		private Game game;
-		public Game getGame() { return game; }
-		public void setGame(Game g) { game = g; }
-		
 		// spectator target, and also kill target in Contract Killer mode
 		public String target;
 		
 		public int nextHelpMessage = 0;
 	}
-	
-	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();
-	public Set<Map.Entry<String, Info>> getPlayerInfo() { return playerInfo.entrySet(); }
-	
-	public void setTeam(OfflinePlayer player, int teamNum)
-	{
-		Info info = playerInfo.get(player.getName());
-		if ( info != null )
-			info.setTeam(teamNum);
-	}
 
 	public void reset(Game game)
 	{
-		for ( Map.Entry<String, Info> info : playerInfo.entrySet() )
-			if ( info.getValue().game == game )
-				playerInfo.remove(info.getKey());
-		
-		for ( Player player : game.getOnlinePlayers() )
-		{
-			resetPlayer(player);
-			setAlive(player, true);
-		}
+		game.getPlayerInfo().clear();
 		
 		if ( Settings.banOnDeath )
 			for ( OfflinePlayer player : plugin.getServer().getBannedPlayers() )
@@ -175,6 +152,12 @@ class PlayerManager
 	public void startGame(Game game)
 	{
 		reset(game);
+
+		for ( Player player : game.getOnlinePlayers() )
+		{
+			resetPlayer(game, player);
+			putPlayerInGame(player, game);
+		}
 	}
 	
 	public void colorPlayerName(Player player, ChatColor color)
@@ -220,27 +203,36 @@ class PlayerManager
 
 	public void playerJoined(Player player)
 	{
+		if ( player.getWorld() == plugin.stagingWorld )
+			return;
+		
 		Game game = plugin.getGameForPlayer(player);
-		Info info = playerInfo.get(player.getName());
+		if ( game != null )
+			putPlayerInGame(player, game);
+	}
+	
+	public void putPlayerInGame(Player player, Game game)
+	{
+		Info info = game.getPlayerInfo().get(player.getName());
 		boolean isNewPlayer;
 		if ( info == null )
 		{
 			isNewPlayer = true;
 			
 			if ( game == null || !game.getGameState().usesGameWorlds )
-				info = new Info(game, true);
+				info = new Info(true);
 			else if ( Settings.lateJoinersStartAsSpectator )
-				info = new Info(game, false);
+				info = new Info(false);
 			else
 			{
-				info = new Info(game, true);
+				info = new Info(true);
 				if ( game != null )
 					plugin.statsManager.playerJoinedLate(game.getNumber());
 			}
-			playerInfo.put(player.getName(), info);
+			game.getPlayerInfo().put(player.getName(), info);
 			
-			// this player is new for this game, but they might still have stuff from previous game on same world. clear them down.
-			resetPlayer(player);
+			// this player is new for this game, so clear them down
+			resetPlayer(game, player);
 		}
 		else
 			isNewPlayer = false;
@@ -260,7 +252,8 @@ class PlayerManager
 			message += "You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.";
 			
 			player.sendMessage(message);
-			setAlive(player, false);
+			
+			setAlive(game, player, false);
 			
 			// send this player to everyone else's scoreboards, because they're now invisible, and won't show otherwise
 			for ( Player online : game.getOnlinePlayers() )
@@ -269,21 +262,13 @@ class PlayerManager
 		}
 		else
 		{
-			if ( info.isAlive() )
-			{
-				setAlive(player, true);
-				
-				if ( !game.getGameMode().teamAllocationIsSecret() )
-					colorPlayerName(player, info.getTeam() == 1 ? ChatColor.RED : ChatColor.BLUE);
-			}
-			else
-			{
-				setAlive(player, false); // game mode made them a spectator for some reason
-				player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
-			}
+			setAlive(game, player, true);
+			
+			if ( !game.getGameMode().teamAllocationIsSecret() )
+				colorPlayerName(player, game.getGameMode().getTeamChatColor(info.getTeam()));
 		}
-		if ( isNewPlayer );
-		game.getGameMode().sendGameModeHelpMessage(player);
+		if ( isNewPlayer )
+			game.getGameMode().sendGameModeHelpMessage(player);
 			
 		if ( player.getInventory().contains(Material.COMPASS) )
 		{// does this need a null check on the target?
@@ -297,7 +282,7 @@ class PlayerManager
 		if ( game == null || !game.getGameState().usesGameWorlds )
 			return;
 		
-		Info info = playerInfo.get(player.getName());
+		Info info = game.getPlayerInfo().get(player.getName());
 		info.setAlive(false);
 		
 		if ( game.getOnlinePlayers().size() == 0 )
@@ -320,7 +305,7 @@ class PlayerManager
 		{
 			if ( game.getGameMode().isAllowedToRespawn(online) )
 			{
-				setAlive(online, true);
+				setAlive(game, online, true);
 				return;
 			}
 			
@@ -344,46 +329,18 @@ class PlayerManager
 		else
 			return target;
 	}
-	
-	public Info getInfo(String player)
-	{
-		return playerInfo.get(player);
-	}
-	
-	public boolean isSpectator(String player)
-	{
-		Info info = playerInfo.get(player);
-		return info == null || !info.isAlive();
-	}
 
-	public boolean isAlive(String player)
-	{
-		Info info = playerInfo.get(player);
-		return info != null && info.isAlive();
-	}
-
-	public int getTeam(String player)
-	{
-		Info info = playerInfo.get(player);
-		return info == null ? 0 : info.getTeam();
-	}
-
-	public void setAlive(Player player, boolean bAlive)
+	public void setAlive(Game game, Player player, boolean bAlive)
 	{
 		boolean wasAlive;
-		Info info = playerInfo.get(player.getName());
+		Info info = game.getPlayerInfo().get(player.getName());
 		wasAlive = info.isAlive();
 
 		Inventory inv = player.getInventory();
 		if ( !bAlive || !wasAlive )
 			inv.clear();
 		
-		Game game = plugin.getGameForPlayer(player);
-		
 		info.setAlive(bAlive);
-
-		if ( game == null )
-			return;
 		
 		if ( bAlive )
 		{
@@ -440,7 +397,7 @@ class PlayerManager
 				p.showPlayer(player);
 	}
 
-	public void resetPlayer(Player player)
+	public void resetPlayer(Game game, Player player)
 	{
 		if ( !player.isDead() )
 		{
@@ -464,7 +421,7 @@ class PlayerManager
 			
 			player.closeInventory(); // this stops them from keeping items they had in (e.g.) a crafting table
 			
-			if ( isAlive(player.getName()) ) // if any starting items are configured, give them if the player is alive
+			if ( game != null && Helper.isAlive(game, player) ) // if any starting items are configured, give them if the player is alive
 				for ( Material material : Settings.startingItems )
 					inv.addItem(new ItemStack(material));
 		}
@@ -472,41 +429,30 @@ class PlayerManager
 		clearPlayerNameColor(player);
 	}
 	
-	public String getFollowTarget(Player player)
-	{
-		Info info = playerInfo.get(player.getName());
-		return info == null ? null : info.target;
-	}
-	
-	public void setFollowTarget(Player player, String target)
-	{
-		Info info = playerInfo.get(player.getName());
-		
-		if ( info != null )
-			info.target = target;
-	}
-	
 	private final double maxFollowSpectateRangeSq = 40 * 40, maxAcceptableOffsetDot = 0.65, farEnoughSpectateRangeSq = 35 * 35;
 	private final int maxSpectatePositionAttempts = 5, idealFollowSpectateRange = 20;
 	
-	public void checkFollowTarget(Player player, String targetName)
+	public void checkFollowTarget(Game game, Player player, String targetName)
 	{
-		Game game = plugin.getGameForPlayer(player);
+		if ( game == null )
+			return;
 		
 		Player target = targetName == null ? null : plugin.getServer().getPlayerExact(targetName);
-		if ( targetName == null || target == null || !isAlive(targetName) || !target.isOnline() || plugin.getGameForWorld(target.getWorld()) != game )
+		if ( target == null || !Helper.isAlive(game, target) || !target.isOnline() || plugin.getGameForWorld(target.getWorld()) != game )
 		{
-			targetName = getNearestFollowTarget(game, player);
-			setFollowTarget(player, targetName);
-			if ( targetName == null )
+			target = getNearestFollowTarget(game, player);
+			
+			if ( target == null )
 				return; // if there isn't a valid follow target, don't let it try to move them to it
 
-			target = plugin.getServer().getPlayerExact(targetName);
-			if ( !isAlive(targetName) || target == null || !target.isOnline() )
+			if ( target == null || !Helper.isAlive(game, target) || !target.isOnline() )
 			{// something went wrong with the default follow target, so just clear it
-				setFollowTarget(player, null);
+				target = null;
+				Helper.setTargetOf(game, player, target);
 				return;
 			}
+			
+			Helper.setTargetOf(game, player, target);
 		}
 		
 		if ( !canSee(player,  target, maxFollowSpectateRangeSq) )
@@ -630,26 +576,26 @@ class PlayerManager
 		player.teleport(bestLoc);
 	}
 	
-	public String getNearestFollowTarget(Game game, Player lookFor)
+	public Player getNearestFollowTarget(Game game, Player lookFor)
 	{
 		double nearestDistSq = Double.MAX_VALUE;
-		String nearestName = null;
+		Player nearest = null;
 		
 		for ( Player player : game.getOnlinePlayers(new PlayerFilter().alive().exclude(lookFor).world(lookFor.getWorld())) )
 		{
 			double testDistSq = player.getLocation().distanceSquared(lookFor.getLocation());
 			if ( testDistSq < nearestDistSq )
 			{
-				nearestName = player.getName();
+				nearest = player;
 				nearestDistSq = testDistSq;
 			}
 		}
 		
-		if ( nearestName != null )
-			return nearestName;
+		if ( nearest != null )
+			return nearest;
 		
-		List<Player> playersInOtherWorlds = game.getOnlinePlayers(new PlayerFilter().alive().exclude(lookFor));;
-		return playersInOtherWorlds.size() > 0 ? playersInOtherWorlds.get(0).getName() : null;
+		List<Player> playersInOtherWorlds = game.getOnlinePlayers(new PlayerFilter().alive().exclude(lookFor));
+		return playersInOtherWorlds.size() > 0 ? playersInOtherWorlds.get(0) : null;
 	}
 	
 	public String getNextFollowTarget(Game game, Player lookFor, String currentTargetName, boolean forwards)

@@ -28,42 +28,60 @@ public class Helper
 		return m.name().toLowerCase().replace('_', ' ');
 	}
 
-	public static int getTeam(OfflinePlayer player)
+	public static int getTeam(Game game, OfflinePlayer player)
 	{
-		return Killer.instance.playerManager.getTeam(player.getName());
+		Info info = game.getPlayerInfo().get(player.getName());
+		return info == null ? 0 : info.getTeam();
 	}
 	
-	public static void setTeam(OfflinePlayer player, int teamNum)
+	public static void setTeam(Game game, OfflinePlayer player, int teamNum)
 	{
-		Killer.instance.playerManager.setTeam(player, teamNum);
+		Info info = game.getPlayerInfo().get(player.getName());
+		if ( info != null )
+			info.setTeam(teamNum);
 	}
 	
-	public static Player getTargetOf(OfflinePlayer player)
+	public static Player getTargetOf(Game game, OfflinePlayer player)
 	{
-		Info info = Killer.instance.playerManager.getInfo(player.getName());
-		if ( info.target == null )
+		Info info = game.getPlayerInfo().get(player.getName());
+		if ( info == null || info.target == null )
 			return null;
 		
 		Player target = Killer.instance.getServer().getPlayerExact(info.target);
 		
-		if ( isAlive(target) && Killer.instance.getGameForPlayer(target) == info.getGame() )
+		if ( isAlive(game, target) && Killer.instance.getGameForPlayer(target) == game )
 			return target;
 		
 		return null;
 	}
 	
-	public static void setTargetOf(OfflinePlayer player, OfflinePlayer target)
+	static String getTargetName(Game game, OfflinePlayer player)
 	{
-		Info info = Killer.instance.playerManager.getInfo(player.getName());
+		Info info = game.getPlayerInfo().get(player.getName());
+		if ( info == null || info.target == null )
+			return null;
+		
+		return info.target;
+	}
+	
+	public static void setTargetOf(Game game, OfflinePlayer player, OfflinePlayer target)
+	{
+		setTargetOf(game, player, target == null ? null : target.getName());
+	}
+	
+	static void setTargetOf(Game game, OfflinePlayer player, String target)
+	{
+		Info info = game.getPlayerInfo().get(player.getName());
 		if ( target == null )
 			info.target = null;
 		else
-			info.target = target.getName();
+			info.target = target;
 	}
 	
-	public static boolean isAlive(OfflinePlayer player)
+	public static boolean isAlive(Game game, OfflinePlayer player)
 	{
-		return Killer.instance.playerManager.isAlive(player.getName());
+		Info info = game.getPlayerInfo().get(player.getName());
+		return info != null && info.isAlive();
 	}
 	
 	public static boolean playerCanSeeOther(Player looker, Player target, double maxDistanceSq)
@@ -76,9 +94,11 @@ public class Helper
 		Location nearest = null;
 		double nearestDistSq = Double.MAX_VALUE;
 		World playerWorld = player.getWorld();
+		Game game = Killer.instance.getGameForWorld(playerWorld);
+		
 		for ( Player other : candidates )
 		{
-			if ( other == player || other.getWorld() != playerWorld || !isAlive(other))
+			if ( other == player || other.getWorld() != playerWorld || !isAlive(game, other))
 				continue;
 				
 			double distSq = other.getLocation().distanceSquared(player.getLocation());

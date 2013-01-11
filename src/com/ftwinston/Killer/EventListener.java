@@ -47,6 +47,7 @@ import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.inventory.ItemStack;
 
 import com.ftwinston.Killer.Game.GameState;
+import com.ftwinston.Killer.PlayerManager.Info;
 
 class EventListener implements Listener
 {
@@ -115,7 +116,7 @@ class EventListener implements Listener
 			});
 		}
 	
-		if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+		if( !Helper.isAlive(game, event.getPlayer()) )
 		{
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				public void run()
@@ -124,7 +125,7 @@ class EventListener implements Listener
 					if ( player != null )
 					{
 						boolean alive = game.getGameMode().isAllowedToRespawn(player);
-						plugin.playerManager.setAlive(player, alive);
+						plugin.playerManager.setAlive(game, player, alive);
 						if ( alive )
 							player.setCompassTarget(plugin.playerManager.getCompassTarget(game, player));
 					}
@@ -148,10 +149,20 @@ class EventListener implements Listener
 			if ( nowInKiller )
 			{
 				Player player = event.getPlayer();
-				if(PlayerManager.instance.isSpectator(player.getName()))
-					PlayerManager.instance.setAlive(player, false);
+				
+				if ( fromGame != toGame )
+				{
+					plugin.playerManager.playerKilled(fromGame, player);
+					plugin.playerManager.putPlayerInGame(player, toGame);
+				}
 				else
-					player.setCompassTarget(plugin.playerManager.getCompassTarget(fromGame, player));
+				{
+					Info info = toGame.getPlayerInfo().get(player.getName());
+					if( info != null && info.isAlive() )
+						player.setCompassTarget(plugin.playerManager.getCompassTarget(fromGame, player));
+					else
+						PlayerManager.instance.setAlive(toGame, player, false);
+				}
 			}
 			else
 			{
@@ -188,7 +199,7 @@ class EventListener implements Listener
 		if ( game == null )
 			return;
 
-		if(PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+		if( !Helper.isAlive(game, event.getPlayer()) )
 			event.setCancelled(true);
 	}
 	
@@ -209,7 +220,7 @@ class EventListener implements Listener
 		if ( game == null && world != plugin.stagingWorld ) 
 			return;
 
-		if ( (world != plugin.stagingWorld && PlayerManager.instance.isSpectator(event.getPlayer().getName())) || plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) )
+		if ( (world != plugin.stagingWorld && !Helper.isAlive(game, event.getPlayer())) || plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) )
 			event.setCancelled(true);
 	}
 	
@@ -228,7 +239,7 @@ class EventListener implements Listener
 		if ( game == null ) 
 			return;
 		
-		if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) || PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+		if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) || !Helper.isAlive(game, event.getPlayer()) )
 			event.setCancelled(true);
 	}
 	
@@ -289,26 +300,26 @@ class EventListener implements Listener
 		if ( game == null ) 
 			return;
 		
-		if ( plugin.playerManager.isSpectator(event.getPlayer().getName()) )
+		if ( !Helper.isAlive(game, event.getPlayer()) )
 		{
 			ItemStack item = event.getPlayer().getInventory().getItem(event.getNewSlot());
 			
 			if ( item == null )
-				plugin.playerManager.setFollowTarget(event.getPlayer(), null);
+				Helper.setTargetOf(game, event.getPlayer(), (String)null);
 			else if ( item.getType() == Settings.teleportModeItem )
 			{
 				event.getPlayer().sendMessage("Free look mode: left click to teleport " + ChatColor.YELLOW + "to" + ChatColor.RESET + " where you're looking, right click to teleport " + ChatColor.YELLOW + "through" + ChatColor.RESET + " through what you're looking");
-				plugin.playerManager.setFollowTarget(event.getPlayer(), null);
+				Helper.setTargetOf(game, event.getPlayer(), (String)null);
 			}
 			else if ( item.getType() == Settings.followModeItem )
 			{
 				event.getPlayer().sendMessage("Follow mode: click to cycle target");
-				String target = plugin.playerManager.getNearestFollowTarget(game, event.getPlayer());
-				plugin.playerManager.setFollowTarget(event.getPlayer(), target);
-				plugin.playerManager.checkFollowTarget(event.getPlayer(), target);
+				Player target = plugin.playerManager.getNearestFollowTarget(game, event.getPlayer());
+				Helper.setTargetOf(game, event.getPlayer(), target);
+				plugin.playerManager.checkFollowTarget(game, event.getPlayer(), target.getName());
 			}
 			else
-				plugin.playerManager.setFollowTarget(event.getPlayer(), null);
+				Helper.setTargetOf(game, event.getPlayer(), (String)null);
 		}
 	}
 	
@@ -333,8 +344,7 @@ class EventListener implements Listener
 			return;
 		
 		// spectators can't interact with anything, but they do use clicking to handle their spectator stuff
-		String playerName = event.getPlayer().getName();
-		if ( plugin.playerManager.isSpectator(playerName) )
+		if ( !Helper.isAlive(game, event.getPlayer()) )
 		{
 			event.setCancelled(true);
 			Material held = event.getPlayer().getItemInHand().getType();
@@ -348,21 +358,21 @@ class EventListener implements Listener
 			}
 			else if ( held == Settings.followModeItem )
 			{
-				PlayerManager.Info info = plugin.playerManager.getInfo(playerName); 
+				String targetName = Helper.getTargetName(game, event.getPlayer());
 				
 				if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
 				{
-					String target = plugin.playerManager.getNextFollowTarget(game, event.getPlayer(), info.target, true);
-					plugin.playerManager.setFollowTarget(event.getPlayer(), target);
-					plugin.playerManager.checkFollowTarget(event.getPlayer(), target);
-					event.getPlayer().sendMessage("Following " + info.target);
+					String target = plugin.playerManager.getNextFollowTarget(game, event.getPlayer(), targetName, true);
+					Helper.setTargetOf(game, event.getPlayer(), target);
+					plugin.playerManager.checkFollowTarget(game, event.getPlayer(), target);
+					event.getPlayer().sendMessage("Following " + target);
 				}
 				else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
 				{
-					String target = plugin.playerManager.getNextFollowTarget(game, event.getPlayer(), info.target, false);
-					plugin.playerManager.setFollowTarget(event.getPlayer(), target);
-					plugin.playerManager.checkFollowTarget(event.getPlayer(), target);
-					event.getPlayer().sendMessage("Following " + info.target);
+					String target = plugin.playerManager.getNextFollowTarget(game, event.getPlayer(), targetName, false);
+					Helper.setTargetOf(game, event.getPlayer(), target);
+					plugin.playerManager.checkFollowTarget(game, event.getPlayer(), target);
+					event.getPlayer().sendMessage("Following " + target);
 				}
 			}
 			
@@ -414,7 +424,7 @@ class EventListener implements Listener
 			return;
 		
 		// spectators can't drop items
-		if ( world == plugin.stagingWorld || plugin.playerManager.isSpectator(event.getPlayer().getName()) )
+		if ( world == plugin.stagingWorld || !Helper.isAlive(game, event.getPlayer()) )
 			event.setCancelled(true);
 		
 	}
@@ -432,7 +442,7 @@ class EventListener implements Listener
 			return;
 		
 		// spectators can't rearrange their inventory ... is that a bit mean?
-		if ( plugin.playerManager.isSpectator(player.getName()) )
+		if ( !Helper.isAlive(game, player) )
 			event.setCancelled(true);
 	}
 	
@@ -449,7 +459,7 @@ class EventListener implements Listener
 			Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
 			if ( damager != null && damager instanceof Player )
 			{
-				if ( PlayerManager.instance.isSpectator(((Player)damager).getName()))
+				if ( !Helper.isAlive(game, (Player)damager) )
 					event.setCancelled(true);
 			}
 		}
@@ -458,7 +468,7 @@ class EventListener implements Listener
 		
 		Player victim = (Player)event.getEntity();
 		
-		if(PlayerManager.instance.isSpectator(victim.getName()))
+		if( !Helper.isAlive(game, victim) )
 			event.setCancelled(true);
 	}
 	
@@ -502,7 +512,7 @@ class EventListener implements Listener
 			return;
 		
 		// monsters shouldn't target spectators
-		if( event.getTarget() != null && event.getTarget() instanceof Player && PlayerManager.instance.isSpectator(((Player)event.getTarget()).getName()))
+		if( event.getTarget() != null && event.getTarget() instanceof Player && !Helper.isAlive(game, (Player)event.getTarget()) )
 			event.setCancelled(true);
 	}
 	
@@ -532,7 +542,7 @@ class EventListener implements Listener
 		if ( event.getPlayer().isConversing() )
 			return;
 		
-		if ( game == null || game.getGameState() == GameState.finished || !PlayerManager.instance.isSpectator(event.getPlayer().getName()))
+		if ( game == null || game.getGameState() == GameState.finished || Helper.isAlive(game, event.getPlayer()) )
 		{// colored player names shouldn't produce colored messages ... spectator chat isn't special when the game is in the "finished" state.
 			event.setMessage(ChatColor.RESET + event.getMessage());
 			return;
@@ -542,7 +552,7 @@ class EventListener implements Listener
 		event.setMessage(ChatColor.YELLOW + "[Spec] " + ChatColor.RESET + event.getMessage());
 		
 		for (Player recipient : new HashSet<Player>(event.getRecipients()))
-			if ( recipient != null && recipient.isOnline() && !PlayerManager.instance.isSpectator(recipient.getName()))
+			if ( recipient != null && recipient.isOnline() && !Helper.isAlive(game, recipient.getPlayer()))
 				event.getRecipients().remove(recipient);
 	}
 	
@@ -674,7 +684,7 @@ class EventListener implements Listener
 				if ( player != null && player.isOnline() )
 					return; // player has reconnected, so don't do anything
 				
-				if ( plugin.playerManager.isAlive(name) )
+				if ( Helper.isAlive(game, player) )
 					plugin.statsManager.playerQuit(game.getNumber());
 			}
 			plugin.playerManager.playerKilled(game, player);

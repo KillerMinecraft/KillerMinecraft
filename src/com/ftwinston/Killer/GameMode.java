@@ -28,6 +28,8 @@ public abstract class GameMode implements Listener
 	static List<GameModePlugin> gameModes = new ArrayList<GameModePlugin>();
 	Killer plugin; Game game;
 	static GameModePlugin get(int num) { return gameModes.get(num); }
+	protected Game getGame() { return game; }
+	
 	protected final Random random = new Random();
 	
 	final void initialize(Game game, GameModePlugin modePlugin)
@@ -368,7 +370,7 @@ public abstract class GameMode implements Listener
 	
 	public final boolean sendGameModeHelpMessage(Player player)
 	{
-		PlayerManager.Info info = plugin.playerManager.getInfo(player.getName());
+		PlayerManager.Info info = game.getPlayerInfo().get(player.getName());
 		String message = null;
 		
 		if ( info.nextHelpMessage >= 0 )

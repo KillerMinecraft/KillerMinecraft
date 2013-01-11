@@ -458,8 +458,7 @@ class StagingWorldManager
 						public void run() {
 							if ( game2.getGameState().usesGameWorlds )
 							{
-								plugin.playerManager.resetPlayer(player);
-								plugin.playerManager.setAlive(player, !Settings.lateJoinersStartAsSpectator);
+								plugin.playerManager.putPlayerInGame(player, game2);
 								plugin.playerManager.teleport(player, game2.getGameMode().getSpawnLocation(player));
 							}
 							else

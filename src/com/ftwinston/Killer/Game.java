@@ -3,6 +3,8 @@ package com.ftwinston.Killer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -11,6 +13,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Recipe;
+
+import com.ftwinston.Killer.PlayerManager.Info;
 
 public class Game
 {
@@ -43,6 +47,9 @@ public class Game
 		world.initialize(this, plugin);
 		worldOption = world;
 	}
+
+	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();
+	public Map<String, Info> getPlayerInfo() { return playerInfo; }
 	
 	static final int defaultMonsterNumbers = 2, defaultAnimalNumbers = 2; 
 	int monsterNumbers = defaultMonsterNumbers, animalNumbers = defaultAnimalNumbers;
@@ -75,9 +82,9 @@ public class Game
         	{
 	        	for ( Player player : getGameMode().getOnlinePlayers(new PlayerFilter().notAlive()) )
 	        	{
-	        		PlayerManager.Info info = plugin.playerManager.getInfo(player.getName());
+	        		PlayerManager.Info info = playerInfo.get(player.getName());
 	        		if (info.target != null )
-	        			plugin.playerManager.checkFollowTarget(player, info.target);
+	        			plugin.playerManager.checkFollowTarget(game, player, info.target);
 	        	}
         	}
         }, 40, 40);

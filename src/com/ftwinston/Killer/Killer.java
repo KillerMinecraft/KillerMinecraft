@@ -266,7 +266,7 @@ public class Killer extends JavaPlugin
 			Player player = (Player)sender;
 			
 			Game game = getGameForWorld(player.getWorld());
-			if ( !playerManager.isSpectator(sender.getName()) || game == null )
+			if ( game == null || Helper.isAlive(game, player) )
 			{
 				sender.sendMessage("Only spectators can use this command");
 				return true;
@@ -294,10 +294,10 @@ public class Killer extends JavaPlugin
 			else
 			{
 				Player other = getServer().getPlayer(args[0]);
-				if ( other == null || !other.isOnline() || game != getGameForPlayer(other) || !playerManager.isAlive(other.getName()))
+				if ( other == null || !other.isOnline() || game != getGameForPlayer(other) || !Helper.isAlive(game, other))
 					sender.sendMessage("Player not found: " + args[0]);
-				else if ( playerManager.getFollowTarget(player) != null )
-					playerManager.setFollowTarget(player, other.getName());
+				else if ( Helper.getTargetName(game, player) != null )
+					Helper.setTargetOf(game,  player, other);
 				
 				playerManager.moveToSee(player, other);
 			}
@@ -337,7 +337,7 @@ public class Killer extends JavaPlugin
 			for ( int i=1; i<args.length; i++ )
 				message += " " + args[i];
 			
-			PlayerManager.Info info = playerManager.getInfo(player.getName());
+			PlayerManager.Info info = game.getPlayerInfo().get(player.getName());
 			List<Player> recipients = game.getOnlinePlayers(new PlayerFilter().team(info.getTeam()));
 			
 			// most of this code is a clone of the actual chat code in NetServerHandler.chat
@@ -368,7 +368,7 @@ public class Killer extends JavaPlugin
 			
 			if ( !game.getGameMode().sendGameModeHelpMessage(player) )
 			{// if there was no message to send, restart from the beginning
-				playerManager.getInfo(player.getName()).nextHelpMessage = 0;
+				game.getPlayerInfo().get(player.getName()).nextHelpMessage = 0;
 				game.getGameMode().sendGameModeHelpMessage(player);
 			}
 			return true;

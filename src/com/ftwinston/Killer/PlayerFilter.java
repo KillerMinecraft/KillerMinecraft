@@ -128,7 +128,7 @@ public class PlayerFilter
 		if ( onlineState == Setting.RequiredNot )
 			return players;
 		
-		for ( Map.Entry<String, Info> info : Killer.instance.playerManager.getPlayerInfo() )
+		for ( Map.Entry<String, Info> info : game.getPlayerInfo().entrySet() )
 		{
 			Info infoVal = info.getValue();
 			
@@ -184,12 +184,9 @@ public class PlayerFilter
 	{
 		ArrayList<OfflinePlayer> players = new ArrayList<OfflinePlayer>();
 		
-		for ( Map.Entry<String, Info> info : Killer.instance.playerManager.getPlayerInfo() )
+		for ( Map.Entry<String, Info> info : game.getPlayerInfo().entrySet() )
 		{
 			Info infoVal = info.getValue();
-			
-			if ( game != null && infoVal.getGame() != game )
-				continue;
 			
 			switch ( aliveState )
 			{
