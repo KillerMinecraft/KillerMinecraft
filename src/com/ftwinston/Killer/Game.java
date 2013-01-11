@@ -54,7 +54,7 @@ public class Game
 	static final int defaultMonsterNumbers = 2, defaultAnimalNumbers = 2; 
 	int monsterNumbers = defaultMonsterNumbers, animalNumbers = defaultAnimalNumbers;
 	
-	public void start()
+	public void startProcesses()
 	{
 		final Game game = this;
 		
@@ -90,7 +90,7 @@ public class Game
         }, 40, 40);
 	}
 	
-	public void reset()
+	public void stopProcesses()
 	{
 		if ( helpMessageProcess != -1 )
 		{
@@ -136,7 +136,14 @@ public class Game
 		gameState = newState;
 		
 		if ( prevState.usesGameWorlds != newState.usesGameWorlds )
+		{
 			plugin.stagingWorldManager.updateGameInfoSigns(this);
+			
+			if ( newState.usesGameWorlds )
+				startProcesses();
+			else
+				stopProcesses();
+		}
 		
 		if ( newState == GameState.worldDeletion )
 		{
@@ -296,6 +303,7 @@ public class Game
 			getGameMode().broadcastMessage("The game has ended. You've been moved to the staging world to allow you to set up a new one...");
 		
 		setGameState(GameState.worldDeletion);
+		plugin.stagingWorldManager.updateGameInfoSigns(this);
 	}
 	
 	void restartGame(CommandSender actionedBy)
