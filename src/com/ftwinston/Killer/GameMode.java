@@ -90,7 +90,7 @@ public abstract class GameMode implements Listener
 
 	public abstract boolean teamAllocationIsSecret();
 
-	public abstract boolean isLocationProtected(Location l); // for protecting plinth, respawn points, etc.
+	public abstract boolean isLocationProtected(Location l, Player p); // for protecting plinth, respawn points, etc.
 
 
 	public abstract boolean isAllowedToRespawn(Player player); // return false and player will become a spectator

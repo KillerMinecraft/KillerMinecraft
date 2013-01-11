@@ -161,7 +161,7 @@ class WorldManager
 		}
 	}
 	
-	public boolean isProtectedLocation(Game game, Location loc)
+	public boolean isProtectedLocation(Game game, Location loc, Player player)
 	{
 		if ( loc.getWorld() == plugin.stagingWorld )
 			return loc.getBlockZ() < StagingWorldGenerator.spleefMinZ
@@ -170,7 +170,7 @@ class WorldManager
 				|| loc.getBlockX() > StagingWorldGenerator.spleefMaxX;
 		
 		if ( game != null )
-			return game.getGameMode().isLocationProtected(loc);
+			return game.getGameMode().isLocationProtected(loc, player);
 		else
 			return false;
 	}

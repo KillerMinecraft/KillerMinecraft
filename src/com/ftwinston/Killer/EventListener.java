@@ -220,7 +220,7 @@ class EventListener implements Listener
 		if ( game == null && world != plugin.stagingWorld ) 
 			return;
 
-		if ( (world != plugin.stagingWorld && !Helper.isAlive(game, event.getPlayer())) || plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) )
+		if ( (world != plugin.stagingWorld && !Helper.isAlive(game, event.getPlayer())) || plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer()) )
 			event.setCancelled(true);
 	}
 	
@@ -239,7 +239,7 @@ class EventListener implements Listener
 		if ( game == null ) 
 			return;
 		
-		if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) || !Helper.isAlive(game, event.getPlayer()) )
+		if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer()) || !Helper.isAlive(game, event.getPlayer()) )
 			event.setCancelled(true);
 	}
 	
@@ -251,7 +251,7 @@ class EventListener implements Listener
 		if ( game == null ) 
 			return;
 		
-		if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) )
+		if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), null) )
 			event.setCancelled(true);
 	}
 	
@@ -263,7 +263,7 @@ class EventListener implements Listener
 		if ( game == null ) 
 			return;
 		
-		if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation()) )
+		if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), null) )
 			event.setCancelled(true);
 	}
 	
@@ -278,7 +278,7 @@ class EventListener implements Listener
 		
 		List<Block> blocks = event.blockList();
 		for ( int i=0; i<blocks.size(); i++ )
-			if ( plugin.worldManager.isProtectedLocation(game, blocks.get(i).getLocation()) )
+		if ( plugin.worldManager.isProtectedLocation(game, blocks.get(i).getLocation(), null) )
 			{
 				blocks.remove(i);
 				i--;
@@ -481,7 +481,7 @@ class EventListener implements Listener
 			return;
 		
 		Block affected = event.getBlockClicked().getRelative(event.getBlockFace());
-		if ( plugin.worldManager.isProtectedLocation(game, affected.getLocation()) )
+		if ( plugin.worldManager.isProtectedLocation(game, affected.getLocation(), event.getPlayer()) )
 			event.setCancelled(true);
 	}
 	
