@@ -181,7 +181,6 @@ public class Game
 		else if( newState == GameState.worldGeneration )
 		{
 			plugin.getServer().getPluginManager().registerEvents(getGameMode(), plugin);
-			getGameMode().initializeGame(true);
 			
 			final Game game = this;
 			plugin.worldManager.generateWorlds(this, worldOption, new Runnable() {
@@ -211,7 +210,6 @@ public class Game
 					plugin.worldManager.removeAllItems(world);
 					world.setTime(0);
 				}
-				getGameMode().initializeGame(false);
 			}
 
 			getGameMode().startGame(!prevState.usesGameWorlds);
