@@ -32,7 +32,7 @@ public abstract class WorldOption
 	protected final World createWorld(WorldConfig worldConfig, Runnable runWhenDone)
 	{
 		Game game = worldConfig.getGame();
-		game.getGameMode().beforeWorldGeneration(game.getNumber(), worldConfig);
+		game.getGameMode().beforeWorldGeneration(game.getWorlds().size(), worldConfig);
 		
 		World world = plugin.worldManager.createWorld(worldConfig, runWhenDone);
 		game.getWorlds().add(world);
@@ -68,11 +68,8 @@ public abstract class WorldOption
 		
 		public void run()
 		{
-			String worldName = Settings.killerWorldName + "_" + (num+1);
-			
+			String worldName = Settings.killerWorldName + "_" + (game.getNumber()+1) + "." + num;
 			final WorldConfig helper = new WorldConfig(game, worldName, environment);
-			System.out.println("WorldSetupRunner.run");
-			
 			setupWorld(helper, runNext);
 		}
 	}
