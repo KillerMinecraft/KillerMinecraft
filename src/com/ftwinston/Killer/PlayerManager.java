@@ -155,10 +155,9 @@ class PlayerManager
 			resetPlayer(game, player);
 	}
 	
-	public void colorPlayerName(Player player, ChatColor color)
+	public void colorPlayerName(Player player, Game game, ChatColor color)
 	{
 		String oldListName = player.getPlayerListName();
-		Game game = plugin.getGameForPlayer(player);
 		player.setDisplayName(color + ChatColor.stripColor(player.getDisplayName()));
 		
 		// mustn't be > 16 chars, or it throws an exception
@@ -249,8 +248,8 @@ class PlayerManager
 		{
 			setAlive(game, player, true);
 			
-			if ( !game.getGameMode().teamAllocationIsSecret() )
-				colorPlayerName(player, game.getGameMode().getTeamChatColor(info.getTeam()));
+			if ( game.getGameState().usesGameWorlds && !game.getGameMode().teamAllocationIsSecret() )
+				colorPlayerName(player, game, game.getGameMode().getTeamChatColor(info.getTeam()));
 		}
 		if ( isNewPlayer )
 			game.getGameMode().sendGameModeHelpMessage(player);

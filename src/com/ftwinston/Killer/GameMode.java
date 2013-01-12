@@ -311,7 +311,10 @@ public abstract class GameMode implements Listener
 		gameStarted(isNewWorlds);
 		
 		for ( Player player : getOnlinePlayers() )
+		{
 			player.teleport(getSpawnLocation(player));
+			plugin.playerManager.colorPlayerName(player, game, game.getGameMode().getTeamChatColor(game.getPlayerInfo().get(player.getName()).getTeam()));
+		}
 	}
 	
 	protected final boolean hasGameFinished()
