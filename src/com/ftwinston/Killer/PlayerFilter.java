@@ -169,6 +169,10 @@ public class PlayerFilter
 			case RequiredNot:
 				if ( p.getWorld() == world )
 					continue;
+			default:
+				// any player not in this game is ignored, as if they were offline
+				if ( Killer.instance.getGameForPlayer(p) != game )
+					continue;
 				break;
 			}
 			

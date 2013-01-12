@@ -264,6 +264,7 @@ class PlayerManager
 	public void removePlayerFromGame(Player player, Game game)
 	{
 		game.getPlayerInfo().remove(player.getName());
+		plugin.stagingWorldManager.updateGameInfoSigns(game);
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time

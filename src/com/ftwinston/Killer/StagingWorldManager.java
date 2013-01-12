@@ -659,16 +659,17 @@ class StagingWorldManager
 		Block b = stagingWorld.getBlockAt(portalX-1, StagingWorldGenerator.baseFloorY+2, signZ);
 		
 		int numPlayers = game.getOnlinePlayers().size();
+		String strPlayers = numPlayers == 1 ? "1 player" : numPlayers + " players";
 		if ( game.getGameState().usesGameWorlds )
 		{
 			String[] mode = StagingWorldGenerator.splitTextForSign(game.getGameMode().getName());
 			
-			StagingWorldGenerator.setupWallSign(b, (byte)0x3, numPlayers + " players", "* In Progress *", mode.length == 1 ? "" : mode[0], mode[mode.length > 1 ? 1 : 0]);
+			StagingWorldGenerator.setupWallSign(b, (byte)0x3, strPlayers, "* In Progress *", mode.length == 1 ? "" : mode[0], mode[mode.length > 1 ? 1 : 0]);
 		}
 		else if ( numPlayers > 0 )
-			StagingWorldGenerator.setupWallSign(b, (byte)0x3, numPlayers + " players", "", "* In Setup *");
+			StagingWorldGenerator.setupWallSign(b, (byte)0x3, strPlayers, "", "* In Setup *");
 		else
-			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "0 players", "", "* Vacant *");
+			StagingWorldGenerator.setupWallSign(b, (byte)0x3, strPlayers, "", "* Vacant *");
 		
 		String actionStr;
 		if ( game.getGameState().usesGameWorlds )
