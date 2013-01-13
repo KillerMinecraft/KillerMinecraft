@@ -220,7 +220,6 @@ public class Game
 		}
 	}
 	
-	
 	private boolean dispenserRecipeEnabled = true;
 	void toggleDispenserRecipe()
 	{

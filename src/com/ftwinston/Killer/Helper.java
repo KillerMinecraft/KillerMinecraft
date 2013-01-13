@@ -27,6 +27,11 @@ public class Helper
 	{
 		return m.name().toLowerCase().replace('_', ' ');
 	}
+	
+	public static void makeSpectator(Game game, Player player)
+	{
+		Killer.instance.playerManager.setAlive(game, player, false);
+	}
 
 	public static int getTeam(Game game, OfflinePlayer player)
 	{
