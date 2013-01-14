@@ -83,6 +83,8 @@ class PlayerManager
 	public void putPlayerInStagingWorld(Player player)
 	{
 		teleport(player, plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+		player.setFlying(false);
+		player.setGameMode(GameMode.SURVIVAL);
 		giveStagingWorldInstructionBook(player);
 	}
 	
