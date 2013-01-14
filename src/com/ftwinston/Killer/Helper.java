@@ -269,17 +269,16 @@ public class Helper
 		return c.getWorld().getHighestBlockYAt(c.getX() * 16 + x, c.getZ() * 16 + z);
 	}
 	
-	public static int getHighestGroundYAt(Chunk c, int x, int z)
-	{	
+	public static int getHighestYAt(Chunk c, int x, int z, int minY, Material ... desiredBlockTypes)
+	{
 		int y = getHighestBlockYAt(c, x, z);
-		x = x & 15; z = z & 15;
 		Block b = c.getBlock(x, y, z);
 		
-		int seaLevel = c.getWorld().getSeaLevel();
-		while ( y > seaLevel )
+		while ( y > minY )
 		{
-			if ( b.getType() == Material.GRASS || b.getType() == Material.DIRT || b.getType() == Material.STONE || b.getType() == Material.SAND || b.getType() == Material.GRAVEL || b.getType() == Material.BEDROCK )
-				break;
+			for ( int i=0; i<desiredBlockTypes.length; i++ )
+				if ( b.getType() == desiredBlockTypes[i] )
+					return y;
 
 			y--;
 			b = c.getBlock(x, y, z);
@@ -288,16 +287,16 @@ public class Helper
 		return y;
 	}
 	
-	public static int getHighestGroundYAt(World w, int x, int z)
-	{	
+	public static int getHighestYAt(World w, int x, int z, int minY, Material ... desiredBlockTypes)
+	{
 		int y = w.getHighestBlockYAt(x, z);
 		Block b = w.getBlockAt(x, y, z);
 		
-		int seaLevel = w.getSeaLevel();
-		while ( y > seaLevel )
+		while ( y > minY )
 		{
-			if ( b.getType() == Material.GRASS || b.getType() == Material.DIRT || b.getType() == Material.STONE || b.getType() == Material.SAND || b.getType() == Material.GRAVEL || b.getType() == Material.BEDROCK )
-				break;
+			for ( int i=0; i<desiredBlockTypes.length; i++ )
+				if ( b.getType() == desiredBlockTypes[i] )
+					return y;
 
 			y--;
 			b = w.getBlockAt(x, y, z);
@@ -305,7 +304,76 @@ public class Helper
 
 		return y;
 	}
+	
+	public static int getHighestYIgnoring(Chunk c, int x, int z, int minY, Material ... ignoredBlockTypes)
+	{
+		int y = getHighestBlockYAt(c, x, z);
+		Block b = c.getBlock(x, y, z);
+		
+		while ( y > minY )
+		{
+			boolean ignore = false;
+			for ( int i=0; i<ignoredBlockTypes.length; i++ )
+				if ( b.getType() == ignoredBlockTypes[i] )
+				{
+					ignore = true;
+					break;
+				}
 
+			if ( !ignore )
+				return y;
+			
+			y--;
+			b = c.getBlock(x, y, z);
+		}
+
+		return y;
+	}
+	
+	public static int getHighestYIgnoring(World w, int x, int z, int minY, Material ... ignoredBlockTypes)
+	{
+		int y = w.getHighestBlockYAt(x, z);
+		Block b = w.getBlockAt(x, y, z);
+		
+		while ( y > minY )
+		{
+			boolean ignore = false;
+			for ( int i=0; i<ignoredBlockTypes.length; i++ )
+				if ( b.getType() == ignoredBlockTypes[i] )
+				{
+					ignore = true;
+					break;
+				}
+
+			if ( !ignore )
+				return y;
+			
+			y--;
+			b = w.getBlockAt(x, y, z);
+		}
+
+		return y;
+	}
+	
+	public static Location findSpaceForPlayer(Location loc) 
+	{
+		World w = loc.getWorld();
+		int x = loc.getBlockX(), y = loc.getBlockY() + 1, z = loc.getBlockZ();
+		
+		boolean prevEmpty = w.getBlockAt(loc).isEmpty();
+		while ( y < w.getMaxHeight() )
+		{
+			boolean empty = w.getBlockAt(x, y, z).isEmpty();
+			if ( empty && prevEmpty )
+				return new Location(w, x + 0.5, y-1, z + 0.5);
+			prevEmpty = empty;
+			y++;
+		}
+		
+		Location highest = w.getHighestBlockAt(x, z).getLocation();
+		return new Location(w, highest.getX() + 0.5, highest.getY() + 1, highest.getZ() + 0.5);
+	}
+	
 	public static Player getAttacker(EntityDamageEvent event)
 	{
 		Player attacker = null;
@@ -341,7 +409,7 @@ public class Helper
 		for ( int testX = x-1; testX <= x+1; testX++ )
 			for ( int testZ = z-1; testZ <= z+1; testZ++ )
 			{
-				int groundY = Helper.getHighestGroundYAt(world, testX, testZ);
+				int groundY = Helper.getHighestYIgnoring(world, testX, testZ, world.getSeaLevel(), Material.LOG, Material.LEAVES, Material.HUGE_MUSHROOM_1, Material.HUGE_MUSHROOM_2);
 				if ( groundY > highestGround )
 					highestGround = groundY;
 			}
