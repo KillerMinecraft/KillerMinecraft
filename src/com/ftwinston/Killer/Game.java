@@ -20,7 +20,6 @@ public class Game
 {
 	Killer plugin;
 	private int number, helpMessageProcess, compassProcess, spectatorFollowProcess;
-	private boolean locked = false;
 	
 	public Game(Killer killer, int gameNumber)
 	{
@@ -286,9 +285,13 @@ public class Game
 	
 	boolean isMonsterEggRecipeEnabled() { return monsterEggsEnabled; }
 	
-	boolean isLocked() { return locked; }
-	void setLocked(boolean val) { locked = val; }
-	
+	private int playerLimit = 0;
+	private boolean hasPlayerLimit = false;
+	boolean usesPlayerLimit() { return hasPlayerLimit; }
+	void setUsesPlayerLimit(boolean val) { hasPlayerLimit = val; if ( !val ) playerLimit = 0; }
+	int getPlayerLimit() { return playerLimit; }
+	void setPlayerLimit(int limit) { playerLimit = limit; }
+		
 	private List<World> worlds = new ArrayList<World>();
 	List<World> getWorlds() { return worlds; }
 	
@@ -318,7 +321,7 @@ public class Game
 
 	public List<Player> getOnlinePlayers()
 	{		
-		return getOnlinePlayers(new PlayerFilter().setGame(this));
+		return getOnlinePlayers(new PlayerFilter());
 	}
 	
 	public List<Player> getOnlinePlayers(PlayerFilter filter)
@@ -326,9 +329,19 @@ public class Game
 		return filter.setGame(this).getOnlinePlayers();
 	}
 	
+	public List<OfflinePlayer> getOfflinePlayers()
+	{
+		return getOfflinePlayers(new PlayerFilter());
+	}
+	
 	public List<OfflinePlayer> getOfflinePlayers(PlayerFilter filter)
 	{		
 		return filter.offline().setGame(this).getPlayers();
+	}
+	
+	public List<OfflinePlayer> getPlayers()
+	{
+		return getPlayers(new PlayerFilter());
 	}
 	
 	public List<OfflinePlayer> getPlayers(PlayerFilter filter)

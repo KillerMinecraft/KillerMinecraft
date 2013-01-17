@@ -436,7 +436,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						setupFloorSign(b, (byte)0x1, "Read your", "instruction", "book if you", "need any help.");
 					
 					// lock lever
-					if ( Settings.canLockGames )
+					if ( Settings.allowPlayerLimits )
 					{
 						b = getBlockAbs(chunk, startButtonX - 1, floorY + 2, wallMaxZ-1);
 						if ( b != null )
@@ -447,7 +447,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						
 						b = getBlockAbs(chunk, startButtonX - 2, floorY + 2, wallMaxZ-1);
 						if ( b != null )
-							setupWallSign(b, (byte)0x2, "Lock this game", "to prevent", "other players", "from joining");
+							setupWallSign(b, (byte)0x2, "No player limit", "is set.", "Pull lever to", "apply a limit.");
 					}
 				}
 				else

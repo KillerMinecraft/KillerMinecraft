@@ -373,7 +373,8 @@ class EventListener implements Listener
 			}
 			else if ( game != null && event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.LEVER )
 			{
-				plugin.stagingWorldManager.lockGame(game, !game.isLocked());
+				game.setUsesPlayerLimit(!game.usesPlayerLimit());
+				plugin.stagingWorldManager.updateGameInfoSigns(game);
 				return;
 			}
 			else if ( (game == null || game.getGameState().canChangeGameSetup) && event.getClickedBlock().getType() == Material.STONE_BUTTON )

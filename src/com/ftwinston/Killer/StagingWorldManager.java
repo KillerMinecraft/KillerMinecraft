@@ -654,19 +654,45 @@ class StagingWorldManager
 		if ( Settings.maxSimultaneousGames == 1 || game == null )
 			return;
 		
-		int numPlayers = game.getOnlinePlayers().size();
+		int numPlayers = game.getOnlinePlayers().size(), numTotal = numPlayers + game.getOfflinePlayers().size();
+		boolean gameLocked = false, gameFull = false;
+		Block b = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX-2, StagingWorldGenerator.getFloorY(game.getNumber())+2, StagingWorldGenerator.getWallMaxZ()- 1);
 		
-		// unlock empty games automatically
-		if ( game.isLocked() && numPlayers == 0 )
+		if ( game.usesPlayerLimit() )
 		{
-			lockGame(game, false);
-			return;
+			if ( game.getPlayerLimit() == 0 )
+			{
+				game.setPlayerLimit(Math.max(numPlayers, 2));
+				gameFull = numPlayers >= 2;
+				gameLocked = gameFull && !game.getGameState().usesGameWorlds;
+			}
+			else if ( numPlayers == 0 && !game.getGameState().usesGameWorlds )
+			{
+				game.setUsesPlayerLimit(false);
+				gameLocked = false;
+				gameFull = !game.getGameState().usesGameWorlds;
+				
+				// reset the switch
+				Block lever = b.getRelative(1, 0, 0); 
+				lever.setData((byte)(lever.getData() | 0x8));
+			}
+			else
+			{
+				gameFull = game.usesPlayerLimit() && numTotal >= game.getPlayerLimit();
+				gameLocked = gameFull && !game.getGameState().usesGameWorlds;
+			}
+			
+			int numFree = game.getPlayerLimit() - numTotal;
+			StagingWorldGenerator.setupWallSign(b, (byte)0x2, "Player limit:", "§l" + game.getPlayerLimit() + " players", "", gameFull ? "§4Game is full" : (numFree == 1 ? "1 free slot" : numFree + " free slots"));
 		}
+		else if ( Settings.allowPlayerLimits )
+			StagingWorldGenerator.setupWallSign(b, (byte)0x2, "No player limit", "is set.", "Pull lever to", "apply a limit.");
+		lockGame(game, gameLocked);
 		
 		int portalX = StagingWorldGenerator.getGamePortalX(game.getNumber());
 		int signZ = StagingWorldGenerator.getGamePortalZ() + 2;
 		
-		Block b = stagingWorld.getBlockAt(portalX-1, StagingWorldGenerator.baseFloorY+2, signZ);
+		b = stagingWorld.getBlockAt(portalX-1, StagingWorldGenerator.baseFloorY+2, signZ);
 		
 		String strPlayers = numPlayers == 1 ? "1 player" : numPlayers + " players";
 		if ( game.getGameState().usesGameWorlds )
@@ -681,23 +707,24 @@ class StagingWorldManager
 			StagingWorldGenerator.setupWallSign(b, (byte)0x3, strPlayers, "", "* Vacant *");
 		
 		b = stagingWorld.getBlockAt(portalX+1, StagingWorldGenerator.baseFloorY+2, signZ);
-		if ( game.isLocked() )
-			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "This game has", "been locked:", "you can't enter", "until it's done");
-		else
+		if ( gameLocked )
+			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "This game", "is full:", "no one else", "can join it");
+		else if ( game.getGameState().usesGameWorlds )
 		{
-			String actionStr;
-			if ( game.getGameState().usesGameWorlds )
+			if ( gameFull )
+				StagingWorldGenerator.setupWallSign(b, (byte)0x3, "This game", "is full:", "enter portal to", "specatate game");
+			else
 			{
-				if ( Settings.lateJoinersStartAsSpectator /*|| game.isAllowedToJoin(null)*/ )
+				String actionStr;
+				if ( Settings.lateJoinersStartAsSpectator || gameFull )
 					actionStr = "spectate game";
 				else
 					actionStr = "join game";
+				StagingWorldGenerator.setupWallSign(b, (byte)0x3, "", "enter portal to", actionStr);
 			}
-			else
-				actionStr = "set up a game";
-			
-			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "", "enter portal to", actionStr);
 		}
+		else
+			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "", "enter portal to", "set up a game");
 	}
 	
 	private void resetTripWire(int x, int y, int z, boolean xDir)
@@ -705,23 +732,19 @@ class StagingWorldManager
 		stagingWorld.getBlockAt(x,y,z).setData((byte)0);
 	}
 
-	public void lockGame(Game game, boolean locked)
+	private void lockGame(Game game, boolean locked)
 	{
-		if ( game.isLocked() == locked || Settings.maxSimultaneousGames <= 1 || (!Settings.canLockGames && locked) )
+		if ( Settings.maxSimultaneousGames <= 1 || (!Settings.allowPlayerLimits && locked) )
 			return;
 		
-		game.setLocked(locked);
-		
 		Block wayIn = stagingWorld.getBlockAt(StagingWorldGenerator.getGamePortalX(game.getNumber()), StagingWorldGenerator.baseFloorY+1, StagingWorldGenerator.getGamePortalZ()+1);
-		Block wayOut = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, StagingWorldGenerator.getFloorY(game.getNumber())+1, StagingWorldGenerator.getWallMaxZ());
+		
+		boolean wasLocked = wayIn.getType() != Material.AIR;
+		if ( wasLocked == locked )
+			return;
 		
 		if ( locked )
 		{
-			wayOut.setTypeIdAndData(Material.IRON_DOOR_BLOCK.getId(), (byte)0x2, false);
-			wayOut = wayOut.getRelative(BlockFace.UP);
-			wayOut.setTypeIdAndData(Material.IRON_DOOR_BLOCK.getId(), (byte)0x8, false);
-			stagingWorld.playSound(wayOut.getLocation(), Sound.DOOR_CLOSE, 0.25f, 0f);
-			
 			wayIn.setTypeIdAndData(Material.IRON_DOOR_BLOCK.getId(), (byte)0x3, false);
 			wayIn = wayIn.getRelative(BlockFace.UP);
 			wayIn.setTypeIdAndData(Material.IRON_DOOR_BLOCK.getId(), (byte)0x8, false);
@@ -729,15 +752,9 @@ class StagingWorldManager
 		}
 		else
 		{
-			wayOut.setType(Material.AIR);
-			wayOut.getRelative(BlockFace.UP).setType(Material.AIR);
-			stagingWorld.playSound(wayOut.getLocation(), Sound.DOOR_OPEN, 0.25f, 0f);
-			
 			wayIn.setType(Material.AIR);
 			wayIn.getRelative(BlockFace.UP).setType(Material.AIR);
 			stagingWorld.playSound(wayIn.getLocation(), Sound.DOOR_OPEN, 0.25f, 0f);
 		}
-		
-		updateGameInfoSigns(game);
 	}
 }
