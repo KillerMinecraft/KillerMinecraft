@@ -19,8 +19,8 @@ import com.ftwinston.Killer.PlayerManager.Info;
 public class Game
 {
 	Killer plugin;
-	private int number;
-	private int helpMessageProcess, compassProcess, spectatorFollowProcess;
+	private int number, helpMessageProcess, compassProcess, spectatorFollowProcess;
+	private boolean locked = false;
 	
 	public Game(Killer killer, int gameNumber)
 	{
@@ -285,6 +285,16 @@ public class Game
 	}
 	
 	boolean isMonsterEggRecipeEnabled() { return monsterEggsEnabled; }
+	
+	boolean isLocked() { return locked; }
+	void setLocked(boolean val)
+	{
+		if ( locked == val )
+			return;
+		
+		locked = val;
+		plugin.stagingWorldManager.lockGame(this, locked);
+	}
 	
 	private List<World> worlds = new ArrayList<World>();
 	List<World> getWorlds() { return worlds; }

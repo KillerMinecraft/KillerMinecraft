@@ -4,6 +4,7 @@ import java.util.Random;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -659,6 +660,11 @@ class StagingWorldManager
 		Block b = stagingWorld.getBlockAt(portalX-1, StagingWorldGenerator.baseFloorY+2, signZ);
 		
 		int numPlayers = game.getOnlinePlayers().size();
+		
+		// unlock empty games automatically
+		if ( game.isLocked() && numPlayers == 0 )
+			lockGame(game, false);
+		
 		String strPlayers = numPlayers == 1 ? "1 player" : numPlayers + " players";
 		if ( game.getGameState().usesGameWorlds )
 		{
@@ -689,5 +695,39 @@ class StagingWorldManager
 	private void resetTripWire(int x, int y, int z, boolean xDir)
 	{
 		stagingWorld.getBlockAt(x,y,z).setData((byte)0);
+	}
+
+	public void lockGame(Game game, boolean locked)
+	{
+		if ( game.isLocked() == locked || Settings.maxSimultaneousGames <= 1 || (!Settings.canLockGames && locked) )
+			return;
+		
+		game.setLocked(locked);
+		
+		Block wayIn = stagingWorld.getBlockAt(StagingWorldGenerator.getGamePortalX(game.getNumber()), StagingWorldGenerator.baseFloorY+1, StagingWorldGenerator.getGamePortalZ()+1);
+		Block wayOut = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, StagingWorldGenerator.getFloorY(game.getNumber())+1, StagingWorldGenerator.getWallMaxZ());
+		
+		if ( locked )
+		{
+			wayOut.setTypeIdAndData(Material.IRON_DOOR_BLOCK.getId(), (byte)0x2, false);
+			wayOut = wayOut.getRelative(BlockFace.UP);
+			wayOut.setTypeIdAndData(Material.IRON_DOOR_BLOCK.getId(), (byte)0x8, false);
+			stagingWorld.playSound(wayOut.getLocation(), Sound.DOOR_CLOSE, 0.25f, 0f);
+			
+			wayIn.setTypeIdAndData(Material.IRON_DOOR_BLOCK.getId(), (byte)0x3, false);
+			wayIn = wayIn.getRelative(BlockFace.UP);
+			wayIn.setTypeIdAndData(Material.IRON_DOOR_BLOCK.getId(), (byte)0x8, false);
+			stagingWorld.playSound(wayIn.getLocation(), Sound.DOOR_CLOSE, 0.25f, 0f);
+		}
+		else
+		{
+			wayOut.setType(Material.AIR);
+			wayOut.getRelative(BlockFace.UP).setType(Material.AIR);
+			stagingWorld.playSound(wayOut.getLocation(), Sound.DOOR_OPEN, 0.25f, 0f);
+			
+			wayIn.setType(Material.AIR);
+			wayIn.getRelative(BlockFace.UP).setType(Material.AIR);
+			stagingWorld.playSound(wayIn.getLocation(), Sound.DOOR_OPEN, 0.25f, 0f);
+		}
 	}
 }

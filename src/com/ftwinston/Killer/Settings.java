@@ -10,6 +10,7 @@ public class Settings
 	public static int maxSimultaneousGames;
 	
 	public static boolean
+	canLockGames,
 	lateJoinersStartAsSpectator,
 	banOnDeath,
 	reportStats,
@@ -37,6 +38,7 @@ public class Settings
 			maxSimultaneousGames = 8;
 		
 		lateJoinersStartAsSpectator = readBoolean(plugin, "lateJoinersStartAsSpectator", false);
+		canLockGames = readBoolean(plugin, "canLockGames", true); 
 		banOnDeath = readBoolean(plugin, "banOnDeath", false);
 		reportStats = readBoolean(plugin, "reportStats", true);
 		
