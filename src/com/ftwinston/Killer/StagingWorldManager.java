@@ -654,16 +654,19 @@ class StagingWorldManager
 		if ( Settings.maxSimultaneousGames == 1 || game == null )
 			return;
 		
-		int portalX = StagingWorldGenerator.getGamePortalX(game.getNumber());
-		int signZ = StagingWorldGenerator.getGamePortalZ() + 2;
-		
-		Block b = stagingWorld.getBlockAt(portalX-1, StagingWorldGenerator.baseFloorY+2, signZ);
-		
 		int numPlayers = game.getOnlinePlayers().size();
 		
 		// unlock empty games automatically
 		if ( game.isLocked() && numPlayers == 0 )
+		{
 			lockGame(game, false);
+			return;
+		}
+		
+		int portalX = StagingWorldGenerator.getGamePortalX(game.getNumber());
+		int signZ = StagingWorldGenerator.getGamePortalZ() + 2;
+		
+		Block b = stagingWorld.getBlockAt(portalX-1, StagingWorldGenerator.baseFloorY+2, signZ);
 		
 		String strPlayers = numPlayers == 1 ? "1 player" : numPlayers + " players";
 		if ( game.getGameState().usesGameWorlds )
@@ -677,19 +680,24 @@ class StagingWorldManager
 		else
 			StagingWorldGenerator.setupWallSign(b, (byte)0x3, strPlayers, "", "* Vacant *");
 		
-		String actionStr;
-		if ( game.getGameState().usesGameWorlds )
-		{
-			if ( Settings.lateJoinersStartAsSpectator /*|| game.isAllowedToJoin(null)*/ )
-				actionStr = "spectate game";
-			else
-				actionStr = "join game";
-		}
-		else
-			actionStr = "set up a game";
-		
 		b = stagingWorld.getBlockAt(portalX+1, StagingWorldGenerator.baseFloorY+2, signZ);
-		StagingWorldGenerator.setupWallSign(b, (byte)0x3, "", "enter portal to", actionStr);
+		if ( game.isLocked() )
+			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "This game has", "been locked:", "you can't enter", "until it's done");
+		else
+		{
+			String actionStr;
+			if ( game.getGameState().usesGameWorlds )
+			{
+				if ( Settings.lateJoinersStartAsSpectator /*|| game.isAllowedToJoin(null)*/ )
+					actionStr = "spectate game";
+				else
+					actionStr = "join game";
+			}
+			else
+				actionStr = "set up a game";
+			
+			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "", "enter portal to", actionStr);
+		}
 	}
 	
 	private void resetTripWire(int x, int y, int z, boolean xDir)
@@ -729,5 +737,7 @@ class StagingWorldManager
 			wayIn.getRelative(BlockFace.UP).setType(Material.AIR);
 			stagingWorld.playSound(wayIn.getLocation(), Sound.DOOR_OPEN, 0.25f, 0f);
 		}
+		
+		updateGameInfoSigns(game);
 	}
 }

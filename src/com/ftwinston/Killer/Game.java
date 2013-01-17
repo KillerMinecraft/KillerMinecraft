@@ -287,14 +287,7 @@ public class Game
 	boolean isMonsterEggRecipeEnabled() { return monsterEggsEnabled; }
 	
 	boolean isLocked() { return locked; }
-	void setLocked(boolean val)
-	{
-		if ( locked == val )
-			return;
-		
-		locked = val;
-		plugin.stagingWorldManager.lockGame(this, locked);
-	}
+	void setLocked(boolean val) { locked = val; }
 	
 	private List<World> worlds = new ArrayList<World>();
 	List<World> getWorlds() { return worlds; }
