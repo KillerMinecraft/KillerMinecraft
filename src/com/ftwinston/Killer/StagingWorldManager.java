@@ -10,6 +10,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.Action;
 
 import com.ftwinston.Killer.Game.GameState;
 
@@ -273,9 +274,56 @@ class StagingWorldManager
 		}
 	}
 	
-	public void setupButtonClicked(Game game, int x, int y, int z, Player player)
+	public void playerInteraction(Game game, Player player, Action action, Block block)
 	{
+		if ( action == Action.PHYSICAL )
+			handlePhysicalInteraction(game, player, action, block);
+		else if ( block.getType() == Material.STONE_BUTTON || block.getType() == Material.LEVER || block.getType() == Material.WOOD_BUTTON )
+			handleButtonPress(game, player, action, block);
+	}
+	
+	public void handleButtonPress(Game game, Player player, Action action, Block block)
+	{
+		if ( game != null && !game.getGameState().canChangeGameSetup )
+			return;
+		
 		int buttonY = StagingWorldGenerator.getButtonY(game == null ? -1 : game.getNumber());
+		int x = block.getX(), y = block.getY(), z = block.getZ();
+		
+		// first; levers, and those buttons that we allow rapid re-pressing on
+		if ( z == StagingWorldGenerator.playerLimitZ && game != null )
+		{
+			if ( action == Action.RIGHT_CLICK_BLOCK && x == StagingWorldGenerator.startButtonX - 1 )
+			{
+				game.setUsesPlayerLimit(!game.usesPlayerLimit());
+				updateGameInfoSigns(game);
+			}
+			else if ( x == StagingWorldGenerator.mainButtonX && Settings.allowPlayerLimits && game.usesPlayerLimit() )
+			{
+				int limit = game.getPlayerLimit();
+				if ( y == buttonY + 1 )
+				{
+					if ( limit < Settings.maxPlayerLimit )
+					{
+						game.setPlayerLimit(limit+1);
+						updateGameInfoSigns(game);
+					}
+				}
+				else if ( y == buttonY - 1 )
+				{
+					if ( limit > Settings.minPlayerLimit )
+					{
+						game.setPlayerLimit(limit - 1);
+						updateGameInfoSigns(game);
+					}
+				}
+			}
+		}
+		
+		// hereafter, only buttons that we don't allow rapid re-pressing on
+		if ( (block.getData() & 0x8) != 0 )
+			return; // this button was already pressed, abort! 
+		
 		if ( z == StagingWorldGenerator.arenaButtonZ )
 		{
 			if ( x == StagingWorldGenerator.arenaSpleefButtonX )
@@ -309,26 +357,6 @@ class StagingWorldManager
 				setCurrentOption(game, currentOption == StagingWorldOption.ANIMALS ? StagingWorldOption.NONE : StagingWorldOption.ANIMALS);
 			else if ( z == StagingWorldGenerator.globalOptionButtonZ )
 				setCurrentOption(game, currentOption == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
-			else if ( z == StagingWorldGenerator.playerLimitZ && Settings.allowPlayerLimits && game.usesPlayerLimit() )
-			{
-				int limit = game.getPlayerLimit();
-				if ( y == buttonY + 1 )
-				{
-					if ( limit < Settings.maxPlayerLimit )
-					{
-						game.setPlayerLimit(limit+1);
-						updateGameInfoSigns(game);
-					}
-				}
-				else if ( y == buttonY - 1 )
-				{
-					if ( limit > Settings.minPlayerLimit )
-					{
-						game.setPlayerLimit(limit - 1);
-						updateGameInfoSigns(game);
-					}
-				}
-			}
 		}
 		else if ( x == StagingWorldGenerator.optionButtonX )
 		{
@@ -462,16 +490,18 @@ class StagingWorldManager
 		}
 	}
 	
-	public void playerInteracted(final Game game, final int x, final int y, final int z, final Player player)
+	private void handlePhysicalInteraction(final Game game, final Player player, final Action action, final Block block)
 	{
-		if ( z == StagingWorldGenerator.spleefPressurePlateZ )
+		if ( block.getType() != Material.TRIPWIRE && block.getType() != Material.STONE_PLATE )
+			return;
+		if ( block.getZ() == StagingWorldGenerator.spleefPressurePlateZ )
 		{
 			plugin.arenaManager.pressurePlatePressed(player);
 		}
-		else if ( z == StagingWorldGenerator.getGamePortalZ() )
+		else if ( block.getZ() == StagingWorldGenerator.getGamePortalZ() )
 		{
 			for ( int i=0; i<Settings.maxSimultaneousGames; i++ )
-				if ( x == StagingWorldGenerator.getGamePortalX(i) )
+				if ( block.getX() == StagingWorldGenerator.getGamePortalX(i) )
 				{
 					final Game game2 = plugin.games[i];
 					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,  new Runnable() {
@@ -485,14 +515,14 @@ class StagingWorldManager
 							else
 								player.teleport(getGameSetupSpawnLocation(game2.getNumber()));
 							plugin.playerManager.putPlayerInGame(player, game2);
-							resetTripWire(x, y, z, true);
+							resetTripWire(block);
 							updateGameInfoSigns(game2);
 						}
 					});
 					break;
 				}
 		}
-		else if ( z == StagingWorldGenerator.getWallMaxZ() + 1 && game != null && Settings.maxSimultaneousGames != 1 )
+		else if ( block.getZ() == StagingWorldGenerator.getWallMaxZ() + 1 && game != null && Settings.maxSimultaneousGames != 1 )
 		{// exit this game, back to the staging world spawn
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,  new Runnable() {
 				@Override
@@ -500,22 +530,22 @@ class StagingWorldManager
 					player.teleport(getStagingWorldSpawnPoint());
 					plugin.playerManager.removePlayerFromGame(player, game);
 					updateGameInfoSigns(game);
-					resetTripWire(x, y, z, true);
+					resetTripWire(block);
 				}
 			});
 		}
-		else if ( z == StagingWorldGenerator.exitPortalZ && !plugin.stagingWorldIsServerDefault )
+		else if ( block.getZ() == StagingWorldGenerator.exitPortalZ && !plugin.stagingWorldIsServerDefault )
 		{// exit killer minecraft altogether
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,  new Runnable() {
 				@Override
 				public void run() {
 					plugin.playerManager.movePlayerOutOfKillerGame(player);
-					resetTripWire(x, y, z, false);
+					resetTripWire(block);
 				}
 			});
 		}
 	}
-
+	
 	public void showStartButtons(Game game, boolean confirm)
 	{
 		int buttonY = StagingWorldGenerator.getButtonY(game.getNumber());
@@ -752,9 +782,9 @@ class StagingWorldManager
 			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "", "enter portal to", "set up a game");
 	}
 	
-	private void resetTripWire(int x, int y, int z, boolean xDir)
+	private void resetTripWire(Block b)
 	{
-		stagingWorld.getBlockAt(x,y,z).setData((byte)0);
+		b.setData((byte)0);
 	}
 
 	private void lockGame(Game game, boolean locked)

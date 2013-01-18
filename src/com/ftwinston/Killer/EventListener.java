@@ -366,22 +366,7 @@ class EventListener implements Listener
 		Game game = plugin.getGameForPlayer(event.getPlayer());
 		
 		if ( event.getPlayer().getWorld() == plugin.stagingWorld && event.getClickedBlock() != null )
-			if ( event.getAction() == Action.PHYSICAL && (event.getClickedBlock().getType() == Material.TRIPWIRE || event.getClickedBlock().getType() == Material.STONE_PLATE) )
-			{
-				plugin.stagingWorldManager.playerInteracted(game, event.getClickedBlock().getLocation().getBlockX(),  event.getClickedBlock().getLocation().getBlockY(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
-				return;
-			}
-			else if ( game != null && event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.LEVER )
-			{
-				game.setUsesPlayerLimit(!game.usesPlayerLimit());
-				plugin.stagingWorldManager.updateGameInfoSigns(game);
-				return;
-			}
-			else if ( (game == null || game.getGameState().canChangeGameSetup) && event.getClickedBlock().getType() == Material.STONE_BUTTON )
-			{
-				plugin.stagingWorldManager.setupButtonClicked(game, event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockY(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
-				return;
-			}
+			plugin.stagingWorldManager.playerInteraction(game, event.getPlayer(), event.getAction(), event.getClickedBlock());
 		
 		if ( game == null ) 
 			return;
