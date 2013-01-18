@@ -691,7 +691,8 @@ class StagingWorldManager
 		
 		int numPlayers = game.getOnlinePlayers().size(), numTotal = numPlayers + game.getOfflinePlayers().size();
 		boolean gameLocked = false, gameFull = false;
-		Block b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, StagingWorldGenerator.getButtonY(game.getNumber()), StagingWorldGenerator.playerLimitZ);
+		int buttonY = StagingWorldGenerator.getButtonY(game.getNumber());
+		Block b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY, StagingWorldGenerator.playerLimitZ);
 		
 		if ( game.usesPlayerLimit() )
 		{
@@ -744,7 +745,29 @@ class StagingWorldManager
 		else if ( numPlayers > 0 )
 			StagingWorldGenerator.setupWallSign(b, (byte)0x3, strPlayers, "", "* In Setup *");
 		else
+		{
 			StagingWorldGenerator.setupWallSign(b, (byte)0x3, strPlayers, "", "* Vacant *");
+			
+			// reset difficulty and monster numbers back to defaults
+			if ( game.getDifficulty() != Game.defaultDifficulty) 
+			{
+				game.setDifficulty(Game.defaultDifficulty);
+				Block sign = plugin.stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY, StagingWorldGenerator.difficultyButtonZ);
+				StagingWorldGenerator.setupWallSign(sign, (byte)0x5, "", "Difficulty:", StagingWorldGenerator.capitalize(game.getDifficulty().name()), "");
+			}
+			if ( game.monsterNumbers != Game.defaultMonsterNumbers) 
+			{
+				game.monsterNumbers = Game.defaultMonsterNumbers; 
+				Block sign = plugin.stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY, StagingWorldGenerator.monstersButtonZ);
+				StagingWorldGenerator.setupWallSign(sign, (byte)0x5, "", "Monsters:", StagingWorldGenerator.getQuantityText(game.monsterNumbers), "");
+			}
+			if ( game.animalNumbers != Game.defaultAnimalNumbers) 
+			{
+				game.animalNumbers = Game.defaultAnimalNumbers;
+				Block sign = plugin.stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY, StagingWorldGenerator.animalsButtonZ);
+				StagingWorldGenerator.setupWallSign(sign, (byte)0x5, "", "Animals:", StagingWorldGenerator.getQuantityText(game.animalNumbers), "");
+			}
+		}
 		
 		b = stagingWorld.getBlockAt(portalX+1, StagingWorldGenerator.baseFloorY+2, signZ);
 		if ( gameLocked )
