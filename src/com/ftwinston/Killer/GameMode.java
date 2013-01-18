@@ -1,3 +1,4 @@
+
 package com.ftwinston.Killer;
 
 import java.util.ArrayList;
@@ -139,7 +140,43 @@ public abstract class GameMode implements Listener
 	{
 		game.broadcastMessage(recipients, message);
 	}
-		
+	
+	public int getMonsterSpawnLimit(int quantity)
+	{
+		switch ( game.monsterNumbers )
+		{
+		case 0:
+			return 0;
+		case 1:
+			return 35;
+		case 2: // MC defaults
+		default:
+			return 70;
+		case 3:
+			return 110;
+		case 4:
+			return 180;
+		}
+	}
+	
+	public int getAnimalSpawnLimit(int quantity)
+	{
+		switch ( game.monsterNumbers )
+		{
+		case 0:
+			return 0;
+		case 1:
+			return 8;
+		case 2: // MC defaults
+		default:
+			return 15;
+		case 3:
+			return 25;
+		case 4:
+			return 40;
+		}
+	}
+	
 	public ChatColor getTeamChatColor(int team)
 	{
 		switch ( team )

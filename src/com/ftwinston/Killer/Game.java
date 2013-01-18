@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.bukkit.Difficulty;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -50,8 +51,15 @@ public class Game
 	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();
 	public Map<String, Info> getPlayerInfo() { return playerInfo; }
 	
+	static final int minQuantityNum = 0, maxQuantityNum = 4;
+	
 	static final int defaultMonsterNumbers = 2, defaultAnimalNumbers = 2; 
 	int monsterNumbers = defaultMonsterNumbers, animalNumbers = defaultAnimalNumbers;
+	
+	static final Difficulty defaultDifficulty = Difficulty.HARD;
+	private Difficulty difficulty = defaultDifficulty;
+	public Difficulty getDifficulty() { return difficulty; }
+	public void setDifficulty(Difficulty d) { difficulty = d; }
 	
 	public void startProcesses()
 	{

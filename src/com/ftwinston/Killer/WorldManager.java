@@ -294,56 +294,16 @@ class WorldManager
 			{
 				for ( World world : game.getWorlds() )
 				{
-					world.setDifficulty(Difficulty.HARD);
+					world.setDifficulty(game.getDifficulty());
 					
-					switch ( game.monsterNumbers )
-					{
-					case 0:
-						world.setMonsterSpawnLimit(0);
-						world.setTicksPerMonsterSpawns(1);
-						break;
-					case 1:
-						world.setMonsterSpawnLimit(35);
-						world.setTicksPerMonsterSpawns(1);
-						break;
-					case 2: // MC defaults
-						world.setMonsterSpawnLimit(70);
-						world.setTicksPerMonsterSpawns(1);
-						break;
-					case 3:
-						world.setMonsterSpawnLimit(110);
-						world.setTicksPerMonsterSpawns(1);
-						break;
-					case 4:
-						world.setMonsterSpawnLimit(180);
-						world.setTicksPerMonsterSpawns(1);
-						break;
-					}
+					world.setTicksPerMonsterSpawns(1);
+					world.setMonsterSpawnLimit(game.getGameMode().getMonsterSpawnLimit(game.monsterNumbers));
 					
 					if ( world.getEnvironment() == Environment.NORMAL )
-						switch ( game.animalNumbers )
-						{
-						case 0:
-							world.setAnimalSpawnLimit(0);
-							world.setTicksPerAnimalSpawns(600);
-							break;
-						case 1:
-							world.setAnimalSpawnLimit(8);
-							world.setTicksPerAnimalSpawns(500);
-							break;
-						case 2: // mc defaults
-							world.setAnimalSpawnLimit(15);
-							world.setTicksPerAnimalSpawns(400);
-							break;
-						case 3:
-							world.setAnimalSpawnLimit(25);
-							world.setTicksPerAnimalSpawns(300);
-							break;
-						case 4:
-							world.setAnimalSpawnLimit(40);
-							world.setTicksPerAnimalSpawns(200);
-							break;
-						}
+					{
+						world.setTicksPerAnimalSpawns(400);
+						world.setMonsterSpawnLimit(game.getGameMode().getAnimalSpawnLimit(game.animalNumbers));
+					}
 				}
 				
 				plugin.stagingWorldManager.removeWorldGenerationIndicator(game);

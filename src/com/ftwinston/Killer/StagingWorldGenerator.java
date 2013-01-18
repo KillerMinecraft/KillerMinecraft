@@ -15,11 +15,12 @@ import org.bukkit.generator.BlockPopulator;
 class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 {
 	public static final int wallMaxX = 9, wallMinX = 3, wallMinZ = 1, startButtonZ = wallMinZ + 1, mainButtonX = wallMinX + 1,
-			optionButtonX = wallMaxX - 1, globalOptionButtonZ = startButtonZ + 3, animalsButtonZ = globalOptionButtonZ + 3,
-			monstersButtonZ = animalsButtonZ + 2, worldConfigButtonZ = monstersButtonZ + 3, worldButtonZ = worldConfigButtonZ + 2,
-			gameModeConfigButtonZ = worldButtonZ + 3, gameModeButtonZ = gameModeConfigButtonZ + 2, startButtonX = wallMaxX - 3,
-			overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1, arenaSpleefButtonX = startButtonX + 2,
-			arenaMonsterButtonX = startButtonX - 2, spleefY = 29, spleefMaxX = startButtonX + 8, spleefMinX = spleefMaxX - 16;
+			optionButtonX = wallMaxX - 1, animalsButtonZ = startButtonZ + 2, monstersButtonZ = animalsButtonZ + 1,
+			difficultyButtonZ = monstersButtonZ + 1, globalOptionButtonZ = startButtonZ + 6, worldConfigButtonZ = globalOptionButtonZ + 3,
+			worldButtonZ = worldConfigButtonZ + 2, gameModeConfigButtonZ = worldButtonZ + 3, gameModeButtonZ = gameModeConfigButtonZ + 2,
+			startButtonX = wallMaxX - 3, overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1,
+			arenaSpleefButtonX = startButtonX + 2, arenaMonsterButtonX = startButtonX - 2, spleefY = 29, spleefMaxX = startButtonX + 8,
+			spleefMinX = spleefMaxX - 16;
 	public static int arenaButtonZ, spleefMinZ, spleefMaxZ, spleefPressurePlateZ, exitPortalZ, playerLimitZ;
 	
 	public static final byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
@@ -242,31 +243,45 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setData((byte)0x1);
 				}
 				
-				for ( int y=floorY + 1; y < floorY + 4; y++ )
+				b = getBlockAbs(chunk, wallMinX, buttonY, difficultyButtonZ);
+				if ( b != null )
 				{
-					b = getBlockAbs(chunk, wallMinX, y, monstersButtonZ - 1);
-					if ( b != null )
-					{
-						b.setType(wool);
-						b.setData(signBackColor);
-					}
+					b.setType(wool);
+					b.setData(colorOptionOff);
 				}
-				b = getBlockAbs(chunk, mainButtonX, buttonY + 1, monstersButtonZ - 1);
+				
+				b = getBlockAbs(chunk, mainButtonX, buttonY, difficultyButtonZ);
 				if ( b != null )
-					setupWallSign(b, (byte)0x5, "Monsters:      ", padSignLeft(getQuantityText(Game.defaultMonsterNumbers)), "Animals:       ", padSignLeft(getQuantityText(Game.defaultAnimalNumbers)));
-				b = getBlockAbs(chunk, mainButtonX, buttonY, monstersButtonZ - 1);
-				if ( b != null )
-					setupWallSign(b, (byte)0x5, "<-- monsters   ", "", "", "    animals -->");
+				{
+					setupWallSign(b, (byte)0x5, "", "Difficulty:", capitalize(Game.defaultDifficulty.name()), "");
+					
+					b = b.getRelative(0, 1, 0);
+					b.setType(Material.WOOD_BUTTON);
+					b.setData((byte)0x1);
+					
+					b = b.getRelative(0, -2, 0);
+					b.setType(Material.WOOD_BUTTON);
+					b.setData((byte)0x1);
+				}
+				
 				b = getBlockAbs(chunk, wallMinX, buttonY, monstersButtonZ);
 				if ( b != null )
 				{
 					b.setType(wool);
 					b.setData(colorOptionOff);
 				}
+				
 				b = getBlockAbs(chunk, mainButtonX, buttonY, monstersButtonZ);
 				if ( b != null )
 				{
-					b.setType(button);
+					setupWallSign(b, (byte)0x5, "", "Monsters:", getQuantityText(Game.defaultMonsterNumbers), "");
+					
+					b = b.getRelative(0, 1, 0);
+					b.setType(Material.WOOD_BUTTON);
+					b.setData((byte)0x1);
+					
+					b = b.getRelative(0, -2, 0);
+					b.setType(Material.WOOD_BUTTON);
 					b.setData((byte)0x1);
 				}
 				
@@ -276,10 +291,18 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(wool);
 					b.setData(colorOptionOff);
 				}
+				
 				b = getBlockAbs(chunk, mainButtonX, buttonY, animalsButtonZ);
 				if ( b != null )
 				{
-					b.setType(button);
+					setupWallSign(b, (byte)0x5, "", "Animals:", getQuantityText(Game.defaultAnimalNumbers), "");
+					
+					b = b.getRelative(0, 1, 0);
+					b.setType(Material.WOOD_BUTTON);
+					b.setData((byte)0x1);
+					
+					b = b.getRelative(0, -2, 0);
+					b.setType(Material.WOOD_BUTTON);
 					b.setData((byte)0x1);
 				}
 
@@ -451,11 +474,11 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 							setupWallSign(b, (byte)0x2, "No player limit", "is set.", "Pull lever to", "apply a limit.");
 							
 							b = b.getRelative(0, 1, 0);
-							b.setType(Material.STONE_BUTTON);
+							b.setType(Material.WOOD_BUTTON);
 							b.setData((byte)0x4);
 							
 							b = b.getRelative(0, -2, 0);
-							b.setType(Material.STONE_BUTTON);
+							b.setType(Material.WOOD_BUTTON);
 							b.setData((byte)0x4);
 						}
 					}
@@ -1242,5 +1265,11 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		}
 		
 		return columns.toArray(new boolean[0][]);
+	}
+	
+	public static String capitalize(String str)
+	{
+		String first = str.substring(0, 1), rest = str.substring(1);
+		return first.toUpperCase() + rest.toLowerCase();
 	}
 }

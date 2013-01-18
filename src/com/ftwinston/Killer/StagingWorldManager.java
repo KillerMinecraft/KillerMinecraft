@@ -2,6 +2,7 @@ package com.ftwinston.Killer;
 
 import java.util.Random;
 
+import org.bukkit.Difficulty;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -44,8 +45,6 @@ class StagingWorldManager
 		GAME_MODE_CONFIG,
 		WORLD,
 		WORLD_CONFIG,
-		MONSTERS,
-		ANIMALS,
 		GLOBAL_OPTION,
 	}
 	
@@ -71,12 +70,6 @@ class StagingWorldManager
 			break;
 		case WORLD_CONFIG:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.worldConfigButtonZ).setData(StagingWorldGenerator.colorOptionOff);
-			break;
-		case MONSTERS:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.monstersButtonZ).setData(StagingWorldGenerator.colorOptionOff);
-			break;
-		case ANIMALS:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.animalsButtonZ).setData(StagingWorldGenerator.colorOptionOff);
 			break;
 		case GLOBAL_OPTION:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.globalOptionButtonZ).setData(StagingWorldGenerator.colorOptionOff);
@@ -143,28 +136,6 @@ class StagingWorldManager
 				values[i] = options[i].isEnabled();
 			}
 			showSetupOptionButtons(game, "World option:", false, labels, values);
-			break;
-		case MONSTERS:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.monstersButtonZ).setData(StagingWorldGenerator.colorOptionOn);
-			labels = new String[5];
-			values = new boolean[5];
-			for ( int i=0; i<5; i++ )
-			{
-				labels[i] = StagingWorldGenerator.getQuantityText(i);
-				values[i] = i == game.monsterNumbers;
-			}
-			showSetupOptionButtons(game, "Monsters:", false, labels, values);
-			break;
-		case ANIMALS:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.animalsButtonZ).setData(StagingWorldGenerator.colorOptionOn);
-			labels = new String[5];
-			values = new boolean[5];
-			for ( int i=0; i<5; i++ )
-			{
-				labels[i] = StagingWorldGenerator.getQuantityText(i);
-				values[i] = i == game.animalNumbers;
-			}
-			showSetupOptionButtons(game, "Animals:", false, labels, values);
 			break;
 		case GLOBAL_OPTION:
 			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.globalOptionButtonZ).setData(StagingWorldGenerator.colorOptionOn);
@@ -340,6 +311,66 @@ class StagingWorldManager
 				}
 			}
 		}
+		else if ( x == StagingWorldGenerator.mainButtonX && game != null )
+		{
+			if ( z == StagingWorldGenerator.monstersButtonZ )
+			{
+				if ( y == buttonY + 1 )
+				{
+					if ( game.monsterNumbers < Game.maxQuantityNum )
+					{
+						game.monsterNumbers++;
+						StagingWorldGenerator.setupWallSign(block.getRelative(0,-1,0), (byte)0x5, "", "Monsters:", StagingWorldGenerator.getQuantityText(game.monsterNumbers), "");
+					}
+				}
+				else if ( y == buttonY - 1 )
+				{
+					if ( game.monsterNumbers > Game.minQuantityNum )
+					{
+						game.monsterNumbers--;
+						StagingWorldGenerator.setupWallSign(block.getRelative(0,1,0), (byte)0x5, "", "Monsters:", StagingWorldGenerator.getQuantityText(game.monsterNumbers), "");
+					}
+				}
+			}
+			else if ( z == StagingWorldGenerator.animalsButtonZ )
+			{
+				if ( y == buttonY + 1 )
+				{
+					if ( game.animalNumbers < Game.maxQuantityNum )
+					{
+						game.animalNumbers++;
+						StagingWorldGenerator.setupWallSign(block.getRelative(0,-1,0), (byte)0x5, "", "Animals:", StagingWorldGenerator.getQuantityText(game.animalNumbers), "");
+					}
+				}
+				else if ( y == buttonY - 1 )
+				{
+					if ( game.animalNumbers > Game.minQuantityNum )
+					{
+						game.animalNumbers--;
+						StagingWorldGenerator.setupWallSign(block.getRelative(0,1,0), (byte)0x5, "", "Animals:", StagingWorldGenerator.getQuantityText(game.animalNumbers), "");
+					}
+				}
+			}
+			else if ( z == StagingWorldGenerator.difficultyButtonZ )
+			{
+				if ( y == buttonY + 1 )
+				{
+					if ( game.getDifficulty().getValue() < Difficulty.HARD.getValue() )
+					{
+						game.setDifficulty(Difficulty.getByValue(game.getDifficulty().getValue()+1));
+						StagingWorldGenerator.setupWallSign(block.getRelative(0,-1,0), (byte)0x5, "", "Difficulty:", StagingWorldGenerator.capitalize(game.getDifficulty().name()), "");
+					}
+				}
+				else if ( y == buttonY - 1 )
+				{
+					if ( game.getDifficulty().getValue() > Difficulty.PEACEFUL.getValue() )
+					{
+						game.setDifficulty(Difficulty.getByValue(game.getDifficulty().getValue()-1));
+						StagingWorldGenerator.setupWallSign(block.getRelative(0,1,0), (byte)0x5, "", "Difficulty:", StagingWorldGenerator.capitalize(game.getDifficulty().name()), "");
+					}
+				}
+			}
+		}
 		
 		// hereafter, only buttons that we don't allow rapid re-pressing on
 		if ( (block.getData() & 0x8) != 0 )
@@ -372,10 +403,6 @@ class StagingWorldManager
 				setCurrentOption(game, currentOption == StagingWorldOption.WORLD ? StagingWorldOption.NONE : StagingWorldOption.WORLD);
 			else if ( z == StagingWorldGenerator.worldConfigButtonZ )
 				setCurrentOption(game, currentOption == StagingWorldOption.WORLD_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.WORLD_CONFIG);
-			else if ( z == StagingWorldGenerator.monstersButtonZ )
-				setCurrentOption(game, currentOption == StagingWorldOption.MONSTERS ? StagingWorldOption.NONE : StagingWorldOption.MONSTERS);
-			else if ( z == StagingWorldGenerator.animalsButtonZ )
-				setCurrentOption(game, currentOption == StagingWorldOption.ANIMALS ? StagingWorldOption.NONE : StagingWorldOption.ANIMALS);
 			else if ( z == StagingWorldGenerator.globalOptionButtonZ )
 				setCurrentOption(game, currentOption == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
 		}
@@ -445,36 +472,6 @@ class StagingWorldManager
 				for ( int i=0; i<newValues.length; i++ )
 					newValues[i] = options[i].isEnabled();
 				updateSetupOptionButtons(game, newValues, false);
-				break;
-			case MONSTERS:
-				game.monsterNumbers = num;
-				
-				// update block colors
-				newValues = new boolean[5];
-				for ( int i=0; i<newValues.length; i++ )
-					newValues[i] = i == num;
-				updateSetupOptionButtons(game, newValues, false);
-				
-				// update main sign
-				b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY+1, StagingWorldGenerator.monstersButtonZ-1);
-				s = (Sign)b.getState();
-				s.setLine(1, StagingWorldGenerator.padSignLeft(StagingWorldGenerator.getQuantityText(num)));
-				s.update();
-				break;
-			case ANIMALS:
-				game.animalNumbers = num;
-				
-				// update block colors
-				newValues = new boolean[5];
-				for ( int i=0; i<newValues.length; i++ )
-					newValues[i] = i == num;
-				updateSetupOptionButtons(game, newValues, false);
-				
-				// update main sign
-				b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY+1, StagingWorldGenerator.monstersButtonZ-1);
-				s = (Sign)b.getState();
-				s.setLine(3, StagingWorldGenerator.padSignLeft(StagingWorldGenerator.getQuantityText(num)));
-				s.update();
 				break;
 			case GLOBAL_OPTION:
 				if ( num == 0 )
@@ -597,30 +594,9 @@ class StagingWorldManager
 			bCancel.setType(Material.STONE_BUTTON);
 			bCancel.setData((byte)0x3);
 			
-			sOverride.setType(Material.WALL_SIGN);
-			sOverride.setData((byte)0x3);
-			Sign s = (Sign)sOverride.getState();
-			s.setLine(1, "Push to start");
-			s.setLine(2, "the game anyway");
-			s.update();
-
-			//sCancel.setData((byte)0x3); // because it still has the "data" value from the start button, which is different 
-			sCancel.setType(Material.WALL_SIGN);
-			sCancel.setData((byte)0x3);
-			s = (Sign)sCancel.getState();
-			s.setLine(1, "Push to cancel");
-			s.setLine(2, "and choose");
-			s.setLine(3, "something else");
-			s.update();
-			
-			sHighInfo.setType(Material.WALL_SIGN);
-			sHighInfo.setData((byte)0x3);
-			s = (Sign)sHighInfo.getState();
-			s.setLine(0, "This mode needs");
-			s.setLine(1, "at least " + game.getGameMode().getMinPlayers());
-			s.setLine(2, "players. You");
-			s.setLine(3, "only have " + game.getOnlinePlayers().size() + ".");
-			s.update();
+			StagingWorldGenerator.setupWallSign(sOverride, (byte)0x3, "", "Push to start", "the game anyway", "");
+			StagingWorldGenerator.setupWallSign(sCancel, (byte)0x3, "", "Push to cancel", "and choose", "something else");
+			StagingWorldGenerator.setupWallSign(sHighInfo, (byte)0x3, "This mode needs", "at least " + game.getGameMode().getMinPlayers(), "players. You", "only have " + game.getOnlinePlayers().size() + ".");
 			
 			backOverride.setData(StagingWorldGenerator.colorOverrideButton);
 			backCancel.setData(StagingWorldGenerator.colorCancelButton);
@@ -630,13 +606,8 @@ class StagingWorldManager
 			bStart.setType(Material.STONE_BUTTON);
 			bStart.setData((byte)0x3);
 			
-			sStart.setType(Material.WALL_SIGN);
-			sStart.setData((byte)0x3);
-			Sign s = (Sign)sStart.getState();
-			s.setLine(1, "Push to");
-			s.setLine(2, "start the game");
-			s.update();
-			
+			StagingWorldGenerator.setupWallSign(sStart, (byte)0x3, "", "Push to", "start the game", "");
+						
 			backStart.setData(StagingWorldGenerator.colorStartButton);
 			backOverride.setData(StagingWorldGenerator.colorOptionOff);
 			backCancel.setData(StagingWorldGenerator.colorOptionOff);
@@ -654,14 +625,7 @@ class StagingWorldManager
 		int buttonY = StagingWorldGenerator.getButtonY(game.getNumber());
 		Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, buttonY + 1, StagingWorldGenerator.startButtonZ);
 			
-		sign.setType(Material.WALL_SIGN);
-		sign.setData((byte)0x3);
-		Sign s = (Sign)sign.getState();
-		s.setLine(0, "Please wait for");
-		s.setLine(1, "the last game's");
-		s.setLine(2, "worlds to be");
-		s.setLine(3, "deleted...");
-		s.update();
+		StagingWorldGenerator.setupWallSign(sign, (byte)0x3, "Please wait for", "the last game's", "worlds to be", "deleted...");
 		
 		// hide all the start buttons' stuff
 		Block bStart = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, buttonY, StagingWorldGenerator.startButtonZ);
