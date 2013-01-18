@@ -273,7 +273,7 @@ class StagingWorldManager
 		}
 	}
 	
-	public void setupButtonClicked(Game game, int x, int z, Player player)
+	public void setupButtonClicked(Game game, int x, int y, int z, Player player)
 	{
 		int buttonY = StagingWorldGenerator.getButtonY(game == null ? -1 : game.getNumber());
 		if ( z == StagingWorldGenerator.arenaButtonZ )
@@ -309,6 +309,26 @@ class StagingWorldManager
 				setCurrentOption(game, currentOption == StagingWorldOption.ANIMALS ? StagingWorldOption.NONE : StagingWorldOption.ANIMALS);
 			else if ( z == StagingWorldGenerator.globalOptionButtonZ )
 				setCurrentOption(game, currentOption == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
+			else if ( z == StagingWorldGenerator.playerLimitZ && Settings.allowPlayerLimits && game.usesPlayerLimit() )
+			{
+				int limit = game.getPlayerLimit();
+				if ( y == buttonY + 1 )
+				{
+					if ( limit < Settings.maxPlayerLimit )
+					{
+						game.setPlayerLimit(limit+1);
+						updateGameInfoSigns(game);
+					}
+				}
+				else if ( y == buttonY - 1 )
+				{
+					if ( limit > Settings.minPlayerLimit )
+					{
+						game.setPlayerLimit(limit - 1);
+						updateGameInfoSigns(game);
+					}
+				}
+			}
 		}
 		else if ( x == StagingWorldGenerator.optionButtonX )
 		{
@@ -656,7 +676,7 @@ class StagingWorldManager
 		
 		int numPlayers = game.getOnlinePlayers().size(), numTotal = numPlayers + game.getOfflinePlayers().size();
 		boolean gameLocked = false, gameFull = false;
-		Block b = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX-2, StagingWorldGenerator.getFloorY(game.getNumber())+2, StagingWorldGenerator.getWallMaxZ()- 1);
+		Block b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, StagingWorldGenerator.getButtonY(game.getNumber()), StagingWorldGenerator.playerLimitZ);
 		
 		if ( game.usesPlayerLimit() )
 		{
@@ -674,7 +694,7 @@ class StagingWorldManager
 				
 				// reset the switch
 				Block lever = b.getRelative(1, 0, 0); 
-				lever.setData((byte)(lever.getData() | 0x8));
+				lever.setData((byte)0x4);
 			}
 			else
 			{
@@ -682,11 +702,16 @@ class StagingWorldManager
 				gameLocked = gameFull && !game.getGameState().usesGameWorlds;
 			}
 			
-			int numFree = game.getPlayerLimit() - numTotal;
-			StagingWorldGenerator.setupWallSign(b, (byte)0x2, "Player limit:", "§l" + game.getPlayerLimit() + " players", "", gameFull ? "§4Game is full" : (numFree == 1 ? "1 free slot" : numFree + " free slots"));
+			if ( game.usesPlayerLimit() )
+			{
+				int numFree = game.getPlayerLimit() - numTotal;
+				StagingWorldGenerator.setupWallSign(b, (byte)0x2, "Player limit:", "§l" + game.getPlayerLimit() + " players", "", gameFull ? "§4Game is full" : (numFree == 1 ? "1 free slot" : numFree + " free slots"));
+			}
 		}
-		else if ( Settings.allowPlayerLimits )
+		
+		if ( !game.usesPlayerLimit() && Settings.allowPlayerLimits )
 			StagingWorldGenerator.setupWallSign(b, (byte)0x2, "No player limit", "is set.", "Pull lever to", "apply a limit.");
+		
 		lockGame(game, gameLocked);
 		
 		int portalX = StagingWorldGenerator.getGamePortalX(game.getNumber());

@@ -379,7 +379,7 @@ class EventListener implements Listener
 			}
 			else if ( (game == null || game.getGameState().canChangeGameSetup) && event.getClickedBlock().getType() == Material.STONE_BUTTON )
 			{
-				plugin.stagingWorldManager.setupButtonClicked(game, event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
+				plugin.stagingWorldManager.setupButtonClicked(game, event.getClickedBlock().getLocation().getBlockX(), event.getClickedBlock().getLocation().getBlockY(), event.getClickedBlock().getLocation().getBlockZ(), event.getPlayer());
 				return;
 			}
 		

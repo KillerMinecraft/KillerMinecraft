@@ -20,7 +20,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			gameModeConfigButtonZ = worldButtonZ + 3, gameModeButtonZ = gameModeConfigButtonZ + 2, startButtonX = wallMaxX - 3,
 			overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1, arenaSpleefButtonX = startButtonX + 2,
 			arenaMonsterButtonX = startButtonX - 2, spleefY = 29, spleefMaxX = startButtonX + 8, spleefMinX = spleefMaxX - 16;
-	public static int arenaButtonZ, spleefMinZ, spleefMaxZ, spleefPressurePlateZ, exitPortalZ;
+	public static int arenaButtonZ, spleefMinZ, spleefMaxZ, spleefPressurePlateZ, exitPortalZ, playerLimitZ;
 	
 	public static final byte colorOptionOn = 5 /* lime */, colorOptionOff = 14 /* red*/,
 		colorStartButton = 4 /* yellow */, colorOverrideButton = 1 /* orange */, colorCancelButton = 9 /* teal */,
@@ -45,7 +45,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	public static void setWallMaxZ(int max)
 	{
 		wallMaxZ = max;
-		arenaButtonZ = wallMaxZ + 2; spleefMinZ = wallMaxZ + 9; spleefMaxZ = spleefMinZ + 16; spleefPressurePlateZ = spleefMinZ-2; exitPortalZ = wallMaxZ - 2;
+		arenaButtonZ = wallMaxZ + 2; spleefMinZ = wallMaxZ + 9; spleefMaxZ = spleefMinZ + 16; spleefPressurePlateZ = spleefMinZ-2; exitPortalZ = wallMaxZ - 2; playerLimitZ = wallMaxZ - 1;
 	}
 
 	public static int getGamePortalX(int i)
@@ -435,19 +435,29 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					if ( b != null )
 						setupFloorSign(b, (byte)0x1, "Read your", "instruction", "book if you", "need any help.");
 					
-					// lock lever
+					// player limit controls
 					if ( Settings.allowPlayerLimits )
 					{
-						b = getBlockAbs(chunk, startButtonX - 1, floorY + 2, wallMaxZ-1);
+						b = getBlockAbs(chunk, mainButtonX + 1, floorY + 2, playerLimitZ);
 						if ( b != null )
 						{
 							b.setType(Material.LEVER);
 							b.setData((byte)0x4);
 						}
 						
-						b = getBlockAbs(chunk, startButtonX - 2, floorY + 2, wallMaxZ-1);
+						b = getBlockAbs(chunk, mainButtonX, floorY + 2, playerLimitZ);
 						if ( b != null )
+						{
 							setupWallSign(b, (byte)0x2, "No player limit", "is set.", "Pull lever to", "apply a limit.");
+							
+							b = b.getRelative(0, 1, 0);
+							b.setType(Material.STONE_BUTTON);
+							b.setData((byte)0x4);
+							
+							b = b.getRelative(0, -2, 0);
+							b.setType(Material.STONE_BUTTON);
+							b.setData((byte)0x4);
+						}
 					}
 				}
 				else

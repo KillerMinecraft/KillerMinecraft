@@ -23,6 +23,8 @@ public class Settings
 	defaultGameMode,
 	defaultWorldOption;
 	
+	public static final int minPlayerLimit = 2, maxPlayerLimit = 200;
+	
 	public static Material[] startingItems;
 	
 	public static Material teleportModeItem = Material.WATCH, followModeItem = Material.ARROW;
