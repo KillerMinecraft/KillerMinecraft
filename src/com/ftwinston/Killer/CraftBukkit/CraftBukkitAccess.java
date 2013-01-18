@@ -6,6 +6,7 @@ import java.util.HashMap;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
@@ -69,4 +70,6 @@ public abstract class CraftBukkitAccess
 	
 	public abstract Location findNearestNetherFortress(Location loc);
 	public abstract boolean createFlyingEnderEye(Player player, Location target);
+	
+	public abstract void pushButton(Block b);
 }

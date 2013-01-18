@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.minecraft.server.v1_4_6.Block;
 import net.minecraft.server.v1_4_6.ChunkPosition;
 import net.minecraft.server.v1_4_6.ChunkProviderHell;
 import net.minecraft.server.v1_4_6.ChunkProviderServer;
@@ -342,5 +343,11 @@ public class v1_4_6 extends CraftBukkitAccess
 		world.makeSound(((CraftPlayer)player).getHandle(), "random.bow", 0.5F, 0.4F);
 		world.a((EntityHuman) null, 1002, playerLoc.getBlockX(), playerLoc.getBlockY(), playerLoc.getBlockZ(), 0); // obfuscated
 		return true;
+	}
+
+	@Override
+	public void pushButton(org.bukkit.block.Block b)
+	{
+		Block.STONE_BUTTON.interact(((CraftWorld)b.getWorld()).getHandle(), b.getX(), b.getY(), b.getZ(), null, 0, 0f, 0f, 0f);
 	}
 }
