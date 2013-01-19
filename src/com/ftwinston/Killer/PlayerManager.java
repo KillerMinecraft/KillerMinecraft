@@ -197,14 +197,22 @@ class PlayerManager
 	public void colorPlayerName(Player player, ChatColor color)
 	{
 		String oldListName = player.getPlayerListName();
-	
-		player.setDisplayName(color + ChatColor.stripColor(player.getDisplayName()));
+		String displayName = ChatColor.stripColor(player.getDisplayName());
+		if( color != ChatColor.RESET )
+			displayName = color + displayName;
+		
+		if ( displayName.length() > 15 )
+			displayName = displayName.substring(0, 15);
+		
+		player.setDisplayName(displayName);
 		
 		// mustn't be > 16 chars, or it throws an exception
-		String name = ChatColor.stripColor(player.getPlayerListName());
-		if ( name.length() > 15 )
-			name = name.substring(0, 15);
-		player.setPlayerListName(color + name);
+		String listName = ChatColor.stripColor(player.getPlayerListName());
+		if ( color != ChatColor.RESET )
+			listName = color + listName;
+		if ( listName.length() > 15 )
+			listName = listName.substring(0, 15);
+		player.setPlayerListName(listName);
 		
 		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
 		for ( Player online : plugin.getOnlinePlayers() )
