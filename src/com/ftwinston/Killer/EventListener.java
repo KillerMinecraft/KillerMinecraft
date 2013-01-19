@@ -11,7 +11,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -484,10 +483,10 @@ class EventListener implements Listener
 		
 		if ( event instanceof EntityDamageByEntityEvent )
 		{
-			Entity damager = ((EntityDamageByEntityEvent)event).getDamager();
-			if ( damager != null && damager instanceof Player )
+			Player attacker = Helper.getAttacker(event);
+			if ( attacker != null )
 			{
-				if ( !Helper.isAlive(game, (Player)damager) )
+				if ( !Helper.isAlive(game, attacker) )
 					event.setCancelled(true);
 			}
 		}
