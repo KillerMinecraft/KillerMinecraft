@@ -3,7 +3,7 @@ package com.ftwinston.Killer;
 import org.bukkit.Location;
 import org.bukkit.TravelAgent;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 public class PortalHelper
@@ -35,7 +35,7 @@ public class PortalHelper
 		setDestination(new Location(destinationWorld, (entranceLocation.getX() * scaleFactor), entranceLocation.getY(), (entranceLocation.getZ() * scaleFactor), entranceLocation.getYaw(), entranceLocation.getPitch()));
 	}
 	
-	void performTeleport(TeleportCause cause, Player player)
+	void performTeleport(TeleportCause cause, Entity entity)
 	{
 		if ( destination == null )
 			return; // null destination means no teleporting
@@ -43,6 +43,6 @@ public class PortalHelper
 		if ( useExitPortal )
 			destination = agent.findOrCreate(destination);
 		
-		player.teleport(destination, cause);
+		entity.teleport(destination, cause);
 	}
 }

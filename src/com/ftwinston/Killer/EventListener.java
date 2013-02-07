@@ -26,6 +26,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -42,6 +43,7 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -164,6 +166,19 @@ class EventListener implements Listener
 		
 		plugin.getGameMode().handlePortal(event.getCause(), event.getFrom(), helper); // see? I told you
 		helper.performTeleport(event.getCause(), event.getPlayer());
+	}
+	
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onEntityPortal(EntityPortalEvent event)
+	{
+		if ( !plugin.isGameWorld(event.getFrom().getWorld()) )
+			return;
+		
+		PortalHelper helper = new PortalHelper(event.getPortalTravelAgent());
+		event.setCancelled(true); // we're going to handle implementing the portalling ourselves
+		
+		plugin.getGameMode().handlePortal(TeleportCause.NETHER_PORTAL, event.getFrom(), helper); // see? I told you
+		helper.performTeleport(TeleportCause.NETHER_PORTAL, event.getEntity());
 	}
 	
     // prevent spectators picking up anything
