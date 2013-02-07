@@ -26,6 +26,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -202,6 +203,20 @@ class EventListener implements Listener
 		
 		game.getGameMode().handlePortal(event.getCause(), event.getFrom(), helper); // see? I told you
 		helper.performTeleport(event.getCause(), event.getPlayer());
+	}
+	
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onEntityPortal(EntityPortalEvent event)
+	{
+		Game game = plugin.getGameForWorld(event.getFrom().getWorld());
+		if ( game == null )
+			return;
+		
+		PortalHelper helper = new PortalHelper(event.getPortalTravelAgent());
+		event.setCancelled(true); // we're going to handle implementing the portalling ourselves
+		
+		game.getGameMode().handlePortal(TeleportCause.NETHER_PORTAL, event.getFrom(), helper); // see? I told you
+		helper.performTeleport(TeleportCause.NETHER_PORTAL, event.getEntity());
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST)
