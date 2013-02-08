@@ -23,7 +23,7 @@ public abstract class CraftBukkitAccess
 		String packageName = plugin.getServer().getClass().getPackage().getName();
         String version = packageName.substring(packageName.lastIndexOf('.') + 1);
         
-        if ( version.equals("v1_4_7"))
+        if ( version.equals("v1_4_R1"))
         	return new v1_4_7(plugin);
         if ( version.equals("v1_4_6"))
         	return new v1_4_6(plugin);
