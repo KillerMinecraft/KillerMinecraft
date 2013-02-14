@@ -526,10 +526,7 @@ class StagingWorldManager
 						@Override
 						public void run() {
 							if ( game2.getGameState().usesGameWorlds )
-							{
 								plugin.playerManager.teleport(player, game2.getGameMode().getSpawnLocation(player));
-								plugin.playerManager.putPlayerInGame(player, game2);
-							}
 							else
 								player.teleport(getGameSetupSpawnLocation(game2.getNumber()));
 							plugin.playerManager.putPlayerInGame(player, game2);

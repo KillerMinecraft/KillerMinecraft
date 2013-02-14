@@ -86,6 +86,9 @@ class PlayerManager
 		player.setFlying(false);
 		player.setGameMode(GameMode.SURVIVAL);
 		giveStagingWorldInstructionBook(player);
+		
+		if ( plugin.games.length == 1 )
+			plugin.playerManager.putPlayerInGame(player, plugin.games[0]);
 	}
 	
 	public void giveStagingWorldInstructionBook(Player player)

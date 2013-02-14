@@ -610,9 +610,13 @@ class EventListener implements Listener
 				{
 					Player player = plugin.getServer().getPlayerExact(playerName);
 					if ( player != null )
-					{
-						plugin.playerManager.putPlayerInStagingWorld(player);
-					}
+						if ( plugin.games.length == 1 && plugin.games[0].getGameState().usesGameWorlds )
+						{
+							plugin.playerManager.teleport(player, plugin.games[0].getGameMode().getSpawnLocation(player));
+							plugin.playerManager.putPlayerInGame(player, plugin.games[0]);
+						}
+						else
+							plugin.playerManager.putPlayerInStagingWorld(player);
 				}
 			});
 		}
