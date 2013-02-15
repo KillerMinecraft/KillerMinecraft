@@ -60,7 +60,7 @@ class EventListener implements Listener
 		plugin = instance;
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST) // run last, because it deletes the intitial world
 	public void onWorldInit(final WorldInitEvent event)
 	{
 		if ( plugin.stagingWorldIsServerDefault && plugin.stagingWorld == null )
@@ -87,7 +87,7 @@ class EventListener implements Listener
 	}
 
 	// when you die a spectator, be made able to fly again when you respawn
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST) // run last, so we can absolutely say where you should respawn, in a Killer game
 	public void onPlayerRespawn(PlayerRespawnEvent event)
 	{
 		World world = event.getPlayer().getWorld();
@@ -136,7 +136,7 @@ class EventListener implements Listener
 		}
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void OnPlayerChangedWorld(PlayerChangedWorldEvent event)
 	{
 		Game fromGame = plugin.getGameForWorld(event.getFrom());
@@ -191,7 +191,7 @@ class EventListener implements Listener
 		}
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerPortal(PlayerPortalEvent event)
 	{
 		Game game = plugin.getGameForWorld(event.getFrom().getWorld());
@@ -205,7 +205,7 @@ class EventListener implements Listener
 		helper.performTeleport(event.getCause(), event.getPlayer());
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onEntityPortal(EntityPortalEvent event)
 	{
 		Game game = plugin.getGameForWorld(event.getFrom().getWorld());
@@ -219,7 +219,7 @@ class EventListener implements Listener
 		helper.performTeleport(TeleportCause.NETHER_PORTAL, event.getEntity());
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerTeleport(PlayerTeleportEvent event)
 	{
 		if ( event.getCause() != TeleportCause.COMMAND && event.getCause() != TeleportCause.PLUGIN )
@@ -243,7 +243,7 @@ class EventListener implements Listener
 	}
 	
 	// prevent spectators picking up anything
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerPickupItem(PlayerPickupItemEvent event)
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
@@ -254,7 +254,7 @@ class EventListener implements Listener
 			event.setCancelled(true);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onItemSpawn(ItemSpawnEvent event)
 	{
 		if ( event.getLocation().getWorld() == plugin.stagingWorld )
@@ -262,7 +262,7 @@ class EventListener implements Listener
 	}
 	
 	// prevent spectators breaking anything, prevent anyone breaking protected locations
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onBlockBreak(BlockBreakEvent event)
 	{
 		World world = event.getPlayer().getWorld();
@@ -271,12 +271,15 @@ class EventListener implements Listener
 		if ( game == null && world != plugin.stagingWorld ) 
 			return;
 
-		if ( (world != plugin.stagingWorld && !Helper.isAlive(game, event.getPlayer())) || plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer()) )
-			event.setCancelled(true);
+		if ( world != plugin.stagingWorld )
+			event.setCancelled(
+				!Helper.isAlive(game, event.getPlayer()) ||
+				plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer())
+			);
 	}
 	
 	// prevent anyone placing blocks on protected locations
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onBlockPlace(BlockPlaceEvent event)
 	{
 		World world = event.getPlayer().getWorld();
@@ -290,36 +293,36 @@ class EventListener implements Listener
 		if ( game == null ) 
 			return;
 		
-		if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer()) || !Helper.isAlive(game, event.getPlayer()) )
-			event.setCancelled(true);
+		event.setCancelled(
+			plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer()) ||
+			!Helper.isAlive(game, event.getPlayer())
+		);
 	}
 	
 	// prevent lava/water from flowing onto protected locations
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void BlockFromTo(BlockFromToEvent event)
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game == null ) 
 			return;
 		
-		if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), null) )
-			event.setCancelled(true);
+		event.setCancelled(plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), null));
 	}
 	
 	// prevent pistons pushing things into/out of protected locations
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onBlockPistonExtend(BlockPistonExtendEvent event)
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game == null ) 
 			return;
 		
-		if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), null) )
-			event.setCancelled(true);
+		event.setCancelled(plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), null));
 	}
 	
 	// prevent explosions from damaging protected locations
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onEntityExplode(EntityExplodeEvent event)
 	{
 		World world = event.getEntity().getWorld();
@@ -343,7 +346,7 @@ class EventListener implements Listener
 	}
 	
 	// switching between spectator items
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerItemSwitch(PlayerItemHeldEvent event)
 	{
 		World world = event.getPlayer().getWorld();
@@ -374,7 +377,7 @@ class EventListener implements Listener
 		}
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerInteract(PlayerInteractEvent event)
 	{
 		Game game = plugin.getGameForPlayer(event.getPlayer());
@@ -457,7 +460,7 @@ class EventListener implements Listener
 		}
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onItemDrop(PlayerDropItemEvent event)
 	{
 		World world = event.getPlayer().getWorld();
@@ -468,10 +471,9 @@ class EventListener implements Listener
 		// spectators can't drop items
 		if ( world == plugin.stagingWorld || !Helper.isAlive(game, event.getPlayer()) )
 			event.setCancelled(true);
-		
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.NORMAL)
 	public void onInventoryClick(InventoryClickEvent event)
 	{
 		Player player = (Player)event.getWhoClicked();
@@ -489,13 +491,14 @@ class EventListener implements Listener
 	}
 	
 	// spectators can't deal or receive damage
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onEntityDamage(EntityDamageEvent event)
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game == null ) 
 			return;
 		
+		event.setCancelled(false);
 		if ( event instanceof EntityDamageByEntityEvent )
 		{
 			Player attacker = Helper.getAttacker(event);
@@ -515,7 +518,7 @@ class EventListener implements Listener
 	}
 	
 	// can't empty buckets onto protected locations
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
@@ -523,11 +526,10 @@ class EventListener implements Listener
 			return;
 		
 		Block affected = event.getBlockClicked().getRelative(event.getBlockFace());
-		if ( plugin.worldManager.isProtectedLocation(game, affected.getLocation(), event.getPlayer()) )
-			event.setCancelled(true);
+		event.setCancelled(plugin.worldManager.isProtectedLocation(game, affected.getLocation(), event.getPlayer()));
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onCraftItem(CraftItemEvent event)
 	{
 		Game game = plugin.getGameForWorld(event.getWhoClicked().getWorld());
@@ -536,16 +538,27 @@ class EventListener implements Listener
 			if ( plugin.isDispenserRecipe(event.getRecipe()) || plugin.isEnderEyeRecipe(event.getRecipe()) || plugin.isMonsterEggRecipe(event.getRecipe()) )
 	   			event.setCancelled(true);
 		}
+		else
+		{
+			if ( !game.isDispenserRecipeEnabled() && plugin.isDispenserRecipe(event.getRecipe()) )
+				event.setCancelled(true);
+			else if ( !game.isEnderEyeRecipeEnabled() && plugin.isEnderEyeRecipe(event.getRecipe()) )
+				event.setCancelled(true);
+			else if ( !game.isMonsterEggRecipeEnabled() && plugin.isMonsterEggRecipe(event.getRecipe()) )
+				event.setCancelled(true);
+			else
+				event.setCancelled(false); // otherwise, allow all crafting
+		}
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onCreatureSpawn(CreatureSpawnEvent event)
 	{
 		if ( event.getLocation().getWorld() == plugin.stagingWorld && event.getSpawnReason() == SpawnReason.NATURAL )
 			event.setCancelled(true);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEntityTarget(EntityTargetEvent event)
 	{
 		World world = event.getEntity().getWorld();
@@ -558,7 +571,7 @@ class EventListener implements Listener
 			event.setCancelled(true);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerChat(AsyncPlayerChatEvent event)
 	{
 		World world = event.getPlayer().getWorld();
@@ -584,7 +597,7 @@ class EventListener implements Listener
 		if ( event.getPlayer().isConversing() )
 			return;
 		
-		if ( game == null || game.getGameState() == GameState.finished || Helper.isAlive(game, event.getPlayer()) )
+		if ( game == null || game.getGameState() == GameState.finished )
 		{// colored player names shouldn't produce colored messages ... spectator chat isn't special when the game is in the "finished" state.
 			event.setMessage(ChatColor.RESET + event.getMessage());
 			return;
@@ -598,7 +611,7 @@ class EventListener implements Listener
 				event.getRecipients().remove(recipient);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerJoin(PlayerJoinEvent event)
 	{
 		World world = event.getPlayer().getWorld();
@@ -659,7 +672,7 @@ class EventListener implements Listener
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(game, player.getName(), true), 600);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onEntityDeath(EntityDeathEvent event)
 	{
 		if ( event.getEntity().getWorld() == plugin.stagingWorld )
