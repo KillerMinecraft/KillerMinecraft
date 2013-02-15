@@ -511,8 +511,8 @@ public class Killer extends JavaPlugin
 	{
 		for ( Game game : games )
 			for ( World world : game.getWorlds() )
-			if ( w == world )
-				return game;
+				if ( w == world )
+					return game;
 		
 		return null;
 	}

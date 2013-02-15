@@ -574,10 +574,23 @@ class EventListener implements Listener
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerChat(AsyncPlayerChatEvent event)
 	{
+		// don't mess with chat if they're in a conversation
+		if ( event.getPlayer().isConversing() )
+			return;
+			
 		World world = event.getPlayer().getWorld();
 		Game game = plugin.getGameForWorld(world);
-		if ( game == null && world != plugin.stagingWorld ) 
+		if ( game == null )
+		{
+			if ( Settings.filterChat )
+			{// this player isn't in a game world, so players that are in game worlds should not see this message
+				for (Player recipient : new HashSet<Player>(event.getRecipients()))
+					if ( recipient != null && recipient.isOnline() && plugin.getGameForWorld(recipient.getWorld()) != null )
+						event.getRecipients().remove(recipient);
+			}
+			
 			return;
+		}
 		
 		if ( plugin.voteManager.isInVote() )
 		{
@@ -593,11 +606,16 @@ class EventListener implements Listener
 			}
 		}
 		
-		// don't mess with spectator chat if they're in the vote setup conversation
-		if ( event.getPlayer().isConversing() )
-			return;
+		if ( Settings.filterChat )
+		{// players that are not in this game's worlds should not see this message
+				for (Player recipient : new HashSet<Player>(event.getRecipients()))
+					if ( recipient != null && recipient.isOnline()
+						&& recipient.getWorld() != world
+						&& plugin.getGameForWorld(recipient.getWorld()) != game )
+						event.getRecipients().remove(recipient);
+		}
 		
-		if ( game == null || game.getGameState() == GameState.finished )
+		if ( game.getGameState() == GameState.finished || Helper.isAlive(game, event.getPlayer()) )
 		{// colored player names shouldn't produce colored messages ... spectator chat isn't special when the game is in the "finished" state.
 			event.setMessage(ChatColor.RESET + event.getMessage());
 			return;

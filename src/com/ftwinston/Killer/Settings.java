@@ -10,6 +10,7 @@ public class Settings
 	public static int maxSimultaneousGames;
 	
 	public static boolean
+	filterChat,
 	allowPlayerLimits,
 	lateJoinersStartAsSpectator,
 	banOnDeath,
@@ -40,7 +41,8 @@ public class Settings
 			maxSimultaneousGames = 8;
 		
 		lateJoinersStartAsSpectator = readBoolean(plugin, "lateJoinersStartAsSpectator", false);
-		allowPlayerLimits = readBoolean(plugin, "allowPlayerLimits", true); 
+		allowPlayerLimits = readBoolean(plugin, "allowPlayerLimits", true);
+		filterChat = readBoolean(plugin, "filterChat", true); 
 		banOnDeath = readBoolean(plugin, "banOnDeath", false);
 		reportStats = readBoolean(plugin, "reportStats", true);
 		
