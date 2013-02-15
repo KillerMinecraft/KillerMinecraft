@@ -2,6 +2,7 @@ package com.ftwinston.Killer;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -16,9 +17,12 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Recipe;
 
 import com.ftwinston.Killer.PlayerManager.Info;
+import com.ftwinston.Killer.StagingWorldManager.StartButtonState;
 
 public class Game
 {
+	static LinkedList<Game> generationQueue = new LinkedList<Game>();
+
 	Killer plugin;
 	private int number, helpMessageProcess, compassProcess, spectatorFollowProcess;
 	
@@ -123,6 +127,7 @@ public class Game
 		stagingWorldSetup(false, true), // in staging world, players need to choose mode/world
 		worldDeletion(false, true), // in staging world, hide start buttons, delete old world, then show start button again
 		stagingWorldConfirm(false, true), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
+		waitingToGenerate(false, false),
 		worldGeneration(false, false), // in staging world, game worlds are being generated
 		active(true, false), // game is active, in game world
 		finished(true, false); // game is finished, but not yet restarted
@@ -161,7 +166,7 @@ public class Game
 			HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
 
 			// don't show the start buttons until the old world finishes deleting
-			plugin.stagingWorldManager.showWaitForDeletion(this);
+			plugin.stagingWorldManager.showStartButtons(this, StartButtonState.WAIT_FOR_DELETION);
 			plugin.stagingWorldManager.removeWorldGenerationIndicator(this);
 			
 			for ( Player player : getOnlinePlayers() )
@@ -179,15 +184,26 @@ public class Game
 		}
 		else if ( newState == GameState.stagingWorldSetup )
 		{
-			plugin.stagingWorldManager.showStartButtons(this, false);
+			plugin.stagingWorldManager.showStartButtons(this, StartButtonState.START);
 		}
 		else if ( newState == GameState.stagingWorldConfirm )
 		{
-			plugin.stagingWorldManager.showStartButtons(this, true);
+			plugin.stagingWorldManager.showStartButtons(this, StartButtonState.CONFIRM);
 		}
-		else if( newState == GameState.worldGeneration )
+		else if ( newState == GameState.waitingToGenerate )
+		{
+			// if nothing in the queue (so nothing currently generating), generate immediately
+			if ( generationQueue.peek() == null ) 
+				newState = gameState = GameState.worldGeneration;
+			else
+				plugin.stagingWorldManager.showStartButtons(this, StartButtonState.WAIT_FOR_GENERATION);
+			
+			generationQueue.addLast(this); // always add to the queue (head of the queue is currently generating)
+		}
+		if( newState == GameState.worldGeneration )
 		{
 			plugin.getServer().getPluginManager().registerEvents(getGameMode(), plugin);
+			plugin.stagingWorldManager.showStartButtons(this, StartButtonState.GENERATING);
 			
 			final Game game = this;
 			plugin.worldManager.generateWorlds(this, worldOption, new Runnable() {
@@ -198,7 +214,15 @@ public class Game
 						plugin.arenaManager.endMonsterArena();
 					
 					setGameState(GameState.active);
-					plugin.stagingWorldManager.showStartButtons(game, false);
+					plugin.stagingWorldManager.showStartButtons(game, StartButtonState.IN_PROGRESS);
+					
+					if ( generationQueue.peek() != game )
+						return; // just in case, only the "head" game should trigger this logic
+					
+					generationQueue.remove(); // remove from the queue when its done generating ... can't block other games
+					Game nextInQueue = generationQueue.peek();
+					if ( nextInQueue != null ) // start the next queued game generating
+						nextInQueue.setGameState(GameState.worldGeneration);
 				}
 			});
 		}

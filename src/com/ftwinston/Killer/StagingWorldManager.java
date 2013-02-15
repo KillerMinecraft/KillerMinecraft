@@ -493,7 +493,7 @@ class StagingWorldManager
 				if ( game.getOnlinePlayers().size() >= game.getGameMode().getMinPlayers() )
 				{
 					setCurrentOption(game, StagingWorldOption.NONE);
-					game.setGameState(GameState.worldGeneration);
+					game.setGameState(GameState.waitingToGenerate);
 				}
 				else
 					game.setGameState(GameState.stagingWorldConfirm);
@@ -501,7 +501,7 @@ class StagingWorldManager
 			else if ( x == StagingWorldGenerator.overrideButtonX )
 			{
 				setCurrentOption(game, StagingWorldOption.NONE);
-				game.setGameState(GameState.worldGeneration);
+				game.setGameState(GameState.waitingToGenerate);
 			}
 			else if ( x == StagingWorldGenerator.cancelButtonX )
 				game.setGameState(GameState.stagingWorldSetup);
@@ -561,7 +561,17 @@ class StagingWorldManager
 		}
 	}
 	
-	public void showStartButtons(Game game, boolean confirm)
+	public enum StartButtonState
+	{
+		START,
+		CONFIRM,
+		WAIT_FOR_DELETION,
+		WAIT_FOR_GENERATION,
+		GENERATING,
+		IN_PROGRESS,
+	}
+	
+	public void showStartButtons(Game game, StartButtonState state)
 	{
 		int buttonY = StagingWorldGenerator.getButtonY(game.getNumber());
 		
@@ -579,33 +589,51 @@ class StagingWorldManager
 		
 		Block sHighInfo = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, buttonY + 2, StagingWorldGenerator.startButtonZ);
 		
-		if ( confirm )
+		boolean showMiddleButton = false, showSideButtons = false;
+		
+		switch ( state )
 		{
-			bStart.setType(Material.AIR);
-			sStart.setType(Material.AIR);
-			backStart.setData(StagingWorldGenerator.colorOptionOff);
-			
+		case CONFIRM:
+			showMiddleButton = false; showSideButtons = true;
+			StagingWorldGenerator.setupWallSign(sOverride, (byte)0x3, "", "Push to start", "the game anyway", "");
+			StagingWorldGenerator.setupWallSign(sCancel, (byte)0x3, "", "Push to cancel", "and choose", "something else");
+			StagingWorldGenerator.setupWallSign(sHighInfo, (byte)0x3, "This mode needs", "at least " + game.getGameMode().getMinPlayers(), "players. You", "only have " + game.getOnlinePlayers().size() + ".");
+			break;
+		case START:
+			showMiddleButton = true; showSideButtons = false;
+			StagingWorldGenerator.setupWallSign(sStart, (byte)0x3, "", "Push to", "start the game", "");
+			break;
+		case WAIT_FOR_DELETION:
+			showMiddleButton = false; showSideButtons = false;
+			StagingWorldGenerator.setupWallSign(sStart, (byte)0x3, "Please wait for", "the last game's", "worlds to be", "deleted...");
+			break;
+		case WAIT_FOR_GENERATION:
+			showMiddleButton = false; showSideButtons = false;
+			StagingWorldGenerator.setupWallSign(sStart, (byte)0x3, "Please wait", "for other games", "to finish", "generating...");
+			break;
+		case GENERATING:
+			showMiddleButton = false; showSideButtons = false;
+			StagingWorldGenerator.setupWallSign(sStart, (byte)0x3, "", "Generating...");
+			break;
+		case IN_PROGRESS:
+			showMiddleButton = false; showSideButtons = false;
+			StagingWorldGenerator.setupWallSign(sStart, (byte)0x3, "This game is in", "progress. You", "should not", "be here!");
+			break;
+		}
+		
+		if ( showSideButtons )
+		{
 			bOverride.setType(Material.STONE_BUTTON);
 			bOverride.setData((byte)0x3);
 			
 			bCancel.setType(Material.STONE_BUTTON);
 			bCancel.setData((byte)0x3);
 			
-			StagingWorldGenerator.setupWallSign(sOverride, (byte)0x3, "", "Push to start", "the game anyway", "");
-			StagingWorldGenerator.setupWallSign(sCancel, (byte)0x3, "", "Push to cancel", "and choose", "something else");
-			StagingWorldGenerator.setupWallSign(sHighInfo, (byte)0x3, "This mode needs", "at least " + game.getGameMode().getMinPlayers(), "players. You", "only have " + game.getOnlinePlayers().size() + ".");
-			
 			backOverride.setData(StagingWorldGenerator.colorOverrideButton);
 			backCancel.setData(StagingWorldGenerator.colorCancelButton);
 		}
 		else
 		{
-			bStart.setType(Material.STONE_BUTTON);
-			bStart.setData((byte)0x3);
-			
-			StagingWorldGenerator.setupWallSign(sStart, (byte)0x3, "", "Push to", "start the game", "");
-						
-			backStart.setData(StagingWorldGenerator.colorStartButton);
 			backOverride.setData(StagingWorldGenerator.colorOptionOff);
 			backCancel.setData(StagingWorldGenerator.colorOptionOff);
 			
@@ -615,39 +643,20 @@ class StagingWorldManager
 			sCancel.setType(Material.AIR);
 			sHighInfo.setType(Material.AIR);
 		}
-	}
-	
-	public void showWaitForDeletion(Game game)
-	{
-		int buttonY = StagingWorldGenerator.getButtonY(game.getNumber());
-		Block sign = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, buttonY + 1, StagingWorldGenerator.startButtonZ);
-			
-		StagingWorldGenerator.setupWallSign(sign, (byte)0x3, "Please wait for", "the last game's", "worlds to be", "deleted...");
 		
-		// hide all the start buttons' stuff
-		Block bStart = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, buttonY, StagingWorldGenerator.startButtonZ);
-		Block backStart = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, buttonY, StagingWorldGenerator.wallMinZ);
-		
-		Block bOverride = stagingWorld.getBlockAt(StagingWorldGenerator.overrideButtonX, buttonY, StagingWorldGenerator.startButtonZ);
-		Block sOverride = bOverride.getRelative(BlockFace.UP);
-		Block backOverride = stagingWorld.getBlockAt(StagingWorldGenerator.overrideButtonX, buttonY, StagingWorldGenerator.wallMinZ);
-		
-		Block bCancel = stagingWorld.getBlockAt(StagingWorldGenerator.cancelButtonX, buttonY, StagingWorldGenerator.startButtonZ);
-		Block sCancel = bCancel.getRelative(BlockFace.UP);
-		Block backCancel = stagingWorld.getBlockAt(StagingWorldGenerator.cancelButtonX, buttonY, StagingWorldGenerator.wallMinZ);
-
-		Block sHighInfo = stagingWorld.getBlockAt(StagingWorldGenerator.startButtonX, buttonY + 2, StagingWorldGenerator.startButtonZ);
-		
-		bStart.setType(Material.AIR);
-		bOverride.setType(Material.AIR);
-		bCancel.setType(Material.AIR);
-		sOverride.setType(Material.AIR);
-		sCancel.setType(Material.AIR);
-		sHighInfo.setType(Material.AIR);
-		
-		backStart.setData(StagingWorldGenerator.colorOptionOff);
-		backOverride.setData(StagingWorldGenerator.colorOptionOff);
-		backCancel.setData(StagingWorldGenerator.colorOptionOff);
+		if ( showMiddleButton )
+		{
+			bStart.setType(Material.STONE_BUTTON);
+			bStart.setData((byte)0x3);
+			backStart.setData(StagingWorldGenerator.colorStartButton);
+		}
+		else
+		{
+			bStart.setType(Material.AIR);
+			if ( showSideButtons )
+				sStart.setType(Material.AIR);
+			backStart.setData(StagingWorldGenerator.colorOptionOff);
+		}
 	}
 	
 	public void showWorldGenerationIndicator(Game game, float completion)
