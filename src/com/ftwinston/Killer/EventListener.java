@@ -183,8 +183,13 @@ class EventListener implements Listener
 					plugin.playerManager.previousLocations.remove(event.getPlayer().getName()); // they left Killer, so forget where they should be put on leaving
 
 				if ( Settings.filterScoreboard )
+				{
 					for ( Player other : fromGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
 						plugin.craftBukkit.sendForScoreboard(other, player, false);
+					// now add everyone that wasn't in this game to this player's scoreboard...
+					for ( Player other : plugin.getServer().getOnlinePlayers() )
+						plugin.craftBukkit.sendForScoreboard(player, other, true);
+				}
 			}
 		}
 		else if ( nowInKiller )
