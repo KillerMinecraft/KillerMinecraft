@@ -430,7 +430,8 @@ class PlayerManager
 					inv.addItem(new ItemStack(material));
 		}
 		
-		clearPlayerNameColor(player);
+		if ( !game.getGameMode().teamAllocationIsSecret() )
+			clearPlayerNameColor(player);
 	}
 	
 	private final double maxFollowSpectateRangeSq = 40 * 40, maxAcceptableOffsetDot = 0.65, farEnoughSpectateRangeSq = 35 * 35;

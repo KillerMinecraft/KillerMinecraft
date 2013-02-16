@@ -347,7 +347,8 @@ public abstract class GameMode implements Listener
 		for ( Player player : getOnlinePlayers() )
 		{
 			player.teleport(getSpawnLocation(player));
-			plugin.playerManager.colorPlayerName(player, game, game.getGameMode().getTeamChatColor(game.getPlayerInfo().get(player.getName()).getTeam()));
+			if ( !game.getGameMode().teamAllocationIsSecret() )
+				plugin.playerManager.colorPlayerName(player, game, game.getGameMode().getTeamChatColor(game.getPlayerInfo().get(player.getName()).getTeam()));
 		}
 	}
 	
