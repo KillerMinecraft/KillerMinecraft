@@ -12,6 +12,7 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -573,7 +574,7 @@ class EventListener implements Listener
 			else if ( !game.isMonsterEggRecipeEnabled() && plugin.isMonsterEggRecipe(event.getRecipe()) )
 				event.setCancelled(true);
 			else
-				event.setCancelled(false); // otherwise, allow all crafting
+				event.setResult(Result.DEFAULT); // otherwise, allow all crafting ... setCancelled(false) cancels it!
 		}
 	}
 	
