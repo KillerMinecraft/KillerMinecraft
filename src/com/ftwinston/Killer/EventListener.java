@@ -139,22 +139,31 @@ class EventListener implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void OnPlayerChangedWorld(PlayerChangedWorldEvent event)
 	{
+		World toWorld = event.getPlayer().getWorld();
 		Game fromGame = plugin.getGameForWorld(event.getFrom());
-		Game toGame = plugin.getGameForWorld(event.getPlayer().getWorld());
+		Game toGame = plugin.getGameForWorld(toWorld);
 		
 		boolean wasInKiller = fromGame != null;
 		boolean nowInKiller = toGame != null;
+		Player player = event.getPlayer();
 		
 		if ( wasInKiller )
 		{
 			if ( nowInKiller )
 			{
-				Player player = event.getPlayer();
 				
 				if ( fromGame != toGame )
 				{
 					plugin.playerManager.playerKilled(fromGame, player);
 					plugin.playerManager.putPlayerInGame(player, toGame);
+					
+					if ( Settings.filterScoreboard )
+					{// hide from old game, show for new
+						for ( Player other : fromGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
+							plugin.craftBukkit.sendForScoreboard(other, player, false);
+						for ( Player other : toGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
+							plugin.craftBukkit.sendForScoreboard(other, player, true);
+					}
 				}
 				else
 				{
@@ -168,12 +177,29 @@ class EventListener implements Listener
 			else
 			{
 				playerQuit(fromGame, event.getPlayer(), false);
-				plugin.playerManager.previousLocations.remove(event.getPlayer().getName()); // they left Killer, so forget where they should be put on leaving
+				
+				if ( toWorld != plugin.stagingWorld )
+					plugin.playerManager.previousLocations.remove(event.getPlayer().getName()); // they left Killer, so forget where they should be put on leaving
+
+				if ( Settings.filterScoreboard )
+					for ( Player other : fromGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
+						plugin.craftBukkit.sendForScoreboard(other, player, false);
 			}
 		}
 		else if ( nowInKiller )
 		{
 			plugin.playerManager.putPlayerInGame(event.getPlayer(), toGame);
+			
+			if ( Settings.filterScoreboard )
+			{
+				// hide everyone that isn't in this game!
+				for ( Player other : plugin.getServer().getOnlinePlayers() )
+					if ( other != player && plugin.getGameForWorld(other.getWorld()) != toGame )
+						plugin.craftBukkit.sendForScoreboard(player, other, false);
+				
+				for ( Player other : toGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
+					plugin.craftBukkit.sendForScoreboard(other, player, true);
+			}
 		}
 		
 		if ( event.getPlayer().getWorld() == plugin.stagingWorld )
@@ -632,33 +658,40 @@ class EventListener implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerJoin(PlayerJoinEvent event)
 	{
-		World world = event.getPlayer().getWorld();
-		if ( world == plugin.stagingWorld )
-		{
-			final String playerName = event.getPlayer().getName();
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-				public void run()
-				{
-					Player player = plugin.getServer().getPlayerExact(playerName);
-					if ( player != null )
-						if ( plugin.games.length == 1 && plugin.games[0].getGameState().usesGameWorlds )
-						{
-							plugin.playerManager.teleport(player, plugin.games[0].getGameMode().getSpawnLocation(player));
-							plugin.playerManager.putPlayerInGame(player, plugin.games[0]);
-						}
-						else
-							plugin.playerManager.putPlayerInStagingWorld(player);
-				}
-			});
-		}
-		else
-		{
-			Game game = plugin.getGameForWorld(world);
-			if ( game != null )
+		final World world = event.getPlayer().getWorld();
+		final Game game = plugin.getGameForWorld(world);
+		final String playerName = event.getPlayer().getName();
+		
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+			public void run()
 			{
-				plugin.playerManager.putPlayerInGame(event.getPlayer(), game);
-				plugin.stagingWorldManager.updateGameInfoSigns(game);
+				Player player = plugin.getServer().getPlayerExact(playerName);
+				if ( player == null )
+					return;
+
+				if ( world == plugin.stagingWorld )
+					if ( plugin.games.length == 1 && plugin.games[0].getGameState().usesGameWorlds )
+					{
+						plugin.playerManager.teleport(player, plugin.games[0].getGameMode().getSpawnLocation(player));
+						plugin.playerManager.putPlayerInGame(player, plugin.games[0]);
+					}
+					else
+						plugin.playerManager.putPlayerInStagingWorld(player);
+				
+				if ( Settings.filterScoreboard )
+				{// hide this person from the scoreboard of any games that they aren't in
+					for ( Game otherGame : plugin.games )
+						if ( otherGame != game )
+							for ( Player other : otherGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
+								plugin.craftBukkit.sendForScoreboard(other, player, false);
+				}
 			}
+		});
+		
+		if ( game != null )
+		{
+			plugin.playerManager.putPlayerInGame(event.getPlayer(), game);
+			plugin.stagingWorldManager.updateGameInfoSigns(game);
 		}
 	}
 	

@@ -11,6 +11,7 @@ public class Settings
 	
 	public static boolean
 	filterChat,
+	filterScoreboard,
 	allowPlayerLimits,
 	lateJoinersStartAsSpectator,
 	banOnDeath,
@@ -42,7 +43,8 @@ public class Settings
 		
 		lateJoinersStartAsSpectator = readBoolean(plugin, "lateJoinersStartAsSpectator", false);
 		allowPlayerLimits = readBoolean(plugin, "allowPlayerLimits", true);
-		filterChat = readBoolean(plugin, "filterChat", true); 
+		filterChat = readBoolean(plugin, "filterChat", true);
+		filterScoreboard = readBoolean(plugin, "filterScoreboard", true);
 		banOnDeath = readBoolean(plugin, "banOnDeath", false);
 		reportStats = readBoolean(plugin, "reportStats", true);
 		
