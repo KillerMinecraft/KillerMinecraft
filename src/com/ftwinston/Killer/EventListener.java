@@ -763,8 +763,8 @@ class EventListener implements Listener
 		if ( player == null )
 			return;
 		
-		if ( game.getGameMode().useDiscreetDeathMessages() )
-			pEvent.setDeathMessage(ChatColor.RED + player.getName() + " died");	
+		game.broadcastMessage(game.getGameMode().useDiscreetDeathMessages() ? ChatColor.RED + player.getName() + " died" : pEvent.getDeathMessage());
+		pEvent.setDeathMessage(""); // we only want the message to go to people in the game	
 		
 		// the only reason this is delayed is to avoid banning the player before they properly die, if we're banning players on death
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(game, player.getName(), false), 10);
