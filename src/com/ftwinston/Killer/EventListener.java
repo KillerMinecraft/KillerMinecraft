@@ -624,17 +624,18 @@ class EventListener implements Listener
 			return;
 		}
 		
+		boolean isVote = false;
 		if ( plugin.voteManager.isInVote() )
 		{
 			if ( event.getMessage().equalsIgnoreCase("Y") && plugin.voteManager.doVote(event.getPlayer(), true) )
 			{
 				event.setMessage(ChatColor.GREEN + "Y");
-				return;
+				isVote = true;
 			}
 			else if ( event.getMessage().equalsIgnoreCase("N") && plugin.voteManager.doVote(event.getPlayer(), false) )
 			{
 				event.setMessage(ChatColor.RED + "N");
-				return;
+				isVote = true;
 			}
 		}
 		
@@ -646,6 +647,9 @@ class EventListener implements Listener
 						&& plugin.getGameForWorld(recipient.getWorld()) != game )
 						event.getRecipients().remove(recipient);
 		}
+		
+		if ( isVote )
+			return;
 		
 		if ( game.getGameState() == GameState.finished || Helper.isAlive(game, event.getPlayer()) )
 		{// colored player names shouldn't produce colored messages ... spectator chat isn't special when the game is in the "finished" state.
