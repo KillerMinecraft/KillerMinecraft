@@ -144,13 +144,13 @@ class EventListener implements Listener
 		Game fromGame = plugin.getGameForWorld(event.getFrom());
 		Game toGame = plugin.getGameForWorld(toWorld);
 		
-		boolean wasInKiller = fromGame != null;
-		boolean nowInKiller = toGame != null;
+		boolean wasInGame = fromGame != null;
+		boolean nowInGame = toGame != null;
 		Player player = event.getPlayer();
 		
-		if ( wasInKiller )
+		if ( wasInGame )
 		{
-			if ( nowInKiller )
+			if ( nowInGame )
 			{
 				
 				if ( fromGame != toGame )
@@ -160,10 +160,13 @@ class EventListener implements Listener
 					
 					if ( Settings.filterScoreboard )
 					{// hide from old game, show for new
+						String name = fromGame.calculateColoredName(player);
 						for ( Player other : fromGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
-							plugin.craftBukkit.sendForScoreboard(other, player, false);
+							plugin.craftBukkit.sendForScoreboard(other, name, false);
+						
+						name = toGame.calculateColoredName(player);
 						for ( Player other : toGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
-							plugin.craftBukkit.sendForScoreboard(other, player, true);
+							plugin.craftBukkit.sendForScoreboard(other, name, true);
 					}
 				}
 				else
@@ -184,27 +187,45 @@ class EventListener implements Listener
 
 				if ( Settings.filterScoreboard )
 				{
+					String name = fromGame.calculateColoredName(player);
 					for ( Player other : fromGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
-						plugin.craftBukkit.sendForScoreboard(other, player, false);
+						plugin.craftBukkit.sendForScoreboard(other, name, false);
+					
+					// if game uses colored names, remove "colored" names for players in this game
+					if ( !fromGame.getGameMode().teamAllocationIsSecret() )
+						for ( Player other : fromGame.getOnlinePlayers() )
+							plugin.craftBukkit.sendForScoreboard(player, fromGame.calculateColoredName(other), false);
+					
 					// now add everyone that wasn't in this game to this player's scoreboard...
 					for ( Player other : plugin.getServer().getOnlinePlayers() )
 						plugin.craftBukkit.sendForScoreboard(player, other, true);
 				}
 			}
 		}
-		else if ( nowInKiller )
+		else if ( nowInGame )
 		{
 			plugin.playerManager.putPlayerInGame(event.getPlayer(), toGame);
 			
 			if ( Settings.filterScoreboard )
 			{
-				// hide everyone that isn't in this game!
-				for ( Player other : plugin.getServer().getOnlinePlayers() )
-					if ( other != player && plugin.getGameForWorld(other.getWorld()) != toGame )
+				// if game uses colored names, hide everyone then send the colored names for players in this game
+				if ( !toGame.getGameMode().teamAllocationIsSecret() )
+				{
+					for ( Player other : plugin.getServer().getOnlinePlayers() )
 						plugin.craftBukkit.sendForScoreboard(player, other, false);
+					
+					for ( Player other : toGame.getOnlinePlayers() )
+						plugin.craftBukkit.sendForScoreboard(player, toGame.calculateColoredName(other), true);
+				}
+				else // otherwise, just hide everyone that isn't in this game
+					for ( Player other : plugin.getServer().getOnlinePlayers() )
+						if ( other != player && plugin.getGameForWorld(other.getWorld()) != toGame )
+							plugin.craftBukkit.sendForScoreboard(player, other, false);
 				
-				for ( Player other : toGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
-					plugin.craftBukkit.sendForScoreboard(other, player, true);
+				// then send me to everyone in this game
+				String name = toGame.calculateColoredName(player);
+				for ( Player other : toGame.getOnlinePlayers() )
+					plugin.craftBukkit.sendForScoreboard(other, name, true);
 			}
 		}
 		

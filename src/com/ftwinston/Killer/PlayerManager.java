@@ -160,55 +160,6 @@ class PlayerManager
 			resetPlayer(game, player);
 	}
 	
-	public void colorPlayerName(Player player, Game game, ChatColor color)
-	{
-		String oldListName = player.getPlayerListName();
-		String displayName = ChatColor.stripColor(player.getDisplayName());
-		if( color != ChatColor.RESET )
-			displayName = color + displayName;
-		
-		if ( displayName.length() > 15 )
-			displayName = displayName.substring(0, 15);
-		
-		player.setDisplayName(displayName);
-		
-		// mustn't be > 16 chars, or it throws an exception
-		String listName = ChatColor.stripColor(player.getPlayerListName());
-		if ( color != ChatColor.RESET )
-			listName = color + listName;
-		if ( listName.length() > 15 )
-			listName = listName.substring(0, 15);
-		player.setPlayerListName(listName);
-		
-		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
-		for ( Player online : game.getOnlinePlayers() )
-			if ( !online.canSee(player) )
-			{
-				plugin.craftBukkit.sendForScoreboard(online, oldListName, false);
-				plugin.craftBukkit.sendForScoreboard(online, player, true);
-			}
-	}
-	
-	public void clearPlayerNameColor(Player player)
-	{
-		String oldListName = player.getPlayerListName();
-		Game game = plugin.getGameForPlayer(player);
-		
-		player.setDisplayName(ChatColor.stripColor(player.getDisplayName()));
-		player.setPlayerListName(ChatColor.stripColor(player.getPlayerListName()));
-		
-		if ( game == null )
-			return;
-		
-		// ensure this change occurs on the scoreboard of anyone I'm currently invisible to
-		for ( Player online : game.getOnlinePlayers() )
-			if ( online != player && !online.canSee(player) )
-			{
-				plugin.craftBukkit.sendForScoreboard(online, oldListName, false);
-				plugin.craftBukkit.sendForScoreboard(online, player, true);
-			}
-	}
-	
 	public void putPlayerInGame(Player player, Game game)
 	{
 		Info info = game.getPlayerInfo().get(player.getName());
@@ -259,12 +210,7 @@ class PlayerManager
 					plugin.craftBukkit.sendForScoreboard(online, player, true);
 		}
 		else
-		{
 			setAlive(game, player, true);
-			
-			if ( game.getGameState().usesGameWorlds && !game.getGameMode().teamAllocationIsSecret() )
-				colorPlayerName(player, game, game.getGameMode().getTeamChatColor(info.getTeam()));
-		}
 		if ( isNewPlayer )
 			game.getGameMode().sendGameModeHelpMessage(player);
 			
@@ -314,7 +260,17 @@ class PlayerManager
 			}
 			
 			if ( !game.getGameMode().teamAllocationIsSecret() )
-				plugin.playerManager.clearPlayerNameColor(online);
+			{// clear this player's name color (cos they're a spectator now), by removing name as it was when was alive, then sending it as it is when dead
+				info.setAlive(true);
+				String name = game.calculateColoredName(online);
+				for ( Player other : game.getOnlinePlayers() )
+					plugin.craftBukkit.sendForScoreboard(other, name, false);
+				
+				info.setAlive(false);
+				name = game.calculateColoredName(online);
+				for ( Player other : game.getOnlinePlayers() )
+					plugin.craftBukkit.sendForScoreboard(other, name, true);
+			}
 		}
 		
 		if ( Settings.banOnDeath )
@@ -429,9 +385,6 @@ class PlayerManager
 				for ( Material material : Settings.startingItems )
 					inv.addItem(new ItemStack(material));
 		}
-		
-		if ( !game.getGameMode().teamAllocationIsSecret() )
-			clearPlayerNameColor(player);
 	}
 	
 	private final double maxFollowSpectateRangeSq = 40 * 40, maxAcceptableOffsetDot = 0.65, farEnoughSpectateRangeSq = 35 * 35;

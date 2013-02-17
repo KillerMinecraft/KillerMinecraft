@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Difficulty;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -177,7 +178,7 @@ public class Game
 			
 			plugin.worldManager.deleteKillerWorlds(this, new Runnable() {
 				@Override
-				public void run() { // we need this to set the state to stagingWorldReady when done
+				public void run() {
 					setGameState(GameState.stagingWorldSetup);
 				}
 			});
@@ -392,4 +393,19 @@ public class Game
 		for ( Player player : getOnlinePlayers(recipients) )
 			player.sendMessage(message);
 	}
+	
+	public String calculateColoredName(Player player)
+	{
+		Info info = getPlayerInfo().get(player.getName());
+		
+		if ( getGameMode().teamAllocationIsSecret() || !info.isAlive() )
+			return player.getPlayerListName();
+		
+		String listName = player.getPlayerListName();
+		ChatColor color = getGameMode().getTeamChatColor(info.getTeam()); 
+		if ( listName.length() > 15 )
+			return color + listName.substring(0, 15);
+		
+		return color + listName;
+	}	
 }
