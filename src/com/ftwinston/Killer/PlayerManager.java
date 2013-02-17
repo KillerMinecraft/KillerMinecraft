@@ -181,7 +181,8 @@ class PlayerManager
 			game.getPlayerInfo().put(player.getName(), info);
 			
 			// this player is new for this game, so clear them down
-			resetPlayer(game, player);
+			if ( game.getGameState().usesGameWorlds )
+				resetPlayer(game, player);
 		}
 		else
 			isNewPlayer = false;
