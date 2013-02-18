@@ -24,6 +24,9 @@ import net.minecraft.server.v1_4_6.Packet205ClientCommand;
 import net.minecraft.server.v1_4_6.RegionFile;
 import net.minecraft.server.v1_4_6.RegionFileCache;
 import net.minecraft.server.v1_4_6.ServerNBTManager;
+import net.minecraft.server.v1_4_6.TileEntity;
+import net.minecraft.server.v1_4_6.TileEntityCommand;
+import net.minecraft.server.v1_4_6.World;
 import net.minecraft.server.v1_4_6.WorldGenNether;
 import net.minecraft.server.v1_4_6.WorldManager;
 import net.minecraft.server.v1_4_6.WorldServer;
@@ -32,7 +35,6 @@ import net.minecraft.server.v1_4_6.WorldType;
 
 import org.bukkit.Location;
 import org.bukkit.Server;
-import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_4_6.CraftServer;
@@ -196,7 +198,7 @@ public class v1_4_6 extends CraftBukkitAccess
 		return true;
 	}
 	
-	public void forceUnloadWorld(World world)
+	public void forceUnloadWorld(org.bukkit.World world)
 	{
 		world.setAutoSave(false);
 		for ( Player player : world.getPlayers() )
@@ -211,7 +213,7 @@ public class v1_4_6 extends CraftBukkitAccess
 			Field f = server.getClass().getDeclaredField("worlds");
 			f.setAccessible(true);
 			@SuppressWarnings("unchecked")
-			Map<String, World> worlds = (Map<String, World>)f.get(server);
+			Map<String, org.bukkit.World> worlds = (Map<String, org.bukkit.World>)f.get(server);
 			worlds.remove(world.getName().toLowerCase());
 			f.setAccessible(false);
 		}
@@ -226,19 +228,19 @@ public class v1_4_6 extends CraftBukkitAccess
 		ms.worlds.remove(ms.worlds.indexOf(craftWorld.getHandle()));
 	}
 	
-	public void accountForDefaultWorldDeletion(World newDefault)
+	public void accountForDefaultWorldDeletion(org.bukkit.World newDefault)
 	{
 		// playerFileData in the player list must point to that of the new default world, instead of the deleted original world
 		getMinecraftServer().getPlayerList().playerFileData = ((CraftWorld)newDefault).getHandle().getDataManager().getPlayerFileData();
 	}
 	
-	public World createWorld(org.bukkit.WorldType type, Environment env, String name, long seed, ChunkGenerator generator, String generatorSettings, boolean generateStructures)
+	public org.bukkit.World createWorld(org.bukkit.WorldType type, Environment env, String name, long seed, ChunkGenerator generator, String generatorSettings, boolean generateStructures)
     {
         final Server server = plugin.getServer();
         MinecraftServer console = getMinecraftServer();
         
         File folder = new File(server.getWorldContainer(), name);
-        World world = server.getWorld(name);
+        org.bukkit.World world = server.getWorld(name);
 
         if (world != null)
             return world;
@@ -349,5 +351,17 @@ public class v1_4_6 extends CraftBukkitAccess
 	public void pushButton(org.bukkit.block.Block b)
 	{
 		Block.STONE_BUTTON.interact(((CraftWorld)b.getWorld()).getHandle(), b.getX(), b.getY(), b.getZ(), null, 0, 0f, 0f, 0f);
+	}
+	
+	@Override
+	public void setCommandBlockCommand(org.bukkit.block.Block b, String command)
+	{
+		World world = ((CraftWorld)b.getWorld()).getHandle();
+		TileEntity tileEntity = world.getTileEntity(b.getX(), b.getY(), b.getZ());
+		if ( tileEntity == null || !(tileEntity instanceof TileEntityCommand) )
+			return;
+		
+		TileEntityCommand tec = (TileEntityCommand)tileEntity;
+		tec.b(command);
 	}
 }

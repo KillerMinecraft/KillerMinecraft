@@ -74,4 +74,5 @@ public abstract class CraftBukkitAccess
 	public abstract boolean createFlyingEnderEye(Player player, Location target);
 	
 	public abstract void pushButton(Block b);
+	public abstract void setCommandBlockCommand(Block b, String command);
 }
