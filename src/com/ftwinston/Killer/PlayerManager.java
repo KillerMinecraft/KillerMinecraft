@@ -148,10 +148,6 @@ class PlayerManager
 	public void reset(Game game)
 	{
 		game.getPlayerInfo().clear();
-		
-		if ( Settings.banOnDeath )
-			for ( OfflinePlayer player : plugin.getServer().getBannedPlayers() )
-				player.setBanned(false);
 	}
 	
 	public void startGame(Game game)
@@ -170,7 +166,7 @@ class PlayerManager
 			
 			if ( game == null || !game.getGameState().usesGameWorlds )
 				info = new Info(true);
-			else if ( Settings.lateJoinersStartAsSpectator )
+			else if ( !Settings.allowLateJoiners )
 				info = new Info(false);
 			else
 			{
@@ -274,11 +270,10 @@ class PlayerManager
 			}
 		}
 		
-		if ( Settings.banOnDeath )
+		if ( !Settings.allowSpectators )
 		{
-			player.setBanned(true);
 			if ( online != null )
-				online.kickPlayer("You died, and are now banned until the end of the game");
+				putPlayerInStagingWorld(online);
 		}
 	}
 	

@@ -734,7 +734,7 @@ class StagingWorldManager
 		if ( !game.usesPlayerLimit() && Settings.allowPlayerLimits )
 			StagingWorldGenerator.setupWallSign(b, (byte)0x2, "No player limit", "is set.", "Pull lever to", "apply a limit.");
 		
-		lockGame(game, gameLocked);
+		lockGame(game, gameLocked || (game.getGameState().usesGameWorlds && !Settings.allowLateJoiners && !Settings.allowSpectators));
 		
 		int portalX = StagingWorldGenerator.getGamePortalX(game.getNumber());
 		int signZ = StagingWorldGenerator.getGamePortalZ() + 2;
@@ -776,22 +776,26 @@ class StagingWorldManager
 		}
 		
 		b = stagingWorld.getBlockAt(portalX+1, StagingWorldGenerator.baseFloorY+2, signZ);
-		if ( gameLocked )
-			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "This game", "is full:", "no one else", "can join it");
-		else if ( game.getGameState().usesGameWorlds )
+		if ( game.getGameState().usesGameWorlds )
 		{
-			if ( gameFull )
+			if ( !Settings.allowLateJoiners && !Settings.allowSpectators )
+			{
+				StagingWorldGenerator.setupWallSign(b, (byte)0x3, "Game already", "started, no", "spectators", "allowed");
+			}
+			else if ( gameFull )
 				StagingWorldGenerator.setupWallSign(b, (byte)0x3, "This game", "is full:", "enter portal to", "specatate game");
 			else
 			{
 				String actionStr;
-				if ( Settings.lateJoinersStartAsSpectator || gameFull )
+				if ( gameFull || !Settings.allowLateJoiners )
 					actionStr = "spectate game";
 				else
 					actionStr = "join game";
 				StagingWorldGenerator.setupWallSign(b, (byte)0x3, "", "enter portal to", actionStr);
 			}
 		}
+		else if ( gameLocked )
+			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "This game", "is full:", "no one else", "can join it");
 		else
 			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "", "enter portal to", "set up a game");
 	}

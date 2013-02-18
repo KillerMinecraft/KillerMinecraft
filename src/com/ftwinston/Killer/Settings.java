@@ -13,8 +13,8 @@ public class Settings
 	filterChat,
 	filterScoreboard,
 	allowPlayerLimits,
-	lateJoinersStartAsSpectator,
-	banOnDeath,
+	allowSpectators,
+	allowLateJoiners,
 	reportStats,
 	autoRestartAtEndOfGame,
 	voteRestartAtEndOfGame;
@@ -41,11 +41,11 @@ public class Settings
 		else if ( maxSimultaneousGames > 8 )
 			maxSimultaneousGames = 8;
 		
-		lateJoinersStartAsSpectator = readBoolean(plugin, "lateJoinersStartAsSpectator", false);
+		allowLateJoiners = readBoolean(plugin, "allowLateJoiners", true);
 		allowPlayerLimits = readBoolean(plugin, "allowPlayerLimits", true);
 		filterChat = readBoolean(plugin, "filterChat", true);
 		filterScoreboard = readBoolean(plugin, "filterScoreboard", true);
-		banOnDeath = readBoolean(plugin, "banOnDeath", false);
+		allowSpectators = readBoolean(plugin, "allowSpectators", true);
 		reportStats = readBoolean(plugin, "reportStats", true);
 		
 		stagingWorldName = readString(plugin, "stagingWorldName", "staging");
