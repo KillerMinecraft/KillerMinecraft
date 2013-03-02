@@ -48,6 +48,7 @@ public abstract class GameMode implements Listener
 		return name;
 	}
 	
+	public boolean allowWorldOptionSelection() { return true; }
 	public Environment[] getWorldsToGenerate() { return new Environment[] { Environment.NORMAL, Environment.NETHER }; }
 	public void beforeWorldGeneration(int worldNumber, WorldConfig world) { }
 

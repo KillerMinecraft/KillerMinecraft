@@ -2,6 +2,7 @@ package com.ftwinston.Killer;
 
 import java.util.Random;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -400,9 +401,11 @@ class StagingWorldManager
 			else if ( z == StagingWorldGenerator.gameModeConfigButtonZ )
 				setCurrentOption(game, currentOption == StagingWorldOption.GAME_MODE_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE_CONFIG);
 			else if ( z == StagingWorldGenerator.worldButtonZ )
-				setCurrentOption(game, currentOption == StagingWorldOption.WORLD ? StagingWorldOption.NONE : StagingWorldOption.WORLD);
+				if ( game.getGameMode().allowWorldOptionSelection() )
+					setCurrentOption(game, currentOption == StagingWorldOption.WORLD ? StagingWorldOption.NONE : StagingWorldOption.WORLD);
 			else if ( z == StagingWorldGenerator.worldConfigButtonZ )
-				setCurrentOption(game, currentOption == StagingWorldOption.WORLD_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.WORLD_CONFIG);
+				if ( game.getGameMode().allowWorldOptionSelection() )
+					setCurrentOption(game, currentOption == StagingWorldOption.WORLD_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.WORLD_CONFIG);
 			else if ( z == StagingWorldGenerator.globalOptionButtonZ )
 				setCurrentOption(game, currentOption == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
 		}
@@ -414,6 +417,8 @@ class StagingWorldManager
 			switch ( currentOption )
 			{
 			case GAME_MODE:
+				boolean prevAllowedWorldOptions = game.getGameMode().allowWorldOptionSelection();
+				
 				// change mode
 				GameModePlugin gameMode = GameMode.get(num);
 				if ( game.getGameMode().getName().equals(gameMode.getName()) )
@@ -427,10 +432,26 @@ class StagingWorldManager
 				updateSetupOptionButtons(game, newValues, true);
 				
 				// update game mode sign
-				b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY+1, StagingWorldGenerator.gameModeButtonZ-1);
-				s = (Sign)b.getState();
+				s = (Sign)stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY+1, StagingWorldGenerator.gameModeButtonZ-1).getState();
 				StagingWorldGenerator.fitTextOnSign(s, gameMode.getName());
 				s.update();
+				
+				if ( prevAllowedWorldOptions != game.getGameMode().allowWorldOptionSelection() )
+				{
+					s = (Sign)stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY+1, StagingWorldGenerator.worldButtonZ-1).getState();
+					
+					if ( game.getGameMode().allowWorldOptionSelection() )
+					{// if this game mode doesn't let you choose the world option, set the default world option and update that sign
+						StagingWorldGenerator.fitTextOnSign(s, game.getWorldOption().getName());	
+					}
+					else // otherwise, ensure that sign is back to normal
+					{
+						game.setWorldOption(WorldOptionPlugin.getDefault());
+						StagingWorldGenerator.fitTextOnSign(s, ChatColor.BOLD + "Disabled by " + ChatColor.BOLD + "game mode");
+					}
+
+					s.update();
+				}
 				break;
 			case GAME_MODE_CONFIG:
 				// toggle this option

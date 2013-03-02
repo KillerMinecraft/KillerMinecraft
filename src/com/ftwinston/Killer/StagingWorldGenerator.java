@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -211,7 +212,11 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					Sign s = (Sign)b.getState();
 					s.setLine(0, "World:");
 					
-					fitTextOnSign(s, WorldOptionPlugin.getDefault().getName());
+					if ( GameModePlugin.getDefault().createInstance().allowWorldOptionSelection() )
+						fitTextOnSign(s, WorldOptionPlugin.getDefault().getName());
+					else
+						fitTextOnSign(s, ChatColor.BOLD + "Disabled by " + ChatColor.BOLD + "game mode");
+					
 					s.update();
 				}
 				b = getBlockAbs(chunk, mainButtonX, buttonY, worldButtonZ-1);
@@ -932,6 +937,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		if ( text.length() <= 15 )
 		{
 			s.setLine(2, text);
+			s.setLine(3, "");
 			return;
 		}
 		
