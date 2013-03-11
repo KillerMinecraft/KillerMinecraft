@@ -130,8 +130,10 @@ class WorldManager
 		if ( plugin.stagingWorldIsServerDefault )
 			plugin.stagingWorld = plugin.getServer().getWorlds().get(0);
 
+		StagingWorldGenerator generator = new StagingWorldGenerator(); 
+		
 		plugin.stagingWorld = new WorldCreator(name)
-			.generator(new StagingWorldGenerator())
+			.generator(generator)
 			.environment(Environment.THE_END)
 			.createWorld();
 		
@@ -140,6 +142,8 @@ class WorldManager
 		plugin.stagingWorld.setPVP(false);
 		plugin.stagingWorld.setAutoSave(false); // don't save changes to the staging world
 
+		generator.saveWorldInfo(plugin, plugin.stagingWorld);
+		
 		plugin.stagingWorldManager = new StagingWorldManager(plugin, plugin.stagingWorld);
 		plugin.arenaManager = new ArenaManager(plugin, plugin.stagingWorld);
 		

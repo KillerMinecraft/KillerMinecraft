@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Difficulty;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.command.Command;
@@ -11,9 +12,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
+import com.ftwinston.Killer.Game.GameState;
+import com.ftwinston.Killer.StagingWorldManager.StagingWorldOption;
+
 public class CommandHandler
 {
-
 	public static boolean spectatorCommand(Killer plugin, CommandSender sender, Command cmd, String label, String[] args)
 	{
 		if ( !(sender instanceof Player) )
@@ -240,5 +243,424 @@ public class CommandHandler
 			sender.sendMessage("Invalid parameter: " + args[0] + " - type /killer to list allowed parameters");
 		
 		return true;
-	} 
+	}
+	
+	public static boolean stagingWorldCommand(Killer plugin, CommandSender sender, Command cmd, String label, String[] args)
+	{
+/*
+Command block commands will be as follows:
+
+|setup game X start
+|setup game X confirm
+|setup game X cancel
+|setup game X difficulty up
+|setup game X difficulty down
+|setup game X monsters up
+|setup game X monsters down
+|setup game X animals up
+|setup game X animals down
+|setup game X show modes
+|setup game X show worlds
+|setup game X show modeconfig
+|setup game X show worldconfig
+|setup game X show misc
+setup game X option Y
+setup game X playerlimit on/off/up/down
+
+setup game X include @p
+setup game X exclude @p
+
+setup arena X spleef
+setup arena X survival
+setup arena X reset
+setup arena X equip @p
+
+setup tp @p pos CX CY CZ
+setup tp @p game X
+setup tp @p game X else CX CY CZ
+setup tp @p exit
+
+setup block TYPE DATA CX CY CZ
+setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
+*/
+		if ( args.length < 3 )
+		{
+			plugin.log.warning("Invalid command: too few arguments");
+			return true;
+		}
+		
+		if ( args[0] == "game" )
+		{
+			int num;
+			try
+			{
+				num = Integer.parseInt(args[1]);
+			}
+			catch ( NumberFormatException ex )
+			{
+				plugin.log.warning("Command error: invalid game #: " + args[1]);
+				return true;
+			}
+			
+			if ( num > 0 && num <= plugin.games.length )
+				gameCommand(plugin, plugin.games[num-1], args);
+			else
+				plugin.log.warning("Command error: no game #" + num);
+		}
+		else if ( args[0] == "arena" )
+		{
+			int num;
+			try
+			{
+				num = Integer.parseInt(args[1]);
+			}
+			catch ( NumberFormatException ex )
+			{
+				plugin.log.warning("Command error: invalid arena #: " + args[1]);
+				return true;
+			}
+			
+			if ( num > 0 && num <= 1) // how to tell how many arenas we have?
+				arenaCommand(plugin, num-1, args);
+			else
+				plugin.log.warning("Command error: no arena #" + num);
+		}
+		else if ( args[0] == "tp" )
+		{
+			teleportCommand(plugin, args);
+		}
+		else if ( args[0] == "block" )
+		{
+			
+		}
+		return true;
+	}
+	
+	private static void gameCommand(Killer plugin, Game game, String[] args)
+	{
+		String cmd = args[2];
+		if ( cmd == "start" ) 
+		{
+			if ( game.getOnlinePlayers().size() >= game.getGameMode().getMinPlayers() )
+			{
+				plugin.stagingWorldManager.setCurrentOption(game, StagingWorldOption.NONE);
+				game.setGameState(GameState.waitingToGenerate);
+			}
+			else
+				game.setGameState(GameState.stagingWorldConfirm);
+		}
+		else if ( cmd == "confirm" ) 
+		{
+			plugin.stagingWorldManager.setCurrentOption(game, StagingWorldOption.NONE);
+			game.setGameState(GameState.waitingToGenerate);
+		}
+		else if ( cmd == "cancel" )
+			game.setGameState(GameState.stagingWorldSetup);
+		if ( cmd == "difficulty" )
+			changeDifficulty(plugin, game, args.length > 3 ? args[3] : "");
+		else if ( cmd == "monsters" )
+			changeMonsterNumbers(plugin, game, args.length > 3 ? args[3] : "");
+		else if ( cmd == "animals" )
+			changeAnimalNumbers(plugin, game, args.length > 3 ? args[3] : "");
+		else if ( cmd == "show" )
+			showGameOption(plugin, game, args.length > 3 ? args[3] : "");
+		else if ( cmd == "option" )
+			gameOptionChanged(plugin, game, args.length > 3 ? args[3] : "");
+		else if ( cmd == "playerlimit" )
+			gamePlayerLimit(plugin, game, args.length > 3 ? args[3] : "");
+		else if ( cmd == "include" ) 
+		{
+			if ( args.length <= 3 )
+			{
+				plugin.log.warning("Player name not specified");
+				return;
+			}
+			
+			Player player = plugin.getServer().getPlayer(args[3]);
+			if ( player == null || !player.isOnline() )
+			{
+				plugin.log.warning("Player not found: " + args[3]);
+				return;									
+			}
+			
+			if ( game.getGameState().usesGameWorlds )
+			{
+				if ( !Settings.allowLateJoiners )
+				{
+					plugin.log.warning("Cannot join: game is in progress");
+					return;
+				}
+				if ( game.usesPlayerLimit() && game.getPlayers().size() >= game.getPlayerLimit() )
+				{
+					plugin.log.warning("Cannot join: game is full");
+					return;
+				}
+				
+				plugin.playerManager.teleport(player, game.getGameMode().getSpawnLocation(player));
+			}
+			else
+				player.teleport(plugin.stagingWorldManager.getGameSetupSpawnLocation(game.getNumber()));
+			plugin.playerManager.putPlayerInGame(player, game);
+			plugin.stagingWorldManager.updateGameInfoSigns(game);
+		}
+		else if ( cmd == "exclude" ) 
+		{
+			if ( args.length <= 3 )
+			{
+				plugin.log.warning("Player name not specified");
+				return;
+			}
+			
+			Player player = plugin.getServer().getPlayer(args[3]);
+			if ( player == null || !player.isOnline() )
+			{
+				plugin.log.warning("Player not found: " + args[3]);
+				return;									
+			}
+			
+			plugin.playerManager.removePlayerFromGame(player, game);
+			plugin.stagingWorldManager.updateGameInfoSigns(game);
+		}
+		else
+			plugin.log.warning("Invalid game command: " + cmd);
+	}
+
+	private static void gamePlayerLimit(Killer plugin, Game game, String cmd)
+	{
+		if ( cmd == "on")
+			game.setUsesPlayerLimit(true);
+		else if ( cmd == "off")
+			game.setUsesPlayerLimit(false);
+		else if ( cmd == "up")
+		{
+			int limit = game.getPlayerLimit();
+			if ( limit < Settings.maxPlayerLimit )
+				game.setPlayerLimit(limit+1);
+			else
+				return;
+		}
+		else if ( cmd == "down")
+		{
+			int limit = game.getPlayerLimit();
+			if ( limit > Settings.minPlayerLimit )
+				game.setPlayerLimit(limit - 1);
+			else
+				return;
+		}
+		else
+		{
+			plugin.log.warning("Invalid player limit command - expected on/off/up/down, got: " + cmd);
+			return;
+		}
+		
+		plugin.stagingWorldManager.updateGameInfoSigns(game);
+	}
+
+	private static void changeDifficulty(Killer plugin, Game game, String param)
+	{
+		if ( param == "up ")
+		{
+			if ( game.getDifficulty().getValue() < Difficulty.HARD.getValue() )
+			{
+				game.setDifficulty(Difficulty.getByValue(game.getDifficulty().getValue()+1));
+				plugin.stagingWorldManager.updateSign(game, StagingWorldManager.GameSign.DIFFICULTY);
+			}
+		}
+		else if ( param == "down" )
+		{
+			if ( game.getDifficulty().getValue() > Difficulty.PEACEFUL.getValue() )
+			{
+				game.setDifficulty(Difficulty.getByValue(game.getDifficulty().getValue()-1));
+				plugin.stagingWorldManager.updateSign(game, StagingWorldManager.GameSign.DIFFICULTY);
+			}
+		}
+		else
+			plugin.log.warning("Invalid difficulty parameter, expected up/down, got: " + param);
+	}
+
+	private static void changeMonsterNumbers(Killer plugin, Game game, String param)
+	{
+		if ( param == "up ")
+		{
+			if ( game.monsterNumbers < Game.maxQuantityNum )
+			{
+				game.monsterNumbers++;
+				plugin.stagingWorldManager.updateSign(game, StagingWorldManager.GameSign.ANIMALS);
+			}
+		}
+		else if ( param == "down" )
+		{
+			if ( game.monsterNumbers > Game.minQuantityNum )
+			{
+				game.monsterNumbers--;
+				plugin.stagingWorldManager.updateSign(game, StagingWorldManager.GameSign.ANIMALS);
+			}
+		}
+		else
+			plugin.log.warning("Invalid monster number parameter, expected up/down, got: " + param);
+	}
+	
+	private static void changeAnimalNumbers(Killer plugin, Game game, String param)
+	{
+		if ( param == "up ")
+		{
+			if ( game.animalNumbers < Game.maxQuantityNum )
+			{
+				game.animalNumbers++;
+				plugin.stagingWorldManager.updateSign(game, StagingWorldManager.GameSign.ANIMALS);
+			}
+		}
+		else if ( param == "down" )
+		{
+			if ( game.animalNumbers > Game.minQuantityNum )
+			{
+				game.animalNumbers--;
+				plugin.stagingWorldManager.updateSign(game, StagingWorldManager.GameSign.ANIMALS);
+			}
+		}
+		else
+			plugin.log.warning("Invalid animal number parameter, expected up/down, got: " + param);
+	}
+
+	private static void showGameOption(Killer plugin, Game game, String option)
+	{
+		if ( option == "modes")
+			plugin.stagingWorldManager.setCurrentOption(game, plugin.stagingWorldManager.getCurrentOption(game) == StagingWorldOption.GAME_MODE ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE);
+		else if ( option == "worlds")
+			plugin.stagingWorldManager.setCurrentOption(game, plugin.stagingWorldManager.getCurrentOption(game) == StagingWorldOption.WORLD ? StagingWorldOption.NONE : StagingWorldOption.WORLD);
+		else if ( option == "modeconfig")
+			plugin.stagingWorldManager.setCurrentOption(game, plugin.stagingWorldManager.getCurrentOption(game) == StagingWorldOption.GAME_MODE_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE_CONFIG);
+		else if ( option == "worldconfig")
+			plugin.stagingWorldManager.setCurrentOption(game, plugin.stagingWorldManager.getCurrentOption(game) == StagingWorldOption.WORLD_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.WORLD_CONFIG);
+		else if ( option == "misc")
+			plugin.stagingWorldManager.setCurrentOption(game, plugin.stagingWorldManager.getCurrentOption(game) == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
+		else
+			plugin.log.warning("Invalid game show option: " + option);
+	}
+	
+	private static void gameOptionChanged(Killer plugin, Game game, String optionNum)
+	{
+		int num;
+		try
+		{
+			num = Integer.parseInt(optionNum);
+		}
+		catch ( NumberFormatException ex )
+		{
+			plugin.log.warning("Command error: invalid option #: " + optionNum);
+			return;
+		}
+		
+		plugin.stagingWorldManager.gameOptionButtonPressed(game, plugin.stagingWorldManager.getCurrentOption(game), num);
+	}
+	
+	private static void arenaCommand(Killer plugin, int arena, String[] args)
+	{
+		String cmd = args[2];
+		if ( cmd == "spleef" )
+		{
+		
+		}
+		else if ( cmd == "survival" )
+		{
+		
+		}
+		else if ( cmd == "reset" )
+		{
+		
+		}
+		else if ( cmd == "equip" )
+		{
+			if ( args.length < 4 )
+			{
+				plugin.log.warning("Invalid arena command: missing player name");
+				return;
+			}
+
+			
+		}
+		else
+			plugin.log.warning("Invalid arena command: " + cmd);
+	}
+	
+	private static void teleportCommand(Killer plugin, String[] args)
+	{
+		String playerName = args[1];
+		String cmd = args[2];
+		
+		if ( cmd == "exit" )
+		{
+			// teleport out of killer
+		}
+		else if ( cmd == "pos" )
+		{
+			if ( args.length < 6 )
+			{
+				plugin.log.warning("Teleport command error: incomplete coordinates provided");
+				return;
+			}
+			int cx, cy, cz;
+			
+			try
+			{
+				cx = Integer.parseInt(args[3]);
+				cy = Integer.parseInt(args[4]);
+				cz = Integer.parseInt(args[5]);
+			}
+			catch ( NumberFormatException ex )
+			{
+				plugin.log.warning("Teleport command error: invalid coordinates #: " + args[3] + " " + args[4] + " " + args[5]);
+				return;
+			}
+			
+			// teleport to the provided coordinates
+		}
+		else if ( cmd == "game" )
+		{
+			int num;
+			try
+			{
+				num = Integer.parseInt(args[3]);
+				if ( num < 0 || num > plugin.games.length)
+				{
+					plugin.log.warning("Teleport command error: no game #" + num);
+					return;
+				}
+			}
+			catch ( NumberFormatException ex )
+			{
+				plugin.log.warning("Teleport command error: invalid game #: " + args[3]);
+				return;
+			}
+			
+			Game game = plugin.games[num-1];
+			
+			if ( game.getGameState().usesGameWorlds )
+			{
+				; // teleport into this game
+				return;
+			}
+			
+			if ( args.length > 7 && args[4] == "else" )
+			{
+				int cx, cy, cz;
+				
+				try
+				{
+					cx = Integer.parseInt(args[5]);
+					cy = Integer.parseInt(args[6]);
+					cz = Integer.parseInt(args[7]);
+				}
+				catch ( NumberFormatException ex )
+				{
+					plugin.log.warning("Teleport command error: invalid coordinates #: " + args[5] + " " + args[6] + " " + args[7]);
+					return;
+				}
+				
+				// teleport to the provided coordinates
+			}
+		}
+		else
+			plugin.log.warning("Invalid teleport command: " + cmd);
+	}
 }

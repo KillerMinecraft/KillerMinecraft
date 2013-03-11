@@ -1,11 +1,14 @@
 package com.ftwinston.Killer;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -57,6 +60,55 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public static int getGamePortalZ() { return getWallMaxZ() - 13; }
 	
+	List<String> worldInfo = new ArrayList<String>();
+	public void saveWorldInfo(Killer plugin, World stagingWorld)
+	{
+		File infoFile = new File(stagingWorld.getWorldFolder(), "killer.txt");
+		try
+		{
+			infoFile.createNewFile();
+		}
+		catch (IOException e1)
+		{
+			e1.printStackTrace();
+			return;
+		}
+		
+		if ( !infoFile.exists() || !infoFile.canWrite() )
+		{
+			plugin.log.warning("Cant find/write killer.txt in staging world folder!");
+			return;
+		}
+		
+		FileWriter fw;
+		try
+		{
+			fw = new FileWriter(infoFile);
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+			return;
+		}
+
+		try
+		{
+			BufferedWriter bw = new BufferedWriter(fw);
+			
+			for ( String line : worldInfo )
+			{
+				bw.write(line);
+				bw.write('\n');
+			}					
+						
+			bw.close();
+			fw.close();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	@Override
     public List<BlockPopulator> getDefaultPopulators(World world) {
         return Arrays.asList((BlockPopulator)new StagingWorldPopulator(this));
@@ -101,6 +153,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			Material wool = Material.WOOL;
 			Material button = Material.STONE_BUTTON;
+			Material command = Material.COMMAND;
 			Block b;
 			
 			for ( int game = 0; game < Settings.maxSimultaneousGames; game++ )
@@ -159,11 +212,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				{
 					b.setType(Material.WALL_SIGN);
 					b.setData((byte)0x5);
-					Sign s = (Sign)b.getState();
-					s.setLine(0, "Game mode:");
-					
-					fitTextOnSign(s, GameModePlugin.getDefault().getName());
-					s.update();
+					worldInfo.add("sign " + b.getX() + " " + b.getY() + " " + b.getZ() + " GAME_MODE " + game);
 				}
 				b = getBlockAbs(chunk, mainButtonX, buttonY, gameModeButtonZ-1);
 				if ( b != null )
@@ -180,6 +229,12 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(button);
 					b.setData((byte)0x1);
 				}
+				b = getBlockAbs(chunk, wallMinX-1, buttonY, gameModeButtonZ);
+				if ( b != null )
+				{
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " show modes");
+				}
 				
 				b = getBlockAbs(chunk, wallMinX, buttonY, gameModeConfigButtonZ);
 				if ( b != null )
@@ -192,6 +247,12 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				{
 					b.setType(button);
 					b.setData((byte)0x1);
+				}
+				b = getBlockAbs(chunk, wallMinX-1, buttonY, gameModeConfigButtonZ);
+				if ( b != null )
+				{
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " show modeconfig");
 				}
 				
 				
@@ -209,15 +270,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				{
 					b.setType(Material.WALL_SIGN);
 					b.setData((byte)0x5);
-					Sign s = (Sign)b.getState();
-					s.setLine(0, "World:");
-					
-					if ( GameModePlugin.getDefault().createInstance().allowWorldOptionSelection() )
-						fitTextOnSign(s, WorldOptionPlugin.getDefault().getName());
-					else
-						fitTextOnSign(s, ChatColor.BOLD + "Disabled by " + ChatColor.BOLD + "game mode");
-					
-					s.update();
+					worldInfo.add("sign " + b.getX() + " " + b.getY() + " " + b.getZ() + " WORLD_OPTION " + game);
 				}
 				b = getBlockAbs(chunk, mainButtonX, buttonY, worldButtonZ-1);
 				if ( b != null )
@@ -234,6 +287,12 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(button);
 					b.setData((byte)0x1);
 				}
+				b = getBlockAbs(chunk, wallMinX-1, buttonY, worldButtonZ);
+				if ( b != null )
+				{
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " show worlds");
+				}
 				
 				b = getBlockAbs(chunk, wallMinX, buttonY, worldConfigButtonZ);
 				if ( b != null )
@@ -247,6 +306,12 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(button);
 					b.setData((byte)0x1);
 				}
+				b = getBlockAbs(chunk, wallMinX-1, buttonY, worldConfigButtonZ);
+				if ( b != null )
+				{
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " show worldconfig");
+				}
 				
 				b = getBlockAbs(chunk, wallMinX, buttonY, difficultyButtonZ);
 				if ( b != null )
@@ -258,7 +323,9 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				b = getBlockAbs(chunk, mainButtonX, buttonY, difficultyButtonZ);
 				if ( b != null )
 				{
-					setupWallSign(b, (byte)0x5, "", "Difficulty:", capitalize(Game.defaultDifficulty.name()), "");
+					b.setType(Material.WALL_SIGN);
+					b.setData((byte)0x5);
+					worldInfo.add("sign " + b.getX() + " " + b.getY() + " " + b.getZ() + " DIFFICULTY " + game);
 					
 					b = b.getRelative(0, 1, 0);
 					b.setType(Material.WOOD_BUTTON);
@@ -267,6 +334,17 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b = b.getRelative(0, -2, 0);
 					b.setType(Material.WOOD_BUTTON);
 					b.setData((byte)0x1);
+				}
+				b = getBlockAbs(chunk, wallMinX-1, buttonY, difficultyButtonZ);
+				if ( b != null )
+				{
+					b = b.getRelative(0, 1, 0);
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " difficulty up");
+					
+					b = b.getRelative(0, -2, 0);
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " difficulty down");
 				}
 				
 				b = getBlockAbs(chunk, wallMinX, buttonY, monstersButtonZ);
@@ -278,8 +356,10 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				
 				b = getBlockAbs(chunk, mainButtonX, buttonY, monstersButtonZ);
 				if ( b != null )
-				{
-					setupWallSign(b, (byte)0x5, "", "Monsters:", getQuantityText(Game.defaultMonsterNumbers), "");
+				{					
+					b.setType(Material.WALL_SIGN);
+					b.setData((byte)0x5);
+					worldInfo.add("sign " + b.getX() + " " + b.getY() + " " + b.getZ() + " MONSTERS " + game);
 					
 					b = b.getRelative(0, 1, 0);
 					b.setType(Material.WOOD_BUTTON);
@@ -288,6 +368,17 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b = b.getRelative(0, -2, 0);
 					b.setType(Material.WOOD_BUTTON);
 					b.setData((byte)0x1);
+				}
+				b = getBlockAbs(chunk, wallMinX-1, buttonY, monstersButtonZ);
+				if ( b != null )
+				{
+					b = b.getRelative(0, 1, 0);
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " monsters up");
+					
+					b = b.getRelative(0, -2, 0);
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " monsters down");
 				}
 				
 				b = getBlockAbs(chunk, wallMinX, buttonY, animalsButtonZ);
@@ -300,7 +391,9 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				b = getBlockAbs(chunk, mainButtonX, buttonY, animalsButtonZ);
 				if ( b != null )
 				{
-					setupWallSign(b, (byte)0x5, "", "Animals:", getQuantityText(Game.defaultAnimalNumbers), "");
+					b.setType(Material.WALL_SIGN);
+					b.setData((byte)0x5);
+					worldInfo.add("sign " + b.getX() + " " + b.getY() + " " + b.getZ() + " MONSTERS " + game);
 					
 					b = b.getRelative(0, 1, 0);
 					b.setType(Material.WOOD_BUTTON);
@@ -309,6 +402,17 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b = b.getRelative(0, -2, 0);
 					b.setType(Material.WOOD_BUTTON);
 					b.setData((byte)0x1);
+				}
+				b = getBlockAbs(chunk, wallMinX-1, buttonY, animalsButtonZ);
+				if ( b != null )
+				{
+					b = b.getRelative(0, 1, 0);
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " animals up");
+					
+					b = b.getRelative(0, -2, 0);
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " animals down");
 				}
 
 				for ( int y=floorY + 1; y < floorY + 4; y++ )
@@ -335,6 +439,12 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				{
 					b.setType(button);
 					b.setData((byte)0x1);
+				}
+				b = getBlockAbs(chunk, wallMinX-1, buttonY, globalOptionButtonZ);
+				if ( b != null )
+				{
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " show misc");
 				}
 				
 				// start button and red surround
@@ -364,7 +474,24 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					b.setType(button);
 					b.setData((byte)0x3);
 				}
-				
+				b = getBlockAbs(chunk, startButtonX, buttonY, wallMinZ-1);
+				if ( b != null )
+				{
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " start");
+				}
+				b = getBlockAbs(chunk, startButtonX-1, buttonY, wallMinZ-1);
+				if ( b != null )
+				{
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " cancel");
+				}
+				b = getBlockAbs(chunk, startButtonX+1, buttonY, wallMinZ-1);
+				if ( b != null )
+				{
+					b.setType(command);
+					Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " confirm");
+				}
 				
 				// if there's only one setup room, it links to the spleef arena. Otherwise, they're all separate.
 				if ( Settings.maxSimultaneousGames != 1 )
@@ -485,6 +612,19 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 							b = b.getRelative(0, -2, 0);
 							b.setType(Material.WOOD_BUTTON);
 							b.setData((byte)0x4);
+						}
+						
+
+						b = getBlockAbs(chunk, mainButtonX, floorY + 2, wallMaxZ+1);
+						if ( b != null )
+						{
+							b = b.getRelative(0, 1, 0);
+							b.setType(command);
+							Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " playerlimit up");
+							
+							b = b.getRelative(0, -2, 0);
+							b.setType(command);
+							Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup game " + (game+1) + " playerlimit down");
 						}
 					}
 				}
@@ -932,6 +1072,13 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		s.update();
 	}
 	
+	public static void setSignLine(Block b, int line, String text)
+	{
+		Sign s = (Sign)b.getState();
+		s.setLine(line,  text);
+		s.update();
+	}
+	
 	public static void fitTextOnSign(Sign s, String text)
 	{
 		if ( text.length() <= 15 )
@@ -958,6 +1105,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			else
 				s.setLine(3, "");
 		}
+		s.update();
 	}
 	
 	public static String[] splitTextForSign(String text)
