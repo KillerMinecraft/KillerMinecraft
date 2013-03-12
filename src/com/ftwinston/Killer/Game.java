@@ -1,23 +1,30 @@
 package com.ftwinston.Killer;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Difficulty;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Recipe;
 
 import com.ftwinston.Killer.PlayerManager.Info;
+import com.ftwinston.Killer.StagingWorldManager.GameSign;
+import com.ftwinston.Killer.StagingWorldManager.StagingWorldOption;
 import com.ftwinston.Killer.StagingWorldManager.StartButtonState;
 
 public class Game
@@ -31,6 +38,15 @@ public class Game
 	{
 		plugin = killer;
 		number = gameNumber;
+	}
+	
+	public void initStagingWorld()
+	{
+		updateIndicators();
+		
+		for ( Entry<GameSign, ArrayList<Location>> entry : signs.entrySet() )
+			for ( Location loc : entry.getValue() )
+				initSign(entry.getKey(), loc.getBlock());
 	}
 	
 	public int getNumber() { return number; }
@@ -403,5 +419,182 @@ public class Game
 			return color + listName.substring(0, 15);
 		
 		return color + listName;
-	}	
+	}
+	
+	private StagingWorldOption currentOption = StagingWorldOption.NONE;
+	private EnumMap<GameSign, ArrayList<Location>> signs = new EnumMap<GameSign, ArrayList<Location>>(GameSign.class);
+	private EnumMap<StagingWorldOption, ArrayList<Location>> indicators = new EnumMap<StagingWorldOption, ArrayList<Location>>(StagingWorldOption.class);
+	
+	public StagingWorldOption getCurrentOption() { return currentOption; }
+	public void setCurrentOption(StagingWorldOption option)
+	{		
+		if ( option == currentOption )
+			return;
+		
+		// disable whatever's currently on
+		updateIndicator(currentOption, false);
+		plugin.stagingWorldManager.hideSetupOptionButtons(this);
+		
+		currentOption = option;
+		
+		String[] labels;
+		boolean[] values;
+		Option[] options;
+		
+		// now set up the new option
+		updateIndicator(currentOption, true);
+		switch ( currentOption )
+		{
+		case GAME_MODE:
+			labels = new String[GameMode.gameModes.size()];
+			values = new boolean[labels.length];
+			for ( int i=0; i<labels.length; i++ )
+			{
+				GameModePlugin mode = GameMode.gameModes.get(i); 
+				labels[i] = mode.getName();
+				values[i] = mode.getName().equals(getGameMode().getName());
+			}
+			plugin.stagingWorldManager.showSetupOptionButtons(this, "Game mode:", true, labels, values);
+			break;
+		case GAME_MODE_CONFIG:
+			options = getGameMode().getOptions();
+			labels = new String[options.length];
+			values = new boolean[options.length];
+			for ( int i=0; i<options.length; i++ )
+			{
+				labels[i] = options[i].getName();
+				values[i] = options[i].isEnabled();
+			}
+			plugin.stagingWorldManager.showSetupOptionButtons(this, "Mode option:", false, labels, values);
+			break;
+		case WORLD:
+			labels = new String[WorldOption.worldOptions.size()];
+			values = new boolean[labels.length];
+			for ( int i=0; i<labels.length; i++ )
+			{
+				WorldOptionPlugin worldOption = WorldOption.worldOptions.get(i); 
+				labels[i] = worldOption.getName();
+				values[i] = worldOption.getName().equals(getWorldOption().getName());
+			}
+			plugin.stagingWorldManager.showSetupOptionButtons(this, "World:", false, labels, values);
+			break;
+		case WORLD_CONFIG:
+			options = getWorldOption().getOptions();
+			labels = new String[options.length];
+			values = new boolean[options.length];
+			for ( int i=0; i<options.length; i++ )
+			{
+				labels[i] = options[i].getName();
+				values[i] = options[i].isEnabled();
+			}
+			plugin.stagingWorldManager.showSetupOptionButtons(this, "World option:", false, labels, values);
+			break;
+		case GLOBAL_OPTION:
+			labels = new String[] { "Craftable monster eggs", "Easier dispenser recipe", "Eyes of ender find nether fortresses" };
+			values = new boolean[] { true, true, true, true };
+			plugin.stagingWorldManager.showSetupOptionButtons(this, "Global option:", false, labels, values);
+			break;
+		}
+	}
+	
+	public void addSign(int x, int y, int z, GameSign type)
+	{
+		if ( signs.containsKey(type) )
+			signs.get(type).add(new Location(plugin.stagingWorld, x, y, z));
+		else
+		{
+			ArrayList<Location> vals = new ArrayList<Location>();
+			vals.add(new Location(plugin.stagingWorld, x, y, z));
+			signs.put(type, vals);
+		}
+	}
+	
+	public void addIndicator(int x, int y, int z, StagingWorldOption type)
+	{
+		if ( indicators.containsKey(type) )
+			indicators.get(type).add(new Location(plugin.stagingWorld, x, y, z));
+		else
+		{
+			ArrayList<Location> vals = new ArrayList<Location>();
+			vals.add(new Location(plugin.stagingWorld, x, y, z));
+			indicators.put(type, vals);
+		}
+	}
+	
+	public void updateIndicators()
+	{
+		for ( Entry<StagingWorldOption, ArrayList<Location>> entry : indicators.entrySet() )
+			for ( Location loc : entry.getValue() )
+				plugin.stagingWorld.getBlockAt(loc).setData(currentOption == entry.getKey() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+	}
+	
+	private void updateIndicator(StagingWorldOption option, boolean on)
+	{
+		ArrayList<Location> list = indicators.get(option);
+		if ( list != null )
+			for ( Location loc : list )
+				loc.getBlock().setData(on ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
+	}
+	
+	private void initSign(GameSign type, Block block)
+	{
+		switch ( type )
+		{
+		case DIFFICULTY:
+			StagingWorldGenerator.setSignLine(block, 1, "Difficulty:");
+			break;
+		case MONSTERS:
+			StagingWorldGenerator.setSignLine(block, 1, "Monsters:");
+			break;
+		case ANIMALS:
+			StagingWorldGenerator.setSignLine(block, 1, "Animals:");
+			break;
+		case GAME_MODE:
+			StagingWorldGenerator.setSignLine(block, 0, "Game mode:");
+			break;
+		case WORLD_OPTION:
+			StagingWorldGenerator.setSignLine(block, 0, "World:");
+			break;
+		}
+		
+		updateSign(type, block);
+	}
+
+	private void updateSign(GameSign type, Block block)
+	{
+		switch ( type )
+		{
+		case DIFFICULTY:
+			StagingWorldGenerator.setSignLine(block, 2, StagingWorldGenerator.capitalize(getDifficulty().name()));
+			break;
+		case MONSTERS:
+			StagingWorldGenerator.setSignLine(block, 2, StagingWorldGenerator.getQuantityText(monsterNumbers));
+			break;
+		case ANIMALS:
+			StagingWorldGenerator.setSignLine(block, 2, StagingWorldGenerator.getQuantityText(animalNumbers));
+			break;
+		case GAME_MODE:
+			StagingWorldGenerator.fitTextOnSign((Sign)block.getState(), getGameMode().getName());
+			break;
+		case WORLD_OPTION:
+			if ( getGameMode().allowWorldOptionSelection() )
+			{// if this game mode doesn't let you choose the world option, set the default world option and update that sign
+				StagingWorldGenerator.fitTextOnSign((Sign)block.getState(), getWorldOption().getName());	
+			}
+			else // otherwise, ensure that sign is back to normal
+			{
+				setWorldOption(WorldOptionPlugin.getDefault());
+				StagingWorldGenerator.fitTextOnSign((Sign)block.getState(), ChatColor.BOLD + "Disabled by " + ChatColor.BOLD + "game mode");
+			}
+			break;
+		}
+	}
+	
+	public void updateSigns(GameSign type)
+	{
+		ArrayList<Location> thisType = signs.get(type);
+		if ( thisType != null )
+			for ( Location loc : thisType )
+				updateSign(type, loc.getBlock());
+	}
 }

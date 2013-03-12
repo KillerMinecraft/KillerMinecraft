@@ -1,5 +1,8 @@
 package com.ftwinston.Killer;
 
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import org.bukkit.Location;
@@ -296,5 +299,26 @@ public class Arena
 				}, 50);
 			}
 		}
+	}
+	
+	EnumMap<Mode, ArrayList<Location>> indicators = new EnumMap<Mode, ArrayList<Location>>(Mode.class);
+	
+	public void addIndicator(int x, int y, int z, Mode type)
+	{
+		if ( indicators.containsKey(type) )
+			indicators.get(type).add(new Location(plugin.stagingWorld, x, y, z));
+		else
+		{
+			ArrayList<Location> vals = new ArrayList<Location>();
+			vals.add(new Location(plugin.stagingWorld, x, y, z));
+			indicators.put(type, vals);
+		}
+	}
+	
+	public void updateIndicators()
+	{
+		for ( Entry<Mode, ArrayList<Location>> entry : indicators.entrySet() )
+			for ( Location loc : entry.getValue() )
+				loc.getBlock().setData(mode == entry.getKey() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
 	}
 }

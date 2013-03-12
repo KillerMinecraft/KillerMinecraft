@@ -6,11 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.Map.Entry;
 import java.util.Random;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -28,19 +25,10 @@ class StagingWorldManager
 		this.plugin = plugin;
 		stagingWorld = world;
 		
-		currentGameOptions = new StagingWorldOption[plugin.games.length];
-		for ( int i=0; i<currentGameOptions.length; i++ )
-			currentGameOptions[i] = StagingWorldOption.NONE;
-		
-		gameSigns = new ArrayList<EnumMap<GameSign, Location>>();
-		for ( int i=0; i<plugin.games.length; i++ )
-			gameSigns.add(new EnumMap<GameSign, Location>(GameSign.class));
-		
 		protectedVolumes = new ArrayList<Volume>();
 		arenas = new ArrayList<Arena>();
 	
 		initWorldInfo();
-		setupSignDefaults();
 		
 		if ( spawn == null )
 		{
@@ -51,6 +39,12 @@ class StagingWorldManager
 			);
 			spawnYaw = 0;
 		}
+		
+		for ( int i=0; i<plugin.games.length; i++ )
+			plugin.games[i].initStagingWorld();
+		
+		for ( int i=0; i<arenas.size(); i++ )
+			arenas.get(i).updateIndicators();
 	}
 
 	private void initWorldInfo()
@@ -88,74 +82,6 @@ class StagingWorldManager
 			e.printStackTrace();
 		}
 	}
-
-	private void setupSignDefaults()
-	{
-		for ( int game=0; game<plugin.games.length; game++ )
-			for ( Entry<GameSign, Location> entry : gameSigns.get(game).entrySet() )
-				initSign(game, entry.getKey(), entry.getValue().getBlock());
-	}
-	
-	private void initSign(int game, GameSign type, Block block)
-	{
-		switch ( type )
-		{
-		case DIFFICULTY:
-			StagingWorldGenerator.setSignLine(block, 1, "Difficulty:");
-			break;
-		case MONSTERS:
-			StagingWorldGenerator.setSignLine(block, 1, "Monsters:");
-			break;
-		case ANIMALS:
-			StagingWorldGenerator.setSignLine(block, 1, "Animals:");
-			break;
-		case GAME_MODE:
-			StagingWorldGenerator.setSignLine(block, 0, "Game mode:");
-			break;
-		case WORLD_OPTION:
-			StagingWorldGenerator.setSignLine(block, 0, "World:");
-			break;
-		}
-		
-		updateSign(plugin.games[game], type, block);
-	}
-
-	private void updateSign(Game game, GameSign type, Block block)
-	{
-		switch ( type )
-		{
-		case DIFFICULTY:
-			StagingWorldGenerator.setSignLine(block, 2, StagingWorldGenerator.capitalize(game.getDifficulty().name()));
-			break;
-		case MONSTERS:
-			StagingWorldGenerator.setSignLine(block, 2, StagingWorldGenerator.getQuantityText(game.monsterNumbers));
-			break;
-		case ANIMALS:
-			StagingWorldGenerator.setSignLine(block, 2, StagingWorldGenerator.getQuantityText(game.animalNumbers));
-			break;
-		case GAME_MODE:
-			StagingWorldGenerator.fitTextOnSign((Sign)block.getState(), game.getGameMode().getName());
-			break;
-		case WORLD_OPTION:
-			if ( game.getGameMode().allowWorldOptionSelection() )
-			{// if this game mode doesn't let you choose the world option, set the default world option and update that sign
-				StagingWorldGenerator.fitTextOnSign((Sign)block.getState(), game.getWorldOption().getName());	
-			}
-			else // otherwise, ensure that sign is back to normal
-			{
-				game.setWorldOption(WorldOptionPlugin.getDefault());
-				StagingWorldGenerator.fitTextOnSign((Sign)block.getState(), ChatColor.BOLD + "Disabled by " + ChatColor.BOLD + "game mode");
-			}
-			break;
-		}
-	}
-	
-	public void updateSign(Game game, GameSign type)
-	{
-		Block sign = getSign(game, type);
-		if ( sign != null )
-			updateSign(game, type, sign);
-	}
 	
 	Killer plugin;
 	World stagingWorld;
@@ -183,111 +109,7 @@ class StagingWorldManager
 		WORLD,
 		WORLD_CONFIG,
 		GLOBAL_OPTION,
-	}
-	
-	private StagingWorldOption[] currentGameOptions;
-	public StagingWorldOption getCurrentOption(Game game)
-	{
-		return currentGameOptions[game.getNumber()];
-	}
-	
-	public void setCurrentOption(Game game, StagingWorldOption option)
-	{		
-		if ( option == currentGameOptions[game.getNumber()] )
-			return;
-		
-		currentGameOptions[game.getNumber()] = option;
-		
-		int buttonY = StagingWorldGenerator.getButtonY(game.getNumber());
-		
-		// disable whatever's currently on
-		switch ( option )
-		{
-		case GAME_MODE:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.gameModeButtonZ).setData(StagingWorldGenerator.colorOptionOff);
-			break;
-		case GAME_MODE_CONFIG:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.gameModeConfigButtonZ).setData(StagingWorldGenerator.colorOptionOff);
-			break;
-		case WORLD:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.worldButtonZ).setData(StagingWorldGenerator.colorOptionOff);
-			break;
-		case WORLD_CONFIG:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.worldConfigButtonZ).setData(StagingWorldGenerator.colorOptionOff);
-			break;
-		case GLOBAL_OPTION:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.globalOptionButtonZ).setData(StagingWorldGenerator.colorOptionOff);
-			break;
-		}
-		hideSetupOptionButtons(game);
-		
-		String[] labels;
-		boolean[] values;
-		Option[] options;
-		
-		// now set up the new option
-		switch ( option )
-		{
-		case GAME_MODE:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.gameModeButtonZ).setData(StagingWorldGenerator.colorOptionOn);
-			
-			labels = new String[GameMode.gameModes.size()];
-			values = new boolean[labels.length];
-			for ( int i=0; i<labels.length; i++ )
-			{
-				GameModePlugin mode = GameMode.gameModes.get(i); 
-				labels[i] = mode.getName();
-				values[i] = mode.getName().equals(game.getGameMode().getName());
-			}
-			showSetupOptionButtons(game, "Game mode:", true, labels, values);
-			break;
-		case GAME_MODE_CONFIG:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.gameModeConfigButtonZ).setData(StagingWorldGenerator.colorOptionOn);
-			
-			options = game.getGameMode().getOptions();
-			labels = new String[options.length];
-			values = new boolean[options.length];
-			for ( int i=0; i<options.length; i++ )
-			{
-				labels[i] = options[i].getName();
-				values[i] = options[i].isEnabled();
-			}
-			showSetupOptionButtons(game, "Mode option:", false, labels, values);
-			break;
-		case WORLD:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.worldButtonZ).setData(StagingWorldGenerator.colorOptionOn);
-			
-			labels = new String[WorldOption.worldOptions.size()];
-			values = new boolean[labels.length];
-			for ( int i=0; i<labels.length; i++ )
-			{
-				WorldOptionPlugin worldOption = WorldOption.worldOptions.get(i); 
-				labels[i] = worldOption.getName();
-				values[i] = worldOption.getName().equals(game.getWorldOption().getName());
-			}
-			showSetupOptionButtons(game, "World:", false, labels, values);
-			break;
-		case WORLD_CONFIG:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.worldConfigButtonZ).setData(StagingWorldGenerator.colorOptionOn);
-			
-			options = game.getWorldOption().getOptions();
-			labels = new String[options.length];
-			values = new boolean[options.length];
-			for ( int i=0; i<options.length; i++ )
-			{
-				labels[i] = options[i].getName();
-				values[i] = options[i].isEnabled();
-			}
-			showSetupOptionButtons(game, "World option:", false, labels, values);
-			break;
-		case GLOBAL_OPTION:
-			stagingWorld.getBlockAt(StagingWorldGenerator.wallMinX, buttonY, StagingWorldGenerator.globalOptionButtonZ).setData(StagingWorldGenerator.colorOptionOn);
-			labels = new String[] { "Craftable monster eggs", "Easier dispenser recipe", "Eyes of ender find nether fortresses" };
-			values = new boolean[] { true, true, true, true };
-			showSetupOptionButtons(game, "Global option:", false, labels, values);
-			break;
-		}
-	}
+	}	
 	
 	public void gameOptionButtonPressed(Game game, StagingWorldOption option, int num)
 	{
@@ -309,10 +131,10 @@ class StagingWorldManager
 				newValues[i] = i == num;
 			updateSetupOptionButtons(game, newValues, true);
 			
-			updateSign(game, GameSign.GAME_MODE);
+			game.updateSigns(GameSign.GAME_MODE);
 			
 			if ( prevAllowedWorldOptions != game.getGameMode().allowWorldOptionSelection() )
-				updateSign(game, GameSign.WORLD_OPTION);
+				game.updateSigns(GameSign.WORLD_OPTION);
 			break;
 		case GAME_MODE_CONFIG:
 			// toggle this option
@@ -338,7 +160,7 @@ class StagingWorldManager
 				newValues[i] = i == num;
 			updateSetupOptionButtons(game, newValues, false);
 			
-			updateSign(game, GameSign.WORLD_OPTION);
+			game.updateSigns(GameSign.WORLD_OPTION);
 			break;
 		case WORLD_CONFIG:
 			// toggle this option
@@ -380,7 +202,7 @@ class StagingWorldManager
 		String[] parts = line.split(" ");
 		
 		if ( parts[0].equals("sign") )
-		{
+		{// sign x y z WORLD_OPTION num
 			if ( parts.length < 6 )
 			{
 				plugin.log.warning("Too few sign parameters in killer.txt: " + line);
@@ -418,10 +240,14 @@ class StagingWorldManager
 				return;
 			}
 			
-			gameSigns.get(num).put(type, new Location(stagingWorld, x, y, z));
+			plugin.games[num].addSign(x, y, z, type);
 		}
 		else if ( parts[0].equals("volume") )
 		{
+			// volume x1 y1 z1 x2 y2 z2 spawn 180
+			// volume x1 y1 z1 x2 y2 z2 protected
+			// volume x1 y1 z1 x2 y2 z2 arena 1 SPLEEF
+			
 			if ( parts.length < 8 )
 			{
 				plugin.log.warning("Too few volume parameters in killer.txt: " + line);
@@ -443,10 +269,6 @@ class StagingWorldManager
 				plugin.log.warning("Can't read volume coordinates from killer.txt: " + line);
 				return;
 			}
-			
-			// volume x1 y1 z1 x2 y2 z2 spawn 180
-			// volume x1 y1 z1 x2 y2 z2 protected
-			// volume x1 y1 z1 x2 y2 z2 arena 1 SPLEEF
 			
 			if ( parts[7].equals("spawn") )
 			{
@@ -509,17 +331,72 @@ class StagingWorldManager
 			else
 				plugin.log.warning("unrecognised volume line in killer.txt: " + line);
 		}
+		else if ( parts[0].equals("indicator") )
+		{
+			// indicator x y z arena 0 SPLEEF
+			// indicator x y z game 1 GAME_MODE
+			
+			if ( parts.length < 7 )
+			{
+				plugin.log.warning("Too few indicator parameters in killer.txt: " + line);
+				return;
+			}
+			
+			int x, y, z, num;
+			try
+			{
+				x = Integer.parseInt(parts[1]);
+				y = Integer.parseInt(parts[2]);
+				z = Integer.parseInt(parts[3]);
+				num = Integer.parseInt(parts[5]);
+			}
+			catch ( NumberFormatException ex )
+			{
+				plugin.log.warning("Can't read indicator coordinates from killer.txt: " + line);
+				return;
+			}
+			
+			if ( parts[4].equals("game") )
+			{
+				if ( num < 0 || num > plugin.games.length )
+				{
+					plugin.log.warning("Invalid game number in killer.txt: " + line);
+					return;
+				}
+				
+				StagingWorldOption type;
+				try
+				{
+					type = StagingWorldOption.valueOf(parts[6]);
+				}
+				catch ( IllegalArgumentException ex )
+				{
+					plugin.log.warning("Unrecognised game indicator type in killer.txt: " + line);
+					return;
+				}
+				
+				plugin.games[num].addIndicator(x, y, z, type);
+			}
+			else if ( parts[4].equals("arena") )
+			{
+				Arena.Mode type;
+				try
+				{
+					type = Arena.Mode.valueOf(parts[6]);
+				}
+				catch ( IllegalArgumentException ex )
+				{
+					plugin.log.warning("Unrecognised arena indicator type in killer.txt: " + line);
+					return;
+				}
+				
+				arenas.get(num).addIndicator(x, y, z, type);
+			}
+			else
+				plugin.log.warning("Can't read indicator type from killer.txt: " + line);
+		}
 		else
 			plugin.log.warning("unrecognised line in killer.txt: " + line);
-	}
-	
-	ArrayList<EnumMap<GameSign, Location>> gameSigns;
-	public Block getSign(Game game, GameSign option)
-	{
-		Location loc = gameSigns.get(game.getNumber()).get(option);
-		if ( loc == null )
-			return null;
-		return loc.getBlock();
 	}
 	
 	ArrayList<Volume> protectedVolumes;
@@ -617,7 +494,7 @@ class StagingWorldManager
 		}
 	}
 	
-	private void showSetupOptionButtons(Game game, String heading, boolean forGameMode, String[] labels, boolean[] values)
+	void showSetupOptionButtons(Game game, String heading, boolean forGameMode, String[] labels, boolean[] values)
 	{
 		Block b;
 		int buttonY = StagingWorldGenerator.getButtonY(game.getNumber());
@@ -680,7 +557,7 @@ class StagingWorldManager
 		}
 	}
 
-	private void hideSetupOptionButtons(Game game)
+	void hideSetupOptionButtons(Game game)
 	{
 		Block b;
 		int minZ = StagingWorldGenerator.getOptionButtonZ(0, false);

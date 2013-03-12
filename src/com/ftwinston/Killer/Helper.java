@@ -85,6 +85,8 @@ public class Helper
 	
 	public static boolean isAlive(Game game, OfflinePlayer player)
 	{
+		if ( game == null )
+			return true;
 		Info info = game.getPlayerInfo().get(player.getName());
 		return info != null && info.isAlive();
 	}

@@ -346,7 +346,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 		{
 			if ( game.getOnlinePlayers().size() >= game.getGameMode().getMinPlayers() )
 			{
-				plugin.stagingWorldManager.setCurrentOption(game, StagingWorldOption.NONE);
+				game.setCurrentOption(StagingWorldOption.NONE);
 				game.setGameState(GameState.waitingToGenerate);
 			}
 			else
@@ -354,7 +354,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 		}
 		else if ( cmd == "confirm" ) 
 		{
-			plugin.stagingWorldManager.setCurrentOption(game, StagingWorldOption.NONE);
+			game.setCurrentOption(StagingWorldOption.NONE);
 			game.setGameState(GameState.waitingToGenerate);
 		}
 		else if ( cmd == "cancel" )
@@ -466,7 +466,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			if ( game.getDifficulty().getValue() < Difficulty.HARD.getValue() )
 			{
 				game.setDifficulty(Difficulty.getByValue(game.getDifficulty().getValue()+1));
-				plugin.stagingWorldManager.updateSign(game, StagingWorldManager.GameSign.DIFFICULTY);
+				game.updateSigns(StagingWorldManager.GameSign.DIFFICULTY);
 			}
 		}
 		else if ( param == "down" )
@@ -474,7 +474,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			if ( game.getDifficulty().getValue() > Difficulty.PEACEFUL.getValue() )
 			{
 				game.setDifficulty(Difficulty.getByValue(game.getDifficulty().getValue()-1));
-				plugin.stagingWorldManager.updateSign(game, StagingWorldManager.GameSign.DIFFICULTY);
+				game.updateSigns(StagingWorldManager.GameSign.DIFFICULTY);
 			}
 		}
 		else
@@ -488,7 +488,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			if ( game.monsterNumbers < Game.maxQuantityNum )
 			{
 				game.monsterNumbers++;
-				plugin.stagingWorldManager.updateSign(game, StagingWorldManager.GameSign.ANIMALS);
+				game.updateSigns(StagingWorldManager.GameSign.ANIMALS);
 			}
 		}
 		else if ( param == "down" )
@@ -496,7 +496,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			if ( game.monsterNumbers > Game.minQuantityNum )
 			{
 				game.monsterNumbers--;
-				plugin.stagingWorldManager.updateSign(game, StagingWorldManager.GameSign.ANIMALS);
+				game.updateSigns(StagingWorldManager.GameSign.ANIMALS);
 			}
 		}
 		else
@@ -510,7 +510,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			if ( game.animalNumbers < Game.maxQuantityNum )
 			{
 				game.animalNumbers++;
-				plugin.stagingWorldManager.updateSign(game, StagingWorldManager.GameSign.ANIMALS);
+				game.updateSigns(StagingWorldManager.GameSign.ANIMALS);
 			}
 		}
 		else if ( param == "down" )
@@ -518,7 +518,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			if ( game.animalNumbers > Game.minQuantityNum )
 			{
 				game.animalNumbers--;
-				plugin.stagingWorldManager.updateSign(game, StagingWorldManager.GameSign.ANIMALS);
+				game.updateSigns(StagingWorldManager.GameSign.ANIMALS);
 			}
 		}
 		else
@@ -528,15 +528,15 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 	private static void showGameOption(Killer plugin, Game game, String option)
 	{
 		if ( option == "modes")
-			plugin.stagingWorldManager.setCurrentOption(game, plugin.stagingWorldManager.getCurrentOption(game) == StagingWorldOption.GAME_MODE ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE);
+			game.setCurrentOption(game.getCurrentOption() == StagingWorldOption.GAME_MODE ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE);
 		else if ( option == "worlds")
-			plugin.stagingWorldManager.setCurrentOption(game, plugin.stagingWorldManager.getCurrentOption(game) == StagingWorldOption.WORLD ? StagingWorldOption.NONE : StagingWorldOption.WORLD);
+			game.setCurrentOption(game.getCurrentOption() == StagingWorldOption.WORLD ? StagingWorldOption.NONE : StagingWorldOption.WORLD);
 		else if ( option == "modeconfig")
-			plugin.stagingWorldManager.setCurrentOption(game, plugin.stagingWorldManager.getCurrentOption(game) == StagingWorldOption.GAME_MODE_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE_CONFIG);
+			game.setCurrentOption(game.getCurrentOption() == StagingWorldOption.GAME_MODE_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE_CONFIG);
 		else if ( option == "worldconfig")
-			plugin.stagingWorldManager.setCurrentOption(game, plugin.stagingWorldManager.getCurrentOption(game) == StagingWorldOption.WORLD_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.WORLD_CONFIG);
+			game.setCurrentOption(game.getCurrentOption() == StagingWorldOption.WORLD_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.WORLD_CONFIG);
 		else if ( option == "misc")
-			plugin.stagingWorldManager.setCurrentOption(game, plugin.stagingWorldManager.getCurrentOption(game) == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
+			game.setCurrentOption(game.getCurrentOption() == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
 		else
 			plugin.log.warning("Invalid game show option: " + option);
 	}
@@ -554,7 +554,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			return;
 		}
 		
-		plugin.stagingWorldManager.gameOptionButtonPressed(game, plugin.stagingWorldManager.getCurrentOption(game), num);
+		plugin.stagingWorldManager.gameOptionButtonPressed(game, game.getCurrentOption(), num);
 	}
 	
 	private static void arenaCommand(Killer plugin, int num, String[] args)
@@ -569,13 +569,19 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 		
 		if ( cmd == "spleef" )
 		{
+			if ( arena.mode == Arena.Mode.SPLEEF )
+				return;
 			arena.mode = Arena.Mode.SPLEEF;
 			arena.endMonsterArena();
+			arena.updateIndicators();
 		}
 		else if ( cmd == "survival" )
 		{
+			if ( arena.mode == Arena.Mode.SURVIVAL )
+				return;
 			arena.mode = Arena.Mode.SURVIVAL;
 			arena.endMonsterArena();
+			arena.updateIndicators();
 		}
 		else if ( cmd == "reset" )
 		{

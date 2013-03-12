@@ -300,8 +300,6 @@ class EventListener implements Listener
 	public void onPlayerPickupItem(PlayerPickupItemEvent event)
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
-		if ( game == null )
-			return;
 
 		if( !Helper.isAlive(game, event.getPlayer()) )
 			event.setCancelled(true);
@@ -310,21 +308,26 @@ class EventListener implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onItemSpawn(ItemSpawnEvent event)
 	{
+		World world = event.getLocation().getWorld();
+		Game game = plugin.getGameForWorld(world);
+		
+		if ( game != null || world == plugin.stagingWorld ) 
+			event.setCancelled(
+				plugin.worldManager.isProtectedLocation(game, event.getLocation(), null)
+			);
+	
 		if ( event.getLocation().getWorld() == plugin.stagingWorld )
 			event.setCancelled(true);
 	}
 	
 	// prevent spectators breaking anything, prevent anyone breaking protected locations
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onBlockBreak(BlockBreakEvent event)
 	{
-		World world = event.getPlayer().getWorld();
+		World world = event.getBlock().getWorld();
 		Game game = plugin.getGameForWorld(world);
 		
-		if ( game == null && world != plugin.stagingWorld ) 
-			return;
-
-		if ( world != plugin.stagingWorld )
+		if ( game != null || world == plugin.stagingWorld ) 
 			event.setCancelled(
 				!Helper.isAlive(game, event.getPlayer()) ||
 				plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer())
@@ -335,21 +338,14 @@ class EventListener implements Listener
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onBlockPlace(BlockPlaceEvent event)
 	{
-		World world = event.getPlayer().getWorld();
-		if ( world == plugin.stagingWorld )
-		{
-			event.setCancelled(true);
-			return;
-		}
-		
+		World world = event.getBlock().getWorld();
 		Game game = plugin.getGameForWorld(world);
-		if ( game == null ) 
-			return;
 		
-		event.setCancelled(
-			plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer()) ||
-			!Helper.isAlive(game, event.getPlayer())
-		);
+		if ( game != null || world == plugin.stagingWorld ) 
+			event.setCancelled(
+				!Helper.isAlive(game, event.getPlayer()) ||
+				plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer())
+			);
 	}
 	
 	// prevent lava/water from flowing onto protected locations
