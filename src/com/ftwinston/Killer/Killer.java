@@ -40,7 +40,6 @@ public class Killer extends JavaPlugin
 	private EventListener eventListener = new EventListener(this);
 	WorldManager worldManager;
 	StagingWorldManager stagingWorldManager;
-	ArenaManager arenaManager;
 	PlayerManager playerManager;
 	VoteManager voteManager;
 	StatsManager statsManager;

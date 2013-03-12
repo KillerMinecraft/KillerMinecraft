@@ -270,10 +270,10 @@ setup game X playerlimit on/off/up/down
 setup game X include @p
 setup game X exclude @p
 
-setup arena X spleef
-setup arena X survival
+|setup arena X spleef
+|setup arena X survival
 setup arena X reset
-setup arena X equip @p
+|setup arena X equip @p
 
 setup tp @p pos CX CY CZ
 setup tp @p game X
@@ -338,6 +338,9 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 	
 	private static void gameCommand(Killer plugin, Game game, String[] args)
 	{
+		if ( game == null || !game.getGameState().canChangeGameSetup )
+			return;
+		
 		String cmd = args[2];
 		if ( cmd == "start" ) 
 		{
@@ -554,20 +557,30 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 		plugin.stagingWorldManager.gameOptionButtonPressed(game, plugin.stagingWorldManager.getCurrentOption(game), num);
 	}
 	
-	private static void arenaCommand(Killer plugin, int arena, String[] args)
+	private static void arenaCommand(Killer plugin, int num, String[] args)
 	{
 		String cmd = args[2];
+		Arena arena = plugin.stagingWorldManager.getArena(num);
+		if ( arena == null )
+		{
+			plugin.log.warning("Invalid arena command: number out of range (" + num + ")");
+			return;
+		}
+		
 		if ( cmd == "spleef" )
 		{
-		
+			arena.mode = Arena.Mode.SPLEEF;
+			arena.endMonsterArena();
 		}
 		else if ( cmd == "survival" )
 		{
-		
+			arena.mode = Arena.Mode.SURVIVAL;
+			arena.endMonsterArena();
 		}
 		else if ( cmd == "reset" )
 		{
-		
+			arena.rebuildArena();
+			arena.endMonsterArena();
 		}
 		else if ( cmd == "equip" )
 		{
@@ -577,7 +590,11 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 				return;
 			}
 
-			
+			Player player = plugin.getServer().getPlayer(args[3]);
+			if ( player == null )
+				plugin.log.warning("Invalid arena command: player not found (" + args[3] + ")");
+			else
+				arena.equipPlayer(player);
 		}
 		else
 			plugin.log.warning("Invalid arena command: " + cmd);

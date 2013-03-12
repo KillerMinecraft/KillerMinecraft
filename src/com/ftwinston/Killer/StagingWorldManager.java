@@ -36,8 +36,21 @@ class StagingWorldManager
 		for ( int i=0; i<plugin.games.length; i++ )
 			gameSigns.add(new EnumMap<GameSign, Location>(GameSign.class));
 		
+		protectedVolumes = new ArrayList<Volume>();
+		arenas = new ArrayList<Arena>();
+	
 		initWorldInfo();
 		setupSignDefaults();
+		
+		if ( spawn == null )
+		{
+			Location loc = stagingWorld.getSpawnLocation();
+			spawn = new Volume(
+				loc.getBlockX() - 1, loc.getBlockY(), loc.getBlockZ() - 1,
+				loc.getBlockX() + 1, loc.getBlockY(), loc.getBlockZ() + 1
+			);
+			spawnYaw = 0;
+		}
 	}
 
 	private void initWorldInfo()
@@ -150,7 +163,9 @@ class StagingWorldManager
 	Random random = new Random();
 	public Location getStagingWorldSpawnPoint()
 	{
-		return new Location(stagingWorld, StagingWorldGenerator.startButtonX + random.nextDouble() * 3 - 1, StagingWorldGenerator.baseFloorY + 1, StagingWorldGenerator.gameModeButtonZ + 8.5 - random.nextDouble() * 1.5, 180, 0);
+		Location loc = spawn.getRandomLocation(stagingWorld, random);
+		loc.setYaw(spawnYaw);
+		return loc;
 	}
 
 	Location getGameSetupSpawnLocation(int gameNum)
@@ -368,7 +383,7 @@ class StagingWorldManager
 		{
 			if ( parts.length < 6 )
 			{
-				plugin.log.warning("Can't too few sign parametesr in killer.txt: " + line);
+				plugin.log.warning("Too few sign parameters in killer.txt: " + line);
 				return;
 			}
 			
@@ -399,11 +414,100 @@ class StagingWorldManager
 			}
 			catch ( IllegalArgumentException ex )
 			{
-				plugin.log.warning("unrecognised sign type in killer.txt: " + line);
+				plugin.log.warning("Unrecognised sign type in killer.txt: " + line);
 				return;
 			}
 			
 			gameSigns.get(num).put(type, new Location(stagingWorld, x, y, z));
+		}
+		else if ( parts[0].equals("volume") )
+		{
+			if ( parts.length < 8 )
+			{
+				plugin.log.warning("Too few volume parameters in killer.txt: " + line);
+				return;
+			}
+			
+			int x1, y1, z1, x2, y2, z2;
+			try
+			{
+				x1 = Integer.parseInt(parts[1]);
+				y1 = Integer.parseInt(parts[2]);
+				z1 = Integer.parseInt(parts[3]);
+				x2 = Integer.parseInt(parts[4]);
+				y2 = Integer.parseInt(parts[5]);
+				z2 = Integer.parseInt(parts[6]);
+			}
+			catch ( NumberFormatException ex )
+			{
+				plugin.log.warning("Can't read volume coordinates from killer.txt: " + line);
+				return;
+			}
+			
+			// volume x1 y1 z1 x2 y2 z2 spawn 180
+			// volume x1 y1 z1 x2 y2 z2 protected
+			// volume x1 y1 z1 x2 y2 z2 arena 1 SPLEEF
+			
+			if ( parts[7].equals("spawn") )
+			{
+				if ( parts.length < 9 )
+				{
+					plugin.log.warning("Too few volume parameters for spawn in killer.txt: " + line);
+					return;
+				}
+			
+				int yaw;
+				try
+				{
+					yaw = Integer.parseInt(parts[8]);
+				}
+				catch ( NumberFormatException ex )
+				{
+					plugin.log.warning("Can't read yaw for spawn in killer.txt: " + line);
+					return;
+				}
+				
+				spawn = new Volume(x1, y1, z1, x2, y2, z2);
+				spawnYaw = yaw;
+			}
+			else if ( parts[7].equals("protected") )
+			{
+				protectedVolumes.add(new Volume(x1, y1, z1, x2, y2, z2));
+			}
+			else if ( parts[7].equals("arena") )
+			{
+				if ( parts.length < 10 )
+				{
+					plugin.log.warning("Too few volume parameters for arena in killer.txt: " + line);
+					return;
+				}
+				
+				int num;
+				try
+				{
+					num = Integer.parseInt(parts[8]);
+				}
+				catch ( NumberFormatException ex )
+				{
+					plugin.log.warning("Can't read arena number from killer.txt: " + line);
+					return;
+				}
+				
+				Arena.Mode mode;
+				try
+				{
+					mode = Arena.Mode.valueOf(parts[9]);
+				}
+				catch ( IllegalArgumentException ex )
+				{
+					plugin.log.warning("Unrecognised arena mode in killer.txt: " + line);
+					return;
+				}
+				
+				arenas.add(new Arena(plugin, num, new Volume(x1, y1, z1, x2, y2, z2), mode));
+			}
+			else
+				plugin.log.warning("unrecognised volume line in killer.txt: " + line);
 		}
 		else
 			plugin.log.warning("unrecognised line in killer.txt: " + line);
@@ -416,6 +520,101 @@ class StagingWorldManager
 		if ( loc == null )
 			return null;
 		return loc.getBlock();
+	}
+	
+	ArrayList<Volume> protectedVolumes;
+	Volume spawn = null;
+	int spawnYaw;
+	
+	ArrayList<Arena> arenas;
+	
+	public boolean isProtected(Block b)
+	{
+		for ( Volume v : protectedVolumes )
+			if ( v.contains(b) )
+				return true;
+		return false;
+	}
+	
+	public boolean isProtected(Location l)
+	{
+		for ( Volume v : protectedVolumes )
+			if ( v.contains(l) )
+				return true;
+		return false;
+	}
+	
+	public Arena getArena(int num)
+	{
+		if ( num < 0 || num >= arenas.size() )
+			return null;
+		return arenas.get(num);
+	}
+	
+	public Arena getArena(Location loc)
+	{
+		for ( Arena arena : arenas )
+			if ( arena.paddedVolume.contains(loc) )
+				return arena;
+		return null;
+	}
+	
+	class Volume
+	{
+		int x1, y1, z1, x2, y2, z2;
+		public Volume(int x1, int y1, int z1, int x2, int y2, int z2)
+		{
+			if ( x1 <= x2 )
+			{
+				this.x1 = x1; this.x2 = x2;
+			}
+			else
+			{
+				this.x1 = x2; this.x2 = x1;
+			}
+			
+			if ( y1 <= y2 )
+			{
+				this.y1 = y1; this.y2 = y2;
+			}
+			else
+			{
+				this.y1 = y2; this.y2 = y1;
+			}
+			
+			if ( z1 <= z2 )
+			{
+				this.z1 = z1; this.z2 = z2;
+			}
+			else
+			{
+				this.z1 = z2; this.z2 = z1;
+			}
+		}
+		
+		public boolean contains(Block b)
+		{
+			return b.getX() >= x1 && b.getX() <= x2
+				&& b.getY() >= y1 && b.getY() <= y2
+				&& b.getZ() >= z1 && b.getZ() <= z2;
+		}
+		
+		public boolean contains(Location l)
+		{
+			return l.getBlockX() >= x1 && l.getBlockX() <= x2
+				&& l.getBlockY() >= y1 && l.getBlockY() <= y2
+				&& l.getBlockZ() >= z1 && l.getBlockZ() <= z2;
+		}
+
+		public Volume expand(int i)
+		{
+			return new Volume(x1-i, y1-i, z1-i, x2+i, y2+i, z2+i);
+		}
+
+		public Location getRandomLocation(World world, Random r)
+		{
+			return new Location(world, x1 + (x2-x1) * r.nextDouble(), y1 + (y2-y1) * r.nextDouble(), z1 + (z2-z1) * r.nextDouble());
+		}
 	}
 	
 	private void showSetupOptionButtons(Game game, String heading, boolean forGameMode, String[] labels, boolean[] values)
@@ -520,9 +719,7 @@ class StagingWorldManager
 	{
 		if ( action == Action.PHYSICAL )
 			handlePhysicalInteraction(game, player, action, block);
-		else if ( block.getType() == Material.STONE_BUTTON || block.getType() == Material.LEVER || block.getType() == Material.WOOD_BUTTON )
-			handleButtonPress(game, player, action, block);
-		else if ( block.getType() == Material.WOOL ) // clicking the surround of a button activates that button
+		/*else if ( block.getType() == Material.WOOL ) // clicking the surround of a button activates that button
 		{
 			if ( block.getX() == StagingWorldGenerator.wallMinX )
 			{
@@ -542,49 +739,14 @@ class StagingWorldManager
 					plugin.craftBukkit.pushButton(block);
 				}
 			}
-		}
-	}
-	
-	public void handleButtonPress(Game game, Player player, Action action, Block block)
-	{
-		if ( game != null && !game.getGameState().canChangeGameSetup )
-			return;
-		
-		int buttonY = StagingWorldGenerator.getButtonY(game == null ? -1 : game.getNumber());
-		int x = block.getX(), z = block.getZ();
-				
-		// hereafter, only buttons that we don't allow rapid re-pressing on
-		if ( (block.getData() & 0x8) != 0 )
-			return; // this button was already pressed, abort! 
-		
-		if ( z == StagingWorldGenerator.arenaButtonZ )
-		{
-			if ( x == StagingWorldGenerator.arenaSpleefButtonX )
-			{
-				stagingWorld.getBlockAt(StagingWorldGenerator.arenaSpleefButtonX+1, buttonY, z).setData(StagingWorldGenerator.colorOptionOn);
-				stagingWorld.getBlockAt(StagingWorldGenerator.arenaMonsterButtonX-1, buttonY, z).setData(StagingWorldGenerator.colorOptionOff);
-				plugin.arenaManager.monsterArenaModeEnabled = false;
-			}
-			else if ( x == StagingWorldGenerator.arenaMonsterButtonX )
-			{
-				stagingWorld.getBlockAt(StagingWorldGenerator.arenaSpleefButtonX+1, buttonY, z).setData(StagingWorldGenerator.colorOptionOff);
-				stagingWorld.getBlockAt(StagingWorldGenerator.arenaMonsterButtonX-1, buttonY, z).setData(StagingWorldGenerator.colorOptionOn);
-				plugin.arenaManager.monsterArenaModeEnabled = true;
-			}
-				
-			plugin.arenaManager.endMonsterArena();
-		}
+		}*/
 	}
 	
 	private void handlePhysicalInteraction(final Game game, final Player player, final Action action, final Block block)
 	{
 		if ( block.getType() != Material.TRIPWIRE && block.getType() != Material.STONE_PLATE )
 			return;
-		if ( block.getZ() == StagingWorldGenerator.spleefPressurePlateZ )
-		{
-			plugin.arenaManager.pressurePlatePressed(player);
-		}
-		else if ( block.getZ() == StagingWorldGenerator.getGamePortalZ() )
+		if ( block.getZ() == StagingWorldGenerator.getGamePortalZ() )
 		{
 			for ( int i=0; i<Settings.maxSimultaneousGames; i++ )
 				if ( block.getX() == StagingWorldGenerator.getGamePortalX(i) )

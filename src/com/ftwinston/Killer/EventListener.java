@@ -393,8 +393,12 @@ class EventListener implements Listener
 		
 		if ( world == plugin.stagingWorld )
 		{
-			plugin.arenaManager.monsterKilled();
-			event.setYield(0);
+			Arena arena = plugin.stagingWorldManager.getArena(event.getLocation());
+			if ( arena != null )
+			{
+				arena.monsterKilled();
+				event.setYield(0);
+			}
 		}
 	}
 	
@@ -732,7 +736,9 @@ class EventListener implements Listener
 		World world = event.getPlayer().getWorld();
 		if ( world == plugin.stagingWorld )
 		{
-			plugin.arenaManager.playerKilled();
+			Arena arena = plugin.stagingWorldManager.getArena(event.getPlayer().getLocation());
+			if ( arena != null )
+				arena.playerKilled();
 			plugin.stagingWorldManager.updateGameInfoSigns(plugin.getGameForPlayer(event.getPlayer()));
 		}
 		else
@@ -761,22 +767,15 @@ class EventListener implements Listener
 		{
 			event.getDrops().clear();
 			event.setDroppedExp(0);
-
+			
+			Arena arena = plugin.stagingWorldManager.getArena(event.getEntity().getLocation());
 			if ( event instanceof PlayerDeathEvent )
 			{
-				plugin.arenaManager.playerKilled();
-				((PlayerDeathEvent) event).setDeathMessage(((PlayerDeathEvent) event).getDeathMessage().replace("hit the ground too hard", "fell out of the world"));
-				
-				final Player player = (Player)event.getEntity();
-				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-					@Override
-					public void run() {
-						plugin.craftBukkit.forceRespawn(player);
-					}
-				}, 30);
+				if ( arena != null )
+					arena.playerKilled();
 			}
-			else
-				plugin.arenaManager.monsterKilled(); // entity killed ... if its a monster in arena mode in the staging world
+			else if ( arena != null )
+				arena.monsterKilled();
 			
 			return;
 		}

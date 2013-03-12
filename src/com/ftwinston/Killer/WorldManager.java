@@ -130,7 +130,7 @@ class WorldManager
 		if ( plugin.stagingWorldIsServerDefault )
 			plugin.stagingWorld = plugin.getServer().getWorlds().get(0);
 
-		StagingWorldGenerator generator = new StagingWorldGenerator(); 
+		StagingWorldGenerator generator = new StagingWorldGenerator();
 		
 		plugin.stagingWorld = new WorldCreator(name)
 			.generator(generator)
@@ -145,7 +145,6 @@ class WorldManager
 		generator.saveWorldInfo(plugin, plugin.stagingWorld);
 		
 		plugin.stagingWorldManager = new StagingWorldManager(plugin, plugin.stagingWorld);
-		plugin.arenaManager = new ArenaManager(plugin, plugin.stagingWorld);
 		
 		for ( Game game : plugin.games )
 			plugin.stagingWorldManager.updateGameInfoSigns(game);
@@ -168,10 +167,7 @@ class WorldManager
 	public boolean isProtectedLocation(Game game, Location loc, Player player)
 	{
 		if ( loc.getWorld() == plugin.stagingWorld )
-			return loc.getBlockZ() < StagingWorldGenerator.spleefMinZ
-				|| loc.getBlockZ() > StagingWorldGenerator.spleefMaxZ
-				|| loc.getBlockX() < StagingWorldGenerator.spleefMinX
-				|| loc.getBlockX() > StagingWorldGenerator.spleefMaxX;
+			return plugin.stagingWorldManager.isProtected(loc);
 		
 		if ( game != null )
 			return game.getGameMode().isLocationProtected(loc, player);

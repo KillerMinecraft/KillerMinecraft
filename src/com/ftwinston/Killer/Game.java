@@ -210,10 +210,6 @@ public class Game
 			plugin.worldManager.generateWorlds(this, worldOption, new Runnable() {
 				@Override
 				public void run() {
-					// don't waste memory on monsters in the staging world
-					if ( plugin.arenaManager.countPlayersInArena() == 0 )
-						plugin.arenaManager.endMonsterArena();
-					
 					setGameState(GameState.active);
 					plugin.stagingWorldManager.showStartButtons(game, StartButtonState.IN_PROGRESS);
 					

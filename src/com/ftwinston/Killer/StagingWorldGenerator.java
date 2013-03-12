@@ -51,6 +51,16 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	{
 		wallMaxZ = max;
 		arenaButtonZ = wallMaxZ + 2; spleefMinZ = wallMaxZ + 9; spleefMaxZ = spleefMinZ + 16; spleefPressurePlateZ = spleefMinZ-2; exitPortalZ = wallMaxZ - 2; playerLimitZ = wallMaxZ - 1;
+		
+		worldInfo = new ArrayList<String>();
+		
+		worldInfo.add("volume " + (startButtonX-1) + " " + (baseFloorY+1) + " " + (gameModeButtonZ+7) + " "
+					+ (startButtonX+1) + " " + (baseFloorY+1) + " " + (gameModeButtonZ+9) + " spawn 180");
+		
+		worldInfo.add("volume -100 0 -100 100 128 100 protected");
+		
+		worldInfo.add("volume " + spleefMinX + " " + spleefY + " " + spleefMinZ + " "
+					+ spleefMaxX + " " + (spleefY+3) + " " + spleefMaxZ + " arena 0 SPLEEF");
 	}
 
 	public static int getGamePortalX(int i)
@@ -60,7 +70,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public static int getGamePortalZ() { return getWallMaxZ() - 13; }
 	
-	List<String> worldInfo = new ArrayList<String>();
+	static List<String> worldInfo;
 	public void saveWorldInfo(Killer plugin, World stagingWorld)
 	{
 		File infoFile = new File(stagingWorld.getWorldFolder(), "killer.txt");
@@ -393,7 +403,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				{
 					b.setType(Material.WALL_SIGN);
 					b.setData((byte)0x5);
-					worldInfo.add("sign " + b.getX() + " " + b.getY() + " " + b.getZ() + " MONSTERS " + game);
+					worldInfo.add("sign " + b.getX() + " " + b.getY() + " " + b.getZ() + " ANIMALS " + game);
 					
 					b = b.getRelative(0, 1, 0);
 					b.setType(Material.WOOD_BUTTON);
@@ -845,6 +855,12 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				b.setType(button);
 				b.setData((byte)0x2);
 			}
+			b = getBlockAbs(chunk, arenaSpleefButtonX+2, buttonY, arenaButtonZ);
+			if ( b != null )
+			{
+				b.setType(command);
+				Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup arena 0 SPLEEF");
+			}
 			
 			for ( int y=floorY + 1; y < floorY + 4; y++ )
 			{
@@ -869,6 +885,12 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			{
 				b.setType(button);
 				b.setData((byte)0x1);
+			}
+			b = getBlockAbs(chunk, arenaMonsterButtonX-2, buttonY, arenaButtonZ);
+			if ( b != null )
+			{
+				b.setType(command);
+				Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup arena 0 SURVIVAL");
 			}
 			
 			// spleef arena itself
@@ -993,6 +1015,13 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			b = getBlockAbs(chunk, startButtonX, floorY+1, spleefPressurePlateZ);
 			if ( b != null )
 				b.setType(Material.STONE_PLATE);
+			
+			b = getBlockAbs(chunk, startButtonX, floorY-1, spleefPressurePlateZ);
+			if ( b != null )
+			{
+				b.setType(command);
+				Killer.instance.craftBukkit.setCommandBlockCommand(b, "setup arena 0 equip @p");
+			}
 		}
 
 		private void createExitPortal(Chunk chunk, int wallX, int floorY,int portalZ)
