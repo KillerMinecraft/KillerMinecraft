@@ -11,6 +11,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
@@ -435,8 +436,41 @@ class EventListener implements Listener
 	{
 		Game game = plugin.getGameForPlayer(event.getPlayer());
 		
-		if ( event.getPlayer().getWorld() == plugin.stagingWorld && event.getClickedBlock() != null )
-			plugin.stagingWorldManager.playerInteraction(game, event.getPlayer(), event.getAction(), event.getClickedBlock());
+		if ( event.getPlayer().getWorld() == plugin.stagingWorld && event.getClickedBlock() != null && plugin.stagingWorldManager.isProtected(event.getClickedBlock()) )
+		{
+			Block block = event.getClickedBlock();
+			
+			if ( event.getAction() == Action.PHYSICAL )
+				plugin.stagingWorldManager.handlePhysicalInteraction(game, event.getPlayer(), event.getAction(), block);
+			else if ( event.getAction() == Action.RIGHT_CLICK_BLOCK && block.getType().isSolid() )
+			{// right clicking a block triggers buttons attached to the same face
+				BlockFace face = event.getBlockFace();
+				if ( face == BlockFace.NORTH ) // -z
+				{
+					block = block.getRelative(0, 0, -1);
+					if ( block.getType() == Material.STONE_BUTTON && block.getData() == 0x4 )
+						plugin.craftBukkit.pushButton(block);
+				}
+				else if ( face == BlockFace.EAST ) // +x
+				{
+					block = block.getRelative(1, 0, 0);
+					if ( block.getType() == Material.STONE_BUTTON && block.getData() == 0x1 )
+						plugin.craftBukkit.pushButton(block);
+				}
+				else if ( face == BlockFace.SOUTH ) // +z
+				{
+					block = block.getRelative(0, 0, 1);
+					if ( block.getType() == Material.STONE_BUTTON && block.getData() == 0x3 )
+						plugin.craftBukkit.pushButton(block);
+				}
+				else if ( event.getBlockFace() == BlockFace.WEST ) // -x
+				{					
+					block = block.getRelative(-1, 0, 0);
+					if ( block.getType() == Material.STONE_BUTTON && block.getData() == 0x2 )
+						plugin.craftBukkit.pushButton(block);
+				}
+			}
+		}
 		
 		if ( game == null ) 
 			return;

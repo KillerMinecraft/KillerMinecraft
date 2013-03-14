@@ -592,34 +592,7 @@ class StagingWorldManager
 		}
 	}
 	
-	public void playerInteraction(Game game, Player player, Action action, Block block)
-	{
-		if ( action == Action.PHYSICAL )
-			handlePhysicalInteraction(game, player, action, block);
-		/*else if ( block.getType() == Material.WOOL ) // clicking the surround of a button activates that button
-		{
-			if ( block.getX() == StagingWorldGenerator.wallMinX )
-			{
-				block = block.getRelative(1, 0, 0);
-				if ( block.getType() == Material.STONE_BUTTON )
-				{
-					handleButtonPress(game, player, action, block);
-					plugin.craftBukkit.pushButton(block);
-				}
-			}
-			else if ( block.getX() == StagingWorldGenerator.wallMaxX )
-			{
-				block = block.getRelative(-1, 0, 0);
-				if ( block.getType() == Material.STONE_BUTTON )
-				{
-					handleButtonPress(game, player, action, block);
-					plugin.craftBukkit.pushButton(block);
-				}
-			}
-		}*/
-	}
-	
-	private void handlePhysicalInteraction(final Game game, final Player player, final Action action, final Block block)
+	public void handlePhysicalInteraction(final Game game, final Player player, final Action action, final Block block)
 	{
 		if ( block.getType() != Material.TRIPWIRE && block.getType() != Material.STONE_PLATE )
 			return;
