@@ -231,7 +231,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				if ( b != null )
 				{
 					b.setType(wool);
-					b.setData(colorOptionOff);
+					worldInfo.add("indicator " + b.getX() + " " + b.getY() + " " + b.getZ() + " game " + game + " GAME_MODE");
 				}
 				b = getBlockAbs(chunk, mainButtonX, buttonY, gameModeButtonZ);
 				if ( b != null )
@@ -250,7 +250,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				if ( b != null )
 				{
 					b.setType(wool);
-					b.setData(colorOptionOff);
+					worldInfo.add("indicator " + b.getX() + " " + b.getY() + " " + b.getZ() + " game " + game + " GAME_MODE_CONFIG");
 				}
 				b = getBlockAbs(chunk, mainButtonX, buttonY, gameModeConfigButtonZ);
 				if ( b != null )
@@ -289,7 +289,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				if ( b != null )
 				{
 					b.setType(wool);
-					b.setData(colorOptionOff);
+					worldInfo.add("indicator " + b.getX() + " " + b.getY() + " " + b.getZ() + " game " + game + " WORLD");
 				}
 				b = getBlockAbs(chunk, mainButtonX, buttonY, worldButtonZ);
 				if ( b != null )
@@ -308,7 +308,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				if ( b != null )
 				{
 					b.setType(wool);
-					b.setData(colorOptionOff);
+					worldInfo.add("indicator " + b.getX() + " " + b.getY() + " " + b.getZ() + " game " + game + " WORLD_CONFIG");
 				}
 				b = getBlockAbs(chunk, mainButtonX, buttonY, worldConfigButtonZ);
 				if ( b != null )
@@ -442,7 +442,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				if ( b != null )
 				{
 					b.setType(wool);
-					b.setData(colorOptionOff);
+					worldInfo.add("indicator " + b.getX() + " " + b.getY() + " " + b.getZ() + " game " + game + " GLOBAL_OPTION");
 				}
 				b = getBlockAbs(chunk, mainButtonX, buttonY, globalOptionButtonZ);
 				if ( b != null )
@@ -847,7 +847,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			if ( b != null )
 			{
 				b.setType(wool);
-				b.setData(colorOptionOn);
+				worldInfo.add("indicator " + b.getX() + " " + b.getY() + " " + b.getZ() + " arena 0 SPLEEF");
 			}
 			b = getBlockAbs(chunk, arenaSpleefButtonX, buttonY, arenaButtonZ);
 			if ( b != null )
@@ -878,7 +878,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			if ( b != null )
 			{
 				b.setType(wool);
-				b.setData(colorOptionOff);
+				worldInfo.add("indicator " + b.getX() + " " + b.getY() + " " + b.getZ() + " arena 0 SURVIVAL");
 			}
 			b = getBlockAbs(chunk, arenaMonsterButtonX, buttonY, arenaButtonZ);
 			if ( b != null )
