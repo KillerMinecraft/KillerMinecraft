@@ -166,7 +166,7 @@ public class Game
 		
 		if ( prevState.usesGameWorlds != newState.usesGameWorlds )
 		{
-			plugin.stagingWorldManager.updateGameInfoSigns(this);
+			plugin.stagingWorldManager.playerNumberChanged(this);
 			
 			if ( newState.usesGameWorlds )
 				startProcesses();
@@ -331,11 +331,14 @@ public class Game
 	boolean isMonsterEggRecipeEnabled() { return monsterEggsEnabled; }
 	
 	private int playerLimit = 0;
-	private boolean hasPlayerLimit = false;
+	private boolean hasPlayerLimit = false, locked = false;
 	boolean usesPlayerLimit() { return hasPlayerLimit; }
 	void setUsesPlayerLimit(boolean val) { hasPlayerLimit = val; if ( !val ) playerLimit = 0; }
 	int getPlayerLimit() { return playerLimit; }
 	void setPlayerLimit(int limit) { playerLimit = limit; }
+	
+	boolean isLocked() { return locked; }
+	void setLocked(boolean value) { locked = value; }
 		
 	private List<World> worlds = new ArrayList<World>();
 	List<World> getWorlds() { return worlds; }
@@ -351,7 +354,7 @@ public class Game
 			getGameMode().broadcastMessage("The game has ended. You've been moved to the staging world to allow you to set up a new one...");
 		
 		setGameState(GameState.worldDeletion);
-		plugin.stagingWorldManager.updateGameInfoSigns(this);
+		plugin.stagingWorldManager.playerNumberChanged(this);
 	}
 	
 	void restartGame(CommandSender actionedBy)
@@ -586,6 +589,76 @@ public class Game
 				setWorldOption(WorldOptionPlugin.getDefault());
 				StagingWorldGenerator.fitTextOnSign((Sign)block.getState(), ChatColor.BOLD + "Disabled by " + ChatColor.BOLD + "game mode");
 			}
+			break;
+		case PLAYER_LIMIT:
+			if ( !Settings.allowPlayerLimits )
+				return;
+			
+			if ( usesPlayerLimit() )
+			{
+				int numFree = getPlayerLimit() - getOnlinePlayers().size() - getOfflinePlayers().size();
+				
+				StagingWorldGenerator.setSignText(block, "Player limit:", "§l" + getPlayerLimit() + " players", "", numFree <= 0 ? "§4Game is full" : (numFree == 1 ? "1 free slot" : numFree + " free slots"));
+			}
+			else
+				StagingWorldGenerator.setSignText(block, "No player limit", "is set.", "Pull lever to", "apply a limit.");
+			break;
+		case STATUS:
+			int numPlayers = getOnlinePlayers().size();
+			String strPlayers = numPlayers == 1 ? "1 player" : numPlayers + " players";
+			if ( getGameState().usesGameWorlds )
+			{
+				String[] mode = StagingWorldGenerator.splitTextForSign(getGameMode().getName());
+				
+				StagingWorldGenerator.setSignText(block, strPlayers, "* In Progress *", mode.length == 1 ? "" : mode[0], mode[mode.length > 1 ? 1 : 0]);
+			}
+			else if ( numPlayers > 0 )
+				StagingWorldGenerator.setSignText(block, strPlayers, "", "* In Setup *");
+			else
+			{
+				StagingWorldGenerator.setSignText(block, strPlayers, "", "* Vacant *");
+				
+				// reset difficulty and monster numbers back to defaults
+				if ( getDifficulty() != defaultDifficulty) 
+				{
+					setDifficulty(defaultDifficulty);
+					updateSigns(GameSign.DIFFICULTY);
+				}
+				if ( monsterNumbers != defaultMonsterNumbers) 
+				{
+					monsterNumbers = defaultMonsterNumbers; 
+					updateSigns(GameSign.MONSTERS);
+				}
+				if ( animalNumbers != defaultAnimalNumbers) 
+				{
+					animalNumbers = defaultAnimalNumbers;
+					updateSigns(GameSign.ANIMALS);
+				}
+			}
+			break;
+		case JOIN_ACTION:
+			if ( getGameState().usesGameWorlds )
+			{
+				if ( !Settings.allowLateJoiners && !Settings.allowSpectators )
+				{
+					StagingWorldGenerator.setSignText(block, "Game already", "started, no", "spectators", "allowed");
+				}
+				else if ( isLocked() )
+					StagingWorldGenerator.setSignText(block, "This game", "is full:", "enter portal to", "specatate game");
+				else
+				{
+					String actionStr;
+					if ( isLocked() || !Settings.allowLateJoiners )
+						actionStr = "spectate game";
+					else
+						actionStr = "join game";
+					StagingWorldGenerator.setSignText(block, "", "enter portal to", actionStr);
+				}
+			}
+			else if ( isLocked() )
+				StagingWorldGenerator.setSignText(block, "This game", "is full:", "no one else", "can join it");
+			else
+				StagingWorldGenerator.setSignText(block, "", "enter portal to", "set up a game");
 			break;
 		}
 	}

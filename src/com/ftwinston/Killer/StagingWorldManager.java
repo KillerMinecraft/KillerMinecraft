@@ -195,6 +195,9 @@ class StagingWorldManager
 		ANIMALS,
 		GAME_MODE,
 		WORLD_OPTION,
+		PLAYER_LIMIT,
+		STATUS,
+		JOIN_ACTION,
 	}
 	
 	private void addWorldInfo(String line)
@@ -761,13 +764,12 @@ class StagingWorldManager
 		}
 	}
 	
-	public void updateGameInfoSigns(Game game)
+	public void playerNumberChanged(Game game)
 	{
 		if ( Settings.maxSimultaneousGames == 1 || game == null )
 			return;
 		
 		int numPlayers = game.getOnlinePlayers().size(), numTotal = numPlayers + game.getOfflinePlayers().size();
-		boolean gameLocked = false, gameFull = false;
 		int buttonY = StagingWorldGenerator.getButtonY(game.getNumber());
 		Block b = stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY, StagingWorldGenerator.playerLimitZ);
 		
@@ -776,14 +778,12 @@ class StagingWorldManager
 			if ( game.getPlayerLimit() == 0 )
 			{
 				game.setPlayerLimit(Math.max(numPlayers, 2));
-				gameFull = numPlayers >= 2;
-				gameLocked = gameFull && !game.getGameState().usesGameWorlds;
+				game.setLocked(numPlayers >= 2 && !game.getGameState().usesGameWorlds);
 			}
 			else if ( numPlayers == 0 && !game.getGameState().usesGameWorlds )
 			{
 				game.setUsesPlayerLimit(false);
-				gameLocked = false;
-				gameFull = !game.getGameState().usesGameWorlds;
+				game.setLocked(false);
 				
 				// reset the switch
 				Block lever = b.getRelative(1, 0, 0); 
@@ -791,84 +791,18 @@ class StagingWorldManager
 			}
 			else
 			{
-				gameFull = game.usesPlayerLimit() && numTotal >= game.getPlayerLimit();
-				gameLocked = gameFull && !game.getGameState().usesGameWorlds;
-			}
-			
-			if ( game.usesPlayerLimit() )
-			{
-				int numFree = game.getPlayerLimit() - numTotal;
-				StagingWorldGenerator.setupWallSign(b, (byte)0x2, "Player limit:", "§l" + game.getPlayerLimit() + " players", "", gameFull ? "§4Game is full" : (numFree == 1 ? "1 free slot" : numFree + " free slots"));
+				game.setLocked(numTotal >= game.getPlayerLimit() && !game.getGameState().usesGameWorlds);
 			}
 		}
-		
-		if ( !game.usesPlayerLimit() && Settings.allowPlayerLimits )
-			StagingWorldGenerator.setupWallSign(b, (byte)0x2, "No player limit", "is set.", "Pull lever to", "apply a limit.");
-		
-		lockGame(game, gameLocked || (game.getGameState().usesGameWorlds && !Settings.allowLateJoiners && !Settings.allowSpectators));
-		
-		int portalX = StagingWorldGenerator.getGamePortalX(game.getNumber());
-		int signZ = StagingWorldGenerator.getGamePortalZ() + 2;
-		
-		b = stagingWorld.getBlockAt(portalX-1, StagingWorldGenerator.baseFloorY+2, signZ);
-		
-		String strPlayers = numPlayers == 1 ? "1 player" : numPlayers + " players";
-		if ( game.getGameState().usesGameWorlds )
-		{
-			String[] mode = StagingWorldGenerator.splitTextForSign(game.getGameMode().getName());
-			
-			StagingWorldGenerator.setupWallSign(b, (byte)0x3, strPlayers, "* In Progress *", mode.length == 1 ? "" : mode[0], mode[mode.length > 1 ? 1 : 0]);
-		}
-		else if ( numPlayers > 0 )
-			StagingWorldGenerator.setupWallSign(b, (byte)0x3, strPlayers, "", "* In Setup *");
 		else
-		{
-			StagingWorldGenerator.setupWallSign(b, (byte)0x3, strPlayers, "", "* Vacant *");
-			
-			// reset difficulty and monster numbers back to defaults
-			if ( game.getDifficulty() != Game.defaultDifficulty) 
-			{
-				game.setDifficulty(Game.defaultDifficulty);
-				Block sign = plugin.stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY, StagingWorldGenerator.difficultyButtonZ);
-				StagingWorldGenerator.setupWallSign(sign, (byte)0x5, "", "Difficulty:", StagingWorldGenerator.capitalize(game.getDifficulty().name()), "");
-			}
-			if ( game.monsterNumbers != Game.defaultMonsterNumbers) 
-			{
-				game.monsterNumbers = Game.defaultMonsterNumbers; 
-				Block sign = plugin.stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY, StagingWorldGenerator.monstersButtonZ);
-				StagingWorldGenerator.setupWallSign(sign, (byte)0x5, "", "Monsters:", StagingWorldGenerator.getQuantityText(game.monsterNumbers), "");
-			}
-			if ( game.animalNumbers != Game.defaultAnimalNumbers) 
-			{
-				game.animalNumbers = Game.defaultAnimalNumbers;
-				Block sign = plugin.stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY, StagingWorldGenerator.animalsButtonZ);
-				StagingWorldGenerator.setupWallSign(sign, (byte)0x5, "", "Animals:", StagingWorldGenerator.getQuantityText(game.animalNumbers), "");
-			}
-		}
+			game.setLocked(false);
 		
-		b = stagingWorld.getBlockAt(portalX+1, StagingWorldGenerator.baseFloorY+2, signZ);
-		if ( game.getGameState().usesGameWorlds )
-		{
-			if ( !Settings.allowLateJoiners && !Settings.allowSpectators )
-			{
-				StagingWorldGenerator.setupWallSign(b, (byte)0x3, "Game already", "started, no", "spectators", "allowed");
-			}
-			else if ( gameFull )
-				StagingWorldGenerator.setupWallSign(b, (byte)0x3, "This game", "is full:", "enter portal to", "specatate game");
-			else
-			{
-				String actionStr;
-				if ( gameFull || !Settings.allowLateJoiners )
-					actionStr = "spectate game";
-				else
-					actionStr = "join game";
-				StagingWorldGenerator.setupWallSign(b, (byte)0x3, "", "enter portal to", actionStr);
-			}
-		}
-		else if ( gameLocked )
-			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "This game", "is full:", "no one else", "can join it");
-		else
-			StagingWorldGenerator.setupWallSign(b, (byte)0x3, "", "enter portal to", "set up a game");
+		game.updateSigns(GameSign.PLAYER_LIMIT);
+		
+		lockGame(game, game.isLocked() || (game.getGameState().usesGameWorlds && !Settings.allowLateJoiners && !Settings.allowSpectators));
+		
+		game.updateSigns(GameSign.STATUS);
+		game.updateSigns(GameSign.JOIN_ACTION);
 	}
 	
 	private void resetTripWire(Block b)

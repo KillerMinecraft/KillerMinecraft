@@ -53,7 +53,7 @@ class PlayerManager
 		if ( game != null )
 		{
 			game.getGameMode().broadcastMessage(player.getName() + " quit the game");
-			plugin.stagingWorldManager.updateGameInfoSigns(game);
+			plugin.stagingWorldManager.playerNumberChanged(game);
 		}
 		
 		playerKilled(game, player);
@@ -220,7 +220,7 @@ class PlayerManager
 	public void removePlayerFromGame(Player player, Game game)
 	{
 		game.getPlayerInfo().remove(player.getName());
-		plugin.stagingWorldManager.updateGameInfoSigns(game);
+		plugin.stagingWorldManager.playerNumberChanged(game);
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time

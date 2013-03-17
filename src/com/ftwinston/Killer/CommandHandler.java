@@ -404,7 +404,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			else
 				player.teleport(plugin.stagingWorldManager.getGameSetupSpawnLocation(game.getNumber()));
 			plugin.playerManager.putPlayerInGame(player, game);
-			plugin.stagingWorldManager.updateGameInfoSigns(game);
+			plugin.stagingWorldManager.playerNumberChanged(game);
 		}
 		else if ( cmd == "exclude" ) 
 		{
@@ -422,7 +422,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			}
 			
 			plugin.playerManager.removePlayerFromGame(player, game);
-			plugin.stagingWorldManager.updateGameInfoSigns(game);
+			plugin.stagingWorldManager.playerNumberChanged(game);
 		}
 		else
 			plugin.log.warning("Invalid game command: " + cmd);
@@ -456,7 +456,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			return;
 		}
 		
-		plugin.stagingWorldManager.updateGameInfoSigns(game);
+		plugin.stagingWorldManager.playerNumberChanged(game);
 	}
 
 	private static void changeDifficulty(Killer plugin, Game game, String param)

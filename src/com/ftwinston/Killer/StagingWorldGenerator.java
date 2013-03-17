@@ -613,7 +613,9 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						b = getBlockAbs(chunk, mainButtonX, floorY + 2, playerLimitZ);
 						if ( b != null )
 						{
-							setupWallSign(b, (byte)0x2, "No player limit", "is set.", "Pull lever to", "apply a limit.");
+							b.setType(Material.WALL_SIGN);
+							b.setData((byte)0x2);
+							worldInfo.add("sign " + b.getX() + " " + b.getY() + " " + b.getZ() + " PLAYER_LIMIT " + game);
 							
 							b = b.getRelative(0, 1, 0);
 							b.setType(Material.WOOD_BUTTON);
@@ -743,6 +745,22 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						b = getBlockAbs(chunk, doorX, floorY+3, selectionWallMinZ+1);
 						if ( b != null )
 							setupWallSign(b, (byte)0x3, "", "Game " + (i+1), "", "");
+						
+						b = getBlockAbs(chunk, doorX-1, floorY+2, selectionWallMinZ+1);
+						if ( b != null )
+						{
+							b.setType(Material.WALL_SIGN);
+							b.setData((byte)0x3);
+							worldInfo.add("sign " + b.getX() + " " + b.getY() + " " + b.getZ() + " STATUS " + i);
+						}
+						
+						b = getBlockAbs(chunk, doorX+1, floorY+2, selectionWallMinZ+1);
+						if ( b != null )
+						{
+							b.setType(Material.WALL_SIGN);
+							b.setData((byte)0x3);
+							worldInfo.add("sign " + b.getX() + " " + b.getY() + " " + b.getZ() + " JOIN_ACTION " + i);
+						}
 				}
 
 				// tripwire
@@ -1078,13 +1096,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	{
 		b.setType(Material.SIGN_POST);
 		b.setData(orientation);
-		Sign s = (Sign)b.getState();
-		
-		for ( int i=0; i<4 && i<lines.length; i++ )
-			s.setLine(i, lines[i]);
-		for ( int i=lines.length; i<4; i++ )
-			s.setLine(i, "");
-		s.update();
+		setSignText(b, lines);
 	}
 
 	
@@ -1092,8 +1104,12 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	{
 		b.setType(Material.WALL_SIGN);
 		b.setData(orientation);
+		setSignText(b, lines);
+	}
+	
+	public static void setSignText(Block b, String... lines)
+	{
 		Sign s = (Sign)b.getState();
-		
 		for ( int i=0; i<4 && i<lines.length; i++ )
 			s.setLine(i, lines[i]);
 		for ( int i=lines.length; i<4; i++ )
