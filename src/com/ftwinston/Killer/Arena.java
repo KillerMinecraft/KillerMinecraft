@@ -119,14 +119,14 @@ public class Arena
 		return null;
 	}
 	
-	private static final int arenaScoreZ = StagingWorldGenerator.spleefMaxZ + 8, arenaScoreX = StagingWorldGenerator.arenaMonsterButtonX + 2;
+	private static final int arenaScoreZ = StagingWorldGenerator.spleefMaxZ + 8, arenaScoreX = StagingWorldGenerator.wallMaxX - 3, arenaScoreY = 35; // these need calculated dynamically
 	public void prepareNextMonsterWave()
 	{
 		monsterWaveNumber++;
 		
 		// write the wave number into the world
 		boolean[][] text = StagingWorldGenerator.writeBlockText("WAVE " + monsterWaveNumber);
-		int xMin = arenaScoreX + text.length/2, yMin = StagingWorldGenerator.spleefY + 6;
+		int xMin = arenaScoreX + text.length/2, yMin = arenaScoreY;
 		for ( int i=0; i<text.length; i++ )
 			for ( int j=0; j<text[i].length; j++ )
 				stagingWorld.getBlockAt(xMin-i, yMin + j, arenaScoreZ).setType(text[i][j] ? Material.SNOW_BLOCK : Material.AIR);
@@ -243,7 +243,7 @@ public class Arena
 		}
 		while ( triesLeft > 0 && highestY < volume.y1 );
 		
-		if ( highestY >= StagingWorldGenerator.spleefY )
+		if ( highestY >= volume.z2 )
 			loc.setY(highestY);
 		
 		return loc;
@@ -251,19 +251,19 @@ public class Arena
 	
 	void rebuildArena()
 	{
-		for ( int x=StagingWorldGenerator.spleefMinX; x<=StagingWorldGenerator.spleefMaxX; x++ )
-			for ( int z=StagingWorldGenerator.spleefMinZ; z<=StagingWorldGenerator.spleefMaxZ; z++ )
+		for ( int x=volume.x1; x<=volume.x2; x++ )
+			for ( int z=volume.z1; z<=volume.z2; z++ )
 			{
-				stagingWorld.getBlockAt(x, StagingWorldGenerator.spleefY, z).setType(Material.DIRT);
-				for ( int y=StagingWorldGenerator.spleefY+1; y<StagingWorldGenerator.spleefY+3; y++ )
+				stagingWorld.getBlockAt(x, volume.y1, z).setType(Material.DIRT);
+				for ( int y=volume.y1+1; y<=volume.y2; y++ )
 					stagingWorld.getBlockAt(x, y, z).setType(Material.AIR);
 			}
 		
 		if ( mode == Mode.SURVIVAL )
 		{
 			int centerZ = (StagingWorldGenerator.spleefMinZ + StagingWorldGenerator.spleefMaxZ) / 2;
-			for ( int x=StagingWorldGenerator.spleefMinX + 3; x<=StagingWorldGenerator.spleefMaxX - 3; x++ )
-				for ( int y=StagingWorldGenerator.spleefY + 1; y < StagingWorldGenerator.spleefY + 3; y++ )
+			for ( int x=volume.x1 + 3; x<=volume.x2 - 3; x++ )
+				for ( int y=volume.y1 + 1; y < volume.y1 + 3; y++ )
 				{
 					stagingWorld.getBlockAt(x, y, centerZ).setType(Material.DIRT);
 					stagingWorld.getBlockAt(x, y, centerZ + 1).setType(Material.DIRT);
@@ -284,7 +284,7 @@ public class Arena
 
 			// clear the world writing
 			for ( int x=arenaScoreX - 25; x<arenaScoreX + 25; x++ )
-				for ( int y=StagingWorldGenerator.spleefY+6; y<StagingWorldGenerator.spleefY+11; y++ )
+				for ( int y=arenaScoreY; y<arenaScoreY+5; y++ )
 					stagingWorld.getBlockAt(x, y, arenaScoreZ).setType(Material.AIR);
 			
 			if ( mode == Mode.SURVIVAL )
