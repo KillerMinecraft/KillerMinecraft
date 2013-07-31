@@ -17,6 +17,42 @@ import com.ftwinston.Killer.StagingWorldManager.StagingWorldOption;
 
 public class CommandHandler
 {
+	public static boolean onCommand(Killer plugin, CommandSender sender, Command cmd, String label, String[] args)
+	{
+		if (cmd.getName().equalsIgnoreCase("spec"))
+			return CommandHandler.spectatorCommand(plugin, sender, cmd, label, args);
+		else if (cmd.getName().equalsIgnoreCase("vote"))
+		{
+			if ( sender instanceof Player )
+				plugin.voteManager.showVoteMenu((Player)sender);
+			return true;
+		}
+		else if (cmd.getName().equalsIgnoreCase("team"))
+			return CommandHandler.teamChat(plugin, sender, cmd, label, args);
+		else if (cmd.getName().equalsIgnoreCase("help"))
+		{
+			if ( !(sender instanceof Player) )
+				return true;
+			
+			// if they've already reached the end of the messages, start again from the beginning
+			Player player = (Player)sender;
+			Game game = plugin.getGameForPlayer(player);
+			if ( game == null )
+				return true;
+			
+			if ( !game.getGameMode().sendGameModeHelpMessage(player) )
+			{// if there was no message to send, restart from the beginning
+				game.getPlayerInfo().get(player.getName()).nextHelpMessage = 0;
+				game.getGameMode().sendGameModeHelpMessage(player);
+			}
+			return true;
+		}
+		else if (cmd.getName().equalsIgnoreCase("killer"))
+			return CommandHandler.killerCommand(plugin, sender, cmd, label, args);
+		
+		return false;
+	}
+	
 	public static boolean spectatorCommand(Killer plugin, CommandSender sender, Command cmd, String label, String[] args)
 	{
 		if ( !(sender instanceof Player) )

@@ -1,8 +1,8 @@
 name: Killer
 main: com.ftwinston.Killer.Killer
-version: 0.3
+version: 0.4
 load: STARTUP
-description: Several PVP game modes that focus on subtlety. Features a staging world that lets you set up games to be played on new worlds, automatically deletes these worlds afterwards.
+description: A plugin for managing PVP game modes played out on temporary worlds that are automatically deleted afterwards.
 authors: [FTWinston, Canazza]
 commands:
   spec:
@@ -10,8 +10,8 @@ commands:
   vote:
     usage: Shows a menu that allows you to set up a vote among all players
   team:
-    usage: Send a message only to team members, in game modes other than Mystery Killer and Contract Killer
+    usage: Send a message only to team members, in game modes with teams
   killer:
-    usage: Admin commands to change the killer & restart the game. Only usable by op / console.
+    usage: Various commands for joining, leaving and configuring games
   help:
     usage: Shows information about the current game mode.

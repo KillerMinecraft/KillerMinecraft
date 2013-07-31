@@ -249,38 +249,7 @@ public class Killer extends JavaPlugin
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
-		if (cmd.getName().equalsIgnoreCase("spec"))
-			return CommandHandler.spectatorCommand(this, sender, cmd, label, args);
-		else if (cmd.getName().equalsIgnoreCase("vote"))
-		{
-			if ( sender instanceof Player )
-				voteManager.showVoteMenu((Player)sender);
-			return true;
-		}
-		else if (cmd.getName().equalsIgnoreCase("team"))
-			return CommandHandler.teamChat(this, sender, cmd, label, args);
-		else if (cmd.getName().equalsIgnoreCase("help"))
-		{
-			if ( !(sender instanceof Player) )
-				return true;
-			
-			// if they've already reached the end of the messages, start again from the beginning
-			Player player = (Player)sender;
-			Game game = getGameForPlayer(player);
-			if ( game == null )
-				return true;
-			
-			if ( !game.getGameMode().sendGameModeHelpMessage(player) )
-			{// if there was no message to send, restart from the beginning
-				game.getPlayerInfo().get(player.getName()).nextHelpMessage = 0;
-				game.getGameMode().sendGameModeHelpMessage(player);
-			}
-			return true;
-		}
-		else if (cmd.getName().equalsIgnoreCase("killer"))
-			return CommandHandler.killerCommand(this, sender, cmd, label, args);
-		
-		return false;
+		return CommandHandler.onCommand(this, sender, cmd, label, args);
 	}
 	
 	Game getGameForWorld(World w)

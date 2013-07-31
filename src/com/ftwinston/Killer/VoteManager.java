@@ -215,9 +215,8 @@ public class VoteManager
 		}
 	}
 	
-	void showVoteMenu(Player sender)
+	void showVoteMenu(Player player)
 	{
-		Player player = (Player)sender;
 		Conversation convo = voteConvFactory.buildConversation(player);
 		convo.begin();
 	}
