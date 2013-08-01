@@ -68,7 +68,7 @@ public abstract class WorldOption
 		
 		public void run()
 		{
-			String worldName = Settings.killerWorldName + "_" + (game.getNumber()+1) + "." + num;
+			String worldName = Settings.killerWorldNamePrefix + "_" + (game.getNumber()+1) + "." + num;
 			final WorldConfig helper = new WorldConfig(game, worldName, environment);
 			setupWorld(helper, runNext);
 		}

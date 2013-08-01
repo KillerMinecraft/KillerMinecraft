@@ -56,17 +56,11 @@ public class Killer extends JavaPlugin
 	{
         instance = this;
         craftBukkit = CraftBukkitAccess.createCorrectVersion(this);
-        if ( craftBukkit == null )
+        if ( craftBukkit == null || !Settings.setup(this) )
         {
         	setEnabled(false);
         	return;
         }
-        
-        Settings.setup(this);
-        
-        games = new Game[Settings.maxSimultaneousGames];
-        for ( int i=0; i<games.length; i++ )
-        	games[i] = new Game(this, i);
         
 		createRecipes();
 		
@@ -77,7 +71,7 @@ public class Killer extends JavaPlugin
         getServer().getPluginManager().registerEvents(eventListener, this);
 
 		String defaultLevelName = craftBukkit.getDefaultLevelName();
-		if ( defaultLevelName.equalsIgnoreCase(Settings.killerWorldName) )
+		if ( defaultLevelName.equalsIgnoreCase(Settings.killerWorldNamePrefix) )
 		{
 			stagingWorldIsServerDefault = true;
 			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
@@ -111,7 +105,7 @@ public class Killer extends JavaPlugin
 		}
 		
 		// remove existing Killer world files
-		worldManager.deleteWorldFolders(Settings.killerWorldName + "_");
+		worldManager.deleteWorldFolders(Settings.killerWorldNamePrefix + "_");
 		
         // disable spawn protection
         getServer().setSpawnRadius(0);

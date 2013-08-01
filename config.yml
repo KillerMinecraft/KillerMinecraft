@@ -1,0 +1,41 @@
+stagingWorldName:           staging
+killerWorldNamePrefix:      killer
+allowTeleportToStagingArea: true
+filterChat:                 true
+filterScoreboard:           true
+allowSpectators:            true
+reportStats:                true
+allowLateJoiners:           true
+allowPlayerLimits:          true
+
+stagingSpawn:
+    from:       -8, 64, -8
+    to:         8, 64, 8
+
+protected:
+    from:       -18, 64, -18
+    to:         18, 68, 18
+
+games:
+  - 
+    mode:       Mystery Killer
+    world:      Default World
+    infomap:    16, 67, 0
+    buttons:
+        join:   16, 66, -2
+        config: 16, 66, 0
+        start:  16, 66, 2
+    progressbar:
+        from:   17, 65, -8
+        to:     17, 65, 8
+  - 
+    mode:       Farm Killer
+    world:      Superflat
+    infomap:    -16, 67, 0
+    buttons:
+        join:   -16, 66, 2
+        config: -16, 66, 0
+        start:  -16, 66, -2
+    progressbar:
+        from:   -17, 65, 8
+        to:     -17, 65, -8

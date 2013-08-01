@@ -18,11 +18,12 @@ import org.bukkit.generator.BlockPopulator;
 
 class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 {
-	public static final int wallMaxX = 9, wallMinX = 3, wallMinZ = 1, startButtonZ = wallMinZ + 1, mainButtonX = wallMinX + 1,
-			optionButtonX = wallMaxX - 1, animalsButtonZ = startButtonZ + 2, monstersButtonZ = animalsButtonZ + 1,
+	public static final int wallMaxX = 9, wallMinZ = 1, optionButtonX = wallMaxX - 1, startButtonZ = wallMinZ + 1, startButtonX = wallMaxX - 3, overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1;
+	
+	public static final int wallMinX = 3, mainButtonX = wallMinX + 1,
+			animalsButtonZ = startButtonZ + 2, monstersButtonZ = animalsButtonZ + 1,
 			difficultyButtonZ = monstersButtonZ + 1, globalOptionButtonZ = startButtonZ + 6, worldConfigButtonZ = globalOptionButtonZ + 3,
 			worldButtonZ = worldConfigButtonZ + 2, gameModeConfigButtonZ = worldButtonZ + 3, gameModeButtonZ = gameModeConfigButtonZ + 2,
-			startButtonX = wallMaxX - 3, overrideButtonX = startButtonX + 1, cancelButtonX = startButtonX - 1,
 			arenaSpleefButtonX = startButtonX + 2, arenaMonsterButtonX = startButtonX - 2, spleefY = 29, spleefMaxX = startButtonX + 8,
 			spleefMinX = spleefMaxX - 16;
 	public static int arenaButtonZ, spleefMinZ, spleefMaxZ, spleefPressurePlateZ, exitPortalZ, playerLimitZ;
@@ -38,7 +39,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	public static final int baseFloorY = 32, floorSeparation = 9, buttonOffset = 2, ceilingOffset = 6;
 	public static int getFloorY(int gameNum)
 	{
-		if ( Settings.maxSimultaneousGames == 1 )
+		if ( Settings.numGames == 1 )
 			return baseFloorY;
 		return baseFloorY + floorSeparation + gameNum * floorSeparation;
 	}
@@ -65,7 +66,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 
 	public static int getGamePortalX(int i)
 	{
-		return startButtonX - (Settings.maxSimultaneousGames * 3 + Settings.maxSimultaneousGames + 1)/2 + 4 * i + 2;
+		return startButtonX - (Settings.numGames * 3 + Settings.numGames + 1)/2 + 4 * i + 2;
 	}
 	
 	public static int getGamePortalZ() { return getWallMaxZ() - 13; }
@@ -166,7 +167,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			Material command = Material.COMMAND;
 			Block b;
 			
-			for ( int game = 0; game < Settings.maxSimultaneousGames; game++ )
+			for ( int game = 0; game < Settings.numGames; game++ )
 			{
 				int floorY = getFloorY(game), buttonY = getButtonY(game), ceilingY = floorY + ceilingOffset;
 			
@@ -504,7 +505,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				}
 				
 				// if there's only one setup room, it links to the spleef arena. Otherwise, they're all separate.
-				if ( Settings.maxSimultaneousGames != 1 )
+				if ( Settings.numGames != 1 )
 				{
 					int wallMaxZ = getWallMaxZ();
 					// fill in end wall
@@ -663,11 +664,11 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 
 			int floorY = baseFloorY, buttonY = floorY + buttonOffset, ceilingY = floorY + ceilingOffset;
 			int backWallMinX = wallMinX - 10, backWallMaxX = wallMaxX + 10, selectionWallMinX = backWallMinX;
-			if ( Settings.maxSimultaneousGames != 1 )
+			if ( Settings.numGames != 1 )
 			{// game selection room
 				int selectionWallMinZ = getGamePortalZ()+1;
-				selectionWallMinX = startButtonX-(Settings.maxSimultaneousGames * 3 + Settings.maxSimultaneousGames + 1)/2;
-				int selectionWallMaxX = selectionWallMinX + Settings.maxSimultaneousGames * 3 + Settings.maxSimultaneousGames + 1;
+				selectionWallMinX = startButtonX-(Settings.numGames * 3 + Settings.numGames + 1)/2;
+				int selectionWallMaxX = selectionWallMinX + Settings.numGames * 3 + Settings.numGames + 1;
 				backWallMinX = Math.min(selectionWallMinX-1, backWallMinX);
 				backWallMaxX = Math.max(selectionWallMaxX+1, backWallMaxX);
 				
@@ -731,7 +732,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					}
 				
 				// doorways
-				for ( int i=0; i<Settings.maxSimultaneousGames; i++ )
+				for ( int i=0; i<Settings.numGames; i++ )
 				{
 					int doorX = getGamePortalX(i);
 					for ( int z=selectionWallMinZ; z>selectionWallMinZ-3; z-- )
@@ -821,7 +822,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 					}
 
 			// "exit" portal
-			if ( !Killer.instance.stagingWorldIsServerDefault && Settings.maxSimultaneousGames != 1 )
+			if ( !Killer.instance.stagingWorldIsServerDefault && Settings.numGames != 1 )
 				createExitPortal(chunk, selectionWallMinX, floorY, exitPortalZ);
 			
 			// spleef arena setup room

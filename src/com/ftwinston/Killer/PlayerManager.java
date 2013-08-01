@@ -377,9 +377,9 @@ class PlayerManager
 			
 			player.closeInventory(); // this stops them from keeping items they had in (e.g.) a crafting table
 			
-			if ( game != null && Helper.isAlive(game, player) ) // if any starting items are configured, give them if the player is alive
+			/*if ( game != null && Helper.isAlive(game, player) ) // if any starting items are configured, give them if the player is alive
 				for ( Material material : Settings.startingItems )
-					inv.addItem(new ItemStack(material));
+					inv.addItem(new ItemStack(material));*/
 		}
 	}
 	

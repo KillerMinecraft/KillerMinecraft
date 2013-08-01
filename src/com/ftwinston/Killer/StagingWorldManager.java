@@ -601,7 +601,7 @@ class StagingWorldManager
 			return;
 		if ( block.getZ() == StagingWorldGenerator.getGamePortalZ() )
 		{
-			for ( int i=0; i<Settings.maxSimultaneousGames; i++ )
+			for ( int i=0; i<Settings.numGames; i++ )
 				if ( block.getX() == StagingWorldGenerator.getGamePortalX(i) )
 				{
 					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,  new Runnable() {
@@ -613,7 +613,7 @@ class StagingWorldManager
 					break;
 				}
 		}
-		else if ( block.getZ() == StagingWorldGenerator.getWallMaxZ() + 1 && game != null && Settings.maxSimultaneousGames != 1 )
+		else if ( block.getZ() == StagingWorldGenerator.getWallMaxZ() + 1 && game != null && Settings.numGames != 1 )
 		{// exit this game, back to the staging world spawn
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,  new Runnable() {
 				@Override
@@ -766,7 +766,7 @@ class StagingWorldManager
 	
 	public void playerNumberChanged(Game game)
 	{
-		if ( Settings.maxSimultaneousGames == 1 || game == null )
+		if ( Settings.numGames == 1 || game == null )
 			return;
 		
 		int numPlayers = game.getOnlinePlayers().size(), numTotal = numPlayers + game.getOfflinePlayers().size();
@@ -812,7 +812,7 @@ class StagingWorldManager
 
 	private void lockGame(Game game, boolean locked)
 	{
-		if ( Settings.maxSimultaneousGames <= 1 || (!Settings.allowPlayerLimits && locked) )
+		if ( Settings.numGames <= 1 || (!Settings.allowPlayerLimits && locked) )
 			return;
 		
 		Block wayIn = stagingWorld.getBlockAt(StagingWorldGenerator.getGamePortalX(game.getNumber()), StagingWorldGenerator.baseFloorY+1, StagingWorldGenerator.getGamePortalZ()+1);

@@ -105,7 +105,7 @@ public class GameConfiguration
 			StringBuilder sb = new StringBuilder();
 			
 			sb.append("Configuring Game");
-			if ( Settings.maxSimultaneousGames > 1 )
+			if ( Settings.numGames > 1 )
 			{
 				sb.append(" #");
 				sb.append(game.getNumber());

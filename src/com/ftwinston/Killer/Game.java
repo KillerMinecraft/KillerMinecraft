@@ -343,7 +343,7 @@ public class Game
 	private List<World> worlds = new ArrayList<World>();
 	List<World> getWorlds() { return worlds; }
 	
-	String getWorldName() { return Settings.killerWorldName + number; }
+	String getWorldName() { return Settings.killerWorldNamePrefix + number; }
 	
 	boolean forcedGameEnd = false;
 	void endGame(CommandSender actionedBy)

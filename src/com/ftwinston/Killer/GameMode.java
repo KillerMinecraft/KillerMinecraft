@@ -368,27 +368,7 @@ public abstract class GameMode implements Listener
 			plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
 				@Override
 				public void run() {
-					if ( Settings.voteRestartAtEndOfGame )
-						plugin.voteManager.startVote(game, "Play another game in the same world?", null, new Runnable() {
-							public void run()
-							{
-								game.restartGame(null);
-							}
-						}, new Runnable() {
-							public void run()
-							{
-								game.endGame(null);
-							}
-						}, new Runnable() {
-							public void run()
-							{
-								game.endGame(null);
-							}
-						});
-					else if  ( Settings.autoRestartAtEndOfGame )
-						game.restartGame(null);
-					else
-						game.endGame(null);
+					game.endGame(null);
 				}
 			}, 220); // add a 12 second delay
 		}
