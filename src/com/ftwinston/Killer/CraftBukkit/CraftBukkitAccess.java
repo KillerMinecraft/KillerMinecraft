@@ -22,7 +22,11 @@ public abstract class CraftBukkitAccess
         // org.bukkit.craftbukkit.versionstring (or for pre-refactor, just org.bukkit.craftbukkit
 		String packageName = plugin.getServer().getClass().getPackage().getName();
         String version = packageName.substring(packageName.lastIndexOf('.') + 1);
-        
+
+        if ( version.equals("v1_6_R2"))
+        	return new v1_6_2(plugin);
+        if ( version.equals("v1_5_R3"))
+        	return new v1_5_2(plugin);
         if ( version.equals("v1_4_R1"))
         	return new v1_4_7(plugin);
         if ( version.equals("v1_4_6"))
