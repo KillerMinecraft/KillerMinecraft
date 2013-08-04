@@ -20,6 +20,10 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
@@ -29,7 +33,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.ftwinston.Killer.CraftBukkit.CraftBukkitAccess;
 
-public class Killer extends JavaPlugin
+public class Killer extends JavaPlugin implements Listener
 {
 	public static Killer instance;
 	CraftBukkitAccess craftBukkit;
@@ -56,65 +60,69 @@ public class Killer extends JavaPlugin
 	{
         instance = this;
         craftBukkit = CraftBukkitAccess.createCorrectVersion(this);
-        if ( craftBukkit == null || !Settings.setup(this) )
+        if ( craftBukkit == null )
         {
         	setEnabled(false);
         	return;
         }
         
-		createRecipes();
-		
-        playerManager = new PlayerManager(this);
-        worldManager = new WorldManager(this);
-        voteManager = new VoteManager(this);
-        statsManager = new StatsManager(this, games.length);
-        getServer().getPluginManager().registerEvents(eventListener, this);
+        Settings.setup(this);
+        
+        playerManager = new PlayerManager(Killer.instance);
+        worldManager = new WorldManager(Killer.instance);
+        voteManager = new VoteManager(Killer.instance);
+        
+		createRecipes(); // should be in all-vs-one game mode plugin
 
-		String defaultLevelName = craftBukkit.getDefaultLevelName();
-		if ( defaultLevelName.equalsIgnoreCase(Settings.killerWorldNamePrefix) )
-		{
-			stagingWorldIsServerDefault = true;
-			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
-		}
-		else if ( defaultLevelName.equalsIgnoreCase(Settings.stagingWorldName) )
-		{
-			stagingWorldIsServerDefault = true;
-			Settings.stagingWorldName = Settings.stagingWorldName + "2"; // rename to avoid conflict
-			worldManager.hijackDefaultWorld(defaultLevelName); // Killer's staging world will be the server's default, but it needs to be a nether world, so create an empty world first until we can create that
-		}
-		else
-		{
-			stagingWorldIsServerDefault = false;
-			// delay this by 1 tick, so that game modes are loaded and some other worlds have already been created (so that the getDefaultGameMode call in CraftServer.createWorld doesn't crash)
-			getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-				@Override
-				public void run() {
-					if ( GameMode.gameModes.size() == 0 )
-					{
-						warnNoGameModes();
-						return;
-					}
-					if ( WorldOption.worldOptions.size() == 0 )
-					{
-						warnNoWorldOptions();
-						return;
-					}
-					worldManager.createStagingWorld(Settings.stagingWorldName); // staging world isn't server default, so create it as a new world
-				}
-			}, 1);
-		}
+        getServer().getPluginManager().registerEvents(Killer.instance, Killer.instance);
 		
+        // delay this by 1 tick so that the plugins are all loaded and the worlds are generated 
+        getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+			@Override
+			public void run() {
+				if ( GameMode.gameModes.size() == 0 )
+				{
+					log.warning("Killer cannot start: No game modes have been loaded!");
+					log.warning("Add some game mode plugins to your server!");
+					setEnabled(false);
+					return;
+				}
+				if ( WorldOption.worldOptions.size() == 0 )
+				{
+					log.warning("Killer cannot start: No world options have been loaded!");
+					log.warning("Add some world option plugins to your server!");
+					setEnabled(false);
+					return;
+				}
+				
+				if ( stagingWorld == null )
+				{
+					stagingWorld = getServer().getWorld(Settings.stagingWorldName);
+					
+					if ( stagingWorld == null )
+						worldManager.createStagingWorld(Settings.stagingWorldName);
+				}
+				
+				if ( !Settings.setupGames(Killer.instance) )
+				{
+					setEnabled(false);
+					return;
+				}
+								
+				statsManager = new StatsManager(Killer.instance, Killer.instance.games.length);
+		        getServer().getPluginManager().registerEvents(eventListener, Killer.instance);
+			}
+		}, 1);
+        
 		// remove existing Killer world files
 		worldManager.deleteWorldFolders(Settings.killerWorldNamePrefix + "_");
-		
-        // disable spawn protection
-        getServer().setSpawnRadius(0);
 	}
 	
 	public void onDisable()
 	{
-		for ( Game game : games )
-			playerManager.reset(game);
+		if ( games != null )
+			for ( Game game : games )
+				playerManager.reset(game);
 		
 		worldManager.onDisable();
 		
@@ -125,6 +133,27 @@ public class Killer extends JavaPlugin
         statsManager = null;
 	}
 	
+	@EventHandler(priority = EventPriority.HIGHEST) // run last, because it deletes the intitial world
+	public void onWorldInit(final WorldInitEvent event)
+	{
+		String worldName = event.getWorld().getName(); 
+		if (!worldName.equalsIgnoreCase(Settings.stagingWorldName))
+			return;
+		
+		stagingWorld = event.getWorld();
+		
+		if ( !craftBukkit.getDefaultLevelName().equalsIgnoreCase(worldName) )
+			return;
+
+		// we're generating the staging world, and it's the server default, so assume this should be a "limited" world with no nether etc.
+		// if the staging world should be a "proper" world, it should have been generated before running killer.
+		
+		
+		// so i guess we'd want to change the chunk generator at this point to be a StagingWorldGenerator? 
+		// that can perhaps be done, if we cast to CraftWorld and then access the (private) generator property, and change it.
+		// U.G.L.Y. ... but probably the best bet.
+	}
+	
 	public static void registerGameMode(GameModePlugin plugin)
 	{
 		plugin.initialize(instance);
@@ -133,18 +162,6 @@ public class Killer extends JavaPlugin
 	public static void registerWorldOption(WorldOptionPlugin plugin)
 	{
 		plugin.initialize(instance);
-	}
-	
-	void warnNoGameModes()
-	{
-		log.warning("Killer cannot start: No game modes have been loaded!");
-		log.warning("Add some game mode plugins to your server!");
-	}
-	
-	void warnNoWorldOptions()
-	{
-		log.warning("Killer cannot start: No world options have been loaded!");
-		log.warning("Add some world option plugins to your server!");
 	}
 	
 	List<Recipe> monsterRecipes = new ArrayList<Recipe>();

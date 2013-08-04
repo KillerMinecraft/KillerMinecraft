@@ -8,15 +8,8 @@ public abstract class WorldOptionPlugin extends JavaPlugin
 	
 	final void initialize(Killer plugin)
 	{
-		String name = getName();
-		if ( WorldOption.worldOptions.size() == 0 || name.equals(Settings.defaultWorldOption) )
-		{
-			defaultWorld = this;
-			for ( Game game : plugin.games )
-				game.setWorldOption(this);
-		}
-				
 		// keep the world options in alphabetic order
+		String name = getName();
 		for ( int i=0; i<WorldOption.worldOptions.size(); i++ )
 			if ( name.compareToIgnoreCase(WorldOption.worldOptions.get(i).getName()) < 0 )
 			{

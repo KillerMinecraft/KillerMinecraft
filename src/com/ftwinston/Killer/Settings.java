@@ -1,11 +1,11 @@
 package com.ftwinston.Killer;
 
-import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class Settings
@@ -34,7 +34,7 @@ public class Settings
 		
 	public static Material teleportModeItem = Material.WATCH, followModeItem = Material.ARROW;
 	
-	public static boolean setup(Killer plugin)
+	public static void setup(Killer plugin)
 	{
 		plugin.saveDefaultConfig();
 		FileConfiguration config = plugin.getConfig();
@@ -42,13 +42,11 @@ public class Settings
 		stagingWorldName = config.getString("stagingWorldName", "staging");
 		killerWorldNamePrefix = config.getString("killerWorldNamePrefix", "killer");
 
-		World stagingWorld = null;//plugin.setupStagingWorld(); // get (creating if needed) the world in question.
+		spawnCoordMin = readLocation(config, "stagingSpawn.from", null, -8, 64, -8);
+		spawnCoordMax = readLocation(config, "stagingSpawn.to", null, 8, 64, 8);
 		
-		spawnCoordMin = readLocation(config, "stagingSpawn.from", stagingWorld, -8, 64, -8);
-		spawnCoordMax = readLocation(config, "stagingSpawn.to", stagingWorld, 8, 64, 8);
-		
-		protectionMin = readLocation(config, "protected.from", stagingWorld, -8, 64, -8);
-		protectionMax = readLocation(config, "protected.to", stagingWorld, 8, 64, 8);
+		protectionMin = readLocation(config, "protected.from", null, -8, 64, -8);
+		protectionMax = readLocation(config, "protected.to", null, 8, 64, 8);
 		
 		allowTeleportToStagingArea = config.getBoolean("allowTeleportToStagingArea", true);
 		filterChat = config.getBoolean("filterChat", true);
@@ -58,24 +56,36 @@ public class Settings
 		allowLateJoiners = config.getBoolean("allowLateJoiners", true);
 		allowPlayerLimits = config.getBoolean("allowPlayerLimits", true);
 		
-		return setupGames(plugin, config.getConfigurationSection("games"));
 		//startingItems = readMaterialList(config, "startingItems", new ArrayList<Integer>(), Material.STONE_PICKAXE);
 	}
 
-	private static boolean setupGames(Killer plugin, ConfigurationSection config)
+	private static void setStagingWorld(World world)
 	{
+		spawnCoordMin.setWorld(world);
+		spawnCoordMax.setWorld(world);
+		protectionMin.setWorld(world);
+		protectionMax.setWorld(world);
+	}
+	
+	public static boolean setupGames(Killer plugin)
+	{
+		if ( plugin.games != null )
+			return false;
+		
+		setStagingWorld(plugin.stagingWorld);
+		
+		List<?> config = plugin.getConfig().getList("games");
+		
 		if ( config == null )
 		{
-			plugin.log.warning("Configuration contains no game information - nothing for Killer to do!");
+			plugin.log.warning("Killer cannot start: Configuration contains no game information");
 			return false;
 		}
 		
-		Map<String, Object> allGames = config.getValues(true);
-		
-		numGames = allGames.size();
+		numGames = config.size();
 		if ( numGames == 0 )
 		{
-			plugin.log.warning("Configuration contains no game information - nothing for Killer to do!");
+			plugin.log.warning("Killer cannot start: Configuration game section contains no information");
 			return false;
 		}
 		
@@ -87,35 +97,57 @@ public class Settings
 		
 		plugin.games = new Game[numGames];
 		
-		int iGame = 0;
-		for ( Object o : allGames.values() )
+		for ( int iGame = 0; iGame < numGames; iGame++ )
 		{
-			ConfigurationSection gameConfig = (ConfigurationSection)o;
+			Object o = config.get(iGame);
+			
+			LinkedHashMap<String, Object> gameConfig = (LinkedHashMap<String, Object>)o;
 			if ( gameConfig == null )
 			{
-				plugin.log.warning("Invalid configuration for game #" + (iGame+1));
+				plugin.log.warning("Killer cannot start: Invalid configuration for game #" + (iGame+1));
 				return false;
 			}
 
 			Game g;
 			plugin.games[iGame] = g = new Game(plugin, iGame);
 			setupGame(plugin, g, gameConfig);
-			iGame++;
 		}
+		
 		return true;
 	}
 
-	private static void setupGame(Killer plugin, Game game, ConfigurationSection config) {
-		String mode = config.getString("mode", defaultGameMode);
-		String world = config.getString("world", defaultWorldOption);
+	private static void setupGame(Killer plugin, Game game, LinkedHashMap<String, Object> config)
+	{
+		String mode = getString(config, "mode", defaultGameMode);
+		String world = getString(config, "world", defaultWorldOption);
 		Location infoMap = readLocation(config, "infomap", plugin.stagingWorld);
 		Location joinButton = readLocation(config, "buttons.join", plugin.stagingWorld);
 		Location configButton = readLocation(config, "buttons.config", plugin.stagingWorld);
 		Location startButton = readLocation(config, "buttons.start", plugin.stagingWorld);
-
+		
 		//g.setGameMode(...);
 		//g.setWorldOption(...);
+
+		game.initStagingWorld();
 	}
+	
+	private static String getString(LinkedHashMap<String, Object> config, String key, String defaultVal)
+	{
+		Object o = config.get(key);
+		if ( o == null )
+			return defaultVal;
+
+		try
+		{
+			return (String)o;
+		}
+		catch ( ClassCastException ex )
+		{
+			Killer.instance.log.warning("'" + key + "' is not a string, but it's supposed to be!");
+			return defaultVal;
+		}
+	}
+	
 
 	private static Location readLocation(FileConfiguration config, String name, World world, int defX, int defY, int defZ)
 	{
@@ -151,22 +183,22 @@ public class Settings
 		}
 	}
 	
-	private static Location readLocation(ConfigurationSection config, String name, World world, int defX, int defY, int defZ)
+	private static Location readLocation(LinkedHashMap<String, Object> config, String name, World world, int defX, int defY, int defZ)
 	{
 		Location loc = readLocation(config, name, world);
 		return loc == null ? new Location(world, defX, defY, defZ) : loc;
 	}
 	
-	private static Location readLocation(ConfigurationSection config, String name, World world)
+	private static Location readLocation(LinkedHashMap<String, Object> config, String name, World world)
 	{
-		String str = config.getString(name);
+		String str = getString(config, name, null);
 		if ( str == null )
 			return null;
 		
 		String[] parts = str.split(",", 3);
 		if ( parts.length != 3 )
 		{
-			Killer.instance.log.warning("Invalid location in config: " + config.getString(name));
+			Killer.instance.log.warning("Invalid location in config: " + str);
 			return null;
 		}
 		
@@ -180,7 +212,7 @@ public class Settings
 		}
 		catch ( NumberFormatException ex )
 		{
-			Killer.instance.log.warning("Invalid location in config: " + config.getString(name));
+			Killer.instance.log.warning("Invalid location in config: " + str);
 			return null;
 		}
 	}

@@ -92,30 +92,7 @@ class WorldManager
 	public void createStagingWorld(final String name) 
 	{
 		plugin.stagingWorld = plugin.getServer().getWorld(name);
-		if ( plugin.stagingWorld != null )
-		{// staging world already existed; delete it, because we might want to reset it back to its default state
-			plugin.log.info("Deleting staging world, because it already exists...");
-			
-			plugin.craftBukkit.forceUnloadWorld(plugin.stagingWorld);
-			try
-			{
-				Thread.sleep(200);
-			}
-			catch ( InterruptedException ex )
-			{
-			}
-			
-			plugin.craftBukkit.clearWorldReference(name);
-			
-			try
-			{
-				delete(new File(plugin.getServer().getWorldContainer() + File.separator + name));
-			}
-			catch ( Exception e )
-			{
-			}
-		}
-		
+				
 		// ensure the end wall leaves enough room for all the options
 		int maxZ = StagingWorldGenerator.getWallMaxZ();
 		maxZ = Math.max(maxZ, StagingWorldGenerator.getOptionButtonZ(GameMode.gameModes.size(), true));
@@ -145,9 +122,6 @@ class WorldManager
 		generator.saveWorldInfo(plugin, plugin.stagingWorld);
 		
 		plugin.stagingWorldManager = new StagingWorldManager(plugin, plugin.stagingWorld);
-		
-		for ( Game game : plugin.games )
-			plugin.stagingWorldManager.playerNumberChanged(game);
 		
 		plugin.log.info("Staging world generated");
 	}

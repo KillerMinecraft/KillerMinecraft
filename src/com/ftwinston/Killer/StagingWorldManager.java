@@ -40,9 +40,6 @@ class StagingWorldManager
 			spawnYaw = 0;
 		}
 		
-		for ( int i=0; i<plugin.games.length; i++ )
-			plugin.games[i].initStagingWorld();
-		
 		for ( int i=0; i<arenas.size(); i++ )
 			arenas.get(i).updateIndicators();
 	}

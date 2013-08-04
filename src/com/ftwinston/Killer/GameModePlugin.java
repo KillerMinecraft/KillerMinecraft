@@ -8,16 +8,9 @@ public abstract class GameModePlugin extends JavaPlugin
 	public abstract String[] getSignDescription();
 	
 	final void initialize(Killer plugin)
-	{
-		String name = getName();
-		if ( GameMode.gameModes.size() == 0 || name.equals(Settings.defaultGameMode) )
-		{
-			defaultMode = this;
-			for ( Game game : plugin.games )
-				game.setGameMode(this);
-		}
-				
+	{	
 		// keep the game modes in alphabetic order
+		String name = getName();
 		for ( int i=0; i<GameMode.gameModes.size(); i++ )
 			if ( name.compareToIgnoreCase(GameMode.gameModes.get(i).getName()) < 0 )
 			{

@@ -47,7 +47,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.inventory.ItemStack;
 
 import com.ftwinston.Killer.Game.GameState;
@@ -60,32 +59,6 @@ class EventListener implements Listener
 	public EventListener(Killer instance)
 	{
 		plugin = instance;
-	}
-	
-	@EventHandler(priority = EventPriority.HIGHEST) // run last, because it deletes the intitial world
-	public void onWorldInit(final WorldInitEvent event)
-	{
-		if ( plugin.stagingWorldIsServerDefault && plugin.stagingWorld == null )
-		{
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-				public void run()
-				{
-					if ( GameMode.gameModes.size() == 0 )
-					{
-						plugin.warnNoGameModes();
-						return;
-					}
-					if ( WorldOption.worldOptions.size() == 0 )
-					{
-						plugin.warnNoWorldOptions();
-						return;
-					}
-					plugin.worldManager.createStagingWorld(Settings.stagingWorldName);
-					plugin.worldManager.deleteWorlds(null, event.getWorld());
-					plugin.craftBukkit.accountForDefaultWorldDeletion(plugin.stagingWorld);
-				}
-			}, 1);
-		}
 	}
 
 	// when you die a spectator, be made able to fly again when you respawn
