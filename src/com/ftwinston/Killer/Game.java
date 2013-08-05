@@ -586,7 +586,6 @@ public class Game
 			}
 			else // otherwise, ensure that sign is back to normal
 			{
-				setWorldOption(WorldOptionPlugin.getDefault());
 				StagingWorldGenerator.fitTextOnSign((Sign)block.getState(), ChatColor.BOLD + "Disabled by " + ChatColor.BOLD + "game mode");
 			}
 			break;

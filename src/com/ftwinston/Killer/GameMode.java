@@ -27,6 +27,15 @@ public abstract class GameMode implements Listener
 	static List<GameModePlugin> gameModes = new ArrayList<GameModePlugin>();
 	Killer plugin; Game game;
 	static GameModePlugin get(int num) { return gameModes.get(num); }
+	static GameModePlugin getByName(String name)
+	{
+		for ( GameModePlugin plugin : gameModes )
+			if ( name.equalsIgnoreCase(plugin.getName()) )
+				return plugin;
+		
+		return null;
+	}
+	
 	protected Game getGame() { return game; }
 	
 	protected final Random random = new Random();

@@ -11,6 +11,15 @@ public abstract class WorldOption
 {
 	static List<WorldOptionPlugin> worldOptions = new ArrayList<WorldOptionPlugin>();
 	static WorldOptionPlugin get(int num) { return worldOptions.get(num); }
+	static WorldOptionPlugin getByName(String name)
+	{
+		for ( WorldOptionPlugin plugin : worldOptions )
+			if ( name.equalsIgnoreCase(plugin.getName()) )
+				return plugin;
+		
+		return null;
+	}
+	
 	Killer plugin; Game game;
 	
 	final void initialize(Game game, WorldOptionPlugin optionPlugin)

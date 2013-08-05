@@ -18,7 +18,4 @@ public abstract class WorldOptionPlugin extends JavaPlugin
 			}
 		WorldOption.worldOptions.add(this);
 	}
-	
-	private static WorldOptionPlugin defaultWorld;
-	static WorldOptionPlugin getDefault() { return defaultWorld; }
 }

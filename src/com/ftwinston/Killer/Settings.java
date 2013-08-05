@@ -101,7 +101,20 @@ public class Settings
 		{
 			Object o = config.get(iGame);
 			
-			LinkedHashMap<String, Object> gameConfig = (LinkedHashMap<String, Object>)o;
+			LinkedHashMap<String, Object> gameConfig;
+			
+			try
+			{
+				@SuppressWarnings("unchecked")
+				LinkedHashMap<String, Object> tmp = (LinkedHashMap<String, Object>)o;
+				
+				gameConfig = tmp;
+			}
+			catch ( ClassCastException ex )
+			{
+				gameConfig = null;
+			}
+			
 			if ( gameConfig == null )
 			{
 				plugin.log.warning("Killer cannot start: Invalid configuration for game #" + (iGame+1));
@@ -125,10 +138,17 @@ public class Settings
 		Location configButton = readLocation(config, "buttons.config", plugin.stagingWorld);
 		Location startButton = readLocation(config, "buttons.start", plugin.stagingWorld);
 		
-		//g.setGameMode(...);
-		//g.setWorldOption(...);
-
-		game.initStagingWorld();
+		GameModePlugin modePlugin = GameMode.getByName(mode);
+		if ( modePlugin == null )
+			modePlugin = GameMode.get(0);
+		game.setGameMode(modePlugin);
+		
+		WorldOptionPlugin worldPlugin = WorldOption.getByName(world);
+		if ( worldPlugin == null )
+			worldPlugin = WorldOption.get(0);
+		game.setWorldOption(worldPlugin);
+		
+		game.initStagingWorld(/*infoMap, joinButton, configButton, startButton*/);
 	}
 	
 	private static String getString(LinkedHashMap<String, Object> config, String key, String defaultVal)

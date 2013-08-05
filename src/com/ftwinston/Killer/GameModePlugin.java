@@ -19,7 +19,4 @@ public abstract class GameModePlugin extends JavaPlugin
 			}
 		GameMode.gameModes.add(this);
 	}
-	
-	private static GameModePlugin defaultMode;
-	static GameModePlugin getDefault() { return defaultMode; }
 }

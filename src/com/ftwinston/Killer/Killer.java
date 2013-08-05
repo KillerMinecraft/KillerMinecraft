@@ -133,25 +133,19 @@ public class Killer extends JavaPlugin implements Listener
         statsManager = null;
 	}
 	
-	@EventHandler(priority = EventPriority.HIGHEST) // run last, because it deletes the intitial world
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onWorldInit(final WorldInitEvent event)
 	{
 		String worldName = event.getWorld().getName(); 
 		if (!worldName.equalsIgnoreCase(Settings.stagingWorldName))
 			return;
 		
-		stagingWorld = event.getWorld();
-		
 		if ( !craftBukkit.getDefaultLevelName().equalsIgnoreCase(worldName) )
 			return;
 
 		// we're generating the staging world, and it's the server default, so assume this should be a "limited" world with no nether etc.
 		// if the staging world should be a "proper" world, it should have been generated before running killer.
-		
-		
-		// so i guess we'd want to change the chunk generator at this point to be a StagingWorldGenerator? 
-		// that can perhaps be done, if we cast to CraftWorld and then access the (private) generator property, and change it.
-		// U.G.L.Y. ... but probably the best bet.
+		craftBukkit.changeChunkGenerator(event.getWorld(), new StagingWorldGenerator());
 	}
 	
 	public static void registerGameMode(GameModePlugin plugin)
