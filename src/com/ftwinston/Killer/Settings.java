@@ -20,6 +20,7 @@ public class Settings
 	defaultWorldOption = "Default World"; // remove this
 	
 	public static boolean
+	nothingButKiller,
 	allowTeleportToStagingArea,
 	filterChat,
 	filterScoreboard,
@@ -48,6 +49,7 @@ public class Settings
 		protectionMin = readLocation(config, "protected.from", null, -8, 64, -8);
 		protectionMax = readLocation(config, "protected.to", null, 8, 64, 8);
 		
+		nothingButKiller = config.getBoolean("nothingButKiller", false);
 		allowTeleportToStagingArea = config.getBoolean("allowTeleportToStagingArea", true);
 		filterChat = config.getBoolean("filterChat", true);
 		filterScoreboard = config.getBoolean("filterScoreboard", true);
@@ -202,13 +204,7 @@ public class Settings
 			return null;
 		}
 	}
-	
-	private static Location readLocation(LinkedHashMap<String, Object> config, String name, World world, int defX, int defY, int defZ)
-	{
-		Location loc = readLocation(config, name, world);
-		return loc == null ? new Location(world, defX, defY, defZ) : loc;
-	}
-	
+
 	private static Location readLocation(LinkedHashMap<String, Object> config, String name, World world)
 	{
 		String str = getString(config, name, null);

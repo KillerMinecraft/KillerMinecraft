@@ -67,7 +67,6 @@ public abstract class CraftBukkitAccess
 		rafField = null;
 	}
 	
-	public abstract void changeChunkGenerator(World world, ChunkGenerator generator);
 	public abstract boolean clearWorldReference(String worldName);
 	public abstract void forceUnloadWorld(World world);
 	

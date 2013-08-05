@@ -46,15 +46,6 @@ class WorldManager
 	
 	public void hijackDefaultWorld(String name)
 	{
-		// as the config may have changed, delete the existing world 
-		try
-		{
-			delete(new File(plugin.getServer().getWorldContainer() + File.separator + name));
-		}
-		catch ( Exception e )
-		{
-		}
-		
 		// in the already-loaded server configuration, create/update an entry specifying the generator to be used for the default world
 		YamlConfiguration configuration = plugin.craftBukkit.getBukkitConfiguration();
 		
@@ -68,9 +59,12 @@ class WorldManager
 		
 		worldSection.set("generator", "Killer");
 		
-		// disable the end and the nether. We'll re-enable once this has generated.
+		// whatever the name of the staging world, it should be the only world on the server. So change the level-name to match that, temporarily, and don't let it get a nether/end.
+		final String prevLevelName = plugin.craftBukkit.getServerProperty("level-name", "world");
 		final String prevAllowNether = plugin.craftBukkit.getServerProperty("allow-nether", "true");
 		final boolean prevAllowEnd = configuration.getBoolean("settings.allow-end", true);
+		
+		plugin.craftBukkit.setServerProperty("level-name", name);
 		plugin.craftBukkit.setServerProperty("allow-nether", "false");			
 		configuration.set("settings.allow-end", false);
 		
@@ -78,9 +72,10 @@ class WorldManager
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 			@Override
 			public void run() {
+				plugin.craftBukkit.setServerProperty("level-name", prevLevelName);
 				plugin.craftBukkit.setServerProperty("allow-nether", prevAllowNether);
-				YamlConfiguration configuration = plugin.craftBukkit.getBukkitConfiguration();
 				
+				YamlConfiguration configuration = plugin.craftBukkit.getBukkitConfiguration();
 				configuration.set("settings.allow-end", prevAllowEnd);
 				
 				plugin.craftBukkit.saveServerPropertiesFile();

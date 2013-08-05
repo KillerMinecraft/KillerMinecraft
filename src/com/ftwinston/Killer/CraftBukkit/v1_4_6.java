@@ -157,24 +157,6 @@ public class v1_4_6 extends CraftBukkitAccess
 		rafField = null;
 	}
 	
-	public void changeChunkGenerator(org.bukkit.World world, ChunkGenerator generator)
-	{
-		CraftWorld cw = (CraftWorld)world;
-		
-		try
-		{
-			Field a = CraftWorld.class.getDeclaredField("generator");
-			a.setAccessible(true);
-			a.set(cw, generator);
-			a.setAccessible(false);
-		}
-		catch (Throwable t)
-		{
-			plugin.getLogger().warning("Error changing " + world.getName() + " world's chunk generator.");
-			t.printStackTrace();
-		}
-	}
-	
 	@SuppressWarnings("rawtypes")
 	public synchronized boolean clearWorldReference(String worldName)
 	{

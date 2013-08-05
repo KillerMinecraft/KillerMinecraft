@@ -1,5 +1,6 @@
 stagingWorldName:           staging
 killerWorldNamePrefix:      killer
+nothingButKiller:           false
 allowTeleportToStagingArea: true
 filterChat:                 true
 filterScoreboard:           true

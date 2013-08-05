@@ -10,7 +10,6 @@ package com.ftwinston.Killer;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
@@ -20,10 +19,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
@@ -33,7 +28,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.ftwinston.Killer.CraftBukkit.CraftBukkitAccess;
 
-public class Killer extends JavaPlugin implements Listener
+public class Killer extends JavaPlugin
 {
 	public static Killer instance;
 	CraftBukkitAccess craftBukkit;
@@ -53,7 +48,7 @@ public class Killer extends JavaPlugin implements Listener
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
-		return stagingWorld == null ? new EmptyWorldGenerator() : null;
+		return stagingWorld == null ? new StagingWorldGenerator() : null;
 	}
 	
 	public void onEnable()
@@ -68,13 +63,14 @@ public class Killer extends JavaPlugin implements Listener
         
         Settings.setup(this);
         
-        playerManager = new PlayerManager(Killer.instance);
-        worldManager = new WorldManager(Killer.instance);
-        voteManager = new VoteManager(Killer.instance);
+        playerManager = new PlayerManager(this);
+        worldManager = new WorldManager(this);
+        voteManager = new VoteManager(this);
         
 		createRecipes(); // should be in all-vs-one game mode plugin
 
-        getServer().getPluginManager().registerEvents(Killer.instance, Killer.instance);
+        if ( Settings.nothingButKiller )
+        	worldManager.hijackDefaultWorld(Settings.stagingWorldName);
 		
         // delay this by 1 tick so that the plugins are all loaded and the worlds are generated 
         getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
@@ -110,6 +106,7 @@ public class Killer extends JavaPlugin implements Listener
 				}
 								
 				statsManager = new StatsManager(Killer.instance, Killer.instance.games.length);
+		        stagingWorldManager = new StagingWorldManager(Killer.instance, stagingWorld);
 		        getServer().getPluginManager().registerEvents(eventListener, Killer.instance);
 			}
 		}, 1);
@@ -131,21 +128,6 @@ public class Killer extends JavaPlugin implements Listener
         worldManager = null;
         voteManager = null;
         statsManager = null;
-	}
-	
-	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onWorldInit(final WorldInitEvent event)
-	{
-		String worldName = event.getWorld().getName(); 
-		if (!worldName.equalsIgnoreCase(Settings.stagingWorldName))
-			return;
-		
-		if ( !craftBukkit.getDefaultLevelName().equalsIgnoreCase(worldName) )
-			return;
-
-		// we're generating the staging world, and it's the server default, so assume this should be a "limited" world with no nether etc.
-		// if the staging world should be a "proper" world, it should have been generated before running killer.
-		craftBukkit.changeChunkGenerator(event.getWorld(), new StagingWorldGenerator());
 	}
 	
 	public static void registerGameMode(GameModePlugin plugin)
@@ -296,18 +278,5 @@ public class Killer extends JavaPlugin implements Listener
 				return games[i];
 		
 		return null;
-	}
-	
-	class EmptyWorldGenerator extends org.bukkit.generator.ChunkGenerator
-	{	
-	    @Override
-	    public boolean canSpawn(World world, int x, int z) {
-	        return true;
-	    }
-	    
-		public byte[][] generateBlockSections(World world, Random random, int cx, int cz, BiomeGrid biomes)
-		{
-			return new byte[1][];
-		}
 	}
 }
