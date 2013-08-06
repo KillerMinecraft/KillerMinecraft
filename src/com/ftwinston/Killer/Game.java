@@ -40,10 +40,15 @@ public class Game
 		number = gameNumber;
 	}
 	
-	public void initStagingWorld()
+	Location infoMap, startButton, joinButton, configButton;
+	
+	public void initStagingArea(Location info, Location join, Location config, Location start)
 	{
-		updateIndicators();
-		
+		infoMap = info;
+		joinButton = join;
+		configButton = config;
+		startButton = start;
+				
 		for ( Entry<GameSign, ArrayList<Location>> entry : signs.entrySet() )
 			for ( Location loc : entry.getValue() )
 				initSign(entry.getKey(), loc.getBlock());
@@ -426,8 +431,7 @@ public class Game
 	
 	private StagingWorldOption currentOption = StagingWorldOption.NONE;
 	private EnumMap<GameSign, ArrayList<Location>> signs = new EnumMap<GameSign, ArrayList<Location>>(GameSign.class);
-	private EnumMap<StagingWorldOption, ArrayList<Location>> indicators = new EnumMap<StagingWorldOption, ArrayList<Location>>(StagingWorldOption.class);
-	
+		
 	public StagingWorldOption getCurrentOption() { return currentOption; }
 	public void setCurrentOption(StagingWorldOption option)
 	{		
@@ -435,7 +439,6 @@ public class Game
 			return;
 		
 		// disable whatever's currently on
-		updateIndicator(currentOption, false);
 		plugin.stagingWorldManager.hideSetupOptionButtons(this);
 		
 		currentOption = option;
@@ -445,7 +448,6 @@ public class Game
 		Option[] options;
 		
 		// now set up the new option
-		updateIndicator(currentOption, true);
 		switch ( currentOption )
 		{
 		case GAME_MODE:
@@ -510,33 +512,6 @@ public class Game
 			vals.add(new Location(plugin.stagingWorld, x, y, z));
 			signs.put(type, vals);
 		}
-	}
-	
-	public void addIndicator(int x, int y, int z, StagingWorldOption type)
-	{
-		if ( indicators.containsKey(type) )
-			indicators.get(type).add(new Location(plugin.stagingWorld, x, y, z));
-		else
-		{
-			ArrayList<Location> vals = new ArrayList<Location>();
-			vals.add(new Location(plugin.stagingWorld, x, y, z));
-			indicators.put(type, vals);
-		}
-	}
-	
-	public void updateIndicators()
-	{
-		for ( Entry<StagingWorldOption, ArrayList<Location>> entry : indicators.entrySet() )
-			for ( Location loc : entry.getValue() )
-				plugin.stagingWorld.getBlockAt(loc).setData(currentOption == entry.getKey() ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
-	}
-	
-	private void updateIndicator(StagingWorldOption option, boolean on)
-	{
-		ArrayList<Location> list = indicators.get(option);
-		if ( list != null )
-			for ( Location loc : list )
-				loc.getBlock().setData(on ? StagingWorldGenerator.colorOptionOn : StagingWorldGenerator.colorOptionOff);
 	}
 	
 	private void initSign(GameSign type, Block block)

@@ -150,7 +150,7 @@ public class Settings
 			worldPlugin = WorldOption.get(0);
 		game.setWorldOption(worldPlugin);
 		
-		game.initStagingWorld(/*infoMap, joinButton, configButton, startButton*/);
+		game.initStagingArea(infoMap, joinButton, configButton, startButton);
 	}
 	
 	private static String getString(LinkedHashMap<String, Object> config, String key, String defaultVal)
@@ -169,7 +169,6 @@ public class Settings
 			return defaultVal;
 		}
 	}
-	
 
 	private static Location readLocation(FileConfiguration config, String name, World world, int defX, int defY, int defZ)
 	{
