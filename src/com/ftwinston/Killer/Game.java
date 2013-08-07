@@ -48,10 +48,48 @@ public class Game
 		joinButton = join;
 		configButton = config;
 		startButton = start;
+		
+		if (!isButton(joinButton))
+			warnStagingAreaWrong(joinButton, "join button");
+		if (!isButton(configButton))
+			warnStagingAreaWrong(joinButton, "configure button");
+		if (!isButton(startButton))
+			warnStagingAreaWrong(joinButton, "start button");
 				
 		for ( Entry<GameSign, ArrayList<Location>> entry : signs.entrySet() )
 			for ( Location loc : entry.getValue() )
 				initSign(entry.getKey(), loc.getBlock());
+	}
+	
+	private boolean isButton(Location loc)
+	{
+		Block b = loc.getBlock();
+		return b.getType() == Material.STONE_BUTTON || b.getType() == Material.WOOD_BUTTON;
+	}
+	
+	private void warnStagingAreaWrong(Location loc, String name)
+	{
+		plugin.log.warning("Expected game " + number + " " + name + " at " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + ", but found " + loc.getBlock().getType().name());
+	}
+	
+	public boolean checkButtonPressed(Location loc)
+	{
+		if ( loc.equals(joinButton) )
+		{
+			
+			return true;
+		}
+		else if ( loc.equals(configButton) )
+		{
+			
+			return true;
+		}
+		else if ( loc.equals(startButton) )
+		{
+			
+			return true;
+		}
+		return false;
 	}
 	
 	public int getNumber() { return number; }

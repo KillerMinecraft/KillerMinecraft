@@ -1,10 +1,5 @@
 package com.ftwinston.Killer;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -27,9 +22,7 @@ class StagingWorldManager
 		
 		protectedVolumes = new ArrayList<Volume>();
 		arenas = new ArrayList<Arena>();
-	
-		initWorldInfo();
-		
+			
 		if ( spawn == null )
 		{
 			Location loc = stagingWorld.getSpawnLocation();
@@ -44,42 +37,6 @@ class StagingWorldManager
 			arenas.get(i).updateIndicators();
 	}
 
-	private void initWorldInfo()
-	{
-		File infoFile = new File(stagingWorld.getWorldFolder(), "killer.txt");
-		if ( !infoFile.exists() || !infoFile.canRead() )
-		{
-			plugin.log.warning("Cant find/read killer.txt in staging world folder!");
-			return;
-		}
-		
-		FileReader fr;
-		try
-		{
-			fr = new FileReader(infoFile);
-		}
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-			return;
-		}
-
-		try
-		{
-			BufferedReader br = new BufferedReader(fr);
-			String line;
-			while ( (line = br.readLine()) != null )
-				addWorldInfo(line);
-			
-			br.close();
-			fr.close();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-	}
-	
 	Killer plugin;
 	World stagingWorld;
 	
@@ -196,209 +153,7 @@ class StagingWorldManager
 		STATUS,
 		JOIN_ACTION,
 	}
-	
-	private void addWorldInfo(String line)
-	{
-		String[] parts = line.split(" ");
 		
-		if ( parts[0].equals("sign") )
-		{// sign x y z WORLD_OPTION num
-			if ( parts.length < 6 )
-			{
-				plugin.log.warning("Too few sign parameters in killer.txt: " + line);
-				return;
-			}
-			
-			int x, y, z, num;
-			try
-			{
-				x = Integer.parseInt(parts[1]);
-				y = Integer.parseInt(parts[2]);
-				z = Integer.parseInt(parts[3]);
-				num = Integer.parseInt(parts[5]);
-			}
-			catch ( NumberFormatException ex )
-			{
-				plugin.log.warning("Can't read sign coordinates from killer.txt: " + line);
-				return;
-			}
-			
-			if ( num < 0 || num >= plugin.games.length )
-			{
-				plugin.log.warning("Invalid game number in killer.txt: " + line);
-				return;
-			}
-			
-			GameSign type;
-			try
-			{
-				type = GameSign.valueOf(parts[4]);
-			}
-			catch ( IllegalArgumentException ex )
-			{
-				plugin.log.warning("Unrecognised sign type in killer.txt: " + line);
-				return;
-			}
-			
-			plugin.games[num].addSign(x, y, z, type);
-		}
-		else if ( parts[0].equals("volume") )
-		{
-			// volume x1 y1 z1 x2 y2 z2 spawn 180
-			// volume x1 y1 z1 x2 y2 z2 protected
-			// volume x1 y1 z1 x2 y2 z2 arena 1 SPLEEF
-			
-			if ( parts.length < 8 )
-			{
-				plugin.log.warning("Too few volume parameters in killer.txt: " + line);
-				return;
-			}
-			
-			int x1, y1, z1, x2, y2, z2;
-			try
-			{
-				x1 = Integer.parseInt(parts[1]);
-				y1 = Integer.parseInt(parts[2]);
-				z1 = Integer.parseInt(parts[3]);
-				x2 = Integer.parseInt(parts[4]);
-				y2 = Integer.parseInt(parts[5]);
-				z2 = Integer.parseInt(parts[6]);
-			}
-			catch ( NumberFormatException ex )
-			{
-				plugin.log.warning("Can't read volume coordinates from killer.txt: " + line);
-				return;
-			}
-			
-			if ( parts[7].equals("spawn") )
-			{
-				if ( parts.length < 9 )
-				{
-					plugin.log.warning("Too few volume parameters for spawn in killer.txt: " + line);
-					return;
-				}
-			
-				int yaw;
-				try
-				{
-					yaw = Integer.parseInt(parts[8]);
-				}
-				catch ( NumberFormatException ex )
-				{
-					plugin.log.warning("Can't read yaw for spawn in killer.txt: " + line);
-					return;
-				}
-				
-				spawn = new Volume(x1, y1, z1, x2, y2, z2);
-				spawnYaw = yaw;
-			}
-			else if ( parts[7].equals("protected") )
-			{
-				protectedVolumes.add(new Volume(x1, y1, z1, x2, y2, z2));
-			}
-			else if ( parts[7].equals("arena") )
-			{
-				if ( parts.length < 10 )
-				{
-					plugin.log.warning("Too few volume parameters for arena in killer.txt: " + line);
-					return;
-				}
-				
-				int num;
-				try
-				{
-					num = Integer.parseInt(parts[8]);
-				}
-				catch ( NumberFormatException ex )
-				{
-					plugin.log.warning("Can't read arena number from killer.txt: " + line);
-					return;
-				}
-				
-				Arena.Mode mode;
-				try
-				{
-					mode = Arena.Mode.valueOf(parts[9]);
-				}
-				catch ( IllegalArgumentException ex )
-				{
-					plugin.log.warning("Unrecognised arena mode in killer.txt: " + line);
-					return;
-				}
-				
-				arenas.add(new Arena(plugin, num, new Volume(x1, y1, z1, x2, y2, z2), mode));
-			}
-			else
-				plugin.log.warning("unrecognised volume line in killer.txt: " + line);
-		}
-		else if ( parts[0].equals("indicator") )
-		{
-			// indicator x y z arena 0 SPLEEF
-			// indicator x y z game 1 GAME_MODE
-			
-			if ( parts.length < 7 )
-			{
-				plugin.log.warning("Too few indicator parameters in killer.txt: " + line);
-				return;
-			}
-			
-			int x, y, z, num;
-			try
-			{
-				x = Integer.parseInt(parts[1]);
-				y = Integer.parseInt(parts[2]);
-				z = Integer.parseInt(parts[3]);
-				num = Integer.parseInt(parts[5]);
-			}
-			catch ( NumberFormatException ex )
-			{
-				plugin.log.warning("Can't read indicator coordinates from killer.txt: " + line);
-				return;
-			}
-			
-			if ( parts[4].equals("game") )
-			{
-				if ( num < 0 || num > plugin.games.length )
-				{
-					plugin.log.warning("Invalid game number in killer.txt: " + line);
-					return;
-				}
-				
-				StagingWorldOption type;
-				try
-				{
-					type = StagingWorldOption.valueOf(parts[6]);
-				}
-				catch ( IllegalArgumentException ex )
-				{
-					plugin.log.warning("Unrecognised game indicator type in killer.txt: " + line);
-					return;
-				}
-				
-				plugin.games[num].addIndicator(x, y, z, type);
-			}
-			else if ( parts[4].equals("arena") )
-			{
-				Arena.Mode type;
-				try
-				{
-					type = Arena.Mode.valueOf(parts[6]);
-				}
-				catch ( IllegalArgumentException ex )
-				{
-					plugin.log.warning("Unrecognised arena indicator type in killer.txt: " + line);
-					return;
-				}
-				
-				arenas.get(num).addIndicator(x, y, z, type);
-			}
-			else
-				plugin.log.warning("Can't read indicator type from killer.txt: " + line);
-		}
-		else
-			plugin.log.warning("unrecognised line in killer.txt: " + line);
-	}
-	
 	ArrayList<Volume> protectedVolumes;
 	Volume spawn = null;
 	int spawnYaw;
