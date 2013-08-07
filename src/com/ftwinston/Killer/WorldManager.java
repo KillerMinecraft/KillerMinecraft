@@ -87,16 +87,6 @@ class WorldManager
 	public void createStagingWorld(final String name) 
 	{
 		plugin.stagingWorld = plugin.getServer().getWorld(name);
-				
-		// ensure the end wall leaves enough room for all the options
-		int maxZ = StagingWorldGenerator.getWallMaxZ();
-		maxZ = Math.max(maxZ, StagingWorldGenerator.getOptionButtonZ(GameMode.gameModes.size(), true));
-		maxZ = Math.max(maxZ, StagingWorldGenerator.getOptionButtonZ(WorldOption.worldOptions.size(), false) + 1);
-		for ( GameModePlugin mode : GameMode.gameModes )
-			maxZ = Math.max(maxZ, StagingWorldGenerator.getOptionButtonZ(mode.createInstance().setupOptions().length, false));
-		for ( WorldOptionPlugin world : WorldOption.worldOptions )
-			maxZ = Math.max(maxZ, StagingWorldGenerator.getOptionButtonZ(world.createInstance().setupOptions().length, false));
-		StagingWorldGenerator.setWallMaxZ(maxZ + 1);
 		
 		// staging world must not be null when the init event is called, so we don't call this again
 		if ( plugin.stagingWorldIsServerDefault )
@@ -106,19 +96,15 @@ class WorldManager
 		
 		plugin.stagingWorld = new WorldCreator(name)
 			.generator(generator)
-			.environment(Environment.THE_END)
+			//.environment(Environment.THE_END)
 			.createWorld();
 		
 		plugin.stagingWorld.setSpawnFlags(false, false);
-		plugin.stagingWorld.setDifficulty(Difficulty.HARD);
+		plugin.stagingWorld.setDifficulty(Difficulty.PEACEFUL);
 		plugin.stagingWorld.setPVP(false);
 		plugin.stagingWorld.setAutoSave(false); // don't save changes to the staging world
 
-		generator.saveWorldInfo(plugin, plugin.stagingWorld);
-		
 		plugin.stagingWorldManager = new StagingWorldManager(plugin, plugin.stagingWorld);
-		
-		plugin.log.info("Staging world generated");
 	}
 	
 	public void removeAllItems(World world)

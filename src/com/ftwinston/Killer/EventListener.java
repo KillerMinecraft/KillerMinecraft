@@ -244,30 +244,7 @@ class EventListener implements Listener
 		game.getGameMode().handlePortal(TeleportCause.NETHER_PORTAL, event.getFrom(), helper); // see? I told you
 		helper.performTeleport(TeleportCause.NETHER_PORTAL, event.getEntity());
 	}
-	
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerTeleport(PlayerTeleportEvent event)
-	{
-		if ( event.getCause() != TeleportCause.COMMAND && event.getCause() != TeleportCause.PLUGIN )
-			return;
 		
-		// only handling non-portal teleporting within the staging world
-		if ( event.getTo().getWorld() == plugin.stagingWorld && event.getFrom().getWorld() == plugin.stagingWorld )
-		{
-			Game from = plugin.getGameForStagingWorldLocation(event.getFrom());
-			Game to = plugin.getGameForStagingWorldLocation(event.getTo());
-			
-			if ( from != to )
-			{
-				if ( from != null && !from.getGameState().usesGameWorlds )
-					plugin.playerManager.removePlayerFromGame(event.getPlayer(), from);
-				
-				if ( to != null && !to.getGameState().usesGameWorlds )
-					plugin.playerManager.putPlayerInGame(event.getPlayer(), to);
-			}
-		}
-	}
-	
 	// prevent spectators picking up anything
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerPickupItem(PlayerPickupItemEvent event)
@@ -359,16 +336,6 @@ class EventListener implements Listener
 				blocks.remove(i);
 				i--;
 			}
-		
-		if ( world == plugin.stagingWorld )
-		{
-			Arena arena = plugin.stagingWorldManager.getArena(event.getLocation());
-			if ( arena != null )
-			{
-				arena.monsterKilled();
-				event.setYield(0);
-			}
-		}
 	}
 	
 	// switching between spectator items
@@ -412,7 +379,7 @@ class EventListener implements Listener
 		{
 			if ( event.getAction() == Action.RIGHT_CLICK_BLOCK && (b.getType() == Material.STONE_BUTTON || b.getType() == Material.WOOD_BUTTON) )
 				for ( Game game : plugin.games )
-					if ( game.checkButtonPressed(b.getLocation()) )
+					if ( game.checkButtonPressed(b.getLocation(), event.getPlayer()) )
 						break;
 			return;
 		}
@@ -712,9 +679,6 @@ class EventListener implements Listener
 		World world = event.getPlayer().getWorld();
 		if ( world == plugin.stagingWorld )
 		{
-			Arena arena = plugin.stagingWorldManager.getArena(event.getPlayer().getLocation());
-			if ( arena != null )
-				arena.playerKilled();
 			plugin.stagingWorldManager.playerNumberChanged(plugin.getGameForPlayer(event.getPlayer()));
 		}
 		else
@@ -739,23 +703,6 @@ class EventListener implements Listener
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onEntityDeath(EntityDeathEvent event)
 	{
-		if ( event.getEntity().getWorld() == plugin.stagingWorld )
-		{
-			event.getDrops().clear();
-			event.setDroppedExp(0);
-			
-			Arena arena = plugin.stagingWorldManager.getArena(event.getEntity().getLocation());
-			if ( event instanceof PlayerDeathEvent )
-			{
-				if ( arena != null )
-					arena.playerKilled();
-			}
-			else if ( arena != null )
-				arena.monsterKilled();
-			
-			return;
-		}
-		
 		if ( !(event instanceof PlayerDeathEvent) )
 			return;
 		

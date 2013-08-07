@@ -343,24 +343,6 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			else
 				plugin.log.warning("Command error: no game #" + num);
 		}
-		else if ( args[0] == "arena" )
-		{
-			int num;
-			try
-			{
-				num = Integer.parseInt(args[1]);
-			}
-			catch ( NumberFormatException ex )
-			{
-				plugin.log.warning("Command error: invalid arena #: " + args[1]);
-				return true;
-			}
-			
-			if ( num > 0 && num <= 1) // how to tell how many arenas we have?
-				arenaCommand(plugin, num-1, args);
-			else
-				plugin.log.warning("Command error: no arena #" + num);
-		}
 		else if ( args[0] == "tp" )
 		{
 			teleportCommand(plugin, args);
@@ -591,55 +573,6 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 		}
 		
 		plugin.stagingWorldManager.gameOptionButtonPressed(game, game.getCurrentOption(), num);
-	}
-	
-	private static void arenaCommand(Killer plugin, int num, String[] args)
-	{
-		String cmd = args[2];
-		Arena arena = plugin.stagingWorldManager.getArena(num);
-		if ( arena == null )
-		{
-			plugin.log.warning("Invalid arena command: number out of range (" + num + ")");
-			return;
-		}
-		
-		if ( cmd == "spleef" )
-		{
-			if ( arena.mode == Arena.Mode.SPLEEF )
-				return;
-			arena.mode = Arena.Mode.SPLEEF;
-			arena.endMonsterArena();
-			arena.updateIndicators();
-		}
-		else if ( cmd == "survival" )
-		{
-			if ( arena.mode == Arena.Mode.SURVIVAL )
-				return;
-			arena.mode = Arena.Mode.SURVIVAL;
-			arena.endMonsterArena();
-			arena.updateIndicators();
-		}
-		else if ( cmd == "reset" )
-		{
-			arena.rebuildArena();
-			arena.endMonsterArena();
-		}
-		else if ( cmd == "equip" )
-		{
-			if ( args.length < 4 )
-			{
-				plugin.log.warning("Invalid arena command: missing player name");
-				return;
-			}
-
-			Player player = plugin.getServer().getPlayer(args[3]);
-			if ( player == null )
-				plugin.log.warning("Invalid arena command: player not found (" + args[3] + ")");
-			else
-				arena.equipPlayer(player);
-		}
-		else
-			plugin.log.warning("Invalid arena command: " + cmd);
 	}
 	
 	private static void teleportCommand(Killer plugin, String[] args)

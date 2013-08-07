@@ -10,9 +10,9 @@ allowLateJoiners:           true
 allowPlayerLimits:          true
 
 stagingSpawn:
-    from:       -8, 64, -8
-    to:         8, 64, 8
-
+    from:       -6, 65, -10
+    to:         6, 65, 10
+    
 protected:
     from:       -18, 64, -18
     to:         18, 68, 18
@@ -21,22 +21,22 @@ games:
   - 
     mode:       Mystery Killer
     world:      Default World
-    infomap:    16, 67, 0
+    infomap:    9, 67, 0
     buttons:
-        join:   16, 66, -2
-        config: 16, 66, 0
-        start:  16, 66, 2
+        join:   9, 66, -2
+        config: 9, 66, 0
+        start:  9, 66, 2
     progressbar:
         from:   17, 65, -8
         to:     17, 65, 8
   - 
     mode:       Farm Killer
     world:      Superflat
-    infomap:    -16, 67, 0
+    infomap:    -9, 67, 0
     buttons:
-        join:   -16, 66, 2
-        config: -16, 66, 0
-        start:  -16, 66, -2
+        join:   -9, 66, 2
+        config: -9, 66, 0
+        start:  -9, 66, -2
     progressbar:
         from:   -17, 65, 8
         to:     -17, 65, -8

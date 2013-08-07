@@ -241,6 +241,9 @@ public class Killer extends JavaPlugin
 	
 	Game getGameForWorld(World w)
 	{
+		if ( w == stagingWorld )
+			return null;
+		
 		for ( Game game : games )
 			for ( World world : game.getWorlds() )
 				if ( w == world )
@@ -251,32 +254,6 @@ public class Killer extends JavaPlugin
 	
 	Game getGameForPlayer(Player player)
 	{
-		World w = player.getWorld();
-		
-		if ( w == stagingWorld )
-			return getGameForStagingWorldLocation(player.getLocation());
-		
-		return getGameForWorld(w);
-	}
-	
-	Game getGameForStagingWorldLocation(Location loc)
-	{
-		if ( loc.getWorld() != stagingWorld )
-			return null;
-		
-		// if only one game, they're always part of that if they're in the staging world
-		if ( games.length == 1 )
-			return games[0];
-			
-		// otherwise, determine game based on player y position
-		int y = loc.getBlockY();
-		if ( y < StagingWorldGenerator.getFloorY(0) )
-			return null;
-		
-		for ( int i=0; i<games.length; i++ )
-			if ( y < StagingWorldGenerator.getFloorY(i+1) )
-				return games[i];
-		
-		return null;
+		return getGameForWorld(player.getWorld());
 	}
 }

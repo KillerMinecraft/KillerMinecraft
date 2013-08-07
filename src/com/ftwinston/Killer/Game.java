@@ -49,11 +49,11 @@ public class Game
 		configButton = config;
 		startButton = start;
 		
-		if (!isButton(joinButton))
+		if (joinButton != null && !isButton(joinButton))
 			warnStagingAreaWrong(joinButton, "join button");
-		if (!isButton(configButton))
+		if (configButton != null && !isButton(configButton))
 			warnStagingAreaWrong(joinButton, "configure button");
-		if (!isButton(startButton))
+		if (startButton != null && !isButton(startButton))
 			warnStagingAreaWrong(joinButton, "start button");
 				
 		for ( Entry<GameSign, ArrayList<Location>> entry : signs.entrySet() )
@@ -72,26 +72,41 @@ public class Game
 		plugin.log.warning("Expected game " + number + " " + name + " at " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + ", but found " + loc.getBlock().getType().name());
 	}
 	
-	public boolean checkButtonPressed(Location loc)
+	public boolean checkButtonPressed(Location loc, Player player)
 	{
 		if ( loc.equals(joinButton) )
 		{
-			
+			joinPressed(player);
 			return true;
 		}
 		else if ( loc.equals(configButton) )
 		{
-			
+			configPressed(player);
 			return true;
 		}
 		else if ( loc.equals(startButton) )
 		{
-			
+			startPressed(player);
 			return true;
 		}
 		return false;
 	}
+
+	public void joinPressed(Player player) {
+		// TODO Auto-generated method stub
+		plugin.log.info(player.getName() + " pressed join for game " + number);
+	}
 	
+	public void configPressed(Player player) {
+		// TODO Auto-generated method stub
+		plugin.log.info(player.getName() + " pressed config for game " + number);
+	}
+	
+	public void startPressed(Player player) {
+		// TODO Auto-generated method stub
+		plugin.log.info(player.getName() + " pressed start for game " + number);
+	}
+
 	public int getNumber() { return number; }
 
 	private GameMode gameMode = null;
@@ -226,8 +241,8 @@ public class Game
 			HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
 
 			// don't show the start buttons until the old world finishes deleting
-			plugin.stagingWorldManager.showStartButtons(this, StartButtonState.WAIT_FOR_DELETION);
-			plugin.stagingWorldManager.removeWorldGenerationIndicator(this);
+			//plugin.stagingWorldManager.showStartButtons(this, StartButtonState.WAIT_FOR_DELETION);
+			//plugin.stagingWorldManager.removeWorldGenerationIndicator(this);
 			
 			for ( Player player : getOnlinePlayers() )
 				if ( player.getWorld() != plugin.stagingWorld )
@@ -244,11 +259,11 @@ public class Game
 		}
 		else if ( newState == GameState.stagingWorldSetup )
 		{
-			plugin.stagingWorldManager.showStartButtons(this, StartButtonState.START);
+			//plugin.stagingWorldManager.showStartButtons(this, StartButtonState.START);
 		}
 		else if ( newState == GameState.stagingWorldConfirm )
 		{
-			plugin.stagingWorldManager.showStartButtons(this, StartButtonState.CONFIRM);
+			//plugin.stagingWorldManager.showStartButtons(this, StartButtonState.CONFIRM);
 		}
 		else if ( newState == GameState.waitingToGenerate )
 		{
@@ -256,21 +271,21 @@ public class Game
 			if ( generationQueue.peek() == null ) 
 				newState = gameState = GameState.worldGeneration;
 			else
-				plugin.stagingWorldManager.showStartButtons(this, StartButtonState.WAIT_FOR_GENERATION);
+				//plugin.stagingWorldManager.showStartButtons(this, StartButtonState.WAIT_FOR_GENERATION);
 			
 			generationQueue.addLast(this); // always add to the queue (head of the queue is currently generating)
 		}
 		if( newState == GameState.worldGeneration )
 		{
 			plugin.getServer().getPluginManager().registerEvents(getGameMode(), plugin);
-			plugin.stagingWorldManager.showStartButtons(this, StartButtonState.GENERATING);
+			//plugin.stagingWorldManager.showStartButtons(this, StartButtonState.GENERATING);
 			
 			final Game game = this;
 			plugin.worldManager.generateWorlds(this, worldOption, new Runnable() {
 				@Override
 				public void run() {
 					setGameState(GameState.active);
-					plugin.stagingWorldManager.showStartButtons(game, StartButtonState.IN_PROGRESS);
+					//plugin.stagingWorldManager.showStartButtons(game, StartButtonState.IN_PROGRESS);
 					
 					if ( generationQueue.peek() != game )
 						return; // just in case, only the "head" game should trigger this logic
@@ -477,7 +492,7 @@ public class Game
 			return;
 		
 		// disable whatever's currently on
-		plugin.stagingWorldManager.hideSetupOptionButtons(this);
+		//plugin.stagingWorldManager.hideSetupOptionButtons(this);
 		
 		currentOption = option;
 		
@@ -497,7 +512,7 @@ public class Game
 				labels[i] = mode.getName();
 				values[i] = mode.getName().equals(getGameMode().getName());
 			}
-			plugin.stagingWorldManager.showSetupOptionButtons(this, "Game mode:", true, labels, values);
+			//plugin.stagingWorldManager.showSetupOptionButtons(this, "Game mode:", true, labels, values);
 			break;
 		case GAME_MODE_CONFIG:
 			options = getGameMode().getOptions();
@@ -508,7 +523,7 @@ public class Game
 				labels[i] = options[i].getName();
 				values[i] = options[i].isEnabled();
 			}
-			plugin.stagingWorldManager.showSetupOptionButtons(this, "Mode option:", false, labels, values);
+			//plugin.stagingWorldManager.showSetupOptionButtons(this, "Mode option:", false, labels, values);
 			break;
 		case WORLD:
 			labels = new String[WorldOption.worldOptions.size()];
@@ -519,7 +534,7 @@ public class Game
 				labels[i] = worldOption.getName();
 				values[i] = worldOption.getName().equals(getWorldOption().getName());
 			}
-			plugin.stagingWorldManager.showSetupOptionButtons(this, "World:", false, labels, values);
+			//plugin.stagingWorldManager.showSetupOptionButtons(this, "World:", false, labels, values);
 			break;
 		case WORLD_CONFIG:
 			options = getWorldOption().getOptions();
@@ -530,12 +545,12 @@ public class Game
 				labels[i] = options[i].getName();
 				values[i] = options[i].isEnabled();
 			}
-			plugin.stagingWorldManager.showSetupOptionButtons(this, "World option:", false, labels, values);
+			//plugin.stagingWorldManager.showSetupOptionButtons(this, "World option:", false, labels, values);
 			break;
 		case GLOBAL_OPTION:
 			labels = new String[] { "Craftable monster eggs", "Easier dispenser recipe", "Eyes of ender find nether fortresses" };
 			values = new boolean[] { true, true, true, true };
-			plugin.stagingWorldManager.showSetupOptionButtons(this, "Global option:", false, labels, values);
+			//plugin.stagingWorldManager.showSetupOptionButtons(this, "Global option:", false, labels, values);
 			break;
 		}
 	}

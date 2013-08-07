@@ -136,9 +136,21 @@ public class Settings
 		String mode = getString(config, "mode", defaultGameMode);
 		String world = getString(config, "world", defaultWorldOption);
 		Location infoMap = readLocation(config, "infomap", plugin.stagingWorld);
-		Location joinButton = readLocation(config, "buttons.join", plugin.stagingWorld);
-		Location configButton = readLocation(config, "buttons.config", plugin.stagingWorld);
-		Location startButton = readLocation(config, "buttons.start", plugin.stagingWorld);
+		
+		Object o = config.get("buttons");
+		if ( o == null || !(o instanceof LinkedHashMap<?, ?>) )
+		{
+			plugin.log.warning("Can't find \"buttons\" section for game " + game.getNumber());
+			plugin.log.warning(o.getClass().getName());
+			return;			
+		}
+		
+		@SuppressWarnings("unchecked")
+		LinkedHashMap<String, Object> buttons = (LinkedHashMap<String, Object>)o;
+				
+		Location joinButton = readLocation(buttons, "join", plugin.stagingWorld);
+		Location configButton = readLocation(buttons, "config", plugin.stagingWorld);
+		Location startButton = readLocation(buttons, "start", plugin.stagingWorld);
 		
 		GameModePlugin modePlugin = GameMode.getByName(mode);
 		if ( modePlugin == null )
@@ -169,7 +181,31 @@ public class Settings
 			return defaultVal;
 		}
 	}
-
+	
+	private static Location doReadLocation(String str, World world)
+	{
+		String[] parts = str.split(",", 3);
+		if ( parts.length != 3 )
+		{
+			Killer.instance.log.warning("Invalid location in config: " + str);
+			return null;
+		}
+		
+		try
+		{
+			int x, y, z;
+			x = Integer.parseInt(parts[0].trim());
+			y = Integer.parseInt(parts[1].trim());
+			z = Integer.parseInt(parts[2].trim());
+			return new Location(world, x, y, z);
+		}
+		catch ( NumberFormatException ex )
+		{
+			Killer.instance.log.warning("Invalid location in config: " + str);
+			return null;
+		}
+	}
+	
 	private static Location readLocation(FileConfiguration config, String name, World world, int defX, int defY, int defZ)
 	{
 		Location loc = readLocation(config, name, world);
@@ -182,26 +218,7 @@ public class Settings
 		if ( str == null )
 			return null;
 		
-		String[] parts = str.split(",", 3);
-		if ( parts.length != 3 )
-		{
-			Killer.instance.log.warning("Invalid location in config: " + config.getString(name));
-			return null;
-		}
-		
-		try
-		{
-			int x, y, z;
-			x = Integer.parseInt(parts[0].trim());
-			y = Integer.parseInt(parts[1].trim());
-			z = Integer.parseInt(parts[2].trim());
-			return new Location(world, x, y, z);
-		}
-		catch ( NumberFormatException ex )
-		{
-			Killer.instance.log.warning("Invalid location in config: " + config.getString(name));
-			return null;
-		}
+		return doReadLocation(str, world);
 	}
 
 	private static Location readLocation(LinkedHashMap<String, Object> config, String name, World world)
@@ -210,26 +227,7 @@ public class Settings
 		if ( str == null )
 			return null;
 		
-		String[] parts = str.split(",", 3);
-		if ( parts.length != 3 )
-		{
-			Killer.instance.log.warning("Invalid location in config: " + str);
-			return null;
-		}
-		
-		try
-		{
-			int x, y, z;
-			x = Integer.parseInt(parts[0].trim());
-			y = Integer.parseInt(parts[1].trim());
-			z = Integer.parseInt(parts[2].trim());
-			return new Location(world, x, y, z);
-		}
-		catch ( NumberFormatException ex )
-		{
-			Killer.instance.log.warning("Invalid location in config: " + str);
-			return null;
-		}
+		return doReadLocation(str, world);
 	}
 	
 	/*
