@@ -13,6 +13,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -358,7 +359,9 @@ class PlayerManager
 		if ( !player.isDead() )
 		{
 			player.setTotalExperience(0);
-			player.setHealth(player.getMaxHealth());
+			
+			Damageable damag = player;
+			player.setHealth(damag.getMaxHealth());
 			player.setFoodLevel(20);
 			player.setSaturation(20);
 			player.setExhaustion(0);

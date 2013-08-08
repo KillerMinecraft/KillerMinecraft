@@ -25,7 +25,6 @@ import org.bukkit.inventory.Recipe;
 import com.ftwinston.Killer.PlayerManager.Info;
 import com.ftwinston.Killer.StagingWorldManager.GameSign;
 import com.ftwinston.Killer.StagingWorldManager.StagingWorldOption;
-import com.ftwinston.Killer.StagingWorldManager.StartButtonState;
 
 public class Game
 {

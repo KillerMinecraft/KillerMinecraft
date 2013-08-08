@@ -15,7 +15,7 @@ import org.bukkit.generator.BlockPopulator;
 class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 {
 	private static final int groundMinY = 32, groundMaxY = 64, groundMinX = -22, groundMaxX = 22, groundMinZ = -22, groundMaxZ = 23;
-	private static final int game1WallX = 10, game2WallX = -10, gameWallMinZ = -10, gameWallMaxZ = 10, gameWallMaxY = 68; 
+	private static final int game1WallX = 10, game2WallX = -10, gameWallMaxY = 68; 
 	private static final int game1ButtonX = 9, game2ButtonX = -9, gameButtonY = 66;
 	
 	@Override
@@ -35,7 +35,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public class StagingWorldPopulator extends org.bukkit.generator.BlockPopulator
 	{
-		StagingWorldGenerator gen;
+		StagingWorldGenerator gen; boolean hackSpawn = true;
 		
 		public StagingWorldPopulator(StagingWorldGenerator gen)
 		{
@@ -53,17 +53,23 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		
 		public void populate(World world, Random random, Chunk chunk)
 		{
+			if ( hackSpawn )
+			{
+				world.setSpawnLocation(0, 65, 0);
+				hackSpawn = false;
+			}
 			if ( chunk.getX() >= 2 || chunk.getX() < -2 || chunk.getZ() >= 2 || chunk.getZ() < -2 )
 				return;
 
 			Block b;
+			final int rSquared = (groundMaxX+2) * (groundMaxX+2);
 			
 			for ( int x = groundMinX; x <= groundMaxX; x++ )
 				for ( int z = groundMinZ; z <= groundMaxZ; z++ )
 				{
 					for ( int y = groundMinY; y < groundMaxY; y++ )
 					{
-						if ( !wantsGround(x,y,z) )
+						if ( !insideSphere(x, y, z, 0, groundMaxY+10, 0, rSquared) )
 							continue;
 						
 						b = getBlockAbs(chunk, x, y, z);
@@ -71,49 +77,300 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 							b.setType(Material.DIRT);
 					}
 					
-					if ( !wantsGround(x,groundMaxY,z) )
+					if ( !insideSphere(x,groundMaxY,z, 0, groundMaxY+10, 0, rSquared) )
 						continue;
 					b = getBlockAbs(chunk, x, groundMaxY, z);
 					if ( b != null )
 						b.setType(Material.GRASS);
 				}
 			
-			for ( int z = gameWallMinZ; z <= gameWallMaxZ; z++ )
-				for ( int y=groundMaxY+1; y <= gameWallMaxY; y++ )
-				{
+			for ( int y=groundMaxY+1; y <= gameWallMaxY; y++ )
+			{
+				for ( int z = -1; z <= 1; z++ )
+				{	
 					b = getBlockAbs(chunk, game1WallX, y, z);
 					if ( b != null )
-						b.setType(Material.STONE);
+					{
+						b.setType(Material.QUARTZ_BLOCK);
+						b.setData((byte)1);
+					}
 				
 					b = getBlockAbs(chunk, game2WallX, y, z);
 					if ( b != null )
-						b.setType(Material.STONE);
+					{
+						b.setType(Material.QUARTZ_BLOCK);
+						b.setData((byte)1);
+					}
 				}
+				
+				int[] zs = new int[] { -5, -2, 2, 5 };
+				
+				for ( int iz = 0; iz < zs.length; iz++ )
+				{	
+					b = getBlockAbs(chunk, game1WallX, y, zs[iz]);
+					if ( b != null )
+					{
+						b.setType(Material.QUARTZ_BLOCK);
+						b.setData((byte)2);
+					}
+				
+					b = getBlockAbs(chunk, game2WallX, y, zs[iz]);
+					if ( b != null )
+					{
+						b.setType(Material.QUARTZ_BLOCK);
+						b.setData((byte)2);
+					}
+				}
+			}
+			
+			for ( int y=groundMaxY+1; y <= groundMaxY+3; y++ )
+			{
+				b = getBlockAbs(chunk, game1WallX, y, -6);
+				if ( b != null )
+					b.setType(Material.QUARTZ_BLOCK);
+			
+				b = getBlockAbs(chunk, game1WallX, y, 6);
+				if ( b != null )
+					b.setType(Material.QUARTZ_BLOCK);
+				
+				b = getBlockAbs(chunk, game2WallX, y, -6);
+				if ( b != null )
+					b.setType(Material.QUARTZ_BLOCK);
+			
+				b = getBlockAbs(chunk, game2WallX, y, 6);
+				if ( b != null )
+					b.setType(Material.QUARTZ_BLOCK);
+			}
+	
+			for ( int y=groundMaxY+1; y <= groundMaxY+2; y++ )
+			{
+				b = getBlockAbs(chunk, game1WallX, y, -7);
+				if ( b != null )
+					b.setType(Material.QUARTZ_BLOCK);
+			
+				b = getBlockAbs(chunk, game1WallX, y, 7);
+				if ( b != null )
+					b.setType(Material.QUARTZ_BLOCK);
+				
+				b = getBlockAbs(chunk, game2WallX, y, -7);
+				if ( b != null )
+					b.setType(Material.QUARTZ_BLOCK);
+			
+				b = getBlockAbs(chunk, game2WallX, y, 7);
+				if ( b != null )
+					b.setType(Material.QUARTZ_BLOCK);
+			}
+	
+			b = getBlockAbs(chunk, game1WallX, groundMaxY+1, -8);
+			if ( b != null )
+				b.setType(Material.QUARTZ_BLOCK);
+		
+			b = getBlockAbs(chunk, game1WallX, groundMaxY+1, 8);
+			if ( b != null )
+				b.setType(Material.QUARTZ_BLOCK);
+			
+			b = getBlockAbs(chunk, game2WallX, groundMaxY+1, -8);
+			if ( b != null )
+				b.setType(Material.QUARTZ_BLOCK);
+		
+			b = getBlockAbs(chunk, game2WallX, groundMaxY+1, 8);
+			if ( b != null )
+				b.setType(Material.QUARTZ_BLOCK);
+			
+			
+			
+			b = getBlockAbs(chunk, game1WallX, groundMaxY+1, -9);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x2);
+			}
+			
+			b = getBlockAbs(chunk, game1WallX, groundMaxY+1, 9);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x3);
+			}
+			
+			b = getBlockAbs(chunk, game2WallX, groundMaxY+1, -9);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x2);
+			}
+			
+			b = getBlockAbs(chunk, game2WallX, groundMaxY+1, 9);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x3);
+			}
+			
+			
+			b = getBlockAbs(chunk, game1WallX, groundMaxY+2, -8);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x2);
+			}
+			
+			b = getBlockAbs(chunk, game1WallX, groundMaxY+2, 8);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x3);
+			}
+			
+			b = getBlockAbs(chunk, game2WallX, groundMaxY+2, -8);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x2);
+			}
+			
+			b = getBlockAbs(chunk, game2WallX, groundMaxY+2, 8);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x3);
+			}
+			
+			
+			b = getBlockAbs(chunk, game1WallX, groundMaxY+3, -7);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x2);
+			}
+			
+			b = getBlockAbs(chunk, game1WallX, groundMaxY+3, 7);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x3);
+			}
+			
+			b = getBlockAbs(chunk, game2WallX, groundMaxY+3, -7);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x2);
+			}
+			
+			b = getBlockAbs(chunk, game2WallX, groundMaxY+3, 7);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x3);
+			}
+			
+			
+			b = getBlockAbs(chunk, game1WallX, groundMaxY+4, -6);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x2);
+			}
+			
+			b = getBlockAbs(chunk, game1WallX, groundMaxY+4, 6);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x3);
+			}
+			
+			b = getBlockAbs(chunk, game2WallX, groundMaxY+4, -6);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x2);
+			}
+			
+			b = getBlockAbs(chunk, game2WallX, groundMaxY+4, 6);
+			if ( b != null )
+			{
+				b.setType(Material.QUARTZ_STAIRS);
+				b.setData((byte)0x3);
+			}
+			
+			
+			b = getBlockAbs(chunk, game1WallX, groundMaxY+2, -3);
+			if ( b != null )
+			{
+				b.setType(Material.TORCH);
+				b.setData((byte)0x4);
+			}
+			
+			b = getBlockAbs(chunk, game1WallX, groundMaxY+2, 3);
+			if ( b != null )
+			{
+				b.setType(Material.TORCH);
+				b.setData((byte)0x3);
+			}
+			
+			b = getBlockAbs(chunk, game2WallX, groundMaxY+2, -3);
+			if ( b != null )
+			{
+				b.setType(Material.TORCH);
+				b.setData((byte)0x4);
+			}
+			
+			b = getBlockAbs(chunk, game2WallX, groundMaxY+2, 3);
+			if ( b != null )
+			{
+				b.setType(Material.TORCH);
+				b.setData((byte)0x3);
+			}
+			
+			
 			
 			for ( int z = -2; z<= 2; z+=2 )
 			{
 				b = getBlockAbs(chunk, game1ButtonX, gameButtonY, z);
 				if ( b != null )
 				{
-					b.setType(Material.WOOD_BUTTON);
+					b.setType(Material.STONE_BUTTON);
 					b.setData((byte)0x2);
 				}
 				
 				b = getBlockAbs(chunk, game2ButtonX, gameButtonY, z);
 				if ( b != null )
 				{
-					b.setType(Material.WOOD_BUTTON);
+					b.setType(Material.STONE_BUTTON);
 					b.setData((byte)0x1);
 				}
 			}
+
+			
+			b = getBlockAbs(chunk, game1ButtonX, gameButtonY-1, -2);
+			if ( b != null )
+				setupWallSign(b, (byte)0x4, "", "Join", "Game 1");
+			
+			b = getBlockAbs(chunk, game2ButtonX, gameButtonY-1, 2);
+			if ( b != null )
+				setupWallSign(b, (byte)0x5, "", "Join", "Game 2");
+			
+			b = getBlockAbs(chunk, game1ButtonX, gameButtonY-1, 0);
+			if ( b != null )
+				setupWallSign(b, (byte)0x4, "", "Start", "Game 1");
+			
+			b = getBlockAbs(chunk, game2ButtonX, gameButtonY-1, 0);
+			if ( b != null )
+				setupWallSign(b, (byte)0x5, "", "Start", "Game 2");
+			
+			b = getBlockAbs(chunk, game1ButtonX, gameButtonY-1, 2);
+			if ( b != null )
+				setupWallSign(b, (byte)0x4, "", "Configure", "Game 1");
+			
+			b = getBlockAbs(chunk, game2ButtonX, gameButtonY-1, -2);
+			if ( b != null )
+				setupWallSign(b, (byte)0x5, "", "Configure", "Game 2");
 		}
 
-		private boolean wantsGround(int x, int y, int z)
+		private boolean insideSphere(int x, int y, int z, int x0, int y0, int z0, int rSquared)
 		{
-			final int rSquared = groundMaxX * groundMaxX;
-			final int y0 = groundMaxY;
-			
-			return x*x + (y-y0)*(y-y0) + z*z <= rSquared;
+			return (x-x0)*(x-x0) + (y-y0)*(y-y0) + (z-z0)*(z-z0) <= rSquared;
 		}
 	}
 	

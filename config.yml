@@ -27,8 +27,10 @@ games:
         config: 9, 66, 0
         start:  9, 66, 2
     progressbar:
-        from:   17, 65, -8
-        to:     17, 65, 8
+        from:   8, 64, -9
+        to:     8, 64, 9
+        width:  3
+        height: 1
   - 
     mode:       Farm Killer
     world:      Superflat
@@ -38,5 +40,7 @@ games:
         config: -9, 66, 0
         start:  -9, 66, -2
     progressbar:
-        from:   -17, 65, 8
-        to:     -17, 65, -8
+        from:   -8, 64, 9
+        to:     -8, 64, -9
+        width:  3
+        height: 1
