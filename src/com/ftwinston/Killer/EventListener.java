@@ -44,7 +44,6 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
 
@@ -129,7 +128,7 @@ class EventListener implements Listener
 				if ( fromGame != toGame )
 				{
 					plugin.playerManager.playerKilled(fromGame, player);
-					plugin.playerManager.putPlayerInGame(player, toGame);
+					toGame.addPlayerToGame(player);
 					
 					if ( Settings.filterScoreboard )
 					{// hide from old game, show for new
@@ -177,7 +176,7 @@ class EventListener implements Listener
 		}
 		else if ( nowInGame )
 		{
-			plugin.playerManager.putPlayerInGame(event.getPlayer(), toGame);
+			toGame.addPlayerToGame(event.getPlayer());
 			
 			if ( Settings.filterScoreboard )
 			{
@@ -651,7 +650,7 @@ class EventListener implements Listener
 					if ( plugin.games.length == 1 && plugin.games[0].getGameState().usesGameWorlds )
 					{
 						plugin.playerManager.teleport(player, plugin.games[0].getGameMode().getSpawnLocation(player));
-						plugin.playerManager.putPlayerInGame(player, plugin.games[0]);
+						plugin.games[0].addPlayerToGame(player);
 					}
 					else
 						plugin.playerManager.putPlayerInStagingWorld(player);
@@ -668,7 +667,7 @@ class EventListener implements Listener
 		
 		if ( game != null )
 		{
-			plugin.playerManager.putPlayerInGame(event.getPlayer(), game);
+			game.addPlayerToGame(event.getPlayer());
 			plugin.stagingWorldManager.playerNumberChanged(game);
 		}
 	}

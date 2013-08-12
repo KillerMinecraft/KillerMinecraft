@@ -72,7 +72,7 @@ class PlayerManager
 			if ( game.getGameState().usesGameWorlds )
 			{
 				resetPlayer(game, player);
-				putPlayerInGame(player, game);
+				game.addPlayerToGame(player);
 				teleport(player, game.getGameMode().getSpawnLocation(player));
 				return;
 			}
@@ -89,7 +89,7 @@ class PlayerManager
 		giveStagingWorldInstructionBook(player);
 		
 		if ( plugin.games.length == 1 )
-			plugin.playerManager.putPlayerInGame(player, plugin.games[0]);
+			plugin.games[0].addPlayerToGame(player);
 	}
 	
 	public void giveStagingWorldInstructionBook(Player player)
@@ -118,6 +118,8 @@ class PlayerManager
 		for ( Material type : typesToRemove )
 			inv.remove(type);
 	}
+	
+	public Info CreateInfo(boolean alive) { return new Info(alive); }
 	
 	public class Info
 	{
@@ -155,73 +157,6 @@ class PlayerManager
 	{
 		for ( Player player : game.getOnlinePlayers() )
 			resetPlayer(game, player);
-	}
-	
-	public void putPlayerInGame(Player player, Game game)
-	{
-		Info info = game.getPlayerInfo().get(player.getName());
-		boolean isNewPlayer;
-		if ( info == null )
-		{
-			isNewPlayer = true;
-			
-			if ( game == null || !game.getGameState().usesGameWorlds )
-				info = new Info(true);
-			else if ( !Settings.allowLateJoiners )
-				info = new Info(false);
-			else
-			{
-				info = new Info(true);
-				if ( game != null )
-					plugin.statsManager.playerJoinedLate(game.getNumber());
-			}
-			game.getPlayerInfo().put(player.getName(), info);
-			
-			// this player is new for this game, so clear them down
-			if ( game.getGameState().usesGameWorlds )
-				resetPlayer(game, player);
-		}
-		else
-			isNewPlayer = false;
-		
-		if ( game == null || !game.getGameState().usesGameWorlds )
-			return;
-
-		// hide all spectators from this player
-		for ( Player spectator : game.getOnlinePlayers(new PlayerFilter().notAlive().exclude(player)) )
-			hidePlayer(player, spectator);
-
-		game.getGameMode().playerJoinedLate(player, isNewPlayer);
-		
-		if ( !info.isAlive() )
-		{
-			String message = isNewPlayer ? "" : "Welcome Back. ";
-			message += "You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.";
-			
-			player.sendMessage(message);
-			
-			setAlive(game, player, false);
-			
-			// send this player to everyone else's scoreboards, because they're now invisible, and won't show otherwise
-			for ( Player online : game.getOnlinePlayers() )
-				if ( online != player && !online.canSee(player) )
-					plugin.craftBukkit.sendForScoreboard(online, player, true);
-		}
-		else
-			setAlive(game, player, true);
-		if ( isNewPlayer )
-			game.getGameMode().sendGameModeHelpMessage(player);
-			
-		if ( player.getInventory().contains(Material.COMPASS) )
-		{// does this need a null check on the target?
-			player.setCompassTarget(getCompassTarget(game, player));
-		}
-	}
-	
-	public void removePlayerFromGame(Player player, Game game)
-	{
-		game.getPlayerInfo().remove(player.getName());
-		plugin.stagingWorldManager.playerNumberChanged(game);
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time

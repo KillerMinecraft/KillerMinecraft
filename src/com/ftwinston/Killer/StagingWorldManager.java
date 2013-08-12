@@ -9,9 +9,6 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Sign;
-import org.bukkit.entity.Player;
-import org.bukkit.event.block.Action;
 
 class StagingWorldManager {
 	public StagingWorldManager(Killer plugin, World world) {
@@ -537,10 +534,6 @@ class StagingWorldManager {
 		 * game.updateSigns(GameSign.STATUS);
 		 * game.updateSigns(GameSign.JOIN_ACTION);
 		 */
-	}
-
-	private void resetTripWire(Block b) {
-		b.setData((byte) 0);
 	}
 
 	private void lockGame(Game game, boolean locked) {

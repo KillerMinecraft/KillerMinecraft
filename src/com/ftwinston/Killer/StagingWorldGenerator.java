@@ -353,19 +353,19 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			
 			b = getBlockAbs(chunk, game1ButtonX, gameButtonY-1, 0);
 			if ( b != null )
-				setupWallSign(b, (byte)0x4, "", "Start", "Game 1");
+				setupWallSign(b, (byte)0x4, "", "Configure", "Game 1");
 			
 			b = getBlockAbs(chunk, game2ButtonX, gameButtonY-1, 0);
 			if ( b != null )
-				setupWallSign(b, (byte)0x5, "", "Start", "Game 2");
+				setupWallSign(b, (byte)0x5, "", "Configure", "Game 2");
 			
 			b = getBlockAbs(chunk, game1ButtonX, gameButtonY-1, 2);
 			if ( b != null )
-				setupWallSign(b, (byte)0x4, "", "Configure", "Game 1");
+				setupWallSign(b, (byte)0x4, "", "Start", "Game 1");
 			
 			b = getBlockAbs(chunk, game2ButtonX, gameButtonY-1, -2);
 			if ( b != null )
-				setupWallSign(b, (byte)0x5, "", "Configure", "Game 2");
+				setupWallSign(b, (byte)0x5, "", "Start", "Game 2");
 		}
 
 		private boolean insideSphere(int x, int y, int z, int x0, int y0, int z0, int rSquared)

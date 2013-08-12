@@ -421,7 +421,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			}
 			else
 				player.teleport(plugin.stagingWorldManager.getGameSetupSpawnLocation(game.getNumber()));
-			plugin.playerManager.putPlayerInGame(player, game);
+			game.addPlayerToGame(player);
 			plugin.stagingWorldManager.playerNumberChanged(game);
 		}
 		else if ( cmd == "exclude" ) 
@@ -439,8 +439,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 				return;									
 			}
 			
-			plugin.playerManager.removePlayerFromGame(player, game);
-			plugin.stagingWorldManager.playerNumberChanged(game);
+			game.removePlayerFromGame(player);
 		}
 		else
 			plugin.log.warning("Invalid game command: " + cmd);

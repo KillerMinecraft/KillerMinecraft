@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -63,6 +62,7 @@ public class Killer extends JavaPlugin
         
         Settings.setup(this);
         
+        GameConfiguration.instance = new GameConfiguration();
         playerManager = new PlayerManager(this);
         worldManager = new WorldManager(this);
         voteManager = new VoteManager(this);

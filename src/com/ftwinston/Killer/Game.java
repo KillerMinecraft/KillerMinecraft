@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
@@ -21,6 +22,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Recipe;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 import com.ftwinston.Killer.PlayerManager.Info;
 import com.ftwinston.Killer.StagingWorldManager.GameSign;
@@ -48,6 +53,7 @@ public class Game
 		configButton = config;
 		startButton = start;
 		
+		// these warnings don't work cos the staging world spawn isn't being kept in memory
 		if (joinButton != null && !isButton(joinButton))
 			warnStagingAreaWrong(joinButton, "join button");
 		if (configButton != null && !isButton(configButton))
@@ -90,23 +96,179 @@ public class Game
 		}
 		return false;
 	}
-
+	
 	public void joinPressed(Player player) {
-		// TODO Auto-generated method stub
-		plugin.log.info(player.getName() + " pressed join for game " + number);
+		if ( getGameState().canChangeGameSetup )
+		{
+			if ( isPlayerInGame(player) )
+			{
+				removePlayerFromGame(player);
+				return;
+			}
+			
+			for ( Game other : plugin.games )
+				if ( other != this && other.isPlayerInGame(player) )
+				{
+					other.removePlayerFromGame(player);
+					break;
+				}
+			
+			addPlayerToGame(player);
+		}
+		else // TODO attempt late joining, if allowed by game
+			player.sendMessage("This game is in progress, and can't currently be joined.");
+	}
+	
+	public void addPlayerToGame(Player player)
+	{
+		Info info = getPlayerInfo().get(player.getName());
+		boolean isNewPlayer;
+		if ( info == null )
+		{
+			isNewPlayer = true;
+			
+			if ( !getGameState().usesGameWorlds )
+				info = PlayerManager.instance.CreateInfo(true);
+			else if ( !Settings.allowLateJoiners )
+				info = PlayerManager.instance.CreateInfo(false);
+			else
+			{
+				info = PlayerManager.instance.CreateInfo(true);
+				plugin.statsManager.playerJoinedLate(getNumber());
+			}
+			getPlayerInfo().put(player.getName(), info);
+			
+			// this player is new for this game, so clear them down
+			if ( getGameState().usesGameWorlds )
+				PlayerManager.instance.resetPlayer(this, player);
+		}
+		else
+			isNewPlayer = false;
+
+		Scoreboard sb = getSetupScoreboard();
+		player.setScoreboard(sb);
+		player.sendMessage("You have joined game " + getDisplayNumber());
+		
+		if ( !getGameState().usesGameWorlds )
+		{
+			updateSetupPlayerCount();
+			return;
+		}
+
+		// hide all spectators from this player
+		for ( Player spectator : getOnlinePlayers(new PlayerFilter().notAlive().exclude(player)) )
+			PlayerManager.instance.hidePlayer(player, spectator);
+
+		getGameMode().playerJoinedLate(player, isNewPlayer);
+		
+		if ( !info.isAlive() )
+		{
+			String message = isNewPlayer ? "" : "Welcome Back. ";
+			message += "You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.";
+			
+			player.sendMessage(message);
+			
+			PlayerManager.instance.setAlive(this, player, false);
+			
+			// send this player to everyone else's scoreboards, because they're now invisible, and won't show otherwise
+			for ( Player online : getOnlinePlayers() )
+				if ( online != player && !online.canSee(player) )
+					plugin.craftBukkit.sendForScoreboard(online, player, true);
+		}
+		else
+			PlayerManager.instance.setAlive(this, player, true);
+		if ( isNewPlayer )
+			getGameMode().sendGameModeHelpMessage(player);
+			
+		if ( player.getInventory().contains(Material.COMPASS) )
+		{// does this need a null check on the target?
+			player.setCompassTarget(PlayerManager.instance.getCompassTarget(this, player));
+		}
+	}
+
+	public void removePlayerFromGame(OfflinePlayer player)
+	{
+		getPlayerInfo().remove(player.getName());
+		plugin.stagingWorldManager.playerNumberChanged(this);
+		
+		if ( !getGameState().usesGameWorlds )
+			updateSetupPlayerCount();
+		
+		if ( player.isOnline() )
+		{
+			Player online = (Player)player;
+			online.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+			online.sendMessage("You have left game " + getDisplayNumber());
+		}
+	}
+	
+	private void updateSetupPlayerCount()
+	{
+		setupObjective.getScore(plugin.getServer().getOfflinePlayer("# players")).setScore(getPlayerInfo().size());
+	}
+	
+	Scoreboard setupScoreboard = null; Team setupTeam; Objective setupObjective;
+	public Scoreboard getSetupScoreboard()
+	{
+		if ( setupScoreboard == null )
+		{
+			 setupScoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+			 setupObjective = setupScoreboard.registerNewObjective("setup", "dummy");
+			 setupObjective.setDisplayName("Game " + getDisplayNumber());
+			 setupObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
+			 setupTeam = setupScoreboard.registerNewTeam("all");
+			 setupTeam.setDisplayName("# players");
+		}
+		return setupScoreboard;
 	}
 	
 	public void configPressed(Player player) {
-		// TODO Auto-generated method stub
-		plugin.log.info(player.getName() + " pressed config for game " + number);
+		if ( !isPlayerInGame(player) )
+		{
+			player.sendMessage("You cannot configure this game because you are not a part of it.");
+			return;
+		}
+		
+		GameConfiguration.instance.showConversation(player, this);
 	}
 	
 	public void startPressed(Player player) {
-		// TODO Auto-generated method stub
-		plugin.log.info(player.getName() + " pressed start for game " + number);
+		if ( getGameState() != GameState.stagingWorldSetup )
+		{
+			player.sendMessage("This game cannot be started. You can only start a game currently being set up.");
+			return;
+		}
+		
+		if ( !isPlayerInGame(player) )
+		{
+			player.sendMessage("You cannot start this game because you are not a part of it.");
+			return;
+		}
+		
+		if ( configuringPlayer != null )
+		{
+			if ( configuringPlayer.equals(player.getName()) )
+				player.sendMessage("You cannot start this game while you are currently configuring it.");
+			else
+				player.sendMessage("You cannot start this game because " + configuringPlayer + " is configuring it.");
+			return;
+		}
+		
+		plugin.log.info(player.getName() + " started game " + getDisplayNumber());
+		setGameState(GameState.waitingToGenerate);
 	}
 
+	public boolean isPlayerInGame(Player player)
+	{
+		return getPlayerInfo().get(player.getName()) != null;
+	}
+	
+	private String configuringPlayer = null;
+	public String getConfiguringPlayer() { return configuringPlayer; }
+	public void setConfiguringPlayer(String p) { configuringPlayer = p; }
+
 	public int getNumber() { return number; }
+	public int getDisplayNumber() { return number+1; }
 
 	private GameMode gameMode = null;
 	GameMode getGameMode() { return gameMode; }
@@ -400,7 +562,7 @@ public class Game
 	private List<World> worlds = new ArrayList<World>();
 	List<World> getWorlds() { return worlds; }
 	
-	String getWorldName() { return Settings.killerWorldNamePrefix + number; }
+	String getWorldName() { return Settings.killerWorldNamePrefix + getDisplayNumber(); }
 	
 	boolean forcedGameEnd = false;
 	void endGame(CommandSender actionedBy)

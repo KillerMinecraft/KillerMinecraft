@@ -7,6 +7,7 @@ import org.bukkit.conversations.ConversationAbandonedListener;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.ConversationFactory;
 import org.bukkit.conversations.InactivityConversationCanceller;
+import org.bukkit.conversations.MessagePrompt;
 import org.bukkit.conversations.NumericPrompt;
 import org.bukkit.conversations.Prompt;
 import org.bukkit.entity.Player;
@@ -16,24 +17,30 @@ public class GameConfiguration
 	public static GameConfiguration instance;
 	private static ConversationFactory configConvFactory;
 	private static final ChatColor numberColor = ChatColor.GOLD;
-	public static void Initialize()
-	{
-		if ( instance == null )
-			return;
-		
-		instance = new GameConfiguration();
-		instance.setupConversation();
-	}
 	
-	private void setupConversation()
+	public GameConfiguration()
 	{
 		configConvFactory = new ConversationFactory(Killer.instance);
         configConvFactory.withLocalEcho(false);
         configConvFactory.withModality(true);
 	}
 	
-	public void ShowConversation(Player player, Game game)
+	public void showConversation(Player player, Game game)
 	{
+		if ( player.isConversing() )
+			return;
+		
+		String configuring = game.getConfiguringPlayer();
+		if ( configuring != null )
+		{
+			if ( !configuring.equals(player.getName()) )
+				player.sendMessage("Game " + game.getDisplayNumber() + " is already being configured by " + configuring);
+			
+			return;
+		}
+		
+		game.setConfiguringPlayer(player.getName());
+		
 		configConvFactory.withFirstPrompt(new MainPrompt(game));
         configConvFactory.withConversationCanceller(new InactivityCanceller(game, 30));
         configConvFactory.addConversationAbandonedListener(new AbandonedListener(game));
@@ -53,7 +60,7 @@ public class GameConfiguration
 
 	protected void configurationFinished(Game game)
 	{
-		
+		game.setConfiguringPlayer(null);
 	}
 
 	private class InactivityCanceller extends InactivityConversationCanceller
@@ -92,6 +99,20 @@ public class GameConfiguration
 		}
 	}
 	
+	private class ClosingPrompt extends MessagePrompt
+	{
+		@Override
+		public String getPromptText(ConversationContext context)
+		{
+			return "\n\n\n\n\n\n\n\n\n\n\n.";
+		}
+
+		@Override
+		protected Prompt getNextPrompt(ConversationContext context) {
+			return Prompt.END_OF_CONVERSATION;
+		}
+	}
+	
 	private class MainPrompt extends NumericPrompt
 	{
 		private Game game;
@@ -104,32 +125,38 @@ public class GameConfiguration
 		{
 			StringBuilder sb = new StringBuilder();
 			
-			sb.append("Configuring Game");
+			sb.append("\n\n\n\n\n\n\n\n\n\n\nConfiguring Game");
 			if ( Settings.numGames > 1 )
 			{
 				sb.append(" #");
-				sb.append(game.getNumber());
+				sb.append(game.getDisplayNumber());
 			}
 			sb.append("\n\nGame mode: ");
 			sb.append(game.getGameMode().getName());
-			writeColoredNumber(sb, 1);
-			sb.append("change");
-			writeColoredNumber(sb, 2);
-			sb.append("configure\n");
 			
 			if ( game.getGameMode().allowWorldOptionSelection() )
 			{
-				sb.append("World: ");
+				sb.append("\nWorld: ");
 				sb.append(game.getWorldOption().getName());
+			}
+			
+			writeColoredNumber(sb, 1);
+			sb.append("change game mode");
+			writeColoredNumber(sb, 2);
+			sb.append("configure game mode");
+			
+			if ( game.getGameMode().allowWorldOptionSelection() )
+			{
 				writeColoredNumber(sb, 3);
-				sb.append("change");
+				sb.append("change world");
 				writeColoredNumber(sb, 4);
-				sb.append("configure");
+				sb.append("configure world");
 			}
 			else
-				sb.append("This game mode configures the world itself");
+				sb.append("\nThis game mode configures the world itself");
 			
-			sb.append("\n[type anything else to close]");
+			writeColoredNumber(sb, 0);
+			sb.append("close");
 			
 			return sb.toString();
 		}
@@ -146,15 +173,15 @@ public class GameConfiguration
 				if ( game.getGameMode().allowWorldOptionSelection() )
 					return new WorldPrompt(game, this);
 				configurationFinished(game);
-				return Prompt.END_OF_CONVERSATION;
+				return new ClosingPrompt();
 			case 4:
 				if ( game.getGameMode().allowWorldOptionSelection() )
 					return new WorldConfigPrompt(game, this);
 				configurationFinished(game);
-				return Prompt.END_OF_CONVERSATION;
+				return new ClosingPrompt();
 			default:
 				configurationFinished(game);
-				return Prompt.END_OF_CONVERSATION;
+				return new ClosingPrompt();
 			}
 		}
 	}
@@ -173,7 +200,7 @@ public class GameConfiguration
 		{
 			StringBuilder sb = new StringBuilder();
 			
-			sb.append("Current game mode: ");
+			sb.append("\n\n\n\n\n\n\n\n\n\n\nCurrent game mode: ");
 			sb.append(game.getGameMode().getName());
 			
 			for ( int i=0; i<GameMode.gameModes.size(); i++ )
@@ -181,8 +208,9 @@ public class GameConfiguration
 				writeColoredNumber(sb, i+1);
 				sb.append(GameMode.get(i).getName());
 			}
-			
-			sb.append("\n[type anything else to go back]");
+
+			writeColoredNumber(sb, 0);
+			sb.append("go back");
 			
 			return sb.toString();
 		}
@@ -190,7 +218,7 @@ public class GameConfiguration
 		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
 		{
 			if ( !game.getGameState().canChangeGameSetup )
-				return Prompt.END_OF_CONVERSATION;
+				return new ClosingPrompt();
 			
 			int choice = val.intValue();
 			if ( choice > 0 && choice <= GameMode.gameModes.size() )
@@ -217,7 +245,7 @@ public class GameConfiguration
 		{
 			StringBuilder sb = new StringBuilder();
 			
-			sb.append("Game mode: ");
+			sb.append("\n\n\n\n\n\n\n\n\n\n\nGame mode: ");
 			sb.append(game.getGameMode().getName());
 			
 			Option[] options = game.getGameMode().getOptions();
@@ -241,7 +269,8 @@ public class GameConfiguration
 				sb.append(ChatColor.RESET);
 			}
 			
-			sb.append("\n[type anything else to go back]");
+			writeColoredNumber(sb, 0);
+			sb.append("go back");
 			
 			return sb.toString();
 		}
@@ -249,7 +278,7 @@ public class GameConfiguration
 		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
 		{
 			if ( !game.getGameState().canChangeGameSetup )
-				return Prompt.END_OF_CONVERSATION;
+				return new ClosingPrompt();
 			
 			int choice = val.intValue();
 			if ( choice > 0 && choice <= game.getGameMode().getNumOptions() )
@@ -276,16 +305,17 @@ public class GameConfiguration
 		{
 			StringBuilder sb = new StringBuilder();
 			
-			sb.append("Current world option: ");
+			sb.append("\n\n\n\n\n\n\n\n\n\n\nCurrent world option: ");
 			sb.append(game.getWorldOption().getName());
 			
-			for ( int i=0; i<GameMode.gameModes.size(); i++ )
+			for ( int i=0; i<WorldOption.worldOptions.size(); i++ )
 			{
 				writeColoredNumber(sb, i+1);
-				sb.append(GameMode.get(i).getName());
+				sb.append(WorldOption.get(i).getName());
 			}
 			
-			sb.append("\n[type anything else to go back]");
+			writeColoredNumber(sb, 0);
+			sb.append("go back");
 			
 			return sb.toString();
 		}
@@ -293,7 +323,7 @@ public class GameConfiguration
 		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
 		{
 			if ( !game.getGameState().canChangeGameSetup )
-				return Prompt.END_OF_CONVERSATION;
+				return new ClosingPrompt();
 			
 			int choice = val.intValue();
 			if ( choice > 0 && choice <= WorldOption.worldOptions.size() && game.getGameMode().allowWorldOptionSelection() )
@@ -320,7 +350,7 @@ public class GameConfiguration
 		{
 			StringBuilder sb = new StringBuilder();
 			
-			sb.append("World option: ");
+			sb.append("\n\n\n\n\n\n\n\n\n\n\nWorld option: ");
 			sb.append(game.getGameMode().getName());
 			
 			Option[] options = game.getWorldOption().getOptions();
@@ -344,7 +374,8 @@ public class GameConfiguration
 				sb.append(ChatColor.RESET);
 			}
 			
-			sb.append("\n[type anything else to go back]");
+			writeColoredNumber(sb, 0);
+			sb.append("go back");
 			
 			return sb.toString();
 		}
@@ -352,7 +383,7 @@ public class GameConfiguration
 		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
 		{
 			if ( !game.getGameState().canChangeGameSetup )
-				return Prompt.END_OF_CONVERSATION;
+				return new ClosingPrompt();
 			
 			int choice = val.intValue();
 			if ( choice > 0 && choice <= game.getWorldOption().getNumOptions() )
