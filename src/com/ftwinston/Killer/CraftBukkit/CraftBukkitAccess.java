@@ -19,7 +19,7 @@ public abstract class CraftBukkitAccess
 	public static CraftBukkitAccess createCorrectVersion(Plugin plugin)
 	{
         // Get full package string of CraftServer class, then extract the version name from that 
-        // org.bukkit.craftbukkit.versionstring (or for pre-refactor, just org.bukkit.craftbukkit
+        // org.bukkit.craftbukkit.versionstring (or for pre-refactor, just org.bukkit.craftbukkit)
 		String packageName = plugin.getServer().getClass().getPackage().getName();
         String version = packageName.substring(packageName.lastIndexOf('.') + 1);
 
@@ -27,15 +27,8 @@ public abstract class CraftBukkitAccess
         	return new v1_6_2(plugin);
         if ( version.equals("v1_5_R3"))
         	return new v1_5_2(plugin);
-        if ( version.equals("v1_4_R1"))
-        	return new v1_4_7(plugin);
-        if ( version.equals("v1_4_6"))
-        	return new v1_4_6(plugin);
-        if ( version.equals("v1_4_5"))
-        	return new v1_4_5(plugin);
-        
-        if ( version.equals("craftbukkit"))
-        	plugin.getLogger().warning("Killer minecraft requires at least CraftBukkit 1.4.5-R1.0 to function. Sorry.");
+        if ( version.equals("v1_4_R1") || version.equals("v1_4_6") || version.equals("v1_4_5") || version.equals("craftbukkit"))
+        	plugin.getLogger().warning("Killer minecraft requires at least CraftBukkit 1.5.2-R1.0 to function. Sorry.");
         else
         	plugin.getLogger().warning("This version of Killer minecraft is not compatible with your server's version of CraftBukkit! (" + version + ") Please download a newer version of Killer minecraft.");
         return null;
