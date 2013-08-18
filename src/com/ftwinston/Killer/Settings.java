@@ -1,12 +1,17 @@
 package com.ftwinston.Killer;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
+
+import com.ftwinston.Killer.Game.GameState;
+
 
 public class Settings
 {
@@ -101,21 +106,7 @@ public class Settings
 		
 		for ( int iGame = 0; iGame < numGames; iGame++ )
 		{
-			Object o = config.get(iGame);
-			
-			LinkedHashMap<String, Object> gameConfig;
-			
-			try
-			{
-				@SuppressWarnings("unchecked")
-				LinkedHashMap<String, Object> tmp = (LinkedHashMap<String, Object>)o;
-				
-				gameConfig = tmp;
-			}
-			catch ( ClassCastException ex )
-			{
-				gameConfig = null;
-			}
+			LinkedHashMap<String, Object> gameConfig = resolveConfigSection(config.get(iGame));
 			
 			if ( gameConfig == null )
 			{
@@ -128,41 +119,132 @@ public class Settings
 			setupGame(plugin, g, gameConfig);
 		}
 		
+		// do a quick duplicate game name check
+		for ( int iGame = 0; iGame < numGames; iGame++ )
+			for ( int iOther = iGame+1; iOther < numGames; iOther++ )
+				if ( plugin.games[iGame].getName().equals(plugin.games[iOther].getName()) )
+					plugin.log.warning("Two games (" + (iGame+1) + " & " + (iOther+1) + ") found with the same name: " + plugin.games[iGame].getName());
+		
 		return true;
 	}
 
 	private static void setupGame(Killer plugin, Game game, LinkedHashMap<String, Object> config)
 	{
-		String mode = getString(config, "mode", defaultGameMode);
-		String world = getString(config, "world", defaultWorldOption);
-		Location infoMap = readLocation(config, "infomap", plugin.stagingWorld);
+		String name = getString(config, "name", "Unnamed game");
+		game.setName(name);
 		
-		Object o = config.get("buttons");
-		if ( o == null || !(o instanceof LinkedHashMap<?, ?>) )
-		{
-			plugin.log.warning("Can't find \"buttons\" section for game " + game.getNumber());
-			plugin.log.warning(o.getClass().getName());
-			return;			
-		}
+		// set the game mode
+		LinkedHashMap<String, Object> section = resolveConfigSection(config.get("mode"));
+		String modeName = getString(section, "name", defaultGameMode);
 		
-		@SuppressWarnings("unchecked")
-		LinkedHashMap<String, Object> buttons = (LinkedHashMap<String, Object>)o;
-				
-		Location joinButton = readLocation(buttons, "join", plugin.stagingWorld);
-		Location configButton = readLocation(buttons, "config", plugin.stagingWorld);
-		Location startButton = readLocation(buttons, "start", plugin.stagingWorld);
-		
-		GameModePlugin modePlugin = GameMode.getByName(mode);
+		GameModePlugin modePlugin = GameMode.getByName(modeName);
 		if ( modePlugin == null )
 			modePlugin = GameMode.get(0);
 		game.setGameMode(modePlugin);
 		
-		WorldOptionPlugin worldPlugin = WorldOption.getByName(world);
+		// set the game mode's options, if any specified
+		setupOptionsFromConfig(game.getGameMode(), section);
+		
+		
+		// set the world option
+		section = resolveConfigSection(config.get("world"));
+		String worldName = getString(section, "name", defaultWorldOption);
+		
+		WorldOptionPlugin worldPlugin = WorldOption.getByName(worldName);
 		if ( worldPlugin == null )
 			worldPlugin = WorldOption.get(0);
 		game.setWorldOption(worldPlugin);
 		
-		game.initStagingArea(infoMap, joinButton, configButton, startButton);
+		//  set the world option's options, if any specified
+		setupOptionsFromConfig(game.getWorldOption(), section);
+		
+		
+		// now the game buttons
+		section = resolveConfigSection(config.get("buttons"));
+		if ( section == null )
+		{
+			plugin.log.warning("Can't find \"buttons\" section for " + game.getName());
+			return;
+		}
+				
+		Location joinButton = readLocation(section, "join", plugin.stagingWorld);
+		Location configButton = readLocation(section, "config", plugin.stagingWorld);
+		Location startButton = readLocation(section, "start", plugin.stagingWorld);
+		game.initButtons(joinButton, configButton, startButton);
+		
+		// and its signs
+		section = resolveConfigSection(config.get("signs"));
+		if ( section == null )
+		{
+			plugin.log.warning("Can't find \"signs\" section for " + game.getName());
+			return;
+		}
+		
+		Location statusSign = readLocation(section, "status", plugin.stagingWorld);
+		Location joinSign = readLocation(section, "join", plugin.stagingWorld);
+		Location configSign = readLocation(section, "config", plugin.stagingWorld);
+		Location startSign = readLocation(section, "start", plugin.stagingWorld);
+		game.initSigns(statusSign, joinSign, configSign, startSign);
+		
+		// and lastly, the progress indicator 
+		section = resolveConfigSection(config.get("progressbar"));
+		if ( section != null )
+		{
+			Location start = readLocation(section, "start", plugin.stagingWorld);
+			String dir = getString(section, "dir", "+z");
+			int length = readInt(section, "length", 18);
+			int breadth = readInt(section, "breadth", 1);
+			int depth = readInt(section, "depth", 1);
+			game.initProgressBar(start, dir, length, breadth, depth);
+		}
+		
+		game.setGameState(GameState.stagingWorldSetup);
+	}
+
+	private static void setupOptionsFromConfig(KillerModule module, LinkedHashMap<String, Object> configSection)
+	{
+		LinkedHashMap<String, Object> options = resolveConfigSection(configSection.get("options"));
+		if ( options != null )
+		{
+			Iterator<Map.Entry<String, Object>> it = options.entrySet().iterator();
+			while ( it.hasNext() )
+			{
+				Map.Entry<String, Object> kvp = it.next();
+				String optionName = kvp.getKey();
+				
+				Option option = module.findOption(optionName);
+				if ( option == null )
+				{
+					Killer.instance.log.warning(module.getName() + " has unrecognised option specified in config: " + optionName);
+					continue;
+				}
+				
+				String val = kvp.getValue().toString();
+				if ( val == null )
+				{
+					Killer.instance.log.warning(module.getName() + " option \"" + optionName + "\" has no value");
+					continue;
+				}
+				option.setEnabled(Boolean.parseBoolean(val));
+			}
+		}
+	}
+	
+	private static LinkedHashMap<String, Object> resolveConfigSection(Object config)
+	{
+		if ( config == null || !(config instanceof LinkedHashMap<?, ?>) )
+			return null;
+		
+		try
+		{
+			@SuppressWarnings("unchecked")
+			LinkedHashMap<String, Object> section = (LinkedHashMap<String, Object>)config;
+			return section;
+		}
+		catch ( ClassCastException ex )
+		{
+			return null;
+		}
 	}
 	
 	private static String getString(LinkedHashMap<String, Object> config, String key, String defaultVal)
@@ -178,6 +260,23 @@ public class Settings
 		catch ( ClassCastException ex )
 		{
 			Killer.instance.log.warning("'" + key + "' is not a string, but it's supposed to be!");
+			return defaultVal;
+		}
+	}
+
+	private static int readInt(LinkedHashMap<String, Object> config, String key, int defaultVal)
+	{
+		Object o = config.get(key);
+		if ( o == null )
+			return defaultVal;
+
+		try
+		{
+			return (Integer)o;
+		}
+		catch ( ClassCastException ex )
+		{
+			Killer.instance.log.warning("'" + key + "' is not an int, but it's supposed to be!");
 			return defaultVal;
 		}
 	}

@@ -12,9 +12,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
-import com.ftwinston.Killer.Game.GameState;
-import com.ftwinston.Killer.StagingWorldManager.StagingWorldOption;
-
 public class CommandHandler
 {
 	public static boolean onCommand(Killer plugin, CommandSender sender, Command cmd, String label, String[] args)
@@ -223,9 +220,9 @@ public class CommandHandler
 							sender.sendMessage("You're not in a Killer game");
 					}	
 					else if ( player.getWorld() == plugin.stagingWorld )
-						sender.sendMessage("You're in the the setup room for Killer game #" + (game.getNumber()+1));
+						sender.sendMessage("You're in the the setup room for " + game.getName());
 					else
-						sender.sendMessage("You're in Killer game #" + (game.getNumber()+1));
+						sender.sendMessage("You're in " + game.getName()+1);
 					
 					return true;
 				}
@@ -360,33 +357,12 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			return;
 		
 		String cmd = args[2];
-		if ( cmd == "start" ) 
-		{
-			if ( game.getOnlinePlayers().size() >= game.getGameMode().getMinPlayers() )
-			{
-				game.setCurrentOption(StagingWorldOption.NONE);
-				game.setGameState(GameState.waitingToGenerate);
-			}
-			else
-				game.setGameState(GameState.stagingWorldConfirm);
-		}
-		else if ( cmd == "confirm" ) 
-		{
-			game.setCurrentOption(StagingWorldOption.NONE);
-			game.setGameState(GameState.waitingToGenerate);
-		}
-		else if ( cmd == "cancel" )
-			game.setGameState(GameState.stagingWorldSetup);
 		if ( cmd == "difficulty" )
 			changeDifficulty(plugin, game, args.length > 3 ? args[3] : "");
 		else if ( cmd == "monsters" )
 			changeMonsterNumbers(plugin, game, args.length > 3 ? args[3] : "");
 		else if ( cmd == "animals" )
 			changeAnimalNumbers(plugin, game, args.length > 3 ? args[3] : "");
-		else if ( cmd == "show" )
-			showGameOption(plugin, game, args.length > 3 ? args[3] : "");
-		else if ( cmd == "option" )
-			gameOptionChanged(plugin, game, args.length > 3 ? args[3] : "");
 		else if ( cmd == "playerlimit" )
 			gamePlayerLimit(plugin, game, args.length > 3 ? args[3] : "");
 		else if ( cmd == "include" ) 
@@ -483,7 +459,6 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			if ( game.getDifficulty().getValue() < Difficulty.HARD.getValue() )
 			{
 				game.setDifficulty(Difficulty.getByValue(game.getDifficulty().getValue()+1));
-				game.updateSigns(StagingWorldManager.GameSign.DIFFICULTY);
 			}
 		}
 		else if ( param == "down" )
@@ -491,7 +466,6 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			if ( game.getDifficulty().getValue() > Difficulty.PEACEFUL.getValue() )
 			{
 				game.setDifficulty(Difficulty.getByValue(game.getDifficulty().getValue()-1));
-				game.updateSigns(StagingWorldManager.GameSign.DIFFICULTY);
 			}
 		}
 		else
@@ -505,7 +479,6 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			if ( game.monsterNumbers < Game.maxQuantityNum )
 			{
 				game.monsterNumbers++;
-				game.updateSigns(StagingWorldManager.GameSign.ANIMALS);
 			}
 		}
 		else if ( param == "down" )
@@ -513,7 +486,6 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			if ( game.monsterNumbers > Game.minQuantityNum )
 			{
 				game.monsterNumbers--;
-				game.updateSigns(StagingWorldManager.GameSign.ANIMALS);
 			}
 		}
 		else
@@ -527,7 +499,6 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			if ( game.animalNumbers < Game.maxQuantityNum )
 			{
 				game.animalNumbers++;
-				game.updateSigns(StagingWorldManager.GameSign.ANIMALS);
 			}
 		}
 		else if ( param == "down" )
@@ -535,48 +506,15 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			if ( game.animalNumbers > Game.minQuantityNum )
 			{
 				game.animalNumbers--;
-				game.updateSigns(StagingWorldManager.GameSign.ANIMALS);
 			}
 		}
 		else
 			plugin.log.warning("Invalid animal number parameter, expected up/down, got: " + param);
 	}
-
-	private static void showGameOption(Killer plugin, Game game, String option)
-	{
-		if ( option == "modes")
-			game.setCurrentOption(game.getCurrentOption() == StagingWorldOption.GAME_MODE ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE);
-		else if ( option == "worlds")
-			game.setCurrentOption(game.getCurrentOption() == StagingWorldOption.WORLD ? StagingWorldOption.NONE : StagingWorldOption.WORLD);
-		else if ( option == "modeconfig")
-			game.setCurrentOption(game.getCurrentOption() == StagingWorldOption.GAME_MODE_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.GAME_MODE_CONFIG);
-		else if ( option == "worldconfig")
-			game.setCurrentOption(game.getCurrentOption() == StagingWorldOption.WORLD_CONFIG ? StagingWorldOption.NONE : StagingWorldOption.WORLD_CONFIG);
-		else if ( option == "misc")
-			game.setCurrentOption(game.getCurrentOption() == StagingWorldOption.GLOBAL_OPTION ? StagingWorldOption.NONE : StagingWorldOption.GLOBAL_OPTION);
-		else
-			plugin.log.warning("Invalid game show option: " + option);
-	}
-	
-	private static void gameOptionChanged(Killer plugin, Game game, String optionNum)
-	{
-		int num;
-		try
-		{
-			num = Integer.parseInt(optionNum);
-		}
-		catch ( NumberFormatException ex )
-		{
-			plugin.log.warning("Command error: invalid option #: " + optionNum);
-			return;
-		}
-		
-		plugin.stagingWorldManager.gameOptionButtonPressed(game, game.getCurrentOption(), num);
-	}
 	
 	private static void teleportCommand(Killer plugin, String[] args)
 	{
-		String playerName = args[1];
+		//String playerName = args[1];
 		String cmd = args[2];
 		
 		if ( cmd == "exit" )
@@ -590,6 +528,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 				plugin.log.warning("Teleport command error: incomplete coordinates provided");
 				return;
 			}
+			/*
 			int cx, cy, cz;
 			
 			try
@@ -603,7 +542,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 				plugin.log.warning("Teleport command error: invalid coordinates #: " + args[3] + " " + args[4] + " " + args[5]);
 				return;
 			}
-			
+			*/
 			// teleport to the provided coordinates
 		}
 		else if ( cmd == "game" )
@@ -634,6 +573,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			
 			if ( args.length > 7 && args[4] == "else" )
 			{
+				/*
 				int cx, cy, cz;
 				
 				try
@@ -647,7 +587,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 					plugin.log.warning("Teleport command error: invalid coordinates #: " + args[5] + " " + args[6] + " " + args[7]);
 					return;
 				}
-				
+				*/
 				// teleport to the provided coordinates
 			}
 		}

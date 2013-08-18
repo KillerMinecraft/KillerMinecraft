@@ -20,6 +20,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	@Override
     public List<BlockPopulator> getDefaultPopulators(World world) {
+		world.setSpawnLocation(0, 65, 0);
         return Arrays.asList((BlockPopulator)new StagingWorldPopulator(this));
     }
 	
@@ -35,7 +36,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 	
 	public class StagingWorldPopulator extends org.bukkit.generator.BlockPopulator
 	{
-		StagingWorldGenerator gen; boolean hackSpawn = true;
+		StagingWorldGenerator gen;
 		
 		public StagingWorldPopulator(StagingWorldGenerator gen)
 		{
@@ -53,11 +54,6 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		
 		public void populate(World world, Random random, Chunk chunk)
 		{
-			if ( hackSpawn )
-			{
-				world.setSpawnLocation(0, 65, 0);
-				hackSpawn = false;
-			}
 			if ( chunk.getX() >= 2 || chunk.getX() < -2 || chunk.getZ() >= 2 || chunk.getZ() < -2 )
 				return;
 
@@ -344,28 +340,36 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 
 			
 			b = getBlockAbs(chunk, game1ButtonX, gameButtonY-1, -2);
-			if ( b != null )
-				setupWallSign(b, (byte)0x4, "", "Join", "Game 1");
+			if ( b != null ) // game 1 join
+				setupWallSign(b, (byte)0x4, "");
 			
 			b = getBlockAbs(chunk, game2ButtonX, gameButtonY-1, 2);
-			if ( b != null )
-				setupWallSign(b, (byte)0x5, "", "Join", "Game 2");
+			if ( b != null ) // game 2 join
+				setupWallSign(b, (byte)0x5, "");
 			
 			b = getBlockAbs(chunk, game1ButtonX, gameButtonY-1, 0);
-			if ( b != null )
-				setupWallSign(b, (byte)0x4, "", "Configure", "Game 1");
+			if ( b != null ) // game 1 config
+				setupWallSign(b, (byte)0x4, "");
 			
 			b = getBlockAbs(chunk, game2ButtonX, gameButtonY-1, 0);
-			if ( b != null )
-				setupWallSign(b, (byte)0x5, "", "Configure", "Game 2");
+			if ( b != null ) // game 2 config
+				setupWallSign(b, (byte)0x5, "");
 			
 			b = getBlockAbs(chunk, game1ButtonX, gameButtonY-1, 2);
-			if ( b != null )
-				setupWallSign(b, (byte)0x4, "", "Start", "Game 1");
+			if ( b != null ) // game 1 start
+				setupWallSign(b, (byte)0x4, "");
 			
 			b = getBlockAbs(chunk, game2ButtonX, gameButtonY-1, -2);
-			if ( b != null )
-				setupWallSign(b, (byte)0x5, "", "Start", "Game 2");
+			if ( b != null ) // game 2 start
+				setupWallSign(b, (byte)0x5, "");
+			
+			b = getBlockAbs(chunk, game1ButtonX, gameButtonY+1, 0);
+			if ( b != null ) // game 1 status
+				setupWallSign(b, (byte)0x4, "");
+			
+			b = getBlockAbs(chunk, game2ButtonX, gameButtonY+1, 0);
+			if ( b != null ) // game 2 status
+				setupWallSign(b, (byte)0x5, "");
 		}
 
 		private boolean insideSphere(int x, int y, int z, int x0, int y0, int z0, int rSquared)

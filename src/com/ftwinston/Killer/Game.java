@@ -1,12 +1,10 @@
 package com.ftwinston.Killer;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.bukkit.Bukkit;
@@ -28,8 +26,6 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import com.ftwinston.Killer.PlayerManager.Info;
-import com.ftwinston.Killer.StagingWorldManager.GameSign;
-import com.ftwinston.Killer.StagingWorldManager.StagingWorldOption;
 
 public class Game
 {
@@ -37,6 +33,7 @@ public class Game
 
 	Killer plugin;
 	private int number, helpMessageProcess, compassProcess, spectatorFollowProcess;
+	private String name;
 	
 	public Game(Killer killer, int gameNumber)
 	{
@@ -44,11 +41,14 @@ public class Game
 		number = gameNumber;
 	}
 	
-	Location infoMap, startButton, joinButton, configButton;
+	public String getName() { return name; }
+	void setName(String n) { name = n; }
 	
-	public void initStagingArea(Location info, Location join, Location config, Location start)
+	Location startButton, joinButton, configButton;
+	Location statusSign, startSign, joinSign, configSign;
+	
+	void initButtons(Location join, Location config, Location start)
 	{
-		infoMap = info;
 		joinButton = join;
 		configButton = config;
 		startButton = start;
@@ -57,24 +57,208 @@ public class Game
 		if (joinButton != null && !isButton(joinButton))
 			warnStagingAreaWrong(joinButton, "join button");
 		if (configButton != null && !isButton(configButton))
-			warnStagingAreaWrong(joinButton, "configure button");
+			warnStagingAreaWrong(configButton, "configure button");
 		if (startButton != null && !isButton(startButton))
-			warnStagingAreaWrong(joinButton, "start button");
-				
-		for ( Entry<GameSign, ArrayList<Location>> entry : signs.entrySet() )
-			for ( Location loc : entry.getValue() )
-				initSign(entry.getKey(), loc.getBlock());
+			warnStagingAreaWrong(startButton, "start button");
 	}
-	
+
 	private boolean isButton(Location loc)
 	{
 		Block b = loc.getBlock();
 		return b.getType() == Material.STONE_BUTTON || b.getType() == Material.WOOD_BUTTON;
 	}
+
+	void initSigns(Location status, Location join, Location config, Location start)
+	{
+		statusSign = status;
+		joinSign = join;
+		configSign = config;
+		startSign = start;
+		
+		// this isn't going to work if it isn't yet loaded.
+		// also, should have some standard methods for setting these sign texts
+		if (statusSign != null && !isSign(statusSign))
+			warnStagingAreaWrong(statusSign, "status sign");
+		if (joinSign != null && !isSign(joinSign))
+			warnStagingAreaWrong(joinSign, "join sign");
+		if (configSign != null && !isSign(configSign))
+			warnStagingAreaWrong(configSign, "config sign");
+		if (startSign != null && !isSign(startSign))
+			warnStagingAreaWrong(startSign, "start sign");
+	}
+
+	private boolean isSign(Location loc)
+	{
+		Block b = loc.getBlock();
+		return b.getType() == Material.SIGN_POST || b.getType() == Material.WALL_SIGN;
+	}
+	
+	void updateSign(Location loc, String... lines)
+	{
+		if ( loc == null || !isSign(loc) )
+			return;
+		
+		Sign s = (Sign)loc.getBlock().getState();
+		for ( int i=0; i<4 && i<lines.length; i++ )
+			s.setLine(i, lines[i]);
+		for ( int i=lines.length; i<4; i++ )
+			s.setLine(i, "");
+		s.update();
+	}
+	
+	private int progressBarDx, progressBarDy, progressBarDz;
+	private Location progressBarMinExtent, progressBarMaxExtent;
+	boolean initProgressBar(Location start, String dir, int length, int breadth, int depth)
+	{
+		progressBarDx = 0; progressBarDy = 0; progressBarDz = 0;
+		
+		// determine the extent of the progress bar
+		if ( dir.equalsIgnoreCase("+x") )
+		{
+			progressBarDx = 1;
+			int xExtent = length;
+			int yExtent = depth;
+			int zExtent = breadth;
+			
+			progressBarMinExtent = new Location(start.getWorld(), start.getBlockX(), start.getBlockY() - yExtent/2, start.getBlockZ() - zExtent/2);
+			progressBarMaxExtent = new Location(start.getWorld(), start.getBlockX() + xExtent, progressBarMinExtent.getBlockY() + yExtent - 1, progressBarMinExtent.getBlockZ() + zExtent - 1);
+		}
+		else if ( dir.equalsIgnoreCase("-x") )
+		{
+			progressBarDx = -1;
+			int xExtent = length;
+			int yExtent = depth;
+			int zExtent = breadth;
+			
+			progressBarMinExtent = new Location(start.getWorld(), start.getBlockX() - xExtent, start.getBlockY() - yExtent/2, start.getBlockZ() - zExtent/2);
+			progressBarMaxExtent = new Location(start.getWorld(), start.getBlockX(), progressBarMinExtent.getBlockY() + yExtent - 1, progressBarMinExtent.getBlockZ() + zExtent - 1);
+		}
+		else if ( dir.equalsIgnoreCase("+y") )
+		{
+			progressBarDy = 1;
+			int xExtent = breadth;
+			int yExtent = length;
+			int zExtent = depth;
+			
+			progressBarMinExtent = new Location(start.getWorld(), start.getBlockX() - xExtent/2, start.getBlockY(), start.getBlockZ() - zExtent/2);
+			progressBarMaxExtent = new Location(start.getWorld(), progressBarMinExtent.getBlockX() + xExtent - 1, start.getBlockY() + yExtent, progressBarMinExtent.getBlockZ() + zExtent - 1);
+		}
+		else if ( dir.equalsIgnoreCase("-y") )
+		{
+			progressBarDy = -1;
+			int xExtent = breadth;
+			int yExtent = length;
+			int zExtent = depth;
+			
+			progressBarMinExtent = new Location(start.getWorld(), start.getBlockX() - xExtent/2, start.getBlockY() - yExtent, start.getBlockZ() - zExtent/2);
+			progressBarMaxExtent = new Location(start.getWorld(), progressBarMinExtent.getBlockX() + xExtent - 1, start.getBlockY(), progressBarMinExtent.getBlockZ() + zExtent - 1);
+		}
+		else if ( dir.equalsIgnoreCase("+z") )
+		{
+			progressBarDz = 1;
+			int xExtent = breadth;
+			int yExtent = depth;
+			int zExtent = length;
+			
+			progressBarMinExtent = new Location(start.getWorld(), start.getBlockX() - xExtent/2, start.getBlockY() - yExtent/2, start.getBlockZ());
+			progressBarMaxExtent = new Location(start.getWorld(), progressBarMinExtent.getBlockX() + xExtent - 1, progressBarMinExtent.getBlockY() + yExtent - 1, start.getBlockZ() + zExtent);
+		}
+		else if ( dir.equalsIgnoreCase("-z") )
+		{
+			progressBarDz = -1;
+			int xExtent = breadth;
+			int yExtent = depth;
+			int zExtent = length;
+
+			progressBarMinExtent = new Location(start.getWorld(), start.getBlockX() - xExtent/2, start.getBlockY() - yExtent/2, start.getBlockZ() - zExtent);
+			progressBarMaxExtent = new Location(start.getWorld(), progressBarMinExtent.getBlockX() + xExtent - 1, progressBarMinExtent.getBlockY() + yExtent - 1, start.getBlockZ());
+		}
+		else
+		{
+			Killer.instance.log.warning("Invalid progress bar direction for " + getName() + ": " + dir);
+			return false;
+		}
+		
+		// ensure that min/max really are the right way around
+		if ( progressBarMinExtent.getBlockX() > progressBarMaxExtent.getBlockX() )
+		{
+			int tmp = progressBarMinExtent.getBlockX();
+			progressBarMinExtent.setX(progressBarMaxExtent.getBlockX());
+			progressBarMaxExtent.setX(tmp);
+		}
+		if ( progressBarMinExtent.getBlockY() > progressBarMaxExtent.getBlockY() )
+		{
+			int tmp = progressBarMinExtent.getBlockY();
+			progressBarMinExtent.setY(progressBarMaxExtent.getBlockY());
+			progressBarMaxExtent.setY(tmp);
+		}
+		if ( progressBarMinExtent.getBlockZ() > progressBarMaxExtent.getBlockZ() )
+		{
+			int tmp = progressBarMinExtent.getBlockZ();
+			progressBarMinExtent.setZ(progressBarMaxExtent.getBlockZ());
+			progressBarMaxExtent.setZ(tmp);
+		}
+		
+		return true;
+	}
+	
+	void drawProgressBar(float fraction)
+	{
+		if ( progressBarMinExtent == null )
+			return;
+		
+		Material type = Material.WOOL;
+		byte data;
+		if ( fraction <= 0 )
+		{
+			fraction = 1;
+			data = 0xE;
+		}
+		else
+		{
+			data = 0x5;
+			if ( fraction > 1 )
+				fraction = 1;
+		}
+		
+		if ( progressBarDx != 0 )
+		{
+			if ( progressBarDx > 0 )
+				drawProgressBar(type, data, progressBarMinExtent.getBlockX(), progressBarMinExtent.getBlockY(), progressBarMinExtent.getBlockZ(), progressBarMinExtent.getBlockX() + (int)((progressBarMaxExtent.getBlockX() - progressBarMinExtent.getBlockX()) * fraction), progressBarMaxExtent.getBlockY(), progressBarMaxExtent.getBlockZ());
+			else
+				drawProgressBar(type, data, progressBarMaxExtent.getBlockX() - (int)((progressBarMaxExtent.getBlockX() - progressBarMinExtent.getBlockX()) * fraction), progressBarMinExtent.getBlockY(), progressBarMinExtent.getBlockZ(), progressBarMaxExtent.getBlockX(), progressBarMaxExtent.getBlockY(), progressBarMaxExtent.getBlockZ());
+		}
+		else if ( progressBarDy != 0 )
+		{
+			if ( progressBarDy > 0 )
+				drawProgressBar(type, data, progressBarMinExtent.getBlockX(), progressBarMinExtent.getBlockY(), progressBarMinExtent.getBlockZ(), progressBarMaxExtent.getBlockX(), progressBarMinExtent.getBlockY() + (int)((progressBarMaxExtent.getBlockY() - progressBarMinExtent.getBlockY()) * fraction), progressBarMaxExtent.getBlockZ());
+			else
+				drawProgressBar(type, data, progressBarMinExtent.getBlockX(), progressBarMaxExtent.getBlockY() - (int)((progressBarMaxExtent.getBlockY() - progressBarMinExtent.getBlockY()) * fraction), progressBarMinExtent.getBlockZ(), progressBarMaxExtent.getBlockX(), progressBarMaxExtent.getBlockY(), progressBarMaxExtent.getBlockZ());
+		}
+		else// if ( progressBarDz != 0 )
+		{
+			if ( progressBarDz > 0 )
+				drawProgressBar(type, data, progressBarMinExtent.getBlockX(), progressBarMinExtent.getBlockY(), progressBarMinExtent.getBlockZ(), progressBarMaxExtent.getBlockX(), progressBarMaxExtent.getBlockY(), progressBarMinExtent.getBlockZ() + (int)((progressBarMaxExtent.getBlockZ() - progressBarMinExtent.getBlockZ()) * fraction));
+			else
+				drawProgressBar(type, data, progressBarMinExtent.getBlockX(), progressBarMinExtent.getBlockY(), progressBarMaxExtent.getBlockZ() - (int)((progressBarMaxExtent.getBlockZ() - progressBarMinExtent.getBlockZ()) * fraction), progressBarMaxExtent.getBlockX(), progressBarMaxExtent.getBlockY(), progressBarMaxExtent.getBlockZ());
+		}
+	}
+	
+	private void drawProgressBar(Material type, byte data, int x1, int y1, int z1, int x2, int y2, int z2)
+	{
+		for ( int x=x1; x<=x2; x++ )
+			for ( int z=z1; z<=z2; z++ )
+				for ( int y=y1; y<=y2; y++ )
+				{
+					Block b = plugin.stagingWorld.getBlockAt(x,y,z);
+					b.setType(type);
+					b.setData(data);
+				}
+	}
 	
 	private void warnStagingAreaWrong(Location loc, String name)
 	{
-		plugin.log.warning("Expected game " + number + " " + name + " at " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + ", but found " + loc.getBlock().getType().name());
+		plugin.log.warning("Expected " + getName() + "'s " + name + " at " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + ", but found " + loc.getBlock().getType().name());
 	}
 	
 	public boolean checkButtonPressed(Location loc, Player player)
@@ -147,7 +331,7 @@ public class Game
 
 		Scoreboard sb = getSetupScoreboard();
 		player.setScoreboard(sb);
-		player.sendMessage("You have joined game " + getDisplayNumber());
+		player.sendMessage("You have joined " + getName());
 		
 		if ( !getGameState().usesGameWorlds )
 		{
@@ -163,7 +347,7 @@ public class Game
 		
 		if ( !info.isAlive() )
 		{
-			String message = isNewPlayer ? "" : "Welcome Back. ";
+			String message = isNewPlayer ? "" : "Welcome Back to " + getName() + ". ";
 			message += "You are now a spectator. You can fly, but can't be seen or interact. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.";
 			
 			player.sendMessage(message);
@@ -198,13 +382,14 @@ public class Game
 		{
 			Player online = (Player)player;
 			online.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
-			online.sendMessage("You have left game " + getDisplayNumber());
+			online.sendMessage("You have left " + getName());
 		}
 	}
 	
 	private void updateSetupPlayerCount()
 	{
 		setupObjective.getScore(plugin.getServer().getOfflinePlayer("# players")).setScore(getPlayerInfo().size());
+		setupObjective.getScore(plugin.getServer().getOfflinePlayer("blah blah blah")).setScore(-1);
 	}
 	
 	Scoreboard setupScoreboard = null; Team setupTeam; Objective setupObjective;
@@ -214,7 +399,7 @@ public class Game
 		{
 			 setupScoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
 			 setupObjective = setupScoreboard.registerNewObjective("setup", "dummy");
-			 setupObjective.setDisplayName("Game " + getDisplayNumber());
+			 setupObjective.setDisplayName(getName());
 			 setupObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
 			 setupTeam = setupScoreboard.registerNewTeam("all");
 			 setupTeam.setDisplayName("# players");
@@ -254,7 +439,7 @@ public class Game
 			return;
 		}
 		
-		plugin.log.info(player.getName() + " started game " + getDisplayNumber());
+		plugin.log.info(player.getName() + " started " + getName());
 		setGameState(GameState.waitingToGenerate);
 	}
 
@@ -268,7 +453,6 @@ public class Game
 	public void setConfiguringPlayer(String p) { configuringPlayer = p; }
 
 	public int getNumber() { return number; }
-	public int getDisplayNumber() { return number+1; }
 
 	private GameMode gameMode = null;
 	GameMode getGameMode() { return gameMode; }
@@ -301,7 +485,7 @@ public class Game
 	public Difficulty getDifficulty() { return difficulty; }
 	public void setDifficulty(Difficulty d) { difficulty = d; }
 	
-	public void startProcesses()
+	void startProcesses()
 	{
 		final Game game = this;
 		
@@ -337,7 +521,7 @@ public class Game
         }, 40, 40);
 	}
 	
-	public void stopProcesses()
+	void stopProcesses()
 	{
 		if ( helpMessageProcess != -1 )
 		{
@@ -393,93 +577,139 @@ public class Game
 				stopProcesses();
 		}
 		
-		if ( newState == GameState.worldDeletion )
+		switch ( newState )
 		{
-			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
-			if ( plugin.statsManager.isTracking(number) )
-				plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), true);
-			
-			HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
-
-			// don't show the start buttons until the old world finishes deleting
-			//plugin.stagingWorldManager.showStartButtons(this, StartButtonState.WAIT_FOR_DELETION);
-			//plugin.stagingWorldManager.removeWorldGenerationIndicator(this);
-			
-			for ( Player player : getOnlinePlayers() )
-				if ( player.getWorld() != plugin.stagingWorld )
-					plugin.playerManager.putPlayerInStagingWorld(player);
-			
-			plugin.playerManager.reset(this);
-			
-			plugin.worldManager.deleteKillerWorlds(this, new Runnable() {
-				@Override
-				public void run() {
-					setGameState(GameState.stagingWorldSetup);
-				}
-			});
-		}
-		else if ( newState == GameState.stagingWorldSetup )
-		{
-			//plugin.stagingWorldManager.showStartButtons(this, StartButtonState.START);
-		}
-		else if ( newState == GameState.stagingWorldConfirm )
-		{
-			//plugin.stagingWorldManager.showStartButtons(this, StartButtonState.CONFIRM);
-		}
-		else if ( newState == GameState.waitingToGenerate )
-		{
-			// if nothing in the queue (so nothing currently generating), generate immediately
-			if ( generationQueue.peek() == null ) 
-				newState = gameState = GameState.worldGeneration;
-			else
-				//plugin.stagingWorldManager.showStartButtons(this, StartButtonState.WAIT_FOR_GENERATION);
-			
-			generationQueue.addLast(this); // always add to the queue (head of the queue is currently generating)
-		}
-		if( newState == GameState.worldGeneration )
-		{
-			plugin.getServer().getPluginManager().registerEvents(getGameMode(), plugin);
-			//plugin.stagingWorldManager.showStartButtons(this, StartButtonState.GENERATING);
-			
-			final Game game = this;
-			plugin.worldManager.generateWorlds(this, worldOption, new Runnable() {
-				@Override
-				public void run() {
-					setGameState(GameState.active);
-					//plugin.stagingWorldManager.showStartButtons(game, StartButtonState.IN_PROGRESS);
-					
-					if ( generationQueue.peek() != game )
-						return; // just in case, only the "head" game should trigger this logic
-					
-					generationQueue.remove(); // remove from the queue when its done generating ... can't block other games
-					Game nextInQueue = generationQueue.peek();
-					if ( nextInQueue != null ) // start the next queued game generating
-						nextInQueue.setGameState(GameState.worldGeneration);
-				}
-			});
-		}
-		else if ( newState == GameState.active )
-		{
-			// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
-			int numPlayers = getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size();
-			if ( plugin.statsManager.isTracking(number) )
-				plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), numPlayers, true);
-			plugin.statsManager.gameStarted(number, numPlayers);
-			
-			if ( prevState.usesGameWorlds )
+			case worldDeletion:
 			{
-				for ( World world : worlds )
-				{
-					plugin.worldManager.removeAllItems(world);
-					world.setTime(0);
-				}
-			}
+				updateSign(statusSign, "", "§l" + getName(), "* vacant *");
+				updateSign(joinSign, "", "Join", getName());
+				updateSign(configSign, "", "Configure", getName());
+				updateSign(startSign, "", "Start", getName());
+				
+				// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
+				if ( plugin.statsManager.isTracking(number) )
+					plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), true);
+				
+				HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
 
-			getGameMode().startGame(!prevState.usesGameWorlds);
-		}
-		else if ( newState == GameState.finished )
-		{
-			plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), false);
+				for ( Player player : getOnlinePlayers() )
+					if ( player.getWorld() != plugin.stagingWorld )
+						plugin.playerManager.putPlayerInStagingWorld(player);
+				
+				plugin.playerManager.reset(this);
+				
+				plugin.worldManager.deleteKillerWorlds(this, new Runnable() {
+					@Override
+					public void run() {
+						setGameState(GameState.stagingWorldSetup);
+					}
+				});
+				break;
+			}
+			case stagingWorldSetup:
+			{
+				updateSign(statusSign, "", "§l" + getName(), "* vacant *");
+				updateSign(joinSign, "", "Join", getName());
+				updateSign(configSign, "", "Configure", getName());
+				updateSign(startSign, "", "Start", getName());
+				
+				drawProgressBar(0f);
+				break;
+			}
+			case stagingWorldConfirm:
+			{
+				updateSign(statusSign, "", "§l" + getName(), "* vacant *");
+				updateSign(joinSign, "", "Join", getName());
+				updateSign(configSign, "", "Configure", getName());
+				updateSign(startSign, "", "Please", "Confirm");
+				break;
+			}
+			case waitingToGenerate:		
+			{				
+				// if nothing in the queue (so nothing currently generating), generate immediately
+				if ( generationQueue.peek() == null ) 
+					setGameState(GameState.worldGeneration);
+				else
+				{
+					updateSign(statusSign, "", "§l" + getName(), "* in queue *");
+					updateSign(joinSign, "", "Join", getName());
+					updateSign(configSign, "", "Configuration", "Locked");
+					updateSign(startSign, "", "Please", "Wait");
+				}
+				
+				generationQueue.addLast(this); // always add to the queue (head of the queue is currently generating)
+				break;
+			}
+			case worldGeneration:
+			{
+				updateSign(statusSign, "", "§l" + getName(), "* generating *");
+				updateSign(joinSign, "", "Join", getName());
+				updateSign(configSign, "", "Configuration", "Locked");
+				updateSign(startSign, "", "Please", "Wait");
+				
+				plugin.getServer().getPluginManager().registerEvents(getGameMode(), plugin);
+				
+				final Game game = this;
+				plugin.worldManager.generateWorlds(this, worldOption, new Runnable() {
+					@Override
+					public void run() {
+						setGameState(GameState.active);
+						
+						if ( generationQueue.peek() != game )
+							return; // just in case, only the "head" game should trigger this logic
+						
+						generationQueue.remove(); // remove from the queue when its done generating ... can't block other games
+						Game nextInQueue = generationQueue.peek();
+						if ( nextInQueue != null ) // start the next queued game generating
+							nextInQueue.setGameState(GameState.worldGeneration);
+					}
+				});
+				break;
+			}
+			case active:
+			{
+				updateSign(statusSign, "", "§l" + getName(), "* in progress *", getOnlinePlayers() + " players");
+				
+				if ( !Settings.allowLateJoiners && !Settings.allowSpectators )
+					updateSign(joinSign, "No late joiners", "or spectators", "allowed");
+				else if ( isLocked() || !Settings.allowLateJoiners )
+					updateSign(joinSign, "", "Spectate", getName());
+				else
+					updateSign(joinSign, "", "Join", getName());
+
+				updateSign(configSign, "", "Configuration", "Locked");
+				updateSign(startSign, "", "Already", "Started");
+				
+				drawProgressBar(1f);
+				
+				// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
+				int numPlayers = getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size();
+				if ( plugin.statsManager.isTracking(number) )
+					plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), numPlayers, true);
+				plugin.statsManager.gameStarted(number, numPlayers);
+				
+				if ( prevState.usesGameWorlds )
+				{
+					for ( World world : worlds )
+					{
+						plugin.worldManager.removeAllItems(world);
+						world.setTime(0);
+					}
+				}
+	
+				getGameMode().startGame(!prevState.usesGameWorlds);
+				break;
+			}
+			case finished:
+			{
+				updateSign(statusSign, "", "§l" + getName(), "* finishing *");
+				updateSign(joinSign, "", "Please", "Wait");
+				updateSign(configSign, "", "Configuration", "Locked");
+				updateSign(startSign, "", "Please", "Wait");
+				
+				plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), false);
+				break;
+			}
 		}
 	}
 	
@@ -562,7 +792,7 @@ public class Game
 	private List<World> worlds = new ArrayList<World>();
 	List<World> getWorlds() { return worlds; }
 	
-	String getWorldName() { return Settings.killerWorldNamePrefix + getDisplayNumber(); }
+	String getWorldName() { return Settings.killerWorldNamePrefix + (getNumber()+1); }
 	
 	boolean forcedGameEnd = false;
 	void endGame(CommandSender actionedBy)
@@ -641,221 +871,5 @@ public class Game
 			return color + listName.substring(0, 15);
 		
 		return color + listName;
-	}
-	
-	private StagingWorldOption currentOption = StagingWorldOption.NONE;
-	private EnumMap<GameSign, ArrayList<Location>> signs = new EnumMap<GameSign, ArrayList<Location>>(GameSign.class);
-		
-	public StagingWorldOption getCurrentOption() { return currentOption; }
-	public void setCurrentOption(StagingWorldOption option)
-	{		
-		if ( option == currentOption )
-			return;
-		
-		// disable whatever's currently on
-		//plugin.stagingWorldManager.hideSetupOptionButtons(this);
-		
-		currentOption = option;
-		
-		String[] labels;
-		boolean[] values;
-		Option[] options;
-		
-		// now set up the new option
-		switch ( currentOption )
-		{
-		case GAME_MODE:
-			labels = new String[GameMode.gameModes.size()];
-			values = new boolean[labels.length];
-			for ( int i=0; i<labels.length; i++ )
-			{
-				GameModePlugin mode = GameMode.gameModes.get(i); 
-				labels[i] = mode.getName();
-				values[i] = mode.getName().equals(getGameMode().getName());
-			}
-			//plugin.stagingWorldManager.showSetupOptionButtons(this, "Game mode:", true, labels, values);
-			break;
-		case GAME_MODE_CONFIG:
-			options = getGameMode().getOptions();
-			labels = new String[options.length];
-			values = new boolean[options.length];
-			for ( int i=0; i<options.length; i++ )
-			{
-				labels[i] = options[i].getName();
-				values[i] = options[i].isEnabled();
-			}
-			//plugin.stagingWorldManager.showSetupOptionButtons(this, "Mode option:", false, labels, values);
-			break;
-		case WORLD:
-			labels = new String[WorldOption.worldOptions.size()];
-			values = new boolean[labels.length];
-			for ( int i=0; i<labels.length; i++ )
-			{
-				WorldOptionPlugin worldOption = WorldOption.worldOptions.get(i); 
-				labels[i] = worldOption.getName();
-				values[i] = worldOption.getName().equals(getWorldOption().getName());
-			}
-			//plugin.stagingWorldManager.showSetupOptionButtons(this, "World:", false, labels, values);
-			break;
-		case WORLD_CONFIG:
-			options = getWorldOption().getOptions();
-			labels = new String[options.length];
-			values = new boolean[options.length];
-			for ( int i=0; i<options.length; i++ )
-			{
-				labels[i] = options[i].getName();
-				values[i] = options[i].isEnabled();
-			}
-			//plugin.stagingWorldManager.showSetupOptionButtons(this, "World option:", false, labels, values);
-			break;
-		case GLOBAL_OPTION:
-			labels = new String[] { "Craftable monster eggs", "Easier dispenser recipe", "Eyes of ender find nether fortresses" };
-			values = new boolean[] { true, true, true, true };
-			//plugin.stagingWorldManager.showSetupOptionButtons(this, "Global option:", false, labels, values);
-			break;
-		}
-	}
-	
-	public void addSign(int x, int y, int z, GameSign type)
-	{
-		if ( signs.containsKey(type) )
-			signs.get(type).add(new Location(plugin.stagingWorld, x, y, z));
-		else
-		{
-			ArrayList<Location> vals = new ArrayList<Location>();
-			vals.add(new Location(plugin.stagingWorld, x, y, z));
-			signs.put(type, vals);
-		}
-	}
-	
-	private void initSign(GameSign type, Block block)
-	{
-		switch ( type )
-		{
-		case DIFFICULTY:
-			StagingWorldGenerator.setSignLine(block, 1, "Difficulty:");
-			break;
-		case MONSTERS:
-			StagingWorldGenerator.setSignLine(block, 1, "Monsters:");
-			break;
-		case ANIMALS:
-			StagingWorldGenerator.setSignLine(block, 1, "Animals:");
-			break;
-		case GAME_MODE:
-			StagingWorldGenerator.setSignLine(block, 0, "Game mode:");
-			break;
-		case WORLD_OPTION:
-			StagingWorldGenerator.setSignLine(block, 0, "World:");
-			break;
-		}
-		
-		updateSign(type, block);
-	}
-
-	private void updateSign(GameSign type, Block block)
-	{
-		switch ( type )
-		{
-		case DIFFICULTY:
-			StagingWorldGenerator.setSignLine(block, 2, StagingWorldGenerator.capitalize(getDifficulty().name()));
-			break;
-		case MONSTERS:
-			StagingWorldGenerator.setSignLine(block, 2, StagingWorldGenerator.getQuantityText(monsterNumbers));
-			break;
-		case ANIMALS:
-			StagingWorldGenerator.setSignLine(block, 2, StagingWorldGenerator.getQuantityText(animalNumbers));
-			break;
-		case GAME_MODE:
-			StagingWorldGenerator.fitTextOnSign((Sign)block.getState(), getGameMode().getName());
-			break;
-		case WORLD_OPTION:
-			if ( getGameMode().allowWorldOptionSelection() )
-			{// if this game mode doesn't let you choose the world option, set the default world option and update that sign
-				StagingWorldGenerator.fitTextOnSign((Sign)block.getState(), getWorldOption().getName());	
-			}
-			else // otherwise, ensure that sign is back to normal
-			{
-				StagingWorldGenerator.fitTextOnSign((Sign)block.getState(), ChatColor.BOLD + "Disabled by " + ChatColor.BOLD + "game mode");
-			}
-			break;
-		case PLAYER_LIMIT:
-			if ( !Settings.allowPlayerLimits )
-				return;
-			
-			if ( usesPlayerLimit() )
-			{
-				int numFree = getPlayerLimit() - getOnlinePlayers().size() - getOfflinePlayers().size();
-				
-				StagingWorldGenerator.setSignText(block, "Player limit:", "§l" + getPlayerLimit() + " players", "", numFree <= 0 ? "§4Game is full" : (numFree == 1 ? "1 free slot" : numFree + " free slots"));
-			}
-			else
-				StagingWorldGenerator.setSignText(block, "No player limit", "is set.", "Pull lever to", "apply a limit.");
-			break;
-		case STATUS:
-			int numPlayers = getOnlinePlayers().size();
-			String strPlayers = numPlayers == 1 ? "1 player" : numPlayers + " players";
-			if ( getGameState().usesGameWorlds )
-			{
-				String[] mode = StagingWorldGenerator.splitTextForSign(getGameMode().getName());
-				
-				StagingWorldGenerator.setSignText(block, strPlayers, "* In Progress *", mode.length == 1 ? "" : mode[0], mode[mode.length > 1 ? 1 : 0]);
-			}
-			else if ( numPlayers > 0 )
-				StagingWorldGenerator.setSignText(block, strPlayers, "", "* In Setup *");
-			else
-			{
-				StagingWorldGenerator.setSignText(block, strPlayers, "", "* Vacant *");
-				
-				// reset difficulty and monster numbers back to defaults
-				if ( getDifficulty() != defaultDifficulty) 
-				{
-					setDifficulty(defaultDifficulty);
-					updateSigns(GameSign.DIFFICULTY);
-				}
-				if ( monsterNumbers != defaultMonsterNumbers) 
-				{
-					monsterNumbers = defaultMonsterNumbers; 
-					updateSigns(GameSign.MONSTERS);
-				}
-				if ( animalNumbers != defaultAnimalNumbers) 
-				{
-					animalNumbers = defaultAnimalNumbers;
-					updateSigns(GameSign.ANIMALS);
-				}
-			}
-			break;
-		case JOIN_ACTION:
-			if ( getGameState().usesGameWorlds )
-			{
-				if ( !Settings.allowLateJoiners && !Settings.allowSpectators )
-				{
-					StagingWorldGenerator.setSignText(block, "Game already", "started, no", "spectators", "allowed");
-				}
-				else if ( isLocked() )
-					StagingWorldGenerator.setSignText(block, "This game", "is full:", "enter portal to", "specatate game");
-				else
-				{
-					String actionStr;
-					if ( isLocked() || !Settings.allowLateJoiners )
-						actionStr = "spectate game";
-					else
-						actionStr = "join game";
-					StagingWorldGenerator.setSignText(block, "", "enter portal to", actionStr);
-				}
-			}
-			else if ( isLocked() )
-				StagingWorldGenerator.setSignText(block, "This game", "is full:", "no one else", "can join it");
-			else
-				StagingWorldGenerator.setSignText(block, "", "enter portal to", "set up a game");
-			break;
-		}
-	}
-	
-	public void updateSigns(GameSign type)
-	{
-		ArrayList<Location> thisType = signs.get(type);
-		if ( thisType != null )
-			for ( Location loc : thisType )
-				updateSign(type, loc.getBlock());
 	}
 }

@@ -4,11 +4,9 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
+
 
 class StagingWorldManager {
 	public StagingWorldManager(Killer plugin, World world) {
@@ -42,7 +40,7 @@ class StagingWorldManager {
 	public enum StagingWorldOption {
 		NONE, GAME_MODE, GAME_MODE_CONFIG, WORLD, WORLD_CONFIG, GLOBAL_OPTION,
 	}
-
+/*
 	public void gameOptionButtonPressed(Game game, StagingWorldOption option,
 			int num) {
 		boolean[] newValues;
@@ -122,7 +120,7 @@ class StagingWorldManager {
 			break;
 		}
 	}
-
+*/
 	// signs related to specific games
 	public enum GameSign {
 		DIFFICULTY, MONSTERS, ANIMALS, GAME_MODE, WORLD_OPTION, PLAYER_LIMIT, STATUS, JOIN_ACTION,
@@ -352,157 +350,6 @@ class StagingWorldManager {
 	 * sStart.setType(Material.AIR);
 	 * backStart.setData(StagingWorldGenerator.colorOptionOff); } }
 	 */
-	public void showWorldGenerationIndicator(Game game, float completion) {/*
-																			 * int
-																			 * minZ
-																			 * =
-																			 * StagingWorldGenerator
-																			 * .
-																			 * wallMinZ
-																			 * +
-																			 * 2
-																			 * ,
-																			 * maxZ
-																			 * =
-																			 * StagingWorldGenerator
-																			 * .
-																			 * getWallMaxZ
-																			 * (
-																			 * )
-																			 * -
-																			 * 2
-																			 * ;
-																			 * int
-																			 * maxCompleteZ
-																			 * =
-																			 * (
-																			 * int
-																			 * )
-																			 * (
-																			 * (
-																			 * maxZ
-																			 * -
-																			 * minZ
-																			 * )
-																			 * *
-																			 * completion
-																			 * +
-																			 * 0.5f
-																			 * )
-																			 * +
-																			 * minZ
-																			 * ;
-																			 * if
-																			 * (
-																			 * completion
-																			 * !=
-																			 * 0f
-																			 * )
-																			 * maxCompleteZ
-																			 * +=
-																			 * 2
-																			 * ;
-																			 * 
-																			 * int
-																			 * x
-																			 * =
-																			 * StagingWorldGenerator
-																			 * .
-																			 * wallMaxX
-																			 * ,
-																			 * y
-																			 * =
-																			 * StagingWorldGenerator
-																			 * .
-																			 * getButtonY
-																			 * (
-																			 * game
-																			 * .
-																			 * getNumber
-																			 * (
-																			 * )
-																			 * )
-																			 * +
-																			 * 1
-																			 * ;
-																			 * for
-																			 * (
-																			 * int
-																			 * z
-																			 * =
-																			 * minZ
-																			 * ;
-																			 * z
-																			 * <=
-																			 * maxZ
-																			 * ;
-																			 * z
-																			 * ++
-																			 * )
-																			 * {
-																			 * Block
-																			 * b
-																			 * =
-																			 * stagingWorld
-																			 * .
-																			 * getBlockAt
-																			 * (
-																			 * x
-																			 * ,
-																			 * y
-																			 * ,
-																			 * z
-																			 * )
-																			 * ;
-																			 * b
-																			 * .
-																			 * setType
-																			 * (
-																			 * Material
-																			 * .
-																			 * WOOL
-																			 * )
-																			 * ;
-																			 * if
-																			 * (
-																			 * z
-																			 * <
-																			 * maxCompleteZ
-																			 * )
-																			 * b
-																			 * .
-																			 * setData
-																			 * (
-																			 * StagingWorldGenerator
-																			 * .
-																			 * colorOptionOn
-																			 * )
-																			 * ;
-																			 * else
-																			 * b
-																			 * .
-																			 * setData
-																			 * (
-																			 * StagingWorldGenerator
-																			 * .
-																			 * colorOptionOff
-																			 * )
-																			 * ;
-																			 * }
-																			 */
-	}
-
-	public void removeWorldGenerationIndicator(Game game) {
-		/*
-		 * int minZ = StagingWorldGenerator.wallMinZ + 2, maxZ =
-		 * StagingWorldGenerator.getWallMaxZ() - 2;
-		 * 
-		 * int x = StagingWorldGenerator.wallMaxX, y =
-		 * StagingWorldGenerator.getButtonY(game.getNumber()) + 1; for ( int z =
-		 * minZ; z <= maxZ; z++ ) { Block b = stagingWorld.getBlockAt(x, y, z);
-		 * b.setType(Material.SMOOTH_BRICK); }
-		 */
-	}
 
 	public void playerNumberChanged(Game game) {
 		/*
@@ -535,7 +382,7 @@ class StagingWorldManager {
 		 * game.updateSigns(GameSign.JOIN_ACTION);
 		 */
 	}
-
+/*
 	private void lockGame(Game game, boolean locked) {
 		if (Settings.numGames <= 1 || (!Settings.allowPlayerLimits && locked))
 			return;
@@ -562,5 +409,5 @@ class StagingWorldManager {
 			stagingWorld.playSound(wayIn.getLocation(), Sound.DOOR_OPEN, 0.25f,
 					0f);
 		}
-	}
+	}*/
 }

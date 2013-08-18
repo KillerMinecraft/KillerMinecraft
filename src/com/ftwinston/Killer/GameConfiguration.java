@@ -12,6 +12,7 @@ import org.bukkit.conversations.NumericPrompt;
 import org.bukkit.conversations.Prompt;
 import org.bukkit.entity.Player;
 
+
 public class GameConfiguration
 {
 	public static GameConfiguration instance;
@@ -34,7 +35,7 @@ public class GameConfiguration
 		if ( configuring != null )
 		{
 			if ( !configuring.equals(player.getName()) )
-				player.sendMessage("Game " + game.getDisplayNumber() + " is already being configured by " + configuring);
+				player.sendMessage(game.getName() + " is already being configured by " + configuring);
 			
 			return;
 		}
@@ -125,12 +126,7 @@ public class GameConfiguration
 		{
 			StringBuilder sb = new StringBuilder();
 			
-			sb.append("\n\n\n\n\n\n\n\n\n\n\nConfiguring Game");
-			if ( Settings.numGames > 1 )
-			{
-				sb.append(" #");
-				sb.append(game.getDisplayNumber());
-			}
+			sb.append("\n\n\n\n\n\n\n\n\n\n\nConfiguring " + game.getName());
 			sb.append("\n\nGame mode: ");
 			sb.append(game.getGameMode().getName());
 			

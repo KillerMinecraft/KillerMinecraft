@@ -16,16 +16,14 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
 
 import com.ftwinston.Killer.Game.GameState;
-import com.ftwinston.Killer.PlayerManager;
 
-public abstract class GameMode implements Listener
+
+public abstract class GameMode extends KillerModule implements Listener
 {
 	static List<GameModePlugin> gameModes = new ArrayList<GameModePlugin>();
-	Killer plugin; Game game;
+
 	static GameModePlugin get(int num) { return gameModes.get(num); }
 	static GameModePlugin getByName(String name)
 	{
@@ -35,28 +33,12 @@ public abstract class GameMode implements Listener
 		
 		return null;
 	}
-	
-	protected Game getGame() { return game; }
-	
+
 	protected final Random random = new Random();
-	
-	final void initialize(Game game, GameModePlugin modePlugin)
-	{
-		this.game = game;
-		plugin = game.plugin;
-		name = modePlugin.getName();
-		options = setupOptions();
-	}
 	
 	// methods to be overridden by each game mode
 	public abstract int getMinPlayers();
 
-	private String name; 
-	public String getName() 
-	{
-		return name;
-	}
-	
 	public boolean allowWorldOptionSelection() { return true; }
 	public Environment[] getWorldsToGenerate() { return new Environment[] { Environment.NORMAL, Environment.NETHER }; }
 	public void beforeWorldGeneration(int worldNumber, WorldConfig world) { }
@@ -316,9 +298,6 @@ public abstract class GameMode implements Listener
 		plugin.playerManager.hidePlayer(looker, player);
 	}
 	
-	protected final JavaPlugin getPlugin() { return plugin; }
-	protected final BukkitScheduler getScheduler() { return plugin.getServer().getScheduler(); }
-	
 	protected final int getNumWorlds() { return game.getWorlds().size(); }
 	protected final World getWorld(int number) { return game.getWorlds().get(number); }
 	
@@ -417,18 +396,6 @@ public abstract class GameMode implements Listener
 		player.sendMessage(message);
 		info.nextHelpMessage --;
 		return true;
-	}
-	
-	private Option[] options;
-	protected abstract Option[] setupOptions();
-	public final Option[] getOptions() { return options; }
-	public final Option getOption(int num) { return options[num]; }
-	public final int getNumOptions() { return options.length; }
-	
-	public void toggleOption(int num)
-	{
-		Option option = options[num];
-		option.setEnabled(!option.isEnabled());
 	}
 	
 	// allows game modes to determine if an event is in their game world

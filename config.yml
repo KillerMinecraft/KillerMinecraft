@@ -19,28 +19,56 @@ protected:
 
 games:
   - 
-    mode:       Mystery Killer
-    world:      Default World
-    infomap:    9, 67, 0
+    name:       Game 1
+    mode:
+        plugin: Mystery Killer
+        options:
+            killer-assigned-on-second-day: true
+            replace-dead-killers: true
+            allow-multiple-killers: false
+    world:
+        plugin: Default World
+        options:
+            use-large-biomes: true
     buttons:
         join:   9, 66, -2
         config: 9, 66, 0
         start:  9, 66, 2
+    signs:
+        status: 9, 67, 0
+        join:   9, 65, -2
+        config: 9, 65, 0
+        start:  9, 65, 2
     progressbar:
-        from:   8, 64, -9
-        to:     8, 64, 9
-        width:  3
-        height: 1
+        start:   8, 64, -9
+        dir:     +z
+        length:  18
+        breadth: 3
+        depth:   1
   - 
-    mode:       Farm Killer
-    world:      Superflat
-    infomap:    -9, 67, 0
+    name:       Game 2
+    mode:
+        plugin: Farm Killer
+        options:
+            friendly-fire: true
+            diminishing-returns: true
+            announce-scores: true
+    world:
+        plugin: Superflat
+        options:
+            classic-flat: true
     buttons:
-        join:   -9, 66, 2
-        config: -9, 66, 0
-        start:  -9, 66, -2
+        join:    -9, 66, 2
+        config:  -9, 66, 0
+        start:   -9, 66, -2
+    signs:
+        status:  -9, 67, 0
+        join:    -9, 65, 2
+        config:  -9, 65, 0
+        start:   -9, 65, -2
     progressbar:
-        from:   -8, 64, 9
-        to:     -8, 64, -9
-        width:  3
-        height: 1
+        start:   -8, 64, 9
+        dir:     -z
+        length:  18
+        breadth: 3
+        depth:   1

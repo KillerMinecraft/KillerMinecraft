@@ -5,9 +5,8 @@ import java.util.List;
 
 import org.bukkit.World;
 import org.bukkit.World.Environment;
-import org.bukkit.plugin.java.JavaPlugin;
 
-public abstract class WorldOption
+public abstract class WorldOption extends KillerModule
 {
 	static List<WorldOptionPlugin> worldOptions = new ArrayList<WorldOptionPlugin>();
 	static WorldOptionPlugin get(int num) { return worldOptions.get(num); }
@@ -19,25 +18,7 @@ public abstract class WorldOption
 		
 		return null;
 	}
-	
-	Killer plugin; Game game;
-	
-	final void initialize(Game game, WorldOptionPlugin optionPlugin)
-	{
-		this.game = game;
-		plugin = game.plugin;
-		name = optionPlugin.getName();
-		options = setupOptions();
-	}
-	
-	private String name;
-	public final String getName()
-	{
-		return name;
-	}
 
-	protected final JavaPlugin getPlugin() { return plugin; }
-	
 	protected final World createWorld(WorldConfig worldConfig, Runnable runWhenDone)
 	{
 		Game game = worldConfig.getGame();
@@ -81,17 +62,5 @@ public abstract class WorldOption
 			final WorldConfig helper = new WorldConfig(game, worldName, environment);
 			setupWorld(helper, runNext);
 		}
-	}
-	
-	private Option[] options;
-	protected abstract Option[] setupOptions();
-	public final Option[] getOptions() { return options; }
-	public final Option getOption(int num) { return options[num]; }
-	public final int getNumOptions() { return options.length; }
-	
-	public void toggleOption(int num)
-	{
-		Option option = options[num];
-		option.setEnabled(!option.isEnabled());
 	}
 }
