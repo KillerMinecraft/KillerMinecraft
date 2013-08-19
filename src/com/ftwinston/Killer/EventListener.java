@@ -45,6 +45,7 @@ import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.ItemStack;
 
 import com.ftwinston.Killer.Game.GameState;
@@ -57,6 +58,18 @@ class EventListener implements Listener
 	public EventListener(Killer instance)
 	{
 		plugin = instance;
+	}
+	
+	@EventHandler
+	public void OnChunkLoad(ChunkLoadEvent event)
+	{
+		if ( event.getWorld() != plugin.stagingWorld )
+			return;
+		
+		// if a game's signs or progress bar are in this chunk, update them
+		for ( Game game : plugin.games )
+			if ( game.usesStagingWorldChunk(event.getChunk().getX(), event.getChunk().getZ()) )
+				game.updateStagingWorld();
 	}
 
 	// when you die a spectator, be made able to fly again when you respawn

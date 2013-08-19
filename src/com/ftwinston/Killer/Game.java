@@ -1,6 +1,7 @@
 package com.ftwinston.Killer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,26 +45,20 @@ public class Game
 	public String getName() { return name; }
 	void setName(String n) { name = n; }
 	
-	Location startButton, joinButton, configButton;
-	Location statusSign, startSign, joinSign, configSign;
+	private Location startButton, joinButton, configButton;
+	private Location statusSign, startSign, joinSign, configSign;
 	
 	void initButtons(Location join, Location config, Location start)
 	{
 		joinButton = join;
 		configButton = config;
 		startButton = start;
-		
-		// these warnings don't work cos the staging world spawn isn't being kept in memory
-		if (joinButton != null && !isButton(joinButton))
-			warnStagingAreaWrong(joinButton, "join button");
-		if (configButton != null && !isButton(configButton))
-			warnStagingAreaWrong(configButton, "configure button");
-		if (startButton != null && !isButton(startButton))
-			warnStagingAreaWrong(startButton, "start button");
 	}
 
 	private boolean isButton(Location loc)
 	{
+		if ( loc == null )
+			return false;
 		Block b = loc.getBlock();
 		return b.getType() == Material.STONE_BUTTON || b.getType() == Material.WOOD_BUTTON;
 	}
@@ -75,20 +70,16 @@ public class Game
 		configSign = config;
 		startSign = start;
 		
-		// this isn't going to work if it isn't yet loaded.
-		// also, should have some standard methods for setting these sign texts
-		if (statusSign != null && !isSign(statusSign))
-			warnStagingAreaWrong(statusSign, "status sign");
-		if (joinSign != null && !isSign(joinSign))
-			warnStagingAreaWrong(joinSign, "join sign");
-		if (configSign != null && !isSign(configSign))
-			warnStagingAreaWrong(configSign, "config sign");
-		if (startSign != null && !isSign(startSign))
-			warnStagingAreaWrong(startSign, "start sign");
+		if ( statusSign != null ) useStagingWorldChunk(new ChunkPosition(statusSign));
+		if ( joinSign != null ) useStagingWorldChunk(new ChunkPosition(joinSign));
+		if ( configSign != null ) useStagingWorldChunk(new ChunkPosition(configSign));
+		if ( startSign != null ) useStagingWorldChunk(new ChunkPosition(startSign));
 	}
 
 	private boolean isSign(Location loc)
 	{
+		if ( loc == null )
+			return false;
 		Block b = loc.getBlock();
 		return b.getType() == Material.SIGN_POST || b.getType() == Material.WALL_SIGN;
 	}
@@ -199,6 +190,12 @@ public class Game
 			progressBarMaxExtent.setZ(tmp);
 		}
 		
+		int minChunkX = progressBarMinExtent.getBlockX() >> 4, minChunkZ = progressBarMinExtent.getBlockZ() >> 4;
+		int maxChunkX = progressBarMaxExtent.getBlockX() >> 4, maxChunkZ = progressBarMaxExtent.getBlockZ() >> 4;
+		
+		for ( int x=minChunkX; x<=maxChunkX; x++ )
+			for ( int z=minChunkZ; z<=maxChunkZ; z++ )
+				useStagingWorldChunk(new ChunkPosition(x,z));
 		return true;
 	}
 	
@@ -258,7 +255,96 @@ public class Game
 	
 	private void warnStagingAreaWrong(Location loc, String name)
 	{
-		plugin.log.warning("Expected " + getName() + "'s " + name + " at " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + ", but found " + loc.getBlock().getType().name());
+		Block b = loc == null ? null : loc.getBlock();
+		plugin.log.warning("Expected " + getName() + "'s " + name + " at " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + ", but found " + (b == null ? "NULL ": b.getType().name()));
+	}
+	
+	private HashMap<ChunkPosition, Boolean> stagingWorldChunks = new HashMap<ChunkPosition, Boolean>();
+	private class ChunkPosition
+	{
+		private int x, z;
+		public ChunkPosition(int x, int z)
+		{
+			this.x = x; this.z = z;
+		}
+		
+		public ChunkPosition(Location loc)
+		{
+			x = loc.getBlockX() >> 4;
+			z = loc.getBlockZ() >> 4;
+		}
+		public int getX() { return x; }
+		public int getZ() { return z; }
+		
+		@Override
+		public int hashCode() {
+			return x * 100000 + z;
+		}
+		
+		@Override
+		public boolean equals(Object obj)
+		{
+			if(this == obj)
+				return true;
+			if((obj == null) || (obj.getClass() != this.getClass()))
+				return false;
+			
+			ChunkPosition other = (ChunkPosition)obj;
+			return x == other.getX() && z == other.getZ();
+		}
+	}
+	
+	private void useStagingWorldChunk(ChunkPosition cp)
+	{
+		if ( !stagingWorldChunks.containsKey(cp) )
+			stagingWorldChunks.put(cp, true);
+	}
+	
+	boolean usesStagingWorldChunk(int x, int z)
+	{
+		return stagingWorldChunks.containsKey(new ChunkPosition(x, z));
+	}
+	
+	void updateStagingWorld()
+	{
+		if ( joinButton != null && joinButton.getChunk().isLoaded() && !isButton(joinButton) )
+		{
+			warnStagingAreaWrong(joinButton, "join button");
+			joinButton = null;
+		}
+		if ( configButton != null && configButton.getChunk().isLoaded() && !isButton(configButton) )
+		{
+			warnStagingAreaWrong(configButton, "config button");
+			configButton = null;
+		}
+		if ( startButton != null && startButton.getChunk().isLoaded() && !isButton(startButton) )
+		{
+			warnStagingAreaWrong(startButton, "start button");
+			startButton = null;
+		}
+		
+		if ( statusSign != null && statusSign.getChunk().isLoaded() && !isSign(statusSign) )
+		{
+			warnStagingAreaWrong(statusSign, "status sign");
+			statusSign = null;
+		}
+		if ( joinSign != null && joinSign.getChunk().isLoaded() && !isSign(joinSign) )
+		{
+			warnStagingAreaWrong(joinSign, "join sign");
+			joinSign = null;
+		}
+		if ( configSign != null && configSign.getChunk().isLoaded() && !isSign(configSign) )
+		{
+			warnStagingAreaWrong(configSign, "config sign");
+			configSign = null;
+		}
+		if ( startSign != null && startSign.getChunk().isLoaded() && !isSign(startSign) )
+		{
+			warnStagingAreaWrong(startSign, "start sign");
+			startSign = null;
+		}
+
+		setGameState(getGameState()); // re-set the state, so as to update the signs & progress bar 
 	}
 	
 	public boolean checkButtonPressed(Location loc, Player player)
@@ -586,6 +672,9 @@ public class Game
 				updateSign(configSign, "", "Configure", getName());
 				updateSign(startSign, "", "Start", getName());
 				
+				if ( prevState == newState )
+					return;
+				
 				// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 				if ( plugin.statsManager.isTracking(number) )
 					plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), true);
@@ -614,6 +703,10 @@ public class Game
 				updateSign(startSign, "", "Start", getName());
 				
 				drawProgressBar(0f);
+				
+				if ( prevState == newState )
+					return;
+				
 				break;
 			}
 			case stagingWorldConfirm:
@@ -625,7 +718,10 @@ public class Game
 				break;
 			}
 			case waitingToGenerate:		
-			{				
+			{
+				if ( prevState == newState )
+					return;
+				
 				// if nothing in the queue (so nothing currently generating), generate immediately
 				if ( generationQueue.peek() == null ) 
 					setGameState(GameState.worldGeneration);
@@ -646,6 +742,9 @@ public class Game
 				updateSign(joinSign, "", "Join", getName());
 				updateSign(configSign, "", "Configuration", "Locked");
 				updateSign(startSign, "", "Please", "Wait");
+				
+				if ( prevState == newState )
+					return;
 				
 				plugin.getServer().getPluginManager().registerEvents(getGameMode(), plugin);
 				
@@ -682,6 +781,9 @@ public class Game
 				
 				drawProgressBar(1f);
 				
+				if ( prevState == newState )
+					return;
+				
 				// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 				int numPlayers = getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size();
 				if ( plugin.statsManager.isTracking(number) )
@@ -706,6 +808,9 @@ public class Game
 				updateSign(joinSign, "", "Please", "Wait");
 				updateSign(configSign, "", "Configuration", "Locked");
 				updateSign(startSign, "", "Please", "Wait");
+				
+				if ( prevState == newState )
+					return;
 				
 				plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), false);
 				break;
