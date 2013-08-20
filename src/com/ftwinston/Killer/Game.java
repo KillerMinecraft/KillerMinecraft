@@ -343,12 +343,11 @@ public class Game
 		Scoreboard sb = getSetupScoreboard();
 		player.setScoreboard(sb);
 		player.sendMessage("You have joined " + getName());
+
+		updatePlayerCount();
 		
 		if ( !getGameState().usesGameWorlds )
-		{
-			updateSetupPlayerCount();
 			return;
-		}
 
 		// hide all spectators from this player
 		for ( Player spectator : getOnlinePlayers(new PlayerFilter().notAlive().exclude(player)) )
@@ -384,10 +383,8 @@ public class Game
 	public void removePlayerFromGame(OfflinePlayer player)
 	{
 		getPlayerInfo().remove(player.getName());
-		plugin.stagingWorldManager.playerNumberChanged(this);
 		
-		if ( !getGameState().usesGameWorlds )
-			updateSetupPlayerCount();
+		updatePlayerCount();
 		
 		if ( player.isOnline() )
 		{
@@ -397,10 +394,46 @@ public class Game
 		}
 	}
 	
-	private void updateSetupPlayerCount()
+	void updatePlayerCount()
 	{
-		setupObjective.getScore(plugin.getServer().getOfflinePlayer("# players")).setScore(getPlayerInfo().size());
-		setupObjective.getScore(plugin.getServer().getOfflinePlayer("blah blah blah")).setScore(-1);
+		if ( !getGameState().usesGameWorlds )
+		{
+			setupObjective.getScore(plugin.getServer().getOfflinePlayer("# players")).setScore(getPlayerInfo().size());
+			setupObjective.getScore(plugin.getServer().getOfflinePlayer("blah blah blah")).setScore(-1);
+		}
+		
+		/*
+		int numPlayers = getOnlinePlayers().size(), numTotal = numPlayers + getOfflinePlayers().size();
+		int buttonY = StagingWorldGenerator.getButtonY(getNumber());
+		Block b = plugin.stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY, StagingWorldGenerator.playerLimitZ);
+
+		if ( usesPlayerLimit() )
+		{
+			if ( getPlayerLimit() == 0 )
+			{
+				setPlayerLimit(Math.max(numPlayers, 2));
+				setLocked(numPlayers >= 2 && !getGameState().usesGameWorlds);
+			}
+			else if ( numPlayers == 0 && !getGameState().usesGameWorlds )
+			{
+				setUsesPlayerLimit(false);
+				setLocked(false);
+
+				// reset the switch
+				Block lever = b.getRelative(1, 0, 0);
+				lever.setData((byte)0x4);
+			}
+			else
+			{
+				setLocked(numTotal >= getPlayerLimit() && !getGameState().usesGameWorlds);
+			}
+		}
+		else
+			setLocked(false);
+
+		updateSigns(GameSign.PLAYER_LIMIT);
+
+		lockGame(this, isLocked() || (getGameState().usesGameWorlds && !Settings.allowLateJoiners && !Settings.allowSpectators));*/
 	}
 	
 	Scoreboard setupScoreboard = null; Team setupTeam; Objective setupObjective;
@@ -580,8 +613,6 @@ public class Game
 		
 		if ( prevState.usesGameWorlds != newState.usesGameWorlds )
 		{
-			plugin.stagingWorldManager.playerNumberChanged(this);
-			
 			if ( newState.usesGameWorlds )
 				startProcesses();
 			else
@@ -833,7 +864,6 @@ public class Game
 			getGameMode().broadcastMessage("The game has ended. You've been moved to the staging world to allow you to set up a new one...");
 		
 		setGameState(GameState.worldDeletion);
-		plugin.stagingWorldManager.playerNumberChanged(this);
 	}
 	
 	void restartGame(CommandSender actionedBy)

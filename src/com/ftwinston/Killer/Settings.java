@@ -50,9 +50,11 @@ public class Settings
 
 		spawnCoordMin = readLocation(config, "stagingSpawn.from", null, -8, 64, -8);
 		spawnCoordMax = readLocation(config, "stagingSpawn.to", null, 8, 64, 8);
+		sortMinMax(spawnCoordMin, spawnCoordMax);
 		
 		protectionMin = readLocation(config, "protected.from", null, -8, 64, -8);
 		protectionMax = readLocation(config, "protected.to", null, 8, 64, 8);
+		sortMinMax(spawnCoordMin, spawnCoordMax);
 		
 		nothingButKiller = config.getBoolean("nothingButKiller", false);
 		allowTeleportToStagingArea = config.getBoolean("allowTeleportToStagingArea", true);
@@ -66,6 +68,28 @@ public class Settings
 		//startingItems = readMaterialList(config, "startingItems", new ArrayList<Integer>(), Material.STONE_PICKAXE);
 	}
 
+	private static void sortMinMax(Location min, Location max)
+	{
+		if ( max.getX() < min.getX() )
+		{
+			double tmp = max.getX();
+			max.setX(min.getX());
+			min.setX(tmp);
+		}
+		if ( max.getY() < min.getY() )
+		{
+			double tmp = max.getY();
+			max.setY(min.getY());
+			min.setY(tmp);
+		}
+		if ( max.getZ() < min.getZ() )
+		{
+			double tmp = max.getZ();
+			max.setZ(min.getZ());
+			min.setZ(tmp);
+		}
+	}
+	
 	private static void setStagingWorld(World world)
 	{
 		spawnCoordMin.setWorld(world);

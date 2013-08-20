@@ -54,7 +54,7 @@ class PlayerManager
 		if ( game != null )
 		{
 			game.getGameMode().broadcastMessage(player.getName() + " quit the game");
-			plugin.stagingWorldManager.playerNumberChanged(game);
+			game.updatePlayerCount();
 		}
 		
 		playerKilled(game, player);
@@ -83,7 +83,7 @@ class PlayerManager
 	
 	public void putPlayerInStagingWorld(Player player)
 	{
-		teleport(player, plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+		teleport(player, plugin.worldManager.getStagingAreaSpawnPoint());
 		player.setFlying(false);
 		player.setGameMode(GameMode.SURVIVAL);
 		giveStagingWorldInstructionBook(player);

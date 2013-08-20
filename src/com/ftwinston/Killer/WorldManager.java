@@ -103,8 +103,6 @@ class WorldManager
 		plugin.stagingWorld.setDifficulty(Difficulty.PEACEFUL);
 		plugin.stagingWorld.setPVP(false);
 		plugin.stagingWorld.setAutoSave(false); // don't save changes to the staging world
-
-		plugin.stagingWorldManager = new StagingWorldManager(plugin, plugin.stagingWorld);
 	}
 	
 	public void removeAllItems(World world)
@@ -119,15 +117,37 @@ class WorldManager
 		}
 	}
 	
+	public static boolean isLocationInRange(Location test, Location min, Location max)
+	{
+		int x = test.getBlockX(), y = test.getBlockY(), z = test.getBlockZ();
+		return x >= min.getBlockX() && x <= max.getBlockX()
+			&& y >= min.getBlockY() && y <= max.getBlockY()
+			&& z >= min.getBlockZ() && z <= max.getBlockZ();
+	}
+	
 	public boolean isProtectedLocation(Game game, Location loc, Player player)
 	{
 		if ( loc.getWorld() == plugin.stagingWorld )
-			return plugin.stagingWorldManager.isProtected(loc);
+			return isLocationInRange(loc, Settings.protectionMin, Settings.protectionMax);
 		
 		if ( game != null )
 			return game.getGameMode().isLocationProtected(loc, player);
 		else
 			return false;
+	}
+
+	Random random = new Random();
+	public Location getRandomLocation(Location rangeMin, Location rangeMax)
+	{
+		return new Location(rangeMin.getWorld(),
+				rangeMin.getX() + (rangeMax.getX() - rangeMin.getX()) * random.nextDouble(),
+				rangeMin.getY() + (rangeMax.getY() - rangeMin.getY()) * random.nextDouble(),
+				rangeMin.getZ() + (rangeMax.getZ() - rangeMin.getZ()) * random.nextDouble(),
+				random.nextFloat() * 360.0f, 0f);
+	}
+
+	public Location getStagingAreaSpawnPoint() {
+		return getRandomLocation(Settings.spawnCoordMin, Settings.spawnCoordMax);
 	}
 	
 	public void deleteWorldFolders(final String prefix)

@@ -363,8 +363,6 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			changeMonsterNumbers(plugin, game, args.length > 3 ? args[3] : "");
 		else if ( cmd == "animals" )
 			changeAnimalNumbers(plugin, game, args.length > 3 ? args[3] : "");
-		else if ( cmd == "playerlimit" )
-			gamePlayerLimit(plugin, game, args.length > 3 ? args[3] : "");
 		else if ( cmd == "include" ) 
 		{
 			if ( args.length <= 3 )
@@ -395,10 +393,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 				
 				plugin.playerManager.teleport(player, game.getGameMode().getSpawnLocation(player));
 			}
-			else
-				player.teleport(plugin.stagingWorldManager.getGameSetupSpawnLocation(game.getNumber()));
 			game.addPlayerToGame(player);
-			plugin.stagingWorldManager.playerNumberChanged(game);
 		}
 		else if ( cmd == "exclude" ) 
 		{
@@ -419,37 +414,6 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 		}
 		else
 			plugin.log.warning("Invalid game command: " + cmd);
-	}
-
-	private static void gamePlayerLimit(Killer plugin, Game game, String cmd)
-	{
-		if ( cmd == "on")
-			game.setUsesPlayerLimit(true);
-		else if ( cmd == "off")
-			game.setUsesPlayerLimit(false);
-		else if ( cmd == "up")
-		{
-			int limit = game.getPlayerLimit();
-			if ( limit < Settings.maxPlayerLimit )
-				game.setPlayerLimit(limit+1);
-			else
-				return;
-		}
-		else if ( cmd == "down")
-		{
-			int limit = game.getPlayerLimit();
-			if ( limit > Settings.minPlayerLimit )
-				game.setPlayerLimit(limit - 1);
-			else
-				return;
-		}
-		else
-		{
-			plugin.log.warning("Invalid player limit command - expected on/off/up/down, got: " + cmd);
-			return;
-		}
-		
-		plugin.stagingWorldManager.playerNumberChanged(game);
 	}
 
 	private static void changeDifficulty(Killer plugin, Game game, String param)

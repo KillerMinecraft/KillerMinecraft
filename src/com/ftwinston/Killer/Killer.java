@@ -40,7 +40,6 @@ public class Killer extends JavaPlugin
 	
 	private EventListener eventListener = new EventListener(this);
 	WorldManager worldManager;
-	StagingWorldManager stagingWorldManager;
 	PlayerManager playerManager;
 	VoteManager voteManager;
 	StatsManager statsManager;
@@ -110,7 +109,6 @@ public class Killer extends JavaPlugin
 				}
 								
 				statsManager = new StatsManager(Killer.instance, Killer.instance.games.length);
-		        stagingWorldManager = new StagingWorldManager(Killer.instance, stagingWorld);
 		        getServer().getPluginManager().registerEvents(eventListener, Killer.instance);
 		        
 		        // because listening for ChunkLoadEvent is unreliable, if the relevant chunk isn't loaded when we try to write a sign,

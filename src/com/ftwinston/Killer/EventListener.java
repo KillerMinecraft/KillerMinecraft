@@ -66,7 +66,7 @@ class EventListener implements Listener
 		World world = event.getPlayer().getWorld();
 		if ( world == plugin.stagingWorld )
 		{
-			event.setRespawnLocation(plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+			event.setRespawnLocation(plugin.worldManager.getStagingAreaSpawnPoint());
 			return;
 		}
 		
@@ -80,7 +80,7 @@ class EventListener implements Listener
 			event.setRespawnLocation(game.getGameMode().getSpawnLocation(event.getPlayer()));
 		else
 		{
-			event.setRespawnLocation(plugin.stagingWorldManager.getStagingWorldSpawnPoint());
+			event.setRespawnLocation(plugin.worldManager.getStagingAreaSpawnPoint());
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				public void run()
 				{
@@ -211,7 +211,7 @@ class EventListener implements Listener
 				if ( !plugin.games[i].getGameState().usesGameWorlds )
 				{
 					plugin.games[i].getPlayerInfo().remove(event.getPlayer().getName());
-					plugin.stagingWorldManager.playerNumberChanged(plugin.games[i]);
+					plugin.games[i].updatePlayerCount();
 				}
 		}
 	}
@@ -257,16 +257,12 @@ class EventListener implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onItemSpawn(ItemSpawnEvent event)
 	{
-		World world = event.getLocation().getWorld();
-		Game game = plugin.getGameForWorld(world);
+		Game game = plugin.getGameForWorld(event.getLocation().getWorld());
 		
-		if ( game != null || world == plugin.stagingWorld ) 
+		if ( game != null ) 
 			event.setCancelled(
 				plugin.worldManager.isProtectedLocation(game, event.getLocation(), null)
 			);
-	
-		if ( event.getLocation().getWorld() == plugin.stagingWorld )
-			event.setCancelled(true);
 	}
 	
 	// prevent spectators breaking anything, prevent anyone breaking protected locations
@@ -462,13 +458,12 @@ class EventListener implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onItemDrop(PlayerDropItemEvent event)
 	{
-		World world = event.getPlayer().getWorld();
-		Game game = plugin.getGameForWorld(world);
-		if ( game == null && world != plugin.stagingWorld ) 
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game == null ) 
 			return;
 		
 		// spectators can't drop items
-		if ( world == plugin.stagingWorld || !Helper.isAlive(game, event.getPlayer()) )
+		if ( !Helper.isAlive(game, event.getPlayer()) )
 			event.setCancelled(true);
 	}
 	
@@ -666,10 +661,7 @@ class EventListener implements Listener
 		});
 		
 		if ( game != null )
-		{
 			game.addPlayerToGame(event.getPlayer());
-			plugin.stagingWorldManager.playerNumberChanged(game);
-		}
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -678,7 +670,9 @@ class EventListener implements Listener
 		World world = event.getPlayer().getWorld();
 		if ( world == plugin.stagingWorld )
 		{
-			plugin.stagingWorldManager.playerNumberChanged(plugin.getGameForPlayer(event.getPlayer()));
+			Game game = plugin.getGameForPlayer(event.getPlayer());
+			if ( game != null )
+				game.updatePlayerCount();
 		}
 		else
 		{
@@ -690,7 +684,7 @@ class EventListener implements Listener
 	
 	private void playerQuit(Game game, Player player, boolean actuallyLeftServer)
 	{
-		plugin.stagingWorldManager.playerNumberChanged(game);
+		game.updatePlayerCount();
 		if ( actuallyLeftServer ) // the quit message should be sent to the scoreboard of anyone who this player was invisible to
 			for ( Player online : game.getOnlinePlayers() )
 				if ( !online.canSee(player) )
