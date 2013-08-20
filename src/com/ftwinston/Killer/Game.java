@@ -293,14 +293,14 @@ public class Game
 	}
 	
 	public void joinPressed(Player player) {
+		if ( isPlayerInGame(player) )
+		{
+			removePlayerFromGame(player);
+			return;
+		}
+		
 		if ( getGameState().canChangeGameSetup )
 		{
-			if ( isPlayerInGame(player) )
-			{
-				removePlayerFromGame(player);
-				return;
-			}
-			
 			for ( Game other : plugin.games )
 				if ( other != this && other.isPlayerInGame(player) )
 				{
@@ -399,7 +399,6 @@ public class Game
 		if ( !getGameState().usesGameWorlds )
 		{
 			setupObjective.getScore(plugin.getServer().getOfflinePlayer("# players")).setScore(getPlayerInfo().size());
-			setupObjective.getScore(plugin.getServer().getOfflinePlayer("blah blah blah")).setScore(-1);
 		}
 		
 		/*
@@ -494,7 +493,14 @@ public class Game
 	
 	private String configuringPlayer = null;
 	public String getConfiguringPlayer() { return configuringPlayer; }
-	public void setConfiguringPlayer(String p) { configuringPlayer = p; }
+	public void setConfiguringPlayer(String p)
+	{
+		configuringPlayer = p;
+		if ( p == null )
+			updateSign(configSign, "", "Configure", getName());
+		else
+			updateSign(configSign, "", "Currently being", "configured");
+	}
 
 	public int getNumber() { return number; }
 

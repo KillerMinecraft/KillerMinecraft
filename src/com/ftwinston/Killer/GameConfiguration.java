@@ -105,7 +105,7 @@ public class GameConfiguration
 		@Override
 		public String getPromptText(ConversationContext context)
 		{
-			return "\n\n\n\n\n\n\n\n\n\n\n.";
+			return "\n\n\n\n\n\n\n\n\n\n\n ";
 		}
 
 		@Override
