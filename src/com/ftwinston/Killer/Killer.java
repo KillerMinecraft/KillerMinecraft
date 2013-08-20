@@ -118,16 +118,23 @@ public class Killer extends JavaPlugin
 		        stagingWorldUpdateProcess = getServer().getScheduler().scheduleSyncRepeatingTask(instance, new Runnable() {
 					public void run()
 					{
+						boolean updateAny = false;
 						Iterator<Map.Entry<Location, String[]>> it = Game.signsNeedingUpdated.entrySet().iterator();
 					    while (it.hasNext()) {
 					        Map.Entry<Location, String[]> pair = (Map.Entry<Location, String[]>)it.next();
 
 				        	if ( craftBukkit.isChunkGenerated(pair.getKey().getChunk()))
 				        	{
-				        		Game.writeSign(pair.getKey(), pair.getValue());
+				        		if ( Game.writeSign(pair.getKey(), pair.getValue()) )
+				        			updateAny = true;
+				        		
 				        		it.remove();
 				        	}
 					    }
+					    
+					    if ( updateAny )
+					    	for ( Game game : games )
+					    		game.drawProgressBar();
 					}
 				}, 120L, 120L); // check every 6 seconds
 			}

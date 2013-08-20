@@ -82,13 +82,13 @@ public class Game
 		writeSign(loc, lines);
 	}
 	
-	static void writeSign(Location loc, String... lines)
+	static boolean writeSign(Location loc, String... lines)
 	{
 		Block b = loc.getBlock();
 		if ( !isSign(b) )
 		{
 			Killer.instance.log.warning("Expected sign at " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + " but got " + b.getType().name());
-			return;
+			return false;
 		}
 		
 		Sign s = (Sign)b.getState();
@@ -97,6 +97,7 @@ public class Game
 		for ( int i=lines.length; i<4; i++ )
 			s.setLine(i, "");
 		s.update();
+		return true;
 	}
 	
 	private int progressBarDx, progressBarDy, progressBarDz;
@@ -199,6 +200,20 @@ public class Game
 			for ( int z=minChunkZ; z<=maxChunkZ; z++ )
 				useStagingWorldChunk(new ChunkPosition(x,z));*/
 		return true;
+	}
+	
+	void drawProgressBar()
+	{
+		switch ( getGameState() )
+		{
+		case active:
+		case finished:
+			drawProgressBar(1f); break;
+		case worldGeneration:
+			break;
+		default:
+			drawProgressBar(0f); break;
+		}
 	}
 	
 	void drawProgressBar(float fraction)
