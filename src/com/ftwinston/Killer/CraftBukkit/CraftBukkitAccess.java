@@ -3,6 +3,7 @@ package com.ftwinston.Killer.CraftBukkit;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
@@ -66,6 +67,7 @@ public abstract class CraftBukkitAccess
 	public abstract void accountForDefaultWorldDeletion(World newDefault);
 	
 	public abstract World createWorld(org.bukkit.WorldType type, Environment env, String name, long seed, ChunkGenerator generator, String generatorSettings, boolean generateStructures);
+	public abstract boolean isChunkGenerated(Chunk chunk);
 	
 	public abstract Location findNearestNetherFortress(Location loc);
 	public abstract boolean createFlyingEnderEye(Player player, Location target);

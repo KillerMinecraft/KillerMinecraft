@@ -33,6 +33,7 @@ import net.minecraft.server.v1_5_R3.WorldServer;
 import net.minecraft.server.v1_5_R3.WorldSettings;
 import net.minecraft.server.v1_5_R3.WorldType;
 
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World.Environment;
@@ -42,6 +43,7 @@ import org.bukkit.craftbukkit.v1_5_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_5_R3.generator.NetherChunkGenerator;
 import org.bukkit.craftbukkit.v1_5_R3.generator.NormalChunkGenerator;
+import org.bukkit.craftbukkit.v1_5_R3.CraftChunk;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
@@ -287,6 +289,11 @@ public class v1_5_2 extends CraftBukkitAccess
         
         return world;
     }
+    
+	public boolean isChunkGenerated(Chunk chunk)
+	{
+		return ((CraftChunk)chunk).getHandle().done;
+	}
 	
 	public Location findNearestNetherFortress(Location loc)
 	{

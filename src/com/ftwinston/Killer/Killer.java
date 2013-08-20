@@ -8,10 +8,13 @@ package com.ftwinston.Killer;
  * Created 18/06/2012
  */
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.logging.Logger;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -44,6 +47,7 @@ public class Killer extends JavaPlugin
 	Game[] games;
 
 	World stagingWorld;
+	int stagingWorldUpdateProcess = -1;
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
@@ -108,6 +112,24 @@ public class Killer extends JavaPlugin
 				statsManager = new StatsManager(Killer.instance, Killer.instance.games.length);
 		        stagingWorldManager = new StagingWorldManager(Killer.instance, stagingWorld);
 		        getServer().getPluginManager().registerEvents(eventListener, Killer.instance);
+		        
+		        // because listening for ChunkLoadEvent is unreliable, if the relevant chunk isn't loaded when we try to write a sign,
+		        // it's saved off in this map and updated when necessary.
+		        stagingWorldUpdateProcess = getServer().getScheduler().scheduleSyncRepeatingTask(instance, new Runnable() {
+					public void run()
+					{
+						Iterator<Map.Entry<Location, String[]>> it = Game.signsNeedingUpdated.entrySet().iterator();
+					    while (it.hasNext()) {
+					        Map.Entry<Location, String[]> pair = (Map.Entry<Location, String[]>)it.next();
+
+				        	if ( craftBukkit.isChunkGenerated(pair.getKey().getChunk()))
+				        	{
+				        		Game.writeSign(pair.getKey(), pair.getValue());
+				        		it.remove();
+				        	}
+					    }
+					}
+				}, 120L, 120L); // check every 6 seconds
 			}
 		}, 1);
         
@@ -117,6 +139,12 @@ public class Killer extends JavaPlugin
 	
 	public void onDisable()
 	{
+		if ( stagingWorldUpdateProcess != -1 )
+		{
+			getServer().getScheduler().cancelTask(stagingWorldUpdateProcess);
+			stagingWorldUpdateProcess = -1;
+		}
+		
 		if ( games != null )
 			for ( Game game : games )
 				playerManager.reset(game);
