@@ -396,7 +396,7 @@ public class Game
 	
 	void updatePlayerCount()
 	{
-		if ( !getGameState().usesGameWorlds )
+		if ( !getGameState().usesGameWorlds && setupObjective != null )
 		{
 			setupObjective.getScore(plugin.getServer().getOfflinePlayer("# players")).setScore(getPlayerInfo().size());
 		}
@@ -634,9 +634,6 @@ public class Game
 				updateSign(configSign, "", "Configure", getName());
 				updateSign(startSign, "", "Start", getName());
 				
-				if ( prevState == newState )
-					return;
-				
 				// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 				if ( plugin.statsManager.isTracking(number) )
 					plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), true);
@@ -665,10 +662,6 @@ public class Game
 				updateSign(startSign, "", "Start", getName());
 				
 				drawProgressBar(0f);
-				
-				if ( prevState == newState )
-					return;
-				
 				break;
 			}
 			case stagingWorldConfirm:
@@ -681,9 +674,6 @@ public class Game
 			}
 			case waitingToGenerate:		
 			{
-				if ( prevState == newState )
-					return;
-				
 				// if nothing in the queue (so nothing currently generating), generate immediately
 				if ( generationQueue.peek() == null ) 
 					setGameState(GameState.worldGeneration);
@@ -704,9 +694,6 @@ public class Game
 				updateSign(joinSign, "", "Join", getName());
 				updateSign(configSign, "", "Configuration", "Locked");
 				updateSign(startSign, "", "Please", "Wait");
-				
-				if ( prevState == newState )
-					return;
 				
 				plugin.getServer().getPluginManager().registerEvents(getGameMode(), plugin);
 				
@@ -743,9 +730,6 @@ public class Game
 				
 				drawProgressBar(1f);
 				
-				if ( prevState == newState )
-					return;
-				
 				// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
 				List<Player> players = getGameMode().getOnlinePlayers(new PlayerFilter().alive());
 				if ( plugin.statsManager.isTracking(number) )
@@ -760,7 +744,6 @@ public class Game
 				
 				plugin.statsManager.gameStarted(number, players.size());
 				
-				
 				getGameMode().startGame(!prevState.usesGameWorlds);
 				break;
 			}
@@ -770,9 +753,6 @@ public class Game
 				updateSign(joinSign, "", "Please", "Wait");
 				updateSign(configSign, "", "Configuration", "Locked");
 				updateSign(startSign, "", "Please", "Wait");
-				
-				if ( prevState == newState )
-					return;
 				
 				plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), false);
 				break;
