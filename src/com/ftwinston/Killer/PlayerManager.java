@@ -310,15 +310,6 @@ class PlayerManager
 			writeStack(section, "i" + i, inv.getItem(i));
 		
 		clearInventory(player);
-		
-		try
-		{
-			inventories.save(inventoriesFile);
-		}
-		catch ( IOException ex )
-		{
-			plugin.log.warning("Unable to save inventories.yml file: " + ex.getMessage());
-		}
 	}
 	
 	private void writeStack(ConfigurationSection section, String key, ItemStack stack) {
@@ -333,7 +324,46 @@ class PlayerManager
 		clearInventory(player);
 		checkInventoryData();
 		
-		//
+
+		ConfigurationSection section = inventories.getConfigurationSection(player.getName());
+		if ( section == null )
+			return;
+		
+		PlayerInventory inv = player.getInventory();
+		
+		ItemStack stack = section.getItemStack("helmet");
+		if ( stack != null )
+			inv.setHelmet(stack);
+		
+		stack = section.getItemStack("chest");
+		if ( stack != null )
+			inv.setChestplate(stack);
+		
+		stack = section.getItemStack("legs");
+		if ( stack != null )
+			inv.setLeggings(stack);
+		
+		stack = section.getItemStack("boots");
+		if ( stack != null )
+			inv.setBoots(stack);
+				
+		for ( int i=0; i<inv.getSize(); i++ )
+		{
+			stack = section.getItemStack("i" + i);
+			if ( stack != null )
+				inv.setItem(i, stack);
+		}
+		
+		inventories.set(player.getName(), null);
+		
+		try
+		{
+			inventories.save(inventoriesFile);
+		}
+		catch ( IOException ex )
+		{
+			plugin.log.warning("Unable to save inventories.yml file: " + ex.getMessage());
+		}
 	}
 	
 	public void resetPlayer(Game game, Player player)
