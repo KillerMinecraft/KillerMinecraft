@@ -90,9 +90,9 @@ class EventListener implements Listener
 					if ( player != null )
 					{
 						boolean alive = game.getGameMode().isAllowedToRespawn(player);
-						plugin.playerManager.setAlive(game, player, alive);
+						PlayerManager.instance.setAlive(game, player, alive);
 						if ( alive )
-							player.setCompassTarget(plugin.playerManager.getCompassTarget(game, player));
+							player.setCompassTarget(PlayerManager.instance.getCompassTarget(game, player));
 					}
 				}
 			});
@@ -117,7 +117,8 @@ class EventListener implements Listener
 				
 				if ( fromGame != toGame )
 				{
-					plugin.playerManager.playerKilled(fromGame, player);
+					PlayerManager.instance.playerKilled(fromGame, player);
+					PlayerManager.instance.clearInventory(player);
 					toGame.addPlayerToGame(player);
 					
 					if ( Settings.filterScoreboard )
@@ -135,17 +136,18 @@ class EventListener implements Listener
 				{
 					Info info = toGame.getPlayerInfo().get(player.getName());
 					if( info != null && info.isAlive() )
-						player.setCompassTarget(plugin.playerManager.getCompassTarget(fromGame, player));
+						player.setCompassTarget(PlayerManager.instance.getCompassTarget(fromGame, player));
 					else
 						PlayerManager.instance.setAlive(toGame, player, false);
 				}
 			}
 			else
 			{
+				PlayerManager.instance.restoreInventory(event.getPlayer());
 				playerQuit(fromGame, event.getPlayer(), false);
 				
 				if ( toWorld != plugin.stagingWorld )
-					plugin.playerManager.previousLocations.remove(event.getPlayer().getName()); // they left Killer, so forget where they should be put on leaving
+					PlayerManager.instance.previousLocations.remove(event.getPlayer().getName()); // they left Killer, so forget where they should be put on leaving
 
 				if ( Settings.filterScoreboard )
 				{
@@ -192,7 +194,7 @@ class EventListener implements Listener
 		}
 		
 		if ( event.getPlayer().getWorld() == plugin.stagingWorld )
-			plugin.playerManager.putPlayerInStagingWorld(event.getPlayer());
+			PlayerManager.instance.putPlayerInStagingWorld(event.getPlayer());
 		
 		if ( event.getFrom() == plugin.stagingWorld )
 		{
@@ -346,9 +348,9 @@ class EventListener implements Listener
 			else if ( item.getType() == Settings.followModeItem )
 			{
 				event.getPlayer().sendMessage("Follow mode: click to cycle target");
-				Player target = plugin.playerManager.getNearestFollowTarget(game, event.getPlayer());
+				Player target = PlayerManager.instance.getNearestFollowTarget(game, event.getPlayer());
 				Helper.setTargetOf(game, event.getPlayer(), target);
-				plugin.playerManager.checkFollowTarget(game, event.getPlayer(), target.getName());
+				PlayerManager.instance.checkFollowTarget(game, event.getPlayer(), target.getName());
 			}
 			else
 				Helper.setTargetOf(game, event.getPlayer(), (String)null);
@@ -382,9 +384,9 @@ class EventListener implements Listener
 			if ( held == Settings.teleportModeItem )
 			{
 				if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
-					plugin.playerManager.doSpectatorTeleport(event.getPlayer(), false);
+					PlayerManager.instance.doSpectatorTeleport(event.getPlayer(), false);
 				else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
-					plugin.playerManager.doSpectatorTeleport(event.getPlayer(), true);
+					PlayerManager.instance.doSpectatorTeleport(event.getPlayer(), true);
 			}
 			else if ( held == Settings.followModeItem )
 			{
@@ -392,16 +394,16 @@ class EventListener implements Listener
 				
 				if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
 				{
-					String target = plugin.playerManager.getNextFollowTarget(game, event.getPlayer(), targetName, true);
+					String target = PlayerManager.instance.getNextFollowTarget(game, event.getPlayer(), targetName, true);
 					Helper.setTargetOf(game, event.getPlayer(), target);
-					plugin.playerManager.checkFollowTarget(game, event.getPlayer(), target);
+					PlayerManager.instance.checkFollowTarget(game, event.getPlayer(), target);
 					event.getPlayer().sendMessage("Following " + target);
 				}
 				else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
 				{
-					String target = plugin.playerManager.getNextFollowTarget(game, event.getPlayer(), targetName, false);
+					String target = PlayerManager.instance.getNextFollowTarget(game, event.getPlayer(), targetName, false);
 					Helper.setTargetOf(game, event.getPlayer(), target);
-					plugin.playerManager.checkFollowTarget(game, event.getPlayer(), target);
+					PlayerManager.instance.checkFollowTarget(game, event.getPlayer(), target);
 					event.getPlayer().sendMessage("Following " + target);
 				}
 			}
@@ -631,14 +633,11 @@ class EventListener implements Listener
 				if ( player == null )
 					return;
 
+				if ( plugin.getGameForWorld(world) == null )
+					PlayerManager.instance.restoreInventory(player);
+				
 				if ( world == plugin.stagingWorld )
-					if ( plugin.games.length == 1 && plugin.games[0].getGameState().usesGameWorlds )
-					{
-						plugin.playerManager.teleport(player, plugin.games[0].getGameMode().getSpawnLocation(player));
-						plugin.games[0].addPlayerToGame(player);
-					}
-					else
-						plugin.playerManager.putPlayerInStagingWorld(player);
+					PlayerManager.instance.putPlayerInStagingWorld(player);
 				
 				if ( Settings.filterScoreboard )
 				{// hide this person from the scoreboard of any games that they aren't in
@@ -732,7 +731,7 @@ class EventListener implements Listener
 				if ( Helper.isAlive(game, player) )
 					plugin.statsManager.playerQuit(game.getNumber());
 			}
-			plugin.playerManager.playerKilled(game, player);
+			PlayerManager.instance.playerKilled(game, player);
 		}
 	}
 }

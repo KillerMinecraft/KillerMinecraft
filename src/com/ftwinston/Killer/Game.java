@@ -335,7 +335,10 @@ public class Game
 			
 			// this player is new for this game, so clear them down
 			if ( getGameState().usesGameWorlds )
+			{
+				PlayerManager.instance.saveInventory(player);
 				PlayerManager.instance.resetPlayer(this, player);
+			}
 		}
 		else
 			isNewPlayer = false;
@@ -553,7 +556,7 @@ public class Game
 	        	for ( Player player : getGameMode().getOnlinePlayers(new PlayerFilter().alive()) )
 	        		if ( player.getInventory().contains(Material.COMPASS) )
 	        		{// does this need a null check on the target?
-	        			player.setCompassTarget(plugin.playerManager.getCompassTarget(game, player));
+	        			player.setCompassTarget(PlayerManager.instance.getCompassTarget(game, player));
 	        		}
         	}
         }, 20, 10);
@@ -565,7 +568,7 @@ public class Game
 	        	{
 	        		PlayerManager.Info info = playerInfo.get(player.getName());
 	        		if (info.target != null )
-	        			plugin.playerManager.checkFollowTarget(game, player, info.target);
+	        			PlayerManager.instance.checkFollowTarget(game, player, info.target);
 	        	}
         	}
         }, 40, 40);
@@ -642,9 +645,12 @@ public class Game
 
 				for ( Player player : getOnlinePlayers() )
 					if ( player.getWorld() != plugin.stagingWorld )
-						plugin.playerManager.putPlayerInStagingWorld(player);
+					{
+						PlayerManager.instance.restoreInventory(player);
+						PlayerManager.instance.putPlayerInStagingWorld(player);
+					}
 				
-				plugin.playerManager.reset(this);
+				PlayerManager.instance.reset(this);
 				
 				plugin.worldManager.deleteKillerWorlds(this, new Runnable() {
 					@Override
@@ -737,9 +743,9 @@ public class Game
 				
 				for ( Player player : players )
 				{
-					plugin.playerManager.saveInventory(player);
-					plugin.playerManager.resetPlayer(this, player);
-					plugin.playerManager.teleport(player, getGameMode().getSpawnLocation(player));	
+					PlayerManager.instance.saveInventory(player);
+					PlayerManager.instance.resetPlayer(this, player);
+					PlayerManager.instance.teleport(player, getGameMode().getSpawnLocation(player));	
 				} 
 				
 				plugin.statsManager.gameStarted(number, players.size());

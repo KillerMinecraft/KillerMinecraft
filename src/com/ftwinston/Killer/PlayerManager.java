@@ -265,7 +265,7 @@ class PlayerManager
 				p.showPlayer(player);
 	}
 	
-	private void clearInventory(Player player) 
+	public void clearInventory(Player player) 
 	{
 		PlayerInventory inv = player.getInventory();
 		inv.clear();
@@ -320,14 +320,13 @@ class PlayerManager
 
 	public void restoreInventory(Player player)
 	{
-		clearInventory(player);
 		checkInventoryData();
 		
-
 		ConfigurationSection section = inventories.getConfigurationSection(player.getName());
 		if ( section == null )
 			return;
 		
+		clearInventory(player);
 		PlayerInventory inv = player.getInventory();
 		
 		ItemStack stack = section.getItemStack("helmet");
