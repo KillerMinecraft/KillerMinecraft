@@ -177,12 +177,6 @@ public class CommandHandler
 						return true;
 					}
 					
-					if ( !plugin.playerManager.isInventoryEmpty(player.getInventory()) )
-					{
-						sender.sendMessage("You must have a completely empty inventory to join Killer Minecraft!");
-						return true;
-					}
-					
 					plugin.playerManager.movePlayerIntoKillerGame(player);
 					return true;
 				}
@@ -245,24 +239,14 @@ public class CommandHandler
 		if ( args.length == 0 )
 		{
 			if ( !plugin.stagingWorldIsServerDefault && player != null )
-				sender.sendMessage("Usage: /killer join, /killer quit, /killer game, /killer restart, /killer end");
+				sender.sendMessage("Usage: /killer join, /killer quit, /killer game, /killer end");
 			else
-				sender.sendMessage("Usage: /killer restart, /killer end");
+				sender.sendMessage("Usage: /killer end");
 			return true;
 		}
 		
 		String firstParam = args[0].toLowerCase();
-		if ( firstParam.equals("restart") )
-		{
-			Game game = plugin.getGameForPlayer(player);
-			if ( game != null && game.getGameState().usesGameWorlds )
-			{
-				game.forcedGameEnd = true;
-				game.getGameMode().gameFinished();
-				game.restartGame(sender);
-			}
-		}
-		else if ( firstParam.equals("end") )
+		if ( firstParam.equals("end") )
 		{
 			Game game = plugin.getGameForPlayer(player);
 			if ( game != null && game.getGameState().usesGameWorlds )

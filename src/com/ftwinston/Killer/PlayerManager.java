@@ -1,5 +1,7 @@
 package com.ftwinston.Killer;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -13,12 +15,13 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BlockIterator;
@@ -36,6 +39,8 @@ class PlayerManager
 		this.plugin = _plugin;
 		instance = this;
 		random = new Random();
+		
+		inventoriesFile = new File(plugin.getDataFolder(), "inventories.yml");
 		
 		transparentBlocks.clear();
 		transparentBlocks.add(new Byte((byte)Material.AIR.getId()));
@@ -86,37 +91,9 @@ class PlayerManager
 		teleport(player, plugin.worldManager.getStagingAreaSpawnPoint());
 		player.setFlying(false);
 		player.setGameMode(GameMode.SURVIVAL);
-		giveStagingWorldInstructionBook(player);
 		
 		if ( plugin.games.length == 1 )
 			plugin.games[0].addPlayerToGame(player);
-	}
-	
-	public void giveStagingWorldInstructionBook(Player player)
-	{
-		PlayerInventory inv = player.getInventory();
-		inv.clear();
-		
-		ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
-		
-		BookMeta bm = (BookMeta)book.getItemMeta();
-		bm.setDisplayName("Instructions");
-		
-		bm.setAuthor("Killer Minecraft");
-		bm.setTitle("The Staging World");
-		bm.setPages("       Welcome to\n  §4§lKiller Minecraft§r§0\n\nThis is the staging world, where you can configure your next game.\n\nEach of the buttons on the left wall will show a different menu of options on the right wall when pressed.",
-					"These let you select a game mode, configure any options it may have, choose world options, and more.\n\nTypically, only one option from a menu can be enabled at a time, but many game mode configuration options can be enabled or disabled simultaneously.",
-					"When you're ready to start a game, push the start button at the end of the corridor.\n\nThis will create the game world(s), and then move everyone into them.\n\nYou will be returned to the staging world when the game ends.",
-					"If you're waiting for other players to join, check out the arena behind the spawn point.\n\nThis can be set to play either spleef or a survival mode where you try to kill as many waves of monsters as possible.\n\n      §4§oHappy killing!");
-		book.setItemMeta(bm);
-		
-		inv.setItem(8, book);
-	}
-	
-	public void removeInventoryItems(PlayerInventory inv, Material... typesToRemove)
-	{
-		for ( Material type : typesToRemove )
-			inv.remove(type);
 	}
 	
 	public Info CreateInfo(boolean alive) { return new Info(alive); }
@@ -288,7 +265,77 @@ class PlayerManager
 			if (p != player && !p.canSee(player))
 				p.showPlayer(player);
 	}
+	
+	private void clearInventory(Player player) 
+	{
+		PlayerInventory inv = player.getInventory();
+		inv.clear();
+		inv.setHelmet(null);
+		inv.setChestplate(null);
+		inv.setLeggings(null);
+		inv.setBoots(null);
+	}
 
+	private File inventoriesFile;
+	private YamlConfiguration inventories = null;
+	
+	private void checkInventoryData()
+	{
+		if ( inventories != null )
+			return;
+		
+		if ( inventoriesFile.exists() )
+			inventories = YamlConfiguration.loadConfiguration(inventoriesFile);
+		else
+			inventories = new YamlConfiguration();
+	}
+	
+	public void saveInventory(Player player)
+	{
+		checkInventoryData();
+		
+		ConfigurationSection section = inventories.getConfigurationSection(player.getName());
+		if ( section != null )
+			inventories.set(player.getName(), null);
+		section = inventories.createSection(player.getName());
+		
+		PlayerInventory inv = player.getInventory();
+		
+		writeStack(section, "helmet", inv.getHelmet());
+		writeStack(section, "chest", inv.getChestplate());
+		writeStack(section, "legs", inv.getLeggings());
+		writeStack(section, "boots", inv.getBoots());
+		
+		for ( int i=0; i<inv.getSize(); i++ )
+			writeStack(section, "i" + i, inv.getItem(i));
+		
+		clearInventory(player);
+		
+		try
+		{
+			inventories.save(inventoriesFile);
+		}
+		catch ( IOException ex )
+		{
+			plugin.log.warning("Unable to save inventories.yml file: " + ex.getMessage());
+		}
+	}
+	
+	private void writeStack(ConfigurationSection section, String key, ItemStack stack) {
+		if ( stack == null || stack.getAmount() == 0 )
+			return;
+		
+		section.set(key, stack);
+	}
+
+	public void restoreInventory(Player player)
+	{
+		clearInventory(player);
+		checkInventoryData();
+		
+		//
+	}
+	
 	public void resetPlayer(Game game, Player player)
 	{
 		if ( !player.isDead() )
@@ -302,22 +349,13 @@ class PlayerManager
 			player.setExhaustion(0);
 			player.setFireTicks(0);
 			
-			PlayerInventory inv = player.getInventory();
-			inv.clear();
-			inv.setHelmet(null);
-			inv.setChestplate(null);
-			inv.setLeggings(null);
-			inv.setBoots(null);
+			clearInventory(player);
 			
 			for (PotionEffectType p : PotionEffectType.values())
 			     if (p != null && player.hasPotionEffect(p))
 			          player.removePotionEffect(p);
 			
 			player.closeInventory(); // this stops them from keeping items they had in (e.g.) a crafting table
-			
-			/*if ( game != null && Helper.isAlive(game, player) ) // if any starting items are configured, give them if the player is alive
-				for ( Material material : Settings.startingItems )
-					inv.addItem(new ItemStack(material));*/
 		}
 	}
 	

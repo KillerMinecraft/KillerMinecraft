@@ -747,20 +747,20 @@ public class Game
 					return;
 				
 				// if the stats manager is tracking, then the game didn't finish "properly" ... this counts as an "aborted" game
-				int numPlayers = getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size();
+				List<Player> players = getGameMode().getOnlinePlayers(new PlayerFilter().alive());
 				if ( plugin.statsManager.isTracking(number) )
-					plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), numPlayers, true);
-				plugin.statsManager.gameStarted(number, numPlayers);
+					plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), players.size(), true);
 				
-				if ( prevState.usesGameWorlds )
+				for ( Player player : players )
 				{
-					for ( World world : worlds )
-					{
-						plugin.worldManager.removeAllItems(world);
-						world.setTime(0);
-					}
-				}
-	
+					plugin.playerManager.saveInventory(player);
+					plugin.playerManager.resetPlayer(this, player);
+					plugin.playerManager.teleport(player, getGameMode().getSpawnLocation(player));	
+				} 
+				
+				plugin.statsManager.gameStarted(number, players.size());
+				
+				
 				getGameMode().startGame(!prevState.usesGameWorlds);
 				break;
 			}
@@ -870,16 +870,6 @@ public class Game
 			getGameMode().broadcastMessage("The game has ended. You've been moved to the staging world to allow you to set up a new one...");
 		
 		setGameState(GameState.worldDeletion);
-	}
-	
-	void restartGame(CommandSender actionedBy)
-	{
-		if ( actionedBy != null )
-			getGameMode().broadcastMessage(actionedBy.getName() + " is restarting the game...");
-		else
-			getGameMode().broadcastMessage("Game is restarting...");
-		
-		setGameState(GameState.active);
 	}
 
 	public List<Player> getOnlinePlayers()

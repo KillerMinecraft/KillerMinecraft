@@ -79,17 +79,7 @@ class EventListener implements Listener
 		if ( game.getGameState().usesGameWorlds && game.getWorlds().size() > 0 )
 			event.setRespawnLocation(game.getGameMode().getSpawnLocation(event.getPlayer()));
 		else
-		{
 			event.setRespawnLocation(plugin.worldManager.getStagingAreaSpawnPoint());
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-				public void run()
-				{
-					Player player = plugin.getServer().getPlayerExact(playerName);
-					if ( player != null )
-						plugin.playerManager.giveStagingWorldInstructionBook(player);
-				}
-			});
-		}
 	
 		if( !Helper.isAlive(game, event.getPlayer()) )
 		{

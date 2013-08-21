@@ -155,7 +155,7 @@ public class VoteManager
         	
 			public String getPromptText(ConversationContext context)
 			{
-				return "What do you want to start a vote on? Say the number to choose:\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " Restart game\n" + ChatColor.GOLD + "2." + ChatColor.RESET + " End game\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
+				return "What do you want to start a vote on? Say the number to choose:\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " End game\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
 			}
 			
 			protected Prompt acceptValidatedInput(ConversationContext context, Number val)
@@ -169,16 +169,6 @@ public class VoteManager
 				int choice = val.intValue();
 				
 				if ( choice == 1 )
-					startVote(game, "Restart the current game?", player, new Runnable() {
-						public void run()
-						{
-							game.forcedGameEnd = true;
-							game.getGameMode().finishGame();
-							game.restartGame(null);
-						}
-					}, null, null);
-				
-				else if ( choice == 2 )
 					startVote(game, "End the current game?", player, new Runnable() {
 						public void run()
 						{

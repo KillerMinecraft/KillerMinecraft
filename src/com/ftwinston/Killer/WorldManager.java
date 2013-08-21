@@ -2,8 +2,6 @@ package com.ftwinston.Killer;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 
 import org.bukkit.Difficulty;
@@ -14,8 +12,6 @@ import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
@@ -103,18 +99,6 @@ class WorldManager
 		plugin.stagingWorld.setDifficulty(Difficulty.PEACEFUL);
 		plugin.stagingWorld.setPVP(false);
 		plugin.stagingWorld.setAutoSave(false); // don't save changes to the staging world
-	}
-	
-	public void removeAllItems(World world)
-	{
-		List<Entity> list = world.getEntities();
-		Iterator<Entity> entities = list.iterator();
-		while (entities.hasNext())
-		{
-			Entity entity = entities.next();
-			if (entity instanceof Item)
-				entity.remove();
-		}
 	}
 	
 	public static boolean isLocationInRange(Location test, Location min, Location max)

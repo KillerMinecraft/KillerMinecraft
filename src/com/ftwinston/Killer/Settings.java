@@ -254,7 +254,7 @@ public class Settings
 		}
 	}
 	
-	private static LinkedHashMap<String, Object> resolveConfigSection(Object config)
+	static LinkedHashMap<String, Object> resolveConfigSection(Object config)
 	{
 		if ( config == null || !(config instanceof LinkedHashMap<?, ?>) )
 			return null;
