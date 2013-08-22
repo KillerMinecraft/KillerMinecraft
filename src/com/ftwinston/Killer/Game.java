@@ -745,6 +745,7 @@ public class Game
 				{
 					PlayerManager.instance.saveInventory(player);
 					PlayerManager.instance.resetPlayer(this, player);
+					player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard()); // remove the game scoreboard, for now.
 					PlayerManager.instance.teleport(player, getGameMode().getSpawnLocation(player));	
 				} 
 				

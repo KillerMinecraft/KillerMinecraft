@@ -109,6 +109,11 @@ class WorldManager
 			&& z >= min.getBlockZ() && z <= max.getBlockZ();
 	}
 	
+	public boolean isProtectedLocation(Location loc, Player player)
+	{
+		return isProtectedLocation(plugin.getGameForWorld(loc.getWorld()), loc, player);
+	}
+	
 	public boolean isProtectedLocation(Game game, Location loc, Player player)
 	{
 		if ( loc.getWorld() == plugin.stagingWorld )

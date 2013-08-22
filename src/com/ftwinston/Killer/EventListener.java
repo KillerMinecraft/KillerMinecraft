@@ -22,7 +22,6 @@ import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -289,22 +288,14 @@ class EventListener implements Listener
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void BlockFromTo(BlockFromToEvent event)
 	{
-		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
-		if ( game == null ) 
-			return;
-		
-		event.setCancelled(plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), null));
+		event.setCancelled(plugin.worldManager.isProtectedLocation(event.getBlock().getLocation(), null));
 	}
 	
 	// prevent pistons pushing things into/out of protected locations
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onBlockPistonExtend(BlockPistonExtendEvent event)
 	{
-		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
-		if ( game == null ) 
-			return;
-		
-		event.setCancelled(plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), null));
+		event.setCancelled(plugin.worldManager.isProtectedLocation(event.getBlock().getLocation(), null));
 	}
 	
 	// prevent explosions from damaging protected locations
@@ -507,12 +498,7 @@ class EventListener implements Listener
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event)
 	{
-		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
-		if ( game == null ) 
-			return;
-		
-		Block affected = event.getBlockClicked().getRelative(event.getBlockFace());
-		event.setCancelled(plugin.worldManager.isProtectedLocation(game, affected.getLocation(), event.getPlayer()));
+		event.setCancelled(plugin.worldManager.isProtectedLocation(event.getBlockClicked().getRelative(event.getBlockFace()).getLocation(), null));
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)
@@ -540,8 +526,8 @@ class EventListener implements Listener
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onCreatureSpawn(CreatureSpawnEvent event)
 	{
-		if ( event.getLocation().getWorld() == plugin.stagingWorld && event.getSpawnReason() == SpawnReason.NATURAL )
-			event.setCancelled(true);
+		//if ( event.getLocation().getWorld() == plugin.stagingWorld && event.getSpawnReason() == SpawnReason.NATURAL )
+			//event.setCancelled(true);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
