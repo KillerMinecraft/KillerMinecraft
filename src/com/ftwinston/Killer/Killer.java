@@ -272,7 +272,7 @@ public class Killer extends JavaPlugin
 		return CommandHandler.onCommand(this, sender, cmd, label, args);
 	}
 	
-	Game getGameForWorld(World w)
+	public Game getGameForWorld(World w)
 	{
 		if ( w == stagingWorld )
 			return null;
@@ -285,8 +285,15 @@ public class Killer extends JavaPlugin
 		return null;
 	}
 	
-	Game getGameForPlayer(Player player)
+	public Game getGameForPlayer(Player player)
 	{
-		return getGameForWorld(player.getWorld());
+		Game game = getGameForWorld(player.getWorld());
+		if ( game == null )
+		{// check if this player is a member of any game
+			for ( Game g : games )
+				if ( g.getPlayerInfo().containsKey(player.getName()))
+					return g;
+		}
+		return game;
 	}
 }
