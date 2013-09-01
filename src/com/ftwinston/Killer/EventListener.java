@@ -11,6 +11,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
@@ -30,6 +31,8 @@ import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -257,7 +260,7 @@ class EventListener implements Listener
 	}
 	
 	// prevent spectators breaking anything, prevent anyone breaking protected locations
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onBlockBreak(BlockBreakEvent event)
 	{
 		World world = event.getBlock().getWorld();
@@ -268,6 +271,35 @@ class EventListener implements Listener
 				!Helper.isAlive(game, event.getPlayer()) ||
 				plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer())
 			);
+	}
+	
+	// prevent spectators breaking frames, prevent anyone breaking protected frames
+	// more complicated than above, because we want to protect against breakings that aren't by entities (I guess)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onHangingBreak(HangingBreakEvent event)
+	{
+		Location loc = event.getEntity().getLocation();
+		Game game = plugin.getGameForWorld(loc.getWorld());
+		
+		if ( game == null && loc.getWorld() != plugin.stagingWorld )
+			return;
+		
+		Player player = null;
+		if ( event instanceof HangingBreakByEntityEvent)
+		{
+			Entity entity = ((HangingBreakByEntityEvent)event).getRemover();
+			if ( entity instanceof Player )
+			{
+				player = (Player)entity;
+				if ( !Helper.isAlive(game, player) )
+				{
+					event.setCancelled(true);
+					return;
+				}
+			}
+		}
+		
+		event.setCancelled(plugin.worldManager.isProtectedLocation(game, loc, player));
 	}
 	
 	// prevent anyone placing blocks on protected locations
