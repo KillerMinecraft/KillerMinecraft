@@ -210,6 +210,9 @@ public class Settings
 		Location startSign = readLocation(section, "start", plugin.stagingWorld);
 		game.initSigns(statusSign, joinSign, configSign, startSign);
 		
+		Location infoFrame = readLocation(config, "infoframe", plugin.stagingWorld);
+		game.initFrame(infoFrame);
+		
 		// and lastly, the progress indicator 
 		section = resolveConfigSection(config.get("progressbar"));
 		if ( section != null )

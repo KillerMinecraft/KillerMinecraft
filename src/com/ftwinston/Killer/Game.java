@@ -46,7 +46,8 @@ public class Game
 	void setName(String n) { name = n; }
 	
 	private Location startButton, joinButton, configButton;
-	private Location statusSign, startSign, joinSign, configSign;
+	private Location statusSign, startSign, joinSign, configSign, infoFrame;
+	private GameInfoRenderer infoRenderer;
 	
 	void initButtons(Location join, Location config, Location start)
 	{
@@ -61,6 +62,30 @@ public class Game
 		joinSign = join;
 		configSign = config;
 		startSign = start;
+	}
+	
+	void initFrame(Location info)
+	{
+		infoFrame = info;
+	}
+	
+	void checkRenderer()
+	{
+		if ( infoRenderer != null || infoFrame == null )
+			return;
+		infoRenderer = GameInfoRenderer.createForGame(this, infoFrame);
+		
+		for ( Player player : plugin.stagingWorld.getPlayers() )
+			player.sendMap(infoRenderer.getView());
+	}
+	
+	static void sendInfoMaps(Player player) 
+	{
+		for ( Game game : Killer.instance.games )
+		{
+			if ( game.infoRenderer != null )
+				player.sendMap(game.infoRenderer.getView());
+		}
 	}
 
 	private static boolean isSign(Block b)

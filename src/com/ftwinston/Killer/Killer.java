@@ -129,12 +129,15 @@ public class Killer extends JavaPlugin
 				        		it.remove();
 				        	}
 					    }
-					    
-					    if ( updateAny )
-					    	for ( Game game : games )
-					    		game.drawProgressBar();
+				    
+				    	for ( Game game : games )
+				    	{
+				    		if ( updateAny )
+				    			game.drawProgressBar();
+				    		game.checkRenderer();
+				    	}
 					}
-				}, 120L, 120L); // check every 6 seconds
+				}, 20L, 120L); // check every 6 seconds
 			}
 		}, 1);
         

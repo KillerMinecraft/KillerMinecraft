@@ -39,6 +39,7 @@ games:
         join:   9, 65, -2
         config: 9, 65, 0
         start:  9, 65, 2
+    infoframe:   9, 66, -1
     progressbar:
         start:   8, 64, -9
         dir:     +z
@@ -66,6 +67,7 @@ games:
         join:    -9, 65, 2
         config:  -9, 65, 0
         start:   -9, 65, -2
+    infoframe:   -9, 66, 1
     progressbar:
         start:   -8, 64, 9
         dir:     -z

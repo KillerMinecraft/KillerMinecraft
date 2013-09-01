@@ -8,7 +8,10 @@ import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.generator.BlockPopulator;
 
 class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
@@ -369,6 +372,36 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			b = getBlockAbs(chunk, game2ButtonX, gameButtonY+1, 0);
 			if ( b != null ) // game 2 status
 				setupWallSign(b, (byte)0x5, "");
+			
+			// game 1 map frames
+			b = getBlockAbs(chunk, game1ButtonX+1, gameButtonY, -1);
+			if ( b != null )
+			{
+				ItemFrame frame = (ItemFrame)b.getWorld().spawnEntity(b.getLocation(), EntityType.ITEM_FRAME);
+				frame.teleport(b.getRelative(BlockFace.WEST).getLocation());
+				frame.setFacingDirection(BlockFace.WEST, true);	
+			}
+
+			b = getBlockAbs(chunk, game1ButtonX+1, gameButtonY, 1);
+			if ( b != null )
+			{
+				ItemFrame frame = (ItemFrame)b.getWorld().spawnEntity(b.getLocation(), EntityType.ITEM_FRAME);
+				frame.teleport(b.getRelative(BlockFace.WEST).getLocation());
+				frame.setFacingDirection(BlockFace.WEST, true);
+			}
+			
+			// game 2 map frames
+			b = getBlockAbs(chunk, game2ButtonX-1, gameButtonY, 1);
+			if ( b != null )
+			{
+				b.getWorld().spawnEntity(b.getLocation(), EntityType.ITEM_FRAME);
+			}
+			
+			b = getBlockAbs(chunk, game2ButtonX-1, gameButtonY, -1);
+			if ( b != null )
+			{
+				b.getWorld().spawnEntity(b.getLocation(), EntityType.ITEM_FRAME);
+			}
 		}
 
 		private boolean insideSphere(int x, int y, int z, int x0, int y0, int z0, int rSquared)

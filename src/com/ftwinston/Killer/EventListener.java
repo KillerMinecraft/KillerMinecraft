@@ -195,8 +195,11 @@ class EventListener implements Listener
 			}
 		}
 		
-		if ( event.getPlayer().getWorld() == plugin.stagingWorld )
+		if ( toWorld == plugin.stagingWorld )
+		{
 			PlayerManager.instance.putPlayerInStagingWorld(event.getPlayer());
+			Game.sendInfoMaps(player);
+		}
 		
 		if ( event.getFrom() == plugin.stagingWorld )
 		{
@@ -655,7 +658,10 @@ class EventListener implements Listener
 					PlayerManager.instance.restoreInventory(player);
 				
 				if ( world == plugin.stagingWorld )
+				{
 					PlayerManager.instance.putPlayerInStagingWorld(player);
+					Game.sendInfoMaps(player);
+				}
 				
 				if ( Settings.filterScoreboard )
 				{// hide this person from the scoreboard of any games that they aren't in
