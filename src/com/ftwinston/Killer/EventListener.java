@@ -33,12 +33,14 @@ import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
+import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -303,6 +305,32 @@ class EventListener implements Listener
 		}
 		
 		event.setCancelled(plugin.worldManager.isProtectedLocation(game, loc, player));
+	}
+	
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onHangingPlace(HangingPlaceEvent event)
+	{
+		Location loc = event.getEntity().getLocation();
+		Game game = plugin.getGameForWorld(loc.getWorld());
+		
+		if ( game != null || loc.getWorld() == plugin.stagingWorld ) 
+			event.setCancelled(
+				!Helper.isAlive(game, event.getPlayer()) ||
+				plugin.worldManager.isProtectedLocation(game, loc, event.getPlayer())
+			);
+	}
+	
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEntityInteract(PlayerInteractEntityEvent event)
+	{	
+		Location loc = event.getRightClicked().getLocation();
+		Game game = plugin.getGameForWorld(loc.getWorld());
+		
+		if ( game != null || loc.getWorld() == plugin.stagingWorld ) 
+			event.setCancelled(
+				!Helper.isAlive(game, event.getPlayer()) ||
+				plugin.worldManager.isProtectedLocation(game, loc, event.getPlayer())
+			);
 	}
 	
 	// prevent anyone placing blocks on protected locations
