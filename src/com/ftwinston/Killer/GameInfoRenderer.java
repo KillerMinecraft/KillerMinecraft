@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.map.MapCanvas;
 import org.bukkit.map.MapFont;
+import org.bukkit.map.MapPalette;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 import org.bukkit.map.MinecraftFont;
@@ -80,6 +81,10 @@ public class GameInfoRenderer extends MapRenderer
 		if ( playersDrawnFor.containsKey(player.getName()) )
 			return;
 		playersDrawnFor.put(player.getName(), true);
+		
+		for ( int x=0; x<128; x++ )
+			for ( int y=0; y<128; y++ )
+				canvas.setPixel(x, y, background);
 		
 		MapFont font = MinecraftFont.Font;
 		int xpos = 7, ypos = 6;
