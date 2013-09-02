@@ -315,6 +315,18 @@ public class Game
 			return;
 		}
 		
+		if ( !getGameState().canChangeGameSetup && !Settings.allowLateJoiners )
+		{
+			player.sendMessage("Cannot join " + getName() + ": game has already started");
+			return;
+		}
+		
+		if ( usesPlayerLimit() && getPlayers().size() >= getPlayerLimit() )
+		{
+			player.sendMessage("Cannot join " + getName() + ": game is full");
+			return;
+		}
+		
 		if ( getGameState().canChangeGameSetup )
 		{
 			for ( Game other : plugin.games )
@@ -327,7 +339,7 @@ public class Game
 			addPlayerToGame(player);
 		}
 		else // TODO attempt late joining, if allowed by game
-			player.sendMessage("This game is in progress, and can't currently be joined.");
+			player.sendMessage("This game is in progress, and can't currently be joined. We're working on late joining. Sorry.");
 	}
 	
 	public void addPlayerToGame(Player player)
