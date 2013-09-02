@@ -77,7 +77,7 @@ public class GameInfoRenderer extends MapRenderer
 		hasChanges = false;
 		
 		MapFont font = MinecraftFont.Font;
-		int xpos = 8, ypos = 8;
+		int xpos = 7, ypos = 6;
 		
 		if ( forGameMode )
 		{
@@ -86,25 +86,25 @@ public class GameInfoRenderer extends MapRenderer
 		}
 		
 		if ( game.getGameMode().allowWorldOptionSelection() )
-		{
-			ypos = drawText(canvas, font, xpos, ypos, "World: " + game.getWorldOption().getName());
-			for ( Option option : game.getWorldOption().getOptions() )
-				ypos = drawText(canvas, font, xpos, ypos, "- " + option.getName() + ": " + (option.isEnabled() ? "Yes" : "No"));
-		}
+			ypos = drawText(canvas, font, xpos, ypos, game.getWorldOption().describe());
 		else
 			ypos = drawText(canvas, font, xpos, ypos, "<world controlled by game mode>");
 		
-		ypos += separator;
+		ypos = 100;
+		ypos = drawText(canvas, font, xpos, ypos, "Monsters:");
+		ypos = drawText(canvas, font, xpos, ypos, "Animals:");
 		
-		ypos = drawText(canvas, font, xpos, ypos, "Monsters: " + getQuantityText(game.monsterNumbers));
-		ypos = drawText(canvas, font, xpos, ypos, "Animals:  " + getQuantityText(game.animalNumbers));
+		ypos = 100; xpos = 60;
+		ypos = drawText(canvas, font, xpos, ypos, getQuantityText(game.monsterNumbers));
+		ypos = drawText(canvas, font, xpos, ypos, getQuantityText(game.animalNumbers));
 	}
 
 	private int drawText(MapCanvas canvas, MapFont font, int xpos, int ypos, String text)
 	{
 		String[] lines = text.split("\n");
 		for ( String line : lines )
-			ypos += drawTextLine(canvas, font, xpos, ypos, line);
+			ypos = drawTextLine(canvas, font, xpos, ypos, line);
+		
 		return ypos;
 	}
 	
