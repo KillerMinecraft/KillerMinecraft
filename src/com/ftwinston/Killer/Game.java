@@ -46,8 +46,8 @@ public class Game
 	void setName(String n) { name = n; }
 	
 	private Location startButton, joinButton, configButton;
-	private Location statusSign, startSign, joinSign, configSign, infoFrame;
-	private GameInfoRenderer infoRenderer;
+	private Location statusSign, startSign, joinSign, configSign, modeFrame, miscFrame;
+	private GameInfoRenderer modeRenderer, miscRenderer;
 	
 	void initButtons(Location join, Location config, Location start)
 	{
@@ -64,27 +64,37 @@ public class Game
 		startSign = start;
 	}
 	
-	void initFrame(Location info)
+	void initFrames(Location mode, Location misc)
 	{
-		infoFrame = info;
+		modeFrame = mode;
+		miscFrame = misc;
 	}
 	
 	void checkRenderer()
 	{
-		if ( infoRenderer != null || infoFrame == null )
-			return;
-		infoRenderer = GameInfoRenderer.createForGame(this, infoFrame);
+		if ( modeRenderer == null && modeFrame != null )
+		{
+			modeRenderer = GameInfoRenderer.createForGame(this, modeFrame, true);
+			for ( Player player : plugin.stagingWorld.getPlayers() )
+				player.sendMap(modeRenderer.getView());
+		}
 		
-		for ( Player player : plugin.stagingWorld.getPlayers() )
-			player.sendMap(infoRenderer.getView());
+		if ( miscRenderer == null && miscFrame != null )
+		{
+			miscRenderer = GameInfoRenderer.createForGame(this, miscFrame, false);
+			for ( Player player : plugin.stagingWorld.getPlayers() )
+				player.sendMap(miscRenderer.getView());
+		}
 	}
 	
 	static void sendInfoMaps(Player player) 
 	{
 		for ( Game game : Killer.instance.games )
 		{
-			if ( game.infoRenderer != null )
-				player.sendMap(game.infoRenderer.getView());
+			if ( game.modeRenderer != null )
+				player.sendMap(game.modeRenderer.getView());
+			if ( game.miscRenderer != null )
+				player.sendMap(game.miscRenderer.getView());
 		}
 	}
 

@@ -18,6 +18,8 @@ public abstract class KillerModule
 	{
 		return name;
 	}
+	
+	public abstract String describe();
 
 	final void initialize(Game game, JavaPlugin myPlugin)
 	{

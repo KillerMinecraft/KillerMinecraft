@@ -434,23 +434,4 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			s.setLine(i, "");
 		s.update();
 	}
-	
-	public static String getQuantityText(int num)
-	{
-		switch ( num )
-		{
-		case 0:
-			return "None";
-		case 1:
-			return "Few";
-		case 2:
-			return "Some";
-		case 3:
-			return "Many";
-		case 4:
-			return "Too Many";
-		default:
-			return "???";
-		}
-	}
 }

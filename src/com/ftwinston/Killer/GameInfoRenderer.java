@@ -17,7 +17,7 @@ import org.bukkit.map.MinecraftFont;
 
 public class GameInfoRenderer extends MapRenderer
 {
-	public static GameInfoRenderer createForGame(Game game, Location loc)
+	public static GameInfoRenderer createForGame(Game game, Location loc, boolean gameModeOnly)
 	{
 		// first find an item frame at the listed location
 		ItemFrame frame = null;
@@ -47,24 +47,25 @@ public class GameInfoRenderer extends MapRenderer
 		for(MapRenderer r : mv.getRenderers())
 			mv.removeRenderer(r);
 				
-		GameInfoRenderer renderer = new GameInfoRenderer(game, mv); 
+		GameInfoRenderer renderer = new GameInfoRenderer(game, mv, gameModeOnly); 
 		mv.addRenderer(renderer);
 		return renderer;
 	}
 	
 	private Game game;
 	private MapView view;
-	private boolean hasChanges;
-	private GameInfoRenderer(Game game, MapView view)
+	private boolean forGameMode, hasChanges;
+	private GameInfoRenderer(Game game, MapView view, gameModeOnly)
 	{
 		this.game = game;
 		this.view = view;
+		this.forGameMode = gameModeOnly;
 		hasChanges = true;
 	}
 	
 	MapView getView() { return view; }
 	
-	final int lineHeight = 12, separator = 4, canvasWidth = 128;
+	final int lineHeight = 12, separator = 8, canvasWidth = 128;
 	
 	@Override
 	public void render(MapView view, MapCanvas canvas, Player player)
@@ -76,13 +77,13 @@ public class GameInfoRenderer extends MapRenderer
 		hasChanges = false;
 		
 		MapFont font = MinecraftFont.Font;
-		
-		
 		int xpos = 8, ypos = 8;
-		ypos = drawText(canvas, font, xpos, ypos, "Mode: " + game.getGameMode().getName());
-		for ( Option option : game.getGameMode().getOptions() )
-			ypos = drawText(canvas, font, xpos, ypos, "- " + option.getName() + ": " + (option.isEnabled() ? "Yes" : "No"));			
-		ypos += separator;
+		
+		if ( forGameMode )
+		{
+			ypos = drawText(canvas, font, xpos, ypos, game.getGameMode().describe());
+			return;
+		}
 		
 		if ( game.getGameMode().allowWorldOptionSelection() )
 		{
@@ -91,12 +92,25 @@ public class GameInfoRenderer extends MapRenderer
 				ypos = drawText(canvas, font, xpos, ypos, "- " + option.getName() + ": " + (option.isEnabled() ? "Yes" : "No"));
 		}
 		else
-			ypos = drawText(canvas, font, xpos, ypos, "<mode-specific world>");
+			ypos = drawText(canvas, font, xpos, ypos, "<world controlled by game mode>");
+		
+		ypos += separator;
+		
+		ypos = drawText(canvas, font, xpos, ypos, "Monsters: " + getQuantityText(game.monsterNumbers));
+		ypos = drawText(canvas, font, xpos, ypos, "Animals:  " + getQuantityText(game.animalNumbers));
 	}
 
 	private int drawText(MapCanvas canvas, MapFont font, int xpos, int ypos, String text)
 	{
-		if ( font.getWidth(text) >= canvasWidth-xpos )
+		String[] lines = text.split("\n");
+		for ( String line : lines )
+			ypos += drawTextLine(canvas, font, xpos, ypos, line);
+		return ypos;
+	}
+	
+	private int drawTextLine(MapCanvas canvas, MapFont font, int xpos, int ypos, String text)
+	{
+		if ( getWidth(text) >= canvasWidth-xpos )
 		{
 			String[] words = text.split(" ");
 			canvas.drawText(xpos, ypos, font, words[0]);
@@ -123,5 +137,24 @@ public class GameInfoRenderer extends MapRenderer
 	private int getWidth(MapFont font, String text)
 	{
 		return font.getWidth(text) + text.length();
+	}
+	
+	public static String getQuantityText(int num)
+	{
+		switch ( num )
+		{
+		case 0:
+			return "None";
+		case 1:
+			return "Few";
+		case 2:
+			return "Some";
+		case 3:
+			return "Many";
+		case 4:
+			return "Too Many";
+		default:
+			return "???";
+		}
 	}
 }
