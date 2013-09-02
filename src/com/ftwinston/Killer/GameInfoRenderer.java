@@ -55,7 +55,7 @@ public class GameInfoRenderer extends MapRenderer
 	private Game game;
 	private MapView view;
 	private boolean forGameMode, hasChanges;
-	private GameInfoRenderer(Game game, MapView view, gameModeOnly)
+	private GameInfoRenderer(Game game, MapView view, boolean gameModeOnly)
 	{
 		this.game = game;
 		this.view = view;
@@ -110,7 +110,7 @@ public class GameInfoRenderer extends MapRenderer
 	
 	private int drawTextLine(MapCanvas canvas, MapFont font, int xpos, int ypos, String text)
 	{
-		if ( getWidth(text) >= canvasWidth-xpos )
+		if ( getWidth(font, text) >= canvasWidth-xpos )
 		{
 			String[] words = text.split(" ");
 			canvas.drawText(xpos, ypos, font, words[0]);
