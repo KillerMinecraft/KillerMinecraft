@@ -151,6 +151,15 @@ public class GameConfiguration
 			else
 				sb.append("\nThis game mode configures the world itself");
 			
+			writeColoredNumber(sb, 5);
+			sb.append("change player limits");
+			
+			writeColoredNumber(sb, 6);
+			sb.append("change monster numbers");
+			
+			writeColoredNumber(sb, 7);
+			sb.append("change animal numbers");
+			
 			writeColoredNumber(sb, 0);
 			sb.append("close");
 			
@@ -175,6 +184,12 @@ public class GameConfiguration
 					return new WorldConfigPrompt(game, this);
 				configurationFinished(game);
 				return new ClosingPrompt();
+			case 5:
+				return new PlayerLimitsPrompt(game, this);
+			case 6:
+				return new MonstersPrompt(game, this);
+			case 7:
+				return new AnimalsPrompt(game, this);
 			default:
 				configurationFinished(game);
 				return new ClosingPrompt();
@@ -390,6 +405,156 @@ public class GameConfiguration
 				game.getWorldOption().toggleOption(choice-1);
 				game.miscRenderer.allowForChanges();
 				return this;
+			}
+			
+			return back;
+		}
+	}
+	
+	private class PlayerLimitsPrompt extends NumericPrompt
+	{
+		private Game game;
+		private Prompt back;
+		public PlayerLimitsPrompt(Game game, MainPrompt back)
+		{
+			this.game = game;
+			this.back = back;
+		}
+		
+		public String getPromptText(ConversationContext context)
+		{
+			StringBuilder sb = new StringBuilder();
+			
+			sb.append("\n\n\n\n\n\n\n\n\n\n\n");
+			if ( game.usesPlayerLimit() )
+			{
+				sb.append("Player limit: " );
+				sb.append(game.getPlayerLimit());
+				sb.append("\nEnter the player limit you want, or 0 to remove the limit.");
+			}
+			else
+				sb.append("No player limit.\nEnter the player limit you want, or 0 to leave with no limit.");
+
+			return sb.toString();
+		}
+		
+		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
+		{
+			if ( !game.getGameState().canChangeGameSetup )
+				return new ClosingPrompt();
+			
+			int limit = val.intValue();
+			if ( limit > 0 )
+			{
+				game.setUsesPlayerLimit(true);
+				game.setPlayerLimit(limit);
+			}
+			else
+				game.setUsesPlayerLimit(false);
+
+			game.miscRenderer.allowForChanges();
+			return back;
+		}
+	}
+	
+
+	
+	private class AnimalsPrompt extends NumericPrompt
+	{
+		private Game game;
+		private Prompt back;
+		public AnimalsPrompt(Game game, MainPrompt back)
+		{
+			this.game = game;
+			this.back = back;
+		}
+		
+		public String getPromptText(ConversationContext context)
+		{
+			StringBuilder sb = new StringBuilder();
+			
+			sb.append("\n\n\n\n\n\n\n\n\n\n\n");
+			sb.append("Animal numbers: " );
+			sb.append(GameInfoRenderer.getQuantityText(game.animalNumbers));
+			sb.append("\nEnter a number from ");
+			sb.append(Game.minQuantityNum);
+			sb.append(" to ");
+			sb.append(Game.maxQuantityNum);
+			sb.append(", representing the following animal numbers:\n");
+			for ( int i=Game.minQuantityNum; i<=Game.maxQuantityNum; i++)
+			{
+				sb.append(i);
+				sb.append(" - ");
+				sb.append(GameInfoRenderer.getQuantityText(i));
+				if ( i < Game.maxQuantityNum )
+					sb.append(", ");
+			}
+			
+			return sb.toString();
+		}
+		
+		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
+		{
+			if ( !game.getGameState().canChangeGameSetup )
+				return new ClosingPrompt();
+			
+			int number = val.intValue();
+			if ( number >= Game.minQuantityNum && number <= Game.maxQuantityNum )
+			{
+				game.animalNumbers = number;
+				game.miscRenderer.allowForChanges();
+			}
+			
+			return back;
+		}
+	}
+	
+
+	
+	private class MonstersPrompt extends NumericPrompt
+	{
+		private Game game;
+		private Prompt back;
+		public MonstersPrompt(Game game, MainPrompt back)
+		{
+			this.game = game;
+			this.back = back;
+		}
+		
+		public String getPromptText(ConversationContext context)
+		{
+			StringBuilder sb = new StringBuilder();
+			
+			sb.append("\n\n\n\n\n\n\n\n\n\n\n");
+			sb.append("Monster numbers: " );
+			sb.append(GameInfoRenderer.getQuantityText(game.monsterNumbers));
+			sb.append("\nEnter a number from ");
+			sb.append(Game.minQuantityNum);
+			sb.append(" to ");
+			sb.append(Game.maxQuantityNum);
+			sb.append(", representing the following monster numbers:\n");
+			for ( int i=Game.minQuantityNum; i<=Game.maxQuantityNum; i++)
+			{
+				sb.append(i);
+				sb.append(" - ");
+				sb.append(GameInfoRenderer.getQuantityText(i));
+				if ( i < Game.maxQuantityNum )
+					sb.append(", ");
+			}
+			
+			return sb.toString();
+		}
+		
+		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
+		{
+			if ( !game.getGameState().canChangeGameSetup )
+				return new ClosingPrompt();
+			
+			int number = val.intValue();
+			if ( number >= Game.minQuantityNum && number <= Game.maxQuantityNum )
+			{
+				game.monsterNumbers = number;
+				game.miscRenderer.allowForChanges();
 			}
 			
 			return back;

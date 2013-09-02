@@ -464,6 +464,8 @@ public class Game
 		updateSigns(GameSign.PLAYER_LIMIT);
 
 		lockGame(this, isLocked() || (getGameState().usesGameWorlds && !Settings.allowLateJoiners && !Settings.allowSpectators));*/
+		
+		miscRenderer.allowForChanges();
 	}
 	
 	Scoreboard setupScoreboard = null; Team setupTeam; Objective setupObjective;

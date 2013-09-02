@@ -101,11 +101,16 @@ public class GameInfoRenderer extends MapRenderer
 		else
 			ypos = drawText(canvas, font, xpos, ypos, "<world controlled by game mode>");
 		
-		ypos = 100;
+		ypos = 88; xpos = 12;
+		ypos = drawText(canvas, font, xpos, ypos, "Players:");
 		ypos = drawText(canvas, font, xpos, ypos, "Monsters:");
 		ypos = drawText(canvas, font, xpos, ypos, "Animals:");
 		
-		ypos = 100; xpos = 60;
+		ypos = 88; xpos = 66;
+		ypos = drawText(canvas, font, xpos, ypos, game.usesPlayerLimit()
+				? game.getPlayers().size() + " / " + game.getPlayerLimit()
+				: "" + game.getPlayers().size()
+			);
 		ypos = drawText(canvas, font, xpos, ypos, getQuantityText(game.monsterNumbers));
 		ypos = drawText(canvas, font, xpos, ypos, getQuantityText(game.animalNumbers));
 		player.sendMap(view);
