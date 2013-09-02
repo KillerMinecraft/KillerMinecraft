@@ -47,7 +47,7 @@ public class Game
 	
 	private Location startButton, joinButton, configButton;
 	private Location statusSign, startSign, joinSign, configSign, modeFrame, miscFrame;
-	private GameInfoRenderer modeRenderer, miscRenderer;
+	GameInfoRenderer modeRenderer, miscRenderer;
 	
 	void initButtons(Location join, Location config, Location start)
 	{
@@ -73,31 +73,12 @@ public class Game
 	void checkRenderer()
 	{
 		if ( modeRenderer == null && modeFrame != null )
-		{
 			modeRenderer = GameInfoRenderer.createForGame(this, modeFrame, true);
-			for ( Player player : plugin.stagingWorld.getPlayers() )
-				player.sendMap(modeRenderer.getView());
-		}
 		
 		if ( miscRenderer == null && miscFrame != null )
-		{
 			miscRenderer = GameInfoRenderer.createForGame(this, miscFrame, false);
-			for ( Player player : plugin.stagingWorld.getPlayers() )
-				player.sendMap(miscRenderer.getView());
-		}
 	}
 	
-	static void sendInfoMaps(Player player) 
-	{
-		for ( Game game : Killer.instance.games )
-		{
-			if ( game.modeRenderer != null )
-				player.sendMap(game.modeRenderer.getView());
-			if ( game.miscRenderer != null )
-				player.sendMap(game.miscRenderer.getView());
-		}
-	}
-
 	private static boolean isSign(Block b)
 	{
 		return b.getType() == Material.SIGN_POST || b.getType() == Material.WALL_SIGN;

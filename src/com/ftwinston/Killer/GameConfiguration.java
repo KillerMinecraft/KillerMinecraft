@@ -221,6 +221,7 @@ public class GameConfiguration
 			{
 				// change the game mode
 				game.setGameMode(GameMode.get(choice-1));
+				game.modeRenderer.allowForChanges();
 			}
 			
 			return back;
@@ -280,6 +281,7 @@ public class GameConfiguration
 			if ( choice > 0 && choice <= game.getGameMode().getNumOptions() )
 			{
 				game.getGameMode().toggleOption(choice-1);
+				game.modeRenderer.allowForChanges();
 				return this;
 			}
 			
@@ -326,6 +328,7 @@ public class GameConfiguration
 			{
 				// change the world option
 				game.setWorldOption(WorldOption.get(choice-1));
+				game.miscRenderer.allowForChanges();
 			}
 			
 			return back;
@@ -385,6 +388,7 @@ public class GameConfiguration
 			if ( choice > 0 && choice <= game.getWorldOption().getNumOptions() )
 			{
 				game.getWorldOption().toggleOption(choice-1);
+				game.miscRenderer.allowForChanges();
 				return this;
 			}
 			

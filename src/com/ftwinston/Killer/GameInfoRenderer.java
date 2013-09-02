@@ -1,6 +1,7 @@
 package com.ftwinston.Killer;
 
 import java.util.Collection;
+import java.util.HashMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -17,7 +18,7 @@ import org.bukkit.map.MinecraftFont;
 
 public class GameInfoRenderer extends MapRenderer
 {
-	public static GameInfoRenderer createForGame(Game game, Location loc, boolean gameModeOnly)
+	static GameInfoRenderer createForGame(Game game, Location loc, boolean gameModeOnly)
 	{
 		// first find an item frame at the listed location
 		ItemFrame frame = null;
@@ -54,27 +55,31 @@ public class GameInfoRenderer extends MapRenderer
 	
 	private Game game;
 	private MapView view;
-	private boolean forGameMode, hasChanges;
+	private boolean forGameMode;
 	private GameInfoRenderer(Game game, MapView view, boolean gameModeOnly)
 	{
 		this.game = game;
 		this.view = view;
 		this.forGameMode = gameModeOnly;
-		hasChanges = true;
+		playersDrawnFor = new HashMap<String, Boolean>();
 	}
+	
+	void allowForChanges() { playersDrawnFor.clear(); }
 	
 	MapView getView() { return view; }
 	
 	final int lineHeight = 12, separator = 8, canvasWidth = 128;
+	final byte background = MapPalette.TRANSPARENT;
+	HashMap<String, Boolean> playersDrawnFor;
 	
 	@Override
 	public void render(MapView view, MapCanvas canvas, Player player)
 	{
 		// called every tick for every player
 		// only redraw if we actually have changes!
-		if ( !hasChanges )
+		if ( playersDrawnFor.containsKey(player.getName()) )
 			return;
-		hasChanges = false;
+		playersDrawnFor.put(player.getName(), true);
 		
 		MapFont font = MinecraftFont.Font;
 		int xpos = 7, ypos = 6;
@@ -82,6 +87,7 @@ public class GameInfoRenderer extends MapRenderer
 		if ( forGameMode )
 		{
 			ypos = drawText(canvas, font, xpos, ypos, game.getGameMode().describe());
+			player.sendMap(view);
 			return;
 		}
 		
@@ -97,6 +103,7 @@ public class GameInfoRenderer extends MapRenderer
 		ypos = 100; xpos = 60;
 		ypos = drawText(canvas, font, xpos, ypos, getQuantityText(game.monsterNumbers));
 		ypos = drawText(canvas, font, xpos, ypos, getQuantityText(game.animalNumbers));
+		player.sendMap(view);
 	}
 
 	private int drawText(MapCanvas canvas, MapFont font, int xpos, int ypos, String text)
