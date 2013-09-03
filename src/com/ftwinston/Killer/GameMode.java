@@ -90,7 +90,6 @@ public abstract class GameMode extends KillerModule implements Listener
 
 	public abstract boolean isLocationProtected(Location l, Player p); // for protecting plinth, respawn points, etc.
 
-
 	public abstract boolean isAllowedToRespawn(Player player); // return false and player will become a spectator
 	
 	public abstract Location getSpawnLocation(Player player); // where should this player spawn?
@@ -99,13 +98,13 @@ public abstract class GameMode extends KillerModule implements Listener
 
 	protected abstract void gameFinished(); // clean up scheduled tasks, etc
 
-	public abstract boolean useDiscreetDeathMessages(); // should we tweak death messages to keep stuff secret?
+	public boolean useDiscreetDeathMessages() { return false; } // should we tweak death messages to keep stuff secret?
 
-	public abstract void playerJoined(Player player, boolean isNewPlayer);
+	public void playerJoined(Player player, boolean isNewPlayer) { };
 
-	public abstract void playerQuit(OfflinePlayer player);
+	public void playerQuit(OfflinePlayer player) { };
 
-	protected abstract Location getCompassTarget(Player player); // if compasses should follow someone / something, control that here
+	protected Location getCompassTarget(Player player) { return null; } // if compasses should follow someone / something, control that here
 	
 	// helper methods that exist to help out the game modes	
 	protected final List<Player> getOnlinePlayers()
