@@ -58,7 +58,7 @@ class PlayerManager
 		if ( game != null )
 		{
 			game.getGameMode().broadcastMessage(player.getName() + " quit the game");
-			game.updatePlayerCount();
+			game.removePlayerFromGame(player);
 		}
 		
 		playerKilled(game, player);
@@ -155,7 +155,7 @@ class PlayerManager
 		plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
 			@Override
 			public void run() {
-				game.getGameMode().playerKilledOrQuit(player);
+				game.getGameMode().playerQuit(player);
 			}
 		}, 15); // game mode doesn't respond for short period, so as to be able to account for other deaths happening simultaneously (e.g. caused by the same explosion)
 		

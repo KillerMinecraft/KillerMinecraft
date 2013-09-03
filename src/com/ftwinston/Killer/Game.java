@@ -21,10 +21,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Recipe;
-import org.bukkit.scoreboard.DisplaySlot;
-import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.scoreboard.Team;
 
 import com.ftwinston.Killer.PlayerManager.Info;
 
@@ -371,20 +368,21 @@ public class Game
 		else
 			isNewPlayer = false;
 
-		Scoreboard sb = getSetupScoreboard();
-		player.setScoreboard(sb);
 		player.sendMessage("You have joined " + getName());
-
-		updatePlayerCount();
+		getGameMode().playerJoined(player, isNewPlayer);
+		miscRenderer.allowForChanges();
 		
 		if ( !getGameState().usesGameWorlds )
+		{
+			if ( getGameMode().shouldShowScoreboardBeforeStarting() )		
+				player.setScoreboard(scoreboard);
 			return;
-
+		}
+		player.setScoreboard(scoreboard);
+		
 		// hide all spectators from this player
 		for ( Player spectator : getOnlinePlayers(new PlayerFilter().notAlive().exclude(player)) )
 			PlayerManager.instance.hidePlayer(player, spectator);
-
-		getGameMode().playerJoinedLate(player, isNewPlayer);
 		
 		if ( !info.isAlive() )
 		{
@@ -414,75 +412,18 @@ public class Game
 	public void removePlayerFromGame(OfflinePlayer player)
 	{
 		getPlayerInfo().remove(player.getName());
-		
-		updatePlayerCount();
-		
+				
 		if ( player.isOnline() )
 		{
 			Player online = (Player)player;
-			online.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+			if ( getGameState().usesGameWorlds || getGameMode().shouldShowScoreboardBeforeStarting() )
+				online.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
 			online.sendMessage("You have left " + getName());
 		}
-	}
-	
-	void updatePlayerCount()
-	{
-		if ( !getGameState().usesGameWorlds && setupObjective != null )
-		{
-			setupObjective.getScore(plugin.getServer().getOfflinePlayer("# players")).setScore(getPlayerInfo().size());
-		}
-		
-		/*
-		int numPlayers = getOnlinePlayers().size(), numTotal = numPlayers + getOfflinePlayers().size();
-		int buttonY = StagingWorldGenerator.getButtonY(getNumber());
-		Block b = plugin.stagingWorld.getBlockAt(StagingWorldGenerator.mainButtonX, buttonY, StagingWorldGenerator.playerLimitZ);
-
-		if ( usesPlayerLimit() )
-		{
-			if ( getPlayerLimit() == 0 )
-			{
-				setPlayerLimit(Math.max(numPlayers, 2));
-				setLocked(numPlayers >= 2 && !getGameState().usesGameWorlds);
-			}
-			else if ( numPlayers == 0 && !getGameState().usesGameWorlds )
-			{
-				setUsesPlayerLimit(false);
-				setLocked(false);
-
-				// reset the switch
-				Block lever = b.getRelative(1, 0, 0);
-				lever.setData((byte)0x4);
-			}
-			else
-			{
-				setLocked(numTotal >= getPlayerLimit() && !getGameState().usesGameWorlds);
-			}
-		}
-		else
-			setLocked(false);
-
-		updateSigns(GameSign.PLAYER_LIMIT);
-
-		lockGame(this, isLocked() || (getGameState().usesGameWorlds && !Settings.allowLateJoiners && !Settings.allowSpectators));*/
-		
+		getGameMode().playerQuit(player);
 		miscRenderer.allowForChanges();
 	}
-	
-	Scoreboard setupScoreboard = null; Team setupTeam; Objective setupObjective;
-	public Scoreboard getSetupScoreboard()
-	{
-		if ( setupScoreboard == null )
-		{
-			 setupScoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-			 setupObjective = setupScoreboard.registerNewObjective("setup", "dummy");
-			 setupObjective.setDisplayName(getName());
-			 setupObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
-			 setupTeam = setupScoreboard.registerNewTeam("all");
-			 setupTeam.setDisplayName("# players");
-		}
-		return setupScoreboard;
-	}
-	
+
 	public void configPressed(Player player) {
 		if ( !isPlayerInGame(player) )
 		{
@@ -539,11 +480,13 @@ public class Game
 
 	private GameMode gameMode = null;
 	GameMode getGameMode() { return gameMode; }
+	Scoreboard scoreboard;
 	void setGameMode(GameModePlugin plugin)
 	{
 		GameMode mode = plugin.createInstance();
 		mode.initialize(this, plugin);
 		gameMode = mode;
+		scoreboard = mode.createScoreboard();
 	}
 	
 	private WorldOption worldOption = null;
@@ -775,7 +718,8 @@ public class Game
 				{
 					PlayerManager.instance.saveInventory(player);
 					PlayerManager.instance.resetPlayer(this, player);
-					player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard()); // remove the game scoreboard, for now.
+					if ( !getGameMode().shouldShowScoreboardBeforeStarting() ) // if not already showing the scoreboard		
+						player.setScoreboard(scoreboard);
 					PlayerManager.instance.teleport(player, getGameMode().getSpawnLocation(player));	
 				} 
 				

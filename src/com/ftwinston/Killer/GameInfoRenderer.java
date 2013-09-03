@@ -99,7 +99,7 @@ public class GameInfoRenderer extends MapRenderer
 		if ( game.getGameMode().allowWorldOptionSelection() )
 			ypos = drawText(canvas, font, xpos, ypos, game.getWorldOption().describe());
 		else
-			ypos = drawText(canvas, font, xpos, ypos, "<world controlled by game mode>");
+			ypos = drawText(canvas, font, xpos, ypos, "Using a world specified by the game mode");
 		
 		ypos = 88; xpos = 12;
 		ypos = drawText(canvas, font, xpos, ypos, "Players:");

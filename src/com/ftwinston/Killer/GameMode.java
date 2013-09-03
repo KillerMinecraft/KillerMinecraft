@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -16,6 +17,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.scoreboard.Scoreboard;
 
 import com.ftwinston.Killer.Game.GameState;
 
@@ -35,6 +37,9 @@ public abstract class GameMode extends KillerModule implements Listener
 	}
 
 	protected final Random random = new Random();
+	
+	public Scoreboard createScoreboard() { return Bukkit.getScoreboardManager().getMainScoreboard(); }
+	public boolean shouldShowScoreboardBeforeStarting() { return true; }
 	
 	// methods to be overridden by each game mode
 	public abstract int getMinPlayers();
@@ -96,9 +101,9 @@ public abstract class GameMode extends KillerModule implements Listener
 
 	public abstract boolean useDiscreetDeathMessages(); // should we tweak death messages to keep stuff secret?
 
-	public abstract void playerJoinedLate(Player player, boolean isNewPlayer);
+	public abstract void playerJoined(Player player, boolean isNewPlayer);
 
-	public abstract void playerKilledOrQuit(OfflinePlayer player);
+	public abstract void playerQuit(OfflinePlayer player);
 
 	protected abstract Location getCompassTarget(Player player); // if compasses should follow someone / something, control that here
 	

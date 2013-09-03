@@ -200,15 +200,12 @@ class EventListener implements Listener
 		if ( toWorld == plugin.stagingWorld )
 			PlayerManager.instance.putPlayerInStagingWorld(event.getPlayer());
 		
-		if ( event.getFrom() == plugin.stagingWorld )
+		if ( event.getFrom() == plugin.stagingWorld && !nowInGame )
 		{
-			// remove them from every game that is currently in setup, in case they teleported out of its setup room
-			for ( int i=0; i<plugin.games.length; i++ )
-				if ( !plugin.games[i].getGameState().usesGameWorlds )
-				{
-					plugin.games[i].getPlayerInfo().remove(event.getPlayer().getName());
-					plugin.games[i].updatePlayerCount();
-				}
+			// if you leave the staging world, you leave any game you were in ... unless you are entering a game world
+			Game game = plugin.getGameForPlayer(event.getPlayer());
+			if ( game != null )
+				game.removePlayerFromGame(event.getPlayer());
 		}
 	}
 	
@@ -707,7 +704,7 @@ class EventListener implements Listener
 		{
 			Game game = plugin.getGameForPlayer(event.getPlayer());
 			if ( game != null )
-				game.updatePlayerCount();
+				game.removePlayerFromGame(event.getPlayer());
 		}
 		else
 		{
@@ -719,7 +716,7 @@ class EventListener implements Listener
 	
 	private void playerQuit(Game game, Player player, boolean actuallyLeftServer)
 	{
-		game.updatePlayerCount();
+		game.removePlayerFromGame(player);
 		if ( actuallyLeftServer ) // the quit message should be sent to the scoreboard of anyone who this player was invisible to
 			for ( Player online : game.getOnlinePlayers() )
 				if ( !online.canSee(player) )
