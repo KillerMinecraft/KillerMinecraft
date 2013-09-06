@@ -9,11 +9,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
-import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -34,8 +32,8 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
-import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -477,22 +475,6 @@ class EventListener implements Listener
 					spectator.teleport(spectator.getLocation().add(0, 3, 0)); // just teleport them upwards, out of the way of this block place
 			}
 		}
-		
-		// eyes of ender can be made to seek out nether fortresses
-		if ( game.isEnderEyeRecipeEnabled() && event.getPlayer().getWorld().getEnvironment() == Environment.NETHER && event.getPlayer().getItemInHand() != null && event.getPlayer().getItemInHand().getType() == Material.EYE_OF_ENDER && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) )
-		{
-			Location target = plugin.craftBukkit.findNearestNetherFortress(event.getPlayer().getLocation());
-			if ( target == null )
-				event.getPlayer().sendMessage("No nether fortresses nearby");
-			else
-			{
-				plugin.craftBukkit.createFlyingEnderEye(event.getPlayer(), target);
-				event.getPlayer().getItemInHand().setAmount(event.getPlayer().getItemInHand().getAmount() - 1);				
-			}
-			
-			event.setCancelled(true);
-			return;
-		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -559,25 +541,9 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onCraftItem(CraftItemEvent event)
+	public void onPrepareCraftItem(PrepareItemCraftEvent event)
 	{
-		Game game = plugin.getGameForWorld(event.getWhoClicked().getWorld());
-		if ( game == null )
-		{// killer recipes can only be crafter in killer worlds, or we could screw up the rest of the server
-			if ( plugin.isDispenserRecipe(event.getRecipe()) || plugin.isEnderEyeRecipe(event.getRecipe()) || plugin.isMonsterEggRecipe(event.getRecipe()) )
-	   			event.setCancelled(true);
-		}
-		else
-		{
-			if ( !game.isDispenserRecipeEnabled() && plugin.isDispenserRecipe(event.getRecipe()) )
-				event.setCancelled(true);
-			else if ( !game.isEnderEyeRecipeEnabled() && plugin.isEnderEyeRecipe(event.getRecipe()) )
-				event.setCancelled(true);
-			else if ( !game.isMonsterEggRecipeEnabled() && plugin.isMonsterEggRecipe(event.getRecipe()) )
-				event.setCancelled(true);
-			else
-				event.setResult(Result.DEFAULT); // otherwise, allow all crafting ... setCancelled(false) cancels it!
-		}
+		plugin.recipeManager.handleCraftEvent(event);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)

@@ -724,7 +724,6 @@ public class Game
 				} 
 				
 				plugin.statsManager.gameStarted(number, players.size());
-				
 				getGameMode().startGame(!prevState.usesGameWorlds);
 				break;
 			}
@@ -760,52 +759,6 @@ public class Game
         		return;
         	}
 	}
-	
-	boolean isDispenserRecipeEnabled() { return dispenserRecipeEnabled; }
-	
-	private boolean enderEyeRecipeEnabled = true;
-	void toggleEnderEyeRecipe()
-	{
-		enderEyeRecipeEnabled = !enderEyeRecipeEnabled;
-		
-		if ( enderEyeRecipeEnabled )
-		{
-			plugin.getServer().addRecipe(plugin.enderRecipe);
-			return;
-		}
-		
-		Iterator<Recipe> iterator = plugin.getServer().recipeIterator();
-        while (iterator.hasNext())
-        	if ( plugin.isEnderEyeRecipe(iterator.next()) )
-        	{
-        		iterator.remove();
-        		return;
-        	}
-	}
-	
-	boolean isEnderEyeRecipeEnabled() { return enderEyeRecipeEnabled; }
-
-	private boolean monsterEggsEnabled = true;
-	void toggleMonsterEggRecipes()
-	{
-		monsterEggsEnabled = !monsterEggsEnabled;
-		
-		if ( monsterEggsEnabled )
-		{
-			for ( Recipe recipe : plugin.monsterRecipes )
-				plugin.getServer().addRecipe(recipe);
-			return;
-		}
-		
-		Iterator<Recipe> iterator = plugin.getServer().recipeIterator();
-		while (iterator.hasNext())
-        {
-			if ( plugin.isMonsterEggRecipe(iterator.next()) )
-            	iterator.remove();
-    	}
-	}
-	
-	boolean isMonsterEggRecipeEnabled() { return monsterEggsEnabled; }
 	
 	private int playerLimit = 0;
 	private boolean hasPlayerLimit = false, locked = false;

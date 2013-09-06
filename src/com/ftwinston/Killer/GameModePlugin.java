@@ -1,14 +1,23 @@
 package com.ftwinston.Killer;
 
+import java.util.ArrayList;
+
+import org.bukkit.inventory.Recipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public abstract class GameModePlugin extends JavaPlugin
 {
+	public void onEnable()
+	{
+		Killer.registerGameMode(this);
+	}
+	
 	public abstract GameMode createInstance();
-	public abstract String[] getSignDescription();
 	
 	final void initialize(Killer plugin)
 	{	
+		plugin.recipeManager.registerCustomRecipes(createCustomRecipes(), this);
+		
 		// keep the game modes in alphabetic order
 		String name = getName();
 		for ( int i=0; i<GameMode.gameModes.size(); i++ )
@@ -19,4 +28,6 @@ public abstract class GameModePlugin extends JavaPlugin
 			}
 		GameMode.gameModes.add(this);
 	}
+	
+	protected ArrayList<Recipe> createCustomRecipes() { return null; }
 }

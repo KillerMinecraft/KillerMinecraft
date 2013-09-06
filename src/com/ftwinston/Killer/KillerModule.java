@@ -5,7 +5,7 @@ import org.bukkit.scheduler.BukkitScheduler;
 
 public abstract class KillerModule
 {
-	Killer plugin;
+	Killer plugin; JavaPlugin modulePlugin;
 	protected final JavaPlugin getPlugin() { return plugin; }
 	
 	protected final BukkitScheduler getScheduler() { return plugin.getServer().getScheduler(); }
@@ -25,6 +25,7 @@ public abstract class KillerModule
 	{
 		this.game = game;
 		plugin = game.plugin;
+		modulePlugin = myPlugin;
 		name = myPlugin.getName();
 		options = setupOptions();
 	}

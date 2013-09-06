@@ -19,7 +19,6 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.ItemStack;
@@ -41,12 +40,18 @@ public class Killer extends JavaPlugin
 	private EventListener eventListener = new EventListener(this);
 	WorldManager worldManager;
 	PlayerManager playerManager;
+	RecipeManager recipeManager;
 	VoteManager voteManager;
 	StatsManager statsManager;
 	Game[] games;
 
 	World stagingWorld;
 	int stagingWorldUpdateProcess = -1;
+	
+	public static CraftBukkitAccess craftBukkitHelper()
+	{
+		return instance.craftBukkit;
+	}
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
@@ -66,11 +71,10 @@ public class Killer extends JavaPlugin
         Settings.setup(this);
         
         GameConfiguration.instance = new GameConfiguration();
-        playerManager = new PlayerManager(this);
         worldManager = new WorldManager(this);
+        playerManager = new PlayerManager(this);
+        recipeManager = new RecipeManager();
         voteManager = new VoteManager(this);
-        
-		createRecipes(); // should be in all-vs-one game mode plugin
 
         if ( Settings.nothingButKiller )
         	worldManager.hijackDefaultWorld(Settings.stagingWorldName);
@@ -166,12 +170,12 @@ public class Killer extends JavaPlugin
         statsManager = null;
 	}
 	
-	public static void registerGameMode(GameModePlugin plugin)
+	static void registerGameMode(GameModePlugin plugin)
 	{
 		plugin.initialize(instance);
 	}
 	
-	public static void registerWorldOption(WorldOptionPlugin plugin)
+	static void registerWorldOption(WorldOptionPlugin plugin)
 	{
 		plugin.initialize(instance);
 	}
@@ -196,6 +200,8 @@ public class Killer extends JavaPlugin
 	
 	boolean isEnderEyeRecipe(Recipe recipe)
 	{
+		return recipe == enderRecipe; // any reason not to do this? 
+		/*
 		if ( recipe.getResult().getType() != enderRecipe.getResult().getType() || !(recipe instanceof ShapelessRecipe) )
     		return false;
     	
@@ -205,69 +211,12 @@ public class Killer extends JavaPlugin
     		if ( ingredient.getType() == Material.SPIDER_EYE )
     			return true;
     			
-    	return false;
+    	return false;*/
 	}
 	
 	boolean isMonsterEggRecipe(Recipe recipe)
 	{
 		return recipe.getResult().getType() == Material.MONSTER_EGG;
-	}
-	
-	private void createRecipes()
-	{
-		// add "simplified" dispenser recipe: replace bow with sapling (of any sort) 
-		dispenserRecipe = new ShapedRecipe(new ItemStack(Material.DISPENSER, 1));
-		dispenserRecipe.shape(new String[] { "AAA", "ABA", "ACA" });
-		dispenserRecipe.setIngredient('A', Material.COBBLESTONE);
-		dispenserRecipe.setIngredient('B', Material.SAPLING);
-		dispenserRecipe.setIngredient('C', Material.REDSTONE);
-		getServer().addRecipe(dispenserRecipe);
-		
-		// eye of ender recipe for use in finding nether fortresses. Replacing blaze powder with spider eye!
-		enderRecipe = new ShapelessRecipe(new ItemStack(Material.EYE_OF_ENDER, 1));
-		enderRecipe.addIngredient(Material.ENDER_PEARL);
-		enderRecipe.addIngredient(Material.SPIDER_EYE);
-		getServer().addRecipe(enderRecipe);
-		
-		ItemStack stack = new ItemStack(Material.MONSTER_EGG, 1);
-		stack.getData().setData((byte)EntityType.SPIDER.getTypeId());
-		ShapelessRecipe recipe = new ShapelessRecipe(stack);
-		recipe.addIngredient(Material.STRING);
-		recipe.addIngredient(Material.IRON_INGOT);
-		getServer().addRecipe(recipe);
-		monsterRecipes.add(recipe);
-		
-		stack = new ItemStack(Material.MONSTER_EGG, 1);
-		stack.getData().setData((byte)EntityType.ZOMBIE.getTypeId());
-		recipe = new ShapelessRecipe(stack);
-		recipe.addIngredient(Material.ROTTEN_FLESH);
-		recipe.addIngredient(Material.IRON_INGOT);
-		getServer().addRecipe(recipe);
-		monsterRecipes.add(recipe);
-		
-		stack = new ItemStack(Material.MONSTER_EGG, 1);
-		stack.getData().setData((byte)EntityType.CREEPER.getTypeId());
-		recipe = new ShapelessRecipe(stack);
-		recipe.addIngredient(Material.SULPHUR);
-		recipe.addIngredient(Material.IRON_INGOT);
-		getServer().addRecipe(recipe);
-		monsterRecipes.add(recipe);
-		
-		stack = new ItemStack(Material.MONSTER_EGG, 1);
-		stack.getData().setData((byte)EntityType.SKELETON.getTypeId());
-		recipe = new ShapelessRecipe(stack);
-		recipe.addIngredient(Material.BONE);
-		recipe.addIngredient(Material.IRON_INGOT);
-		getServer().addRecipe(recipe);
-		monsterRecipes.add(recipe);
-		
-		stack = new ItemStack(Material.MONSTER_EGG, 1);
-		stack.getData().setData((byte)EntityType.SLIME.getTypeId());
-		recipe = new ShapelessRecipe(stack);
-		recipe.addIngredient(Material.SLIME_BALL);
-		recipe.addIngredient(Material.IRON_INGOT);
-		getServer().addRecipe(recipe);
-		monsterRecipes.add(recipe);
 	}
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)

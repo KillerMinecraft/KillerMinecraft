@@ -41,7 +41,6 @@ public abstract class GameMode extends KillerModule implements Listener
 	public Scoreboard createScoreboard() { return Bukkit.getScoreboardManager().getMainScoreboard(); }
 	public boolean shouldShowScoreboardBeforeStarting() { return true; }
 	
-	// methods to be overridden by each game mode
 	public abstract int getMinPlayers();
 
 	public boolean allowWorldOptionSelection() { return true; }
@@ -103,7 +102,7 @@ public abstract class GameMode extends KillerModule implements Listener
 	public void playerJoined(Player player, boolean isNewPlayer) { };
 
 	public void playerQuit(OfflinePlayer player) { };
-
+	
 	protected Location getCompassTarget(Player player) { return null; } // if compasses should follow someone / something, control that here
 	
 	// helper methods that exist to help out the game modes	
@@ -328,10 +327,8 @@ public abstract class GameMode extends KillerModule implements Listener
 		
 		helper.setupScaledDestination(toWorld, entrance, blockRatio);
 	}
-	
-	// methods to be used by external code for accessing the game modes, rather than going directly into the mode-specific functions
-	
-	public final void startGame(boolean isNewWorlds)
+
+	final void startGame(boolean isNewWorlds)
 	{	
 		game.forcedGameEnd = false;
 		plugin.playerManager.startGame(game);
@@ -366,13 +363,13 @@ public abstract class GameMode extends KillerModule implements Listener
 		}
 	}
 	
-	public final void sendGameModeHelpMessage()
+	final void sendGameModeHelpMessage()
 	{
 		for ( Player player : getOnlinePlayers() )
 			sendGameModeHelpMessage(player);
 	}
 	
-	public final boolean sendGameModeHelpMessage(Player player)
+	final boolean sendGameModeHelpMessage(Player player)
 	{
 		PlayerManager.Info info = game.getPlayerInfo().get(player.getName());
 		String message = null;

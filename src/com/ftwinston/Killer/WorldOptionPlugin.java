@@ -4,6 +4,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public abstract class WorldOptionPlugin extends JavaPlugin
 {
+	public void onEnable()
+	{
+		Killer.registerWorldOption(this);
+	}
+	
 	public abstract WorldOption createInstance();
 	
 	final void initialize(Killer plugin)
