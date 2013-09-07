@@ -58,21 +58,22 @@ class RecipeManager
 		StringBuilder sb = new StringBuilder();
 		if ( recipe instanceof ShapedRecipe )
 		{
+			sb.append('1');
 			ShapedRecipe sr = (ShapedRecipe)recipe;
+			Map<Character, ItemStack> ingredients = sr.getIngredientMap();
 			for ( String s : sr.getShape() )
 			{
+				for ( int i=0 ; i<s.length(); i++ )
+				{
+					sb.append(';');
+					sb.append(ingredients.get(new Character(s.charAt(i))).hashCode());
+				}
 				sb.append(';');
-				sb.append(s);
-			}
-			for ( Map.Entry<Character, ItemStack> entry : sr.getIngredientMap().entrySet() )
-			{
-				sb.append(';');
-				sb.append(entry.getKey());
-				sb.append(entry.getValue().hashCode());
 			}
 		}
 		else if ( recipe instanceof ShapelessRecipe )
 		{
+			sb.append('0');
 			ShapelessRecipe sr = (ShapelessRecipe)recipe;
 			for ( ItemStack ingredient : sr.getIngredientList() )
 			{
@@ -167,7 +168,8 @@ class RecipeManager
 	
 	private boolean canCraft(CraftingInventory inventory, ShapedRecipe recipe, int xOffset, int yOffset, boolean flag)
 	{
-		ItemStack[] items = (ItemStack[])recipe.getIngredientMap().values().toArray();
+		ItemStack[] items = new ItemStack[0];
+		items = (ItemStack[])recipe.getIngredientMap().values().toArray(items);
 		
 		int width = recipe.getShape()[0].length(), height = recipe.getShape().length;
         for (int x = 0; x < 3; ++x) {
