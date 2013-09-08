@@ -137,15 +137,14 @@ class RecipeManager
 				inventory.setResult(other.getResult());
 				return;
 			}
-		
 	}
 	
 	private boolean canCraft(CraftingInventory inventory, Recipe recipe)
 	{
 		if ( recipe instanceof ShapedRecipe )
-			return canCraft(inventory, (ShapedRecipe)recipe);
+			return canCraftShaped(inventory, (ShapedRecipe)recipe);
 		else if ( recipe instanceof ShapelessRecipe )
-			return canCraft(inventory, (ShapelessRecipe)recipe);
+			return canCraftShapeless(inventory, (ShapelessRecipe)recipe);
 		else
 			return false;
 	}
@@ -153,62 +152,64 @@ class RecipeManager
 	// what follows is a reproduction of net.minecraft.server.ShapedRecipes.a(InventoryCrafting, World) and net.minecraft.server.ShapelessRecipes.a(InventoryCrafting, World).
 	// ...because to actually create the relevant stuff to call those manually would be longer, believe it or not.
 	
-	private boolean canCraft(CraftingInventory inventory, ShapedRecipe recipe)
+	
+	private boolean canCraftShaped(CraftingInventory inventory, ShapedRecipe recipe)
 	{
-		int width = recipe.getShape()[0].length(), height = recipe.getShape().length;
-		for (int xOffset = 0; xOffset <= 3 - width; ++xOffset) {
-            for (int yOffset = 0; yOffset <= 3 - height; ++yOffset) {
-                if (canCraft(inventory, recipe, xOffset, yOffset, true)
-                 || canCraft(inventory, recipe, xOffset, yOffset, false))
-                	return true;
-            }
-        }
+		String[] shape = recipe.getShape();
+		int recipeWidth = shape[0].length(), recipeHeight = shape.length;
+		for ( int i=1; i<recipeHeight; i++ )
+			recipeWidth = Math.max(recipeWidth, shape[i].length());
+		Map<Character, ItemStack> ingredientMap = recipe.getIngredientMap();
+		
+		ItemStack[] inputItems = inventory.getMatrix();
+		int inventoryWidth = inputItems.length < 9 ? 2 : 3, inventoryHeight = inventoryWidth; // assume the inventory is always 2x2 or 3x3
+		
+		int xOffsetRange = inventoryWidth - recipeWidth, yOffsetRange = inventoryHeight - recipeHeight; 
+		
+		for ( int xOffset = 0; xOffset <= xOffsetRange; xOffset ++ )
+			for ( int yOffset = 0; yOffset <= yOffsetRange; yOffset ++ )
+				if ( canCraftShaped(recipeWidth, recipeHeight, inventoryWidth, inventoryHeight, xOffset, yOffset, inputItems, ingredientMap, shape, false)
+					|| canCraftShaped(recipeWidth, recipeHeight, inventoryWidth, inventoryHeight, xOffset, yOffset, inputItems, ingredientMap, shape, true))
+					return true;
+		
+		return false;
+	}
 
-        return false;
+	private boolean canCraftShaped(int recipeWidth, int recipeHeight, int inventoryWidth, int inventoryHeight, int xOffset, int yOffset, ItemStack[] inputItems, Map<Character, ItemStack> ingredientMap, String[] shape, boolean mirror)
+	{
+		for ( int x = 0; x<inventoryWidth; x++ )
+			for ( int y = 0; y<inventoryHeight; y++ )
+			{
+				int recipeX = x - xOffset, recipeY = y - yOffset;
+				ItemStack inventoryItem = inputItems[x + y*inventoryWidth];
+				if ( recipeX < 0 || recipeX >= recipeWidth || recipeY < 0 || recipeY >= recipeHeight )
+				{
+					if ( inventoryItem != null && inventoryItem.getType() != Material.AIR )
+						return false;
+					continue;
+				}
+				
+                ItemStack recipeItem = ingredientMap.get(mirror
+                		? shape[recipeY].charAt(recipeWidth-recipeX-1)
+                		: shape[recipeY].charAt(recipeX));
+                
+                if (inventoryItem != null || recipeItem != null) {
+                    if ((inventoryItem == null && recipeItem != null) || (inventoryItem != null && recipeItem == null))
+                        return false;
+
+                    if (recipeItem.getType() != inventoryItem.getType())
+                        return false;
+
+                    if (recipeItem.getDurability() != 32767 && recipeItem.getDurability() != inventoryItem.getDurability())
+                        return false;
+                }
+			}
+		
+		return true;
 	}
 	
-	private boolean canCraft(CraftingInventory inventory, ShapedRecipe recipe, int xOffset, int yOffset, boolean flag)
-	{
-		ItemStack[] items = new ItemStack[0];
-		items = (ItemStack[])recipe.getIngredientMap().values().toArray(items);
-		
-		int width = recipe.getShape()[0].length(), height = recipe.getShape().length;
-        for (int x = 0; x < 3; ++x) {
-            for (int y = 0; y < 3; ++y) {
-                int x1 = x - xOffset;
-                int y1 = y - yOffset;
-                ItemStack itemstack = null;
-
-                if (x1 >= 0 && y1 >= 0 && x1 < width && y1 < height) {
-                    if (flag) {
-                        itemstack = items[width - x1 - 1 + y1 * width];
-                    } else {
-                        itemstack = items[x1 + y1 * width];
-                    }
-                }
-
-                ItemStack itemstack1 = inventory.getItem(x + y * 3);
-
-                if (itemstack1 != null || itemstack != null) {
-                    if (itemstack1 == null && itemstack != null || itemstack1 != null && itemstack == null) {
-                        return false;
-                    }
-
-                    if (itemstack.getType() != itemstack1.getType()) {
-                        return false;
-                    }
-
-                    if (itemstack.getDurability() != 32767 && itemstack.getDurability() != itemstack1.getDurability()) {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
 	
-	public boolean canCraft(CraftingInventory inventory, ShapelessRecipe recipe)
+	public boolean canCraftShapeless(CraftingInventory inventory, ShapelessRecipe recipe)
 	{
         List<ItemStack> ingredients = recipe.getIngredientList();
         for (int i = 0; i < inventory.getSize(); ++i)
