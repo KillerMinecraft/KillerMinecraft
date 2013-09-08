@@ -49,42 +49,6 @@ public abstract class GameMode extends KillerModule implements Listener
 
 	public abstract String getHelpMessage(int messageNum, int teamNum);
 	
-	private String getExtraHelpMessage(int messageNum)
-	{
-		boolean usesNether = false;
-		for ( Environment env : getWorldsToGenerate() )
-			if ( env == Environment.NETHER )
-			{
-				usesNether = true;
-				break;
-			}
-	
-		boolean use1 = usesNether && game.isEnderEyeRecipeEnabled();
-		boolean use2 = game.isMonsterEggRecipeEnabled();
-		boolean use3 = game.isDispenserRecipeEnabled();
-		
-		if ( !use1 )
-			messageNum --;
-		
-		if ( messageNum < -1 && !use2 )
-			messageNum --;
-		
-		if ( messageNum < -2 && !use3 )
-			messageNum --;
-			
-		switch ( messageNum )
-		{
-			case -1:
-				return "Eyes of ender will help you find nether fortresses (to get blaze rods).\nThey can be crafted from an ender pearl and a spider eye.";
-			case -2:
-				return "Several monster eggs can be crafted by combining one of their dropped items with an iron ingot.";
-			case -3:
-				return "Dispensers can be crafted using a sapling instead of a bow. These work well with monster eggs.";
-			default:
-				return null;
-		}
-	}
-
 	public abstract boolean teamAllocationIsSecret();
 
 	public abstract boolean isLocationProtected(Location l, Player p); // for protecting plinth, respawn points, etc.
@@ -377,9 +341,7 @@ public abstract class GameMode extends KillerModule implements Listener
 		if ( info.nextHelpMessage >= 0 )
 		{
 			message = getHelpMessage(info.nextHelpMessage, info.getTeam()); // 0 ... n
-			if ( message == null )
-				info.nextHelpMessage = -1;
-			else
+			if ( message != null )
 			{
 				if ( info.nextHelpMessage == 0 )
 					message = ChatColor.YELLOW + getName() + ChatColor.RESET + "\n" + message; // put the game mode name on the front of the first message
@@ -389,14 +351,7 @@ public abstract class GameMode extends KillerModule implements Listener
 				return true;
 			}
 		}
-		
-		message = getExtraHelpMessage(info.nextHelpMessage); // -1 ... -m
-		if ( message == null )
-			return false;
-		
-		player.sendMessage(message);
-		info.nextHelpMessage --;
-		return true;
+		return false;
 	}
 	
 	// allows game modes to determine if an event is in their game world
