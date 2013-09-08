@@ -127,16 +127,17 @@ class RecipeManager
 			inventory.setResult(null);
 			return;
 		}
-				
+
+		// for the sake of the "canCraft" checks looking through the inventory, we set the result to null now.
+		inventory.setResult(null);
+		
 		for ( Recipe other : pluginRecipes )
 			if ( canCraft(inventory, other) )
 			{
-				// this doesn't account for the if the "new" recipe uses fewer items than the current one
 				inventory.setResult(other.getResult());
 				return;
 			}
 		
-		inventory.setResult(null);
 	}
 	
 	private boolean canCraft(CraftingInventory inventory, Recipe recipe)
@@ -210,31 +211,30 @@ class RecipeManager
 	public boolean canCraft(CraftingInventory inventory, ShapelessRecipe recipe)
 	{
         List<ItemStack> ingredients = recipe.getIngredientList();
-
         for (int i = 0; i < inventory.getSize(); ++i)
         {
             ItemStack itemstack = inventory.getItem(i);
 
-            if (itemstack != null) {
-                boolean flag = false;
-                Iterator<ItemStack> iterator = ingredients.iterator();
+            if (itemstack == null)
+            	continue;
+            
+            boolean flag = false;
+            Iterator<ItemStack> iterator = ingredients.iterator();
 
-                while (iterator.hasNext()) {
-                    ItemStack itemstack1 = iterator.next();
+            while (iterator.hasNext()) {
+                ItemStack itemstack1 = iterator.next();
 
-                    if (itemstack.getType() == itemstack1.getType() && (itemstack1.getDurability() == 32767 || itemstack.getDurability() == itemstack1.getDurability())) {
-                        flag = true;
-                        ingredients.remove(itemstack1);
-                        break;
-                    }
-                }
-
-                if (!flag) {
-                    return false;
+                if (itemstack.getType() == itemstack1.getType() && (itemstack1.getDurability() == 32767 || itemstack.getDurability() == itemstack1.getDurability())) {
+                    flag = true;
+                    ingredients.remove(itemstack1);
+                    break;
                 }
             }
-        }
 
+            if (!flag)
+                return false;
+        }
+        
         return ingredients.isEmpty();
     }
 }
