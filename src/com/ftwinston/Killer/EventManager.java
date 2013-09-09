@@ -56,11 +56,11 @@ import org.bukkit.plugin.RegisteredListener;
 import com.ftwinston.Killer.Game.GameState;
 import com.ftwinston.Killer.PlayerManager.Info;
 
-class EventListener implements Listener
+class EventManager implements Listener
 {
 	Killer plugin;
 	
-	public EventListener(Killer instance)
+	public EventManager(Killer instance)
 	{
 		plugin = instance;
 		eventHandlersByModule = new HashMap<KillerModule, Map<Class<? extends Event>, Set<RegisteredListener>>>();

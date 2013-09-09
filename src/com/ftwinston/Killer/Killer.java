@@ -37,7 +37,7 @@ public class Killer extends JavaPlugin
 
 	boolean stagingWorldIsServerDefault;
 	
-	EventListener eventListener = new EventListener(this);
+	EventManager eventListener = new EventManager(this);
 	WorldManager worldManager;
 	PlayerManager playerManager;
 	RecipeManager recipeManager;
