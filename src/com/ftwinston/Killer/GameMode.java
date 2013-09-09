@@ -12,8 +12,6 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.scoreboard.Scoreboard;
@@ -351,29 +349,5 @@ public abstract class GameMode extends KillerModule
 			}
 		}
 		return false;
-	}
-	
-	// allows game modes to determine if an event is in their game world
-	protected final boolean shouldIgnoreEvent(Entity e)
-	{
-		return plugin.getGameForWorld(e.getWorld()) != game;
-	}
-	
-	// allows events to determine if an event is in their game world
-	protected final boolean shouldIgnoreEvent(Block b)
-	{
-		return plugin.getGameForWorld(b.getWorld()) != game;
-	}
-	
-	// allows events to determine if an event is in their game world
-	protected final boolean shouldIgnoreEvent(World w)
-	{
-		return plugin.getGameForWorld(w) != game;
-	}
-	
-	// allows events to determine if an event is in their game world
-	protected final boolean shouldIgnoreEvent(Location l)
-	{
-		return plugin.getGameForWorld(l.getWorld()) != game;
 	}
 }
