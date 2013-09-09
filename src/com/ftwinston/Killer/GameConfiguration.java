@@ -40,14 +40,14 @@ public class GameConfiguration
 			return;
 		}
 		
-		game.setConfiguringPlayer(player.getName());
-		
 		configConvFactory.withFirstPrompt(new MainPrompt(game));
         configConvFactory.withConversationCanceller(new InactivityCanceller(game, 30));
         configConvFactory.addConversationAbandonedListener(new AbandonedListener(game));
         
 		Conversation convo = configConvFactory.buildConversation(player);
 		convo.begin();
+		
+		game.setConfiguringPlayer(player.getName(), convo);
 	}
 	
 	protected void writeColoredNumber(StringBuilder sb, int number)
@@ -61,7 +61,7 @@ public class GameConfiguration
 
 	protected void configurationFinished(Game game)
 	{
-		game.setConfiguringPlayer(null);
+		game.setConfiguringPlayer(null, null);
 	}
 
 	private class InactivityCanceller extends InactivityConversationCanceller

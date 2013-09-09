@@ -18,6 +18,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
+import org.bukkit.conversations.Conversation;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Recipe;
@@ -450,10 +451,14 @@ public class Game
 		if ( configuringPlayer != null )
 		{
 			if ( configuringPlayer.equals(player.getName()) )
-				player.sendMessage("You cannot start this game while you are currently configuring it.");
+			{// you can start a game while configuring it, but this should end the conversation
+				player.abandonConversation(configConversation);
+			}
 			else
+			{
 				player.sendMessage("You cannot start this game because " + configuringPlayer + " is configuring it.");
-			return;
+				return;
+			}
 		}
 		
 		plugin.log.info(player.getName() + " started " + getName());
@@ -465,15 +470,17 @@ public class Game
 		return getPlayerInfo().get(player.getName()) != null;
 	}
 	
+	private Conversation configConversation;
 	private String configuringPlayer = null;
 	public String getConfiguringPlayer() { return configuringPlayer; }
-	public void setConfiguringPlayer(String p)
+	public void setConfiguringPlayer(String name, Conversation convo)
 	{
-		configuringPlayer = p;
-		if ( p == null )
+		configuringPlayer = name;
+		if ( name == null )
 			updateSign(configSign, "", "Configure", getName());
 		else
 			updateSign(configSign, "", "Currently being", "configured");
+		configConversation = convo;
 	}
 
 	public int getNumber() { return number; }
