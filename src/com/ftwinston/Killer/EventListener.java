@@ -23,9 +23,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -408,17 +406,6 @@ class EventListener implements Listener
 			callModuleEvents(event, game);
 	}
 	
-	// prevent pistons pushing things into/out of protected locations
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onBlockPistonExtend(BlockPistonExtendEvent event) throws EventException
-	{
-		event.setCancelled(plugin.worldManager.isProtectedLocation(event.getBlock().getLocation(), null));
-		
-		Game game = plugin.getGameForWorld(event.getBlock().getWorld());		
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-	
 	// prevent explosions from damaging protected locations
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onEntityExplode(EntityExplodeEvent event) throws EventException
@@ -631,14 +618,6 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onCreatureSpawn(CreatureSpawnEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getLocation().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-	
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEntityTarget(EntityTargetEvent event) throws EventException
 	{
 		World world = event.getEntity().getWorld();
@@ -832,5 +811,975 @@ class EventListener implements Listener
 			}
 			PlayerManager.instance.playerKilled(game, player);
 		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockBurnEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockCanBuildEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockDamageEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockDispenseEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockExpEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockFadeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockFormEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockFromToEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockGrowEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockIgniteEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockPhysicsEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockPistonExtendEvent event) throws EventException
+	{
+		// prevent pistons pushing things into/out of protected locations
+		event.setCancelled(plugin.worldManager.isProtectedLocation(event.getBlock().getLocation(), null));
+		
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockPistonRetractEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockPlaceEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockRedstoneEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.BlockSpreadEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.LeavesDecayEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.NotePlayEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.block.SignChangeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.enchantment.EnchantItemEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEnchanter().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.enchantment.PrepareItemEnchantEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEnchanter().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.CreatureSpawnEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getLocation().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.CreeperPowerEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityChangeBlockEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityCombustEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityCreatePortalEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityDamageEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityDeathEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityExplodeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityInteractEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityPortalEnterEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityPortalExitEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityRegainHealthEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityShootBowEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityTameEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityTargetEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.EntityTeleportEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.ExpBottleEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.ExplosionPrimeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.FoodLevelChangeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.ItemDespawnEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.ItemSpawnEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.PigZapEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.PotionSplashEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.ProjectileHitEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.ProjectileLaunchEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.SheepDyeWoolEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.SheepRegrowWoolEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.entity.SlimeSplitEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.hanging.HangingBreakEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.hanging.HangingPlaceEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.inventory.BrewEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.inventory.FurnaceBurnEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.inventory.FurnaceSmeltEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.inventory.InventoryClickEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWhoClicked().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.inventory.InventoryCloseEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.inventory.InventoryDragEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWhoClicked().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.inventory.InventoryEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getViewers().get(0).getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.inventory.InventoryMoveItemEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getInitiator().getViewers().get(0).getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.inventory.InventoryOpenEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.inventory.InventoryPickupItemEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getItem().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.inventory.PrepareItemCraftEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getViewers().get(0).getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.AsyncPlayerChatEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerAnimationEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerBedEnterEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerBedLeaveEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerBucketEmptyEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerBucketFillEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerChangedWorldEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerChannelEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerChatTabCompleteEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerCommandPreprocessEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerDropItemEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerEditBookEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerEggThrowEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerExpChangeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerFishEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerGameModeChangeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerInteractEntityEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerInteractEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerItemBreakEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerItemConsumeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerItemHeldEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerJoinEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerKickEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerLevelChangeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerMoveEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerPickupItemEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerRespawnEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerShearEntityEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerTeleportEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerToggleFlightEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerToggleSneakEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerToggleSprintEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.player.PlayerVelocityEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.server.MapInitializeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getMap().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.server.ServerCommandEvent event) throws EventException
+	{
+		Player sender = (Player)event.getSender();
+		if ( sender == null )
+			return;
+		Game game = plugin.getGameForWorld(sender.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.vehicle.VehicleBlockCollisionEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.vehicle.VehicleCreateEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.vehicle.VehicleDamageEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.vehicle.VehicleDestroyEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.vehicle.VehicleEnterEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.vehicle.VehicleEntityCollisionEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.vehicle.VehicleExitEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.vehicle.VehicleMoveEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.vehicle.VehicleUpdateEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.weather.LightningStrikeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.weather.ThunderChangeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.weather.WeatherChangeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.world.ChunkLoadEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.world.ChunkPopulateEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.world.ChunkUnloadEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.world.PortalCreateEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.world.SpawnChangeEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.world.StructureGrowEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.world.WorldInitEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.world.WorldLoadEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.world.WorldSaveEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEvent(org.bukkit.event.world.WorldUnloadEvent event) throws EventException
+	{
+		Game game = plugin.getGameForWorld(event.getWorld());
+		if ( game != null )
+			callModuleEvents(event, game);
 	}
 }
