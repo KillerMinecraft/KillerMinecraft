@@ -93,7 +93,7 @@ class EventListener implements Listener
 	
 	// when you die a spectator, be made able to fly again when you respawn
 	@EventHandler(priority = EventPriority.HIGHEST) // run last, so we can absolutely say where you should respawn, in a Killer game
-	public void onPlayerRespawn(PlayerRespawnEvent event) throws EventException
+	public void onEvent(PlayerRespawnEvent event) throws EventException
 	{
 		World world = event.getPlayer().getWorld();
 		if ( world == plugin.stagingWorld )
@@ -134,7 +134,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
-	public void OnPlayerChangedWorld(PlayerChangedWorldEvent event) throws EventException
+	public void onEvent(PlayerChangedWorldEvent event) throws EventException
 	{
 		World toWorld = event.getPlayer().getWorld();
 		Game fromGame = plugin.getGameForWorld(event.getFrom());
@@ -243,7 +243,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onPlayerPortal(PlayerPortalEvent event) throws EventException
+	public void onEvent(PlayerPortalEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getFrom().getWorld());
 		if ( game == null )
@@ -258,7 +258,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onEntityPortal(EntityPortalEvent event) throws EventException
+	public void onEvent(EntityPortalEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getFrom().getWorld());
 		if ( game == null )
@@ -274,7 +274,7 @@ class EventListener implements Listener
 		
 	// prevent spectators picking up anything
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerPickupItem(PlayerPickupItemEvent event) throws EventException
+	public void onEvent(PlayerPickupItemEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game == null )
@@ -287,7 +287,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onItemSpawn(ItemSpawnEvent event) throws EventException
+	public void onEvent(ItemSpawnEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getLocation().getWorld());
 		
@@ -300,7 +300,7 @@ class EventListener implements Listener
 	
 	// prevent spectators breaking anything, prevent anyone breaking protected locations
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onBlockBreak(BlockBreakEvent event) throws EventException
+	public void onEvent(BlockBreakEvent event) throws EventException
 	{
 		World world = event.getBlock().getWorld();
 		Game game = plugin.getGameForWorld(world);
@@ -318,7 +318,7 @@ class EventListener implements Listener
 	// prevent spectators breaking frames, prevent anyone breaking protected frames
 	// more complicated than above, because we want to protect against breakings that aren't by entities (I guess)
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onHangingBreak(HangingBreakEvent event) throws EventException
+	public void onEvent(HangingBreakEvent event) throws EventException
 	{
 		Location loc = event.getEntity().getLocation();
 		Game game = plugin.getGameForWorld(loc.getWorld());
@@ -347,7 +347,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onHangingPlace(HangingPlaceEvent event) throws EventException
+	public void onEvent(HangingPlaceEvent event) throws EventException
 	{
 		Location loc = event.getEntity().getLocation();
 		Game game = plugin.getGameForWorld(loc.getWorld());
@@ -363,7 +363,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEntityInteract(PlayerInteractEntityEvent event) throws EventException
+	public void onEvent(PlayerInteractEntityEvent event) throws EventException
 	{	
 		Location loc = event.getRightClicked().getLocation();
 		Game game = plugin.getGameForWorld(loc.getWorld());
@@ -380,7 +380,7 @@ class EventListener implements Listener
 	
 	// prevent anyone placing blocks on protected locations
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onBlockPlace(BlockPlaceEvent event) throws EventException
+	public void onEvent(BlockPlaceEvent event) throws EventException
 	{
 		World world = event.getBlock().getWorld();
 		Game game = plugin.getGameForWorld(world);
@@ -397,7 +397,7 @@ class EventListener implements Listener
 	
 	// prevent lava/water from flowing onto protected locations
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void BlockFromTo(BlockFromToEvent event) throws EventException
+	public void onEvent(BlockFromToEvent event) throws EventException
 	{
 		event.setCancelled(plugin.worldManager.isProtectedLocation(event.getBlock().getLocation(), null));
 		
@@ -408,7 +408,7 @@ class EventListener implements Listener
 	
 	// prevent explosions from damaging protected locations
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onEntityExplode(EntityExplodeEvent event) throws EventException
+	public void onEvent(EntityExplodeEvent event) throws EventException
 	{
 		World world = event.getEntity().getWorld();
 		Game game = plugin.getGameForWorld(world);
@@ -429,7 +429,7 @@ class EventListener implements Listener
 	
 	// switching between spectator items
 	@EventHandler(priority = EventPriority.NORMAL)
-	public void onPlayerItemSwitch(PlayerItemHeldEvent event) throws EventException
+	public void onEvent(PlayerItemHeldEvent event) throws EventException
 	{
 		World world = event.getPlayer().getWorld();
 		Game game = plugin.getGameForWorld(world);
@@ -462,7 +462,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerInteract(PlayerInteractEvent event) throws EventException
+	public void onEvent(PlayerInteractEvent event) throws EventException
 	{
 		Block b = event.getClickedBlock();
 		
@@ -535,7 +535,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onItemDrop(PlayerDropItemEvent event) throws EventException
+	public void onEvent(PlayerDropItemEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game == null ) 
@@ -549,7 +549,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.NORMAL)
-	public void onInventoryClick(InventoryClickEvent event) throws EventException
+	public void onEvent(InventoryClickEvent event) throws EventException
 	{
 		Player player = (Player)event.getWhoClicked();
 		if ( player == null )
@@ -569,7 +569,7 @@ class EventListener implements Listener
 	
 	// spectators can't deal or receive damage
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onEntityDamage(EntityDamageEvent event) throws EventException
+	public void onEvent(EntityDamageEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game == null ) 
@@ -598,7 +598,7 @@ class EventListener implements Listener
 	
 	// can't empty buckets onto protected locations
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) throws EventException
+	public void onEvent(PlayerBucketEmptyEvent event) throws EventException
 	{
 		event.setCancelled(plugin.worldManager.isProtectedLocation(event.getBlockClicked().getRelative(event.getBlockFace()).getLocation(), null));
 		
@@ -608,7 +608,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onPrepareCraftItem(PrepareItemCraftEvent event) throws EventException
+	public void onEvent(PrepareItemCraftEvent event) throws EventException
 	{
 		plugin.recipeManager.handleCraftEvent(event);
 		
@@ -618,7 +618,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEntityTarget(EntityTargetEvent event) throws EventException
+	public void onEvent(EntityTargetEvent event) throws EventException
 	{
 		World world = event.getEntity().getWorld();
 		Game game = plugin.getGameForWorld(world);
@@ -633,7 +633,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.NORMAL)
-	public void onPlayerChat(AsyncPlayerChatEvent event) throws EventException
+	public void onEvent(AsyncPlayerChatEvent event) throws EventException
 	{
 		// don't mess with chat if they're in a conversation
 		if ( event.getPlayer().isConversing() )
@@ -698,7 +698,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onPlayerJoin(PlayerJoinEvent event)
+	public void onEvent(PlayerJoinEvent event)
 	{
 		final World world = event.getPlayer().getWorld();
 		final Game game = plugin.getGameForWorld(world);
@@ -732,7 +732,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST)
-	public void onPlayerQuit(PlayerQuitEvent event)
+	public void onEvent(PlayerQuitEvent event)
 	{
 		World world = event.getPlayer().getWorld();
 		if ( world == plugin.stagingWorld )
@@ -761,7 +761,7 @@ class EventListener implements Listener
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onEntityDeath(EntityDeathEvent event)
+	public void onEvent(EntityDeathEvent event)
 	{
 		if ( !(event instanceof PlayerDeathEvent) )
 			return;
@@ -812,18 +812,6 @@ class EventListener implements Listener
 			PlayerManager.instance.playerKilled(game, player);
 		}
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.block.BlockBurnEvent event) throws EventException
@@ -882,14 +870,6 @@ class EventListener implements Listener
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.block.BlockFromToEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.block.BlockGrowEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
@@ -926,14 +906,6 @@ class EventListener implements Listener
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.block.BlockPistonRetractEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.block.BlockPlaceEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
@@ -1037,30 +1009,6 @@ class EventListener implements Listener
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.entity.EntityDamageEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.entity.EntityDeathEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.entity.EntityExplodeEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.entity.EntityInteractEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
@@ -1109,14 +1057,6 @@ class EventListener implements Listener
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.entity.EntityTargetEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.entity.EntityTeleportEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
@@ -1150,14 +1090,6 @@ class EventListener implements Listener
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.entity.ItemDespawnEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.entity.ItemSpawnEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
@@ -1221,22 +1153,6 @@ class EventListener implements Listener
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.hanging.HangingBreakEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.hanging.HangingPlaceEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.inventory.BrewEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
@@ -1256,14 +1172,6 @@ class EventListener implements Listener
 	public void onEvent(org.bukkit.event.inventory.FurnaceSmeltEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.inventory.InventoryClickEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getWhoClicked().getWorld());
 		if ( game != null )
 			callModuleEvents(event, game);
 	}
@@ -1317,22 +1225,6 @@ class EventListener implements Listener
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.inventory.PrepareItemCraftEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getViewers().get(0).getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.player.AsyncPlayerChatEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.player.PlayerAnimationEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
@@ -1357,23 +1249,7 @@ class EventListener implements Listener
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.player.PlayerBucketEmptyEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.player.PlayerBucketFillEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.player.PlayerChangedWorldEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
@@ -1403,15 +1279,7 @@ class EventListener implements Listener
 		if ( game != null )
 			callModuleEvents(event, game);
 	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.player.PlayerDropItemEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
+	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.player.PlayerEditBookEvent event) throws EventException
 	{
@@ -1453,22 +1321,6 @@ class EventListener implements Listener
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.player.PlayerInteractEntityEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.player.PlayerInteractEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.player.PlayerItemBreakEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
@@ -1478,22 +1330,6 @@ class EventListener implements Listener
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.player.PlayerItemConsumeEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.player.PlayerItemHeldEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.player.PlayerJoinEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
@@ -1518,22 +1354,6 @@ class EventListener implements Listener
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.player.PlayerMoveEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.player.PlayerPickupItemEvent event) throws EventException
-	{
-		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
-		if ( game != null )
-			callModuleEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.player.PlayerRespawnEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
