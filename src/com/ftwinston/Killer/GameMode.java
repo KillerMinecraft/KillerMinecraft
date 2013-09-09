@@ -15,14 +15,13 @@ import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.scoreboard.Scoreboard;
 
 import com.ftwinston.Killer.Game.GameState;
 
 
-public abstract class GameMode extends KillerModule implements Listener
+public abstract class GameMode extends KillerModule
 {
 	static List<GameModePlugin> gameModes = new ArrayList<GameModePlugin>();
 

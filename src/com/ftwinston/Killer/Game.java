@@ -20,7 +20,6 @@ import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.conversations.Conversation;
 import org.bukkit.entity.Player;
-import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.scoreboard.Scoreboard;
 
@@ -621,7 +620,7 @@ public class Game
 				if ( plugin.statsManager.isTracking(number) )
 					plugin.statsManager.gameFinished(number, getGameMode(), getWorldOption(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), true);
 				
-				HandlerList.unregisterAll(getGameMode()); // stop this game mode listening for events
+				plugin.eventListener.unregisterEvents(getGameMode());
 
 				for ( Player player : getOnlinePlayers() )
 					if ( player.getWorld() != plugin.stagingWorld )
@@ -681,7 +680,7 @@ public class Game
 				updateSign(configSign, "", "Configuration", "Locked");
 				updateSign(startSign, "", "Please", "Wait");
 				
-				plugin.getServer().getPluginManager().registerEvents(getGameMode(), plugin);
+				plugin.eventListener.registerEvents(getGameMode());
 				
 				final Game game = this;
 				plugin.worldManager.generateWorlds(this, worldOption, new Runnable() {

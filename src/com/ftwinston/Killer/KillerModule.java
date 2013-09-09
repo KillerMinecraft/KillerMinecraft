@@ -1,9 +1,10 @@
 package com.ftwinston.Killer;
 
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
-public abstract class KillerModule
+public abstract class KillerModule implements Listener
 {
 	Killer plugin; JavaPlugin modulePlugin;
 	protected final JavaPlugin getPlugin() { return plugin; }
