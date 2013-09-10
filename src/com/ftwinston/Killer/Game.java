@@ -621,6 +621,7 @@ public class Game
 					plugin.statsManager.gameFinished(number, getGameMode(), getWorldGenerator(), getGameMode().getOnlinePlayers(new PlayerFilter().alive()).size(), true);
 				
 				plugin.eventListener.unregisterEvents(getGameMode());
+				plugin.eventListener.unregisterEvents(getWorldGenerator());
 
 				for ( Player player : getOnlinePlayers() )
 					if ( player.getWorld() != plugin.stagingWorld )
@@ -681,6 +682,8 @@ public class Game
 				updateSign(startSign, "", "Please", "Wait");
 				
 				plugin.eventListener.registerEvents(getGameMode());
+				if ( getGameMode().allowWorldGeneratorSelection() )
+					plugin.eventListener.registerEvents(getWorldGenerator());
 				
 				final Game game = this;
 				plugin.worldManager.generateWorlds(this, worldGenerator, new Runnable() {

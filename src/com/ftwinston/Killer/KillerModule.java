@@ -1,5 +1,6 @@
 package com.ftwinston.Killer;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,7 +37,7 @@ public abstract class KillerModule implements Listener
 		options = setupOptions();
 	}
 	
-	Map<Class<? extends Event>, Set<RegisteredListener>> eventHandlers;
+	Map<Class<? extends Event>, Set<RegisteredListener>> eventHandlers = new HashMap<Class<? extends Event>, Set<RegisteredListener>>();
 	
 	private Option[] options;
 	protected abstract Option[] setupOptions();
