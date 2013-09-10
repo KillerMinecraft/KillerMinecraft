@@ -40,7 +40,7 @@ public abstract class GameMode extends KillerModule
 	
 	public abstract int getMinPlayers();
 
-	public boolean allowWorldOptionSelection() { return true; }
+	public boolean allowWorldGeneratorSelection() { return true; }
 	public Environment[] getWorldsToGenerate() { return new Environment[] { Environment.NORMAL, Environment.NETHER }; }
 	public void beforeWorldGeneration(int worldNumber, WorldConfig world) { }
 

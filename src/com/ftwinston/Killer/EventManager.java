@@ -1,9 +1,7 @@
 package com.ftwinston.Killer;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
@@ -77,8 +75,8 @@ class EventManager implements Listener
 
 	private void fireGameEvents(Event event, Game game) throws EventException
 	{
-		fireModuleEvents(game.getGameMode());
-		//fireModuleEvents(game.getWorldOption());
+		fireModuleEvents(event, game.getGameMode());
+		//fireModuleEvents(event, game.getWorldOption());
 	}
 	
 	private void fireModuleEvents(Event event, KillerModule module) throws EventException
