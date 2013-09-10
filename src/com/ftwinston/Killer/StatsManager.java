@@ -65,7 +65,7 @@ class StatsManager
 		games[gameNum].started(numPlayers);
 	}
 	
-	public void gameFinished(int gameNum, GameMode mode, WorldOption world, int numPlayersEnd, boolean abandoned)
+	public void gameFinished(int gameNum, GameMode mode, WorldGenerator world, int numPlayersEnd, boolean abandoned)
 	{
 		GameInfo game = games[gameNum];
 		if ( !game.isTracking || !Settings.reportStats)

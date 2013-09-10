@@ -90,10 +90,10 @@ public class Killer extends JavaPlugin
 					setEnabled(false);
 					return;
 				}
-				if ( WorldOption.worldOptions.size() == 0 )
+				if ( WorldGenerator.worldGenerators.size() == 0 )
 				{
-					log.warning("Killer cannot start: No world options have been loaded!");
-					log.warning("Add some world option plugins to your server!");
+					log.warning("Killer cannot start: No world generators have been loaded!");
+					log.warning("Add some world generator plugins to your server!");
 					setEnabled(false);
 					return;
 				}
@@ -175,7 +175,7 @@ public class Killer extends JavaPlugin
 		plugin.initialize(instance);
 	}
 	
-	static void registerWorldOption(WorldOptionPlugin plugin)
+	static void registerWorldGenerator(WorldGeneratorPlugin plugin)
 	{
 		plugin.initialize(instance);
 	}

@@ -248,7 +248,7 @@ class WorldManager
 		return folder.delete() && retVal;
 	}
 	
-	public void generateWorlds(final Game game, final WorldOption generator, final Runnable runWhenDone)
+	public void generateWorlds(final Game game, final WorldGenerator generator, final Runnable runWhenDone)
 	{
 		game.getGameMode().broadcastMessage(game.getGameMode().getNumWorlds() == 1 ? "Preparing new world..." : "Preparing new worlds...");
 		

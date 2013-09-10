@@ -6,13 +6,13 @@ import java.util.List;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 
-public abstract class WorldOption extends KillerModule
+public abstract class WorldGenerator extends KillerModule
 {
-	static List<WorldOptionPlugin> worldOptions = new ArrayList<WorldOptionPlugin>();
-	static WorldOptionPlugin get(int num) { return worldOptions.get(num); }
-	static WorldOptionPlugin getByName(String name)
+	static List<WorldGeneratorPlugin> worldGenerators = new ArrayList<WorldGeneratorPlugin>();
+	static WorldGeneratorPlugin get(int num) { return worldGenerators.get(num); }
+	static WorldGeneratorPlugin getByName(String name)
 	{
-		for ( WorldOptionPlugin plugin : worldOptions )
+		for ( WorldGeneratorPlugin plugin : worldGenerators )
 			if ( name.equalsIgnoreCase(plugin.getName()) )
 				return plugin;
 		

@@ -130,10 +130,10 @@ public class GameConfiguration
 			sb.append("\n\nGame mode: ");
 			sb.append(game.getGameMode().getName());
 			
-			if ( game.getGameMode().allowWorldOptionSelection() )
+			if ( game.getGameMode().allowWorldGeneratorSelection() )
 			{
 				sb.append("\nWorld: ");
-				sb.append(game.getWorldOption().getName());
+				sb.append(game.getWorldGenerator().getName());
 			}
 			
 			writeColoredNumber(sb, 1);
@@ -141,7 +141,7 @@ public class GameConfiguration
 			writeColoredNumber(sb, 2);
 			sb.append("configure game mode");
 			
-			if ( game.getGameMode().allowWorldOptionSelection() )
+			if ( game.getGameMode().allowWorldGeneratorSelection() )
 			{
 				writeColoredNumber(sb, 3);
 				sb.append("change world");
@@ -175,12 +175,12 @@ public class GameConfiguration
 			case 2:
 				return new ModeConfigPrompt(game, this);
 			case 3:
-				if ( game.getGameMode().allowWorldOptionSelection() )
+				if ( game.getGameMode().allowWorldGeneratorSelection() )
 					return new WorldPrompt(game, this);
 				configurationFinished(game);
 				return new ClosingPrompt();
 			case 4:
-				if ( game.getGameMode().allowWorldOptionSelection() )
+				if ( game.getGameMode().allowWorldGeneratorSelection() )
 					return new WorldConfigPrompt(game, this);
 				configurationFinished(game);
 				return new ClosingPrompt();
@@ -319,12 +319,12 @@ public class GameConfiguration
 			StringBuilder sb = new StringBuilder();
 			
 			sb.append("\n\n\n\n\n\n\n\n\n\n\nCurrent world option: ");
-			sb.append(game.getWorldOption().getName());
+			sb.append(game.getWorldGenerator().getName());
 			
-			for ( int i=0; i<WorldOption.worldOptions.size(); i++ )
+			for ( int i=0; i<WorldGenerator.worldGenerators.size(); i++ )
 			{
 				writeColoredNumber(sb, i+1);
-				sb.append(WorldOption.get(i).getName());
+				sb.append(WorldGenerator.get(i).getName());
 			}
 			
 			writeColoredNumber(sb, 0);
@@ -339,10 +339,10 @@ public class GameConfiguration
 				return new ClosingPrompt();
 			
 			int choice = val.intValue();
-			if ( choice > 0 && choice <= WorldOption.worldOptions.size() && game.getGameMode().allowWorldOptionSelection() )
+			if ( choice > 0 && choice <= WorldGenerator.worldGenerators.size() && game.getGameMode().allowWorldGeneratorSelection() )
 			{
 				// change the world option
-				game.setWorldOption(WorldOption.get(choice-1));
+				game.setWorldGenerator(WorldGenerator.get(choice-1));
 				game.miscRenderer.allowForChanges();
 			}
 			
@@ -367,7 +367,7 @@ public class GameConfiguration
 			sb.append("\n\n\n\n\n\n\n\n\n\n\nWorld option: ");
 			sb.append(game.getGameMode().getName());
 			
-			Option[] options = game.getWorldOption().getOptions();
+			Option[] options = game.getWorldGenerator().getOptions();
 			
 			for ( int i=0; i<options.length; i++ )
 			{
@@ -400,9 +400,9 @@ public class GameConfiguration
 				return new ClosingPrompt();
 			
 			int choice = val.intValue();
-			if ( choice > 0 && choice <= game.getWorldOption().getNumOptions() )
+			if ( choice > 0 && choice <= game.getWorldGenerator().getNumOptions() )
 			{
-				game.getWorldOption().toggleOption(choice-1);
+				game.getWorldGenerator().toggleOption(choice-1);
 				game.miscRenderer.allowForChanges();
 				return this;
 			}

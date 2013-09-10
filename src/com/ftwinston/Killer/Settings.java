@@ -22,7 +22,7 @@ public class Settings
 	stagingWorldName,
 	killerWorldNamePrefix,
 	defaultGameMode = "Mystery Killer", // remove this
-	defaultWorldOption = "Default World"; // remove this
+	defaultWorldGenerator = "Default World"; // remove this
 	
 	public static boolean
 	nothingButKiller,
@@ -172,15 +172,15 @@ public class Settings
 		
 		// set the world option
 		section = resolveConfigSection(config.get("world"));
-		String worldName = getString(section, "name", defaultWorldOption);
+		String worldName = getString(section, "name", defaultWorldGenerator);
 		
-		WorldOptionPlugin worldPlugin = WorldOption.getByName(worldName);
+		WorldGeneratorPlugin worldPlugin = WorldGenerator.getByName(worldName);
 		if ( worldPlugin == null )
-			worldPlugin = WorldOption.get(0);
-		game.setWorldOption(worldPlugin);
+			worldPlugin = WorldGenerator.get(0);
+		game.setWorldGenerator(worldPlugin);
 		
 		//  set the world option's options, if any specified
-		setupOptionsFromConfig(game.getWorldOption(), section);
+		setupOptionsFromConfig(game.getWorldGenerator(), section);
 		
 		
 		// now the game buttons
