@@ -63,34 +63,32 @@ class EventManager implements Listener
 	public EventManager(Killer instance)
 	{
 		plugin = instance;
-		eventHandlersByModule = new HashMap<KillerModule, Map<Class<? extends Event>, Set<RegisteredListener>>>();
 	}
 
-	Map<KillerModule, Map<Class<? extends Event>, Set<RegisteredListener>>> eventHandlersByModule;
 	public void registerEvents(KillerModule module)
 	{
-		Map<Class<? extends Event>, Set<RegisteredListener>> handlersByEvent = plugin.getPluginLoader().createRegisteredListeners(module, plugin);
-		eventHandlersByModule.put(module, handlersByEvent);
+		module.eventHandlers = plugin.getPluginLoader().createRegisteredListeners(module, plugin);
 	}
 
 	public void unregisterEvents(KillerModule module)
 	{
-		eventHandlersByModule.remove(module);
+		module.eventHandlers.clear();
 	}
 
-	private void callModuleEvents(Event event, Game game) throws EventException
+	private void fireGameEvents(Event event, Game game) throws EventException
 	{
-		Map<Class<? extends Event>, Set<RegisteredListener>> handlersByEvent = eventHandlersByModule.get(game.getGameMode());
-		if ( handlersByEvent != null )
-		{
-			Set<RegisteredListener> listeners = handlersByEvent.get(event.getClass());
-			if ( listeners != null )
-				for (RegisteredListener listener : listeners)
-					listener.callEvent(event);
-		}
+		fireModuleEvents(game.getGameMode());
+		//fireModuleEvents(game.getWorldOption());
+	}
+	
+	private void fireModuleEvents(Event event, KillerModule module) throws EventException
+	{	
+		Set<RegisteredListener> listeners = module.eventHandlers.get(event.getClass());
+		if ( listeners != null )
+			for (RegisteredListener listener : listeners)
+				listener.callEvent(event);
 	}
 
-	
 	// when you die a spectator, be made able to fly again when you respawn
 	@EventHandler(priority = EventPriority.HIGHEST) // run last, so we can absolutely say where you should respawn, in a Killer game
 	public void onEvent(PlayerRespawnEvent event) throws EventException
@@ -130,7 +128,7 @@ class EventManager implements Listener
 			});
 		}
 		
-		callModuleEvents(event, game);
+		fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -239,7 +237,7 @@ class EventManager implements Listener
 		}
 		
 		if ( wasInGame && toGame == fromGame )
-			callModuleEvents(event, toGame);
+			fireGameEvents(event, toGame);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -254,7 +252,7 @@ class EventManager implements Listener
 		
 		game.getGameMode().handlePortal(event.getCause(), event.getFrom(), helper); // see? I told you
 		helper.performTeleport(event.getCause(), event.getPlayer());
-		callModuleEvents(event, game);
+		fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -269,7 +267,7 @@ class EventManager implements Listener
 		
 		game.getGameMode().handlePortal(TeleportCause.NETHER_PORTAL, event.getFrom(), helper); // see? I told you
 		helper.performTeleport(TeleportCause.NETHER_PORTAL, event.getEntity());
-		callModuleEvents(event, game);
+		fireGameEvents(event, game);
 	}
 		
 	// prevent spectators picking up anything
@@ -283,7 +281,7 @@ class EventManager implements Listener
 		if( !Helper.isAlive(game, event.getPlayer()) )
 			event.setCancelled(true);
 		
-		callModuleEvents(event, game);
+		fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -295,7 +293,7 @@ class EventManager implements Listener
 			return;
 
 		event.setCancelled(plugin.worldManager.isProtectedLocation(game, event.getLocation(), null));
-		callModuleEvents(event, game);
+		fireGameEvents(event, game);
 	}
 	
 	// prevent spectators breaking anything, prevent anyone breaking protected locations
@@ -312,7 +310,7 @@ class EventManager implements Listener
 			);
 		
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 	
 	// prevent spectators breaking frames, prevent anyone breaking protected frames
@@ -343,7 +341,7 @@ class EventManager implements Listener
 		
 		event.setCancelled(plugin.worldManager.isProtectedLocation(game, loc, player));
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -359,7 +357,7 @@ class EventManager implements Listener
 			);
 		
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -375,7 +373,7 @@ class EventManager implements Listener
 			);
 		
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 	
 	// prevent anyone placing blocks on protected locations
@@ -392,7 +390,7 @@ class EventManager implements Listener
 			);
 		
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 	
 	// prevent lava/water from flowing onto protected locations
@@ -403,7 +401,7 @@ class EventManager implements Listener
 		
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());		
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 	
 	// prevent explosions from damaging protected locations
@@ -424,7 +422,7 @@ class EventManager implements Listener
 			}
 		
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 	
 	// switching between spectator items
@@ -458,7 +456,7 @@ class EventManager implements Listener
 				Helper.setTargetOf(game, event.getPlayer(), (String)null);
 		}
 		
-		callModuleEvents(event, game);
+		fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -531,7 +529,7 @@ class EventManager implements Listener
 			}
 		}
 		
-		callModuleEvents(event, game);
+		fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -545,7 +543,7 @@ class EventManager implements Listener
 		if ( !Helper.isAlive(game, event.getPlayer()) )
 			event.setCancelled(true);
 		
-		callModuleEvents(event, game);
+		fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.NORMAL)
@@ -564,7 +562,7 @@ class EventManager implements Listener
 		if ( !Helper.isAlive(game, player) )
 			event.setCancelled(true);
 		
-		callModuleEvents(event, game);
+		fireGameEvents(event, game);
 	}
 	
 	// spectators can't deal or receive damage
@@ -593,7 +591,7 @@ class EventManager implements Listener
 		if( !Helper.isAlive(game, victim) )
 			event.setCancelled(true);
 		
-		callModuleEvents(event, game);
+		fireGameEvents(event, game);
 	}
 	
 	// can't empty buckets onto protected locations
@@ -604,7 +602,7 @@ class EventManager implements Listener
 		
 		Game game = plugin.getGameForWorld(event.getBlockClicked().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)
@@ -614,7 +612,7 @@ class EventManager implements Listener
 		
 		Game game = plugin.getGameForWorld(event.getViewers().get(0).getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -629,7 +627,7 @@ class EventManager implements Listener
 		if( event.getTarget() != null && event.getTarget() instanceof Player && !Helper.isAlive(game, (Player)event.getTarget()) )
 			event.setCancelled(true);
 		
-		callModuleEvents(event, game);
+		fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.NORMAL)
@@ -694,7 +692,7 @@ class EventManager implements Listener
 		}
 		
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -818,7 +816,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -826,7 +824,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -834,7 +832,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -842,7 +840,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -850,7 +848,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -858,7 +856,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -866,7 +864,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -874,7 +872,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -882,7 +880,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -890,7 +888,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -901,7 +899,7 @@ class EventManager implements Listener
 		
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -909,7 +907,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -917,7 +915,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -925,7 +923,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -933,7 +931,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -941,7 +939,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -949,7 +947,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -957,7 +955,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEnchanter().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -965,7 +963,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEnchanter().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -973,7 +971,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getLocation().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -981,7 +979,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -989,7 +987,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -997,7 +995,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1005,7 +1003,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1013,7 +1011,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1021,7 +1019,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1029,7 +1027,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1037,7 +1035,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1045,7 +1043,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1053,7 +1051,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1061,7 +1059,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1069,7 +1067,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1077,7 +1075,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1085,7 +1083,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1093,7 +1091,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1101,7 +1099,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1109,7 +1107,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1117,7 +1115,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1125,7 +1123,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1133,7 +1131,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1141,7 +1139,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1149,7 +1147,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1157,7 +1155,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1165,7 +1163,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1173,7 +1171,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1181,7 +1179,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1189,7 +1187,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWhoClicked().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1197,7 +1195,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getViewers().get(0).getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1205,7 +1203,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getInitiator().getViewers().get(0).getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1213,7 +1211,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1221,7 +1219,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getItem().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1229,7 +1227,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1237,7 +1235,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1245,7 +1243,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1253,7 +1251,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1261,7 +1259,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1269,7 +1267,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1277,7 +1275,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1285,7 +1283,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1293,7 +1291,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1301,7 +1299,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1309,7 +1307,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1317,7 +1315,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1325,7 +1323,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1333,7 +1331,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1341,7 +1339,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1349,7 +1347,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1357,7 +1355,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1365,7 +1363,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1373,7 +1371,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1381,7 +1379,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1389,7 +1387,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1397,7 +1395,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1405,7 +1403,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1413,7 +1411,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getMap().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1424,7 +1422,7 @@ class EventManager implements Listener
 			return;
 		Game game = plugin.getGameForWorld(sender.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1432,7 +1430,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1440,7 +1438,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1448,7 +1446,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1456,7 +1454,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1464,7 +1462,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1472,7 +1470,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1480,7 +1478,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1488,7 +1486,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1496,7 +1494,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1504,7 +1502,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1512,7 +1510,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1520,7 +1518,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1528,7 +1526,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1536,7 +1534,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1544,7 +1542,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1552,7 +1550,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1560,7 +1558,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1568,7 +1566,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1576,7 +1574,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1584,7 +1582,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1592,7 +1590,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1600,6 +1598,6 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			callModuleEvents(event, game);
+			fireGameEvents(event, game);
 	}
 }

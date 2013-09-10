@@ -1,7 +1,12 @@
 package com.ftwinston.Killer;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.bukkit.event.Listener;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.scheduler.BukkitScheduler;
 
 public abstract class KillerModule implements Listener
@@ -30,7 +35,9 @@ public abstract class KillerModule implements Listener
 		name = myPlugin.getName();
 		options = setupOptions();
 	}
-		
+	
+	Map<Class<? extends Event>, Set<RegisteredListener>> eventHandlers;
+	
 	private Option[] options;
 	protected abstract Option[] setupOptions();
 	public final Option[] getOptions() { return options; }
