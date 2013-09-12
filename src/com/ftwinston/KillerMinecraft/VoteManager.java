@@ -18,7 +18,7 @@ public class VoteManager
 {
 	static VoteManager instance;
 	public static VoteManager getInstance() { return instance; }
-	private Killer plugin;
+	private KillerMinecraft plugin;
 	
 	private boolean inVote; 
 	long voteDuration = 400; // 20 secs
@@ -31,7 +31,7 @@ public class VoteManager
 
 	private ConversationFactory voteConvFactory;
 	
-	VoteManager(Killer _plugin)
+	VoteManager(KillerMinecraft _plugin)
 	{
 		this.plugin = _plugin;
 		instance = this;

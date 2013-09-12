@@ -21,7 +21,7 @@ public class GameConfiguration
 	
 	public GameConfiguration()
 	{
-		configConvFactory = new ConversationFactory(Killer.instance);
+		configConvFactory = new ConversationFactory(KillerMinecraft.instance);
         configConvFactory.withLocalEcho(false);
         configConvFactory.withModality(true);
 	}
@@ -69,7 +69,7 @@ public class GameConfiguration
 		private Game game;
 		public InactivityCanceller(Game game, int timeoutSeconds)
 		{
-			super(Killer.instance, timeoutSeconds);
+			super(KillerMinecraft.instance, timeoutSeconds);
 			this.game = game;
 		}
 	

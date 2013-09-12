@@ -56,9 +56,9 @@ import com.ftwinston.KillerMinecraft.PlayerManager.Info;
 
 class EventManager implements Listener
 {
-	Killer plugin;
+	KillerMinecraft plugin;
 	
-	public EventManager(Killer instance)
+	public EventManager(KillerMinecraft instance)
 	{
 		plugin = instance;
 	}

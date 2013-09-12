@@ -12,7 +12,7 @@ import org.bukkit.scheduler.BukkitScheduler;
 
 public abstract class KillerModule implements Listener
 {
-	Killer plugin; JavaPlugin modulePlugin;
+	KillerMinecraft plugin; JavaPlugin modulePlugin;
 	protected final JavaPlugin getPlugin() { return plugin; }
 	
 	protected final BukkitScheduler getScheduler() { return plugin.getServer().getScheduler(); }

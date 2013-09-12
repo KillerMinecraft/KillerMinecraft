@@ -30,10 +30,10 @@ import org.bukkit.util.Vector;
 class PlayerManager
 {
 	public static PlayerManager instance;
-	private Killer plugin;
+	private KillerMinecraft plugin;
 	private Random random;
 	
-	public PlayerManager(Killer _plugin)
+	public PlayerManager(KillerMinecraft _plugin)
 	{
 		this.plugin = _plugin;
 		instance = this;

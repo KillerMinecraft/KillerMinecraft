@@ -30,7 +30,7 @@ public class Helper
 	
 	public static void makeSpectator(Game game, Player player)
 	{
-		Killer.instance.playerManager.setAlive(game, player, false);
+		KillerMinecraft.instance.playerManager.setAlive(game, player, false);
 	}
 
 	public static int getTeam(Game game, OfflinePlayer player)
@@ -52,9 +52,9 @@ public class Helper
 		if ( info == null || info.target == null )
 			return null;
 		
-		Player target = Killer.instance.getServer().getPlayerExact(info.target);
+		Player target = KillerMinecraft.instance.getServer().getPlayerExact(info.target);
 		
-		if ( isAlive(game, target) && Killer.instance.getGameForPlayer(target) == game )
+		if ( isAlive(game, target) && KillerMinecraft.instance.getGameForPlayer(target) == game )
 			return target;
 		
 		return null;
@@ -93,7 +93,7 @@ public class Helper
 	
 	public static boolean playerCanSeeOther(Player looker, Player target, double maxDistanceSq)
 	{
-		return Killer.instance.playerManager.canSee(looker, target, maxDistanceSq);
+		return KillerMinecraft.instance.playerManager.canSee(looker, target, maxDistanceSq);
 	}
 
 	public static Location getNearestPlayerTo(Player player, List<Player> candidates)
@@ -101,7 +101,7 @@ public class Helper
 		Location nearest = null;
 		double nearestDistSq = Double.MAX_VALUE;
 		World playerWorld = player.getWorld();
-		Game game = Killer.instance.getGameForWorld(playerWorld);
+		Game game = KillerMinecraft.instance.getGameForWorld(playerWorld);
 		
 		for ( Player other : candidates )
 		{

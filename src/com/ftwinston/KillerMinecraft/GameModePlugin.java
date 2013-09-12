@@ -9,12 +9,12 @@ public abstract class GameModePlugin extends JavaPlugin
 {
 	public void onEnable()
 	{
-		Killer.registerGameMode(this);
+		KillerMinecraft.registerGameMode(this);
 	}
 	
 	public abstract GameMode createInstance();
 	
-	final void initialize(Killer plugin)
+	final void initialize(KillerMinecraft plugin)
 	{	
 		plugin.recipeManager.registerCustomRecipes(createCustomRecipes(), this);
 		

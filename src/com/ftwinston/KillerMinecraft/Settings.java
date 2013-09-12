@@ -40,7 +40,7 @@ public class Settings
 		
 	public static Material teleportModeItem = Material.WATCH, followModeItem = Material.ARROW;
 	
-	public static void setup(Killer plugin)
+	public static void setup(KillerMinecraft plugin)
 	{
 		plugin.saveDefaultConfig();
 		FileConfiguration config = plugin.getConfig();
@@ -98,7 +98,7 @@ public class Settings
 		protectionMax.setWorld(world);
 	}
 	
-	public static boolean setupGames(Killer plugin)
+	public static boolean setupGames(KillerMinecraft plugin)
 	{
 		if ( plugin.games != null )
 			return false;
@@ -152,7 +152,7 @@ public class Settings
 		return true;
 	}
 
-	private static void setupGame(Killer plugin, Game game, LinkedHashMap<String, Object> config)
+	private static void setupGame(KillerMinecraft plugin, Game game, LinkedHashMap<String, Object> config)
 	{
 		String name = getString(config, "name", "Unnamed game");
 		game.setName(name);
@@ -251,14 +251,14 @@ public class Settings
 				Option option = module.findOption(optionName);
 				if ( option == null )
 				{
-					Killer.instance.log.warning(module.getName() + " has unrecognised option specified in config: " + optionName);
+					KillerMinecraft.instance.log.warning(module.getName() + " has unrecognised option specified in config: " + optionName);
 					continue;
 				}
 				
 				String val = kvp.getValue().toString();
 				if ( val == null )
 				{
-					Killer.instance.log.warning(module.getName() + " option \"" + optionName + "\" has no value");
+					KillerMinecraft.instance.log.warning(module.getName() + " option \"" + optionName + "\" has no value");
 					continue;
 				}
 				option.setEnabled(Boolean.parseBoolean(val));
@@ -295,7 +295,7 @@ public class Settings
 		}
 		catch ( ClassCastException ex )
 		{
-			Killer.instance.log.warning("'" + key + "' is not a string, but it's supposed to be!");
+			KillerMinecraft.instance.log.warning("'" + key + "' is not a string, but it's supposed to be!");
 			return defaultVal;
 		}
 	}
@@ -312,7 +312,7 @@ public class Settings
 		}
 		catch ( ClassCastException ex )
 		{
-			Killer.instance.log.warning("'" + key + "' is not an int, but it's supposed to be!");
+			KillerMinecraft.instance.log.warning("'" + key + "' is not an int, but it's supposed to be!");
 			return defaultVal;
 		}
 	}
@@ -322,7 +322,7 @@ public class Settings
 		String[] parts = str.split(",", 3);
 		if ( parts.length != 3 )
 		{
-			Killer.instance.log.warning("Invalid location in config: " + str);
+			KillerMinecraft.instance.log.warning("Invalid location in config: " + str);
 			return null;
 		}
 		
@@ -336,7 +336,7 @@ public class Settings
 		}
 		catch ( NumberFormatException ex )
 		{
-			Killer.instance.log.warning("Invalid location in config: " + str);
+			KillerMinecraft.instance.log.warning("Invalid location in config: " + str);
 			return null;
 		}
 	}

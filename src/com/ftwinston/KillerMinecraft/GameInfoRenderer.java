@@ -35,7 +35,7 @@ public class GameInfoRenderer extends MapRenderer
 		}
 		
         if ( frame == null ) {
-        	Killer.instance.log.warning("Cannot find ItemFrame at " + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+        	KillerMinecraft.instance.log.warning("Cannot find ItemFrame at " + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
         	return null;
         }
 

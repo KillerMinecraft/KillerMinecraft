@@ -29,11 +29,11 @@ public class Game
 {
 	static LinkedList<Game> generationQueue = new LinkedList<Game>();
 
-	Killer plugin;
+	KillerMinecraft plugin;
 	private int number, helpMessageProcess, compassProcess, spectatorFollowProcess;
 	private String name;
 	
-	public Game(Killer killer, int gameNumber)
+	public Game(KillerMinecraft killer, int gameNumber)
 	{
 		plugin = killer;
 		number = gameNumber;
@@ -100,7 +100,7 @@ public class Game
 		Block b = loc.getBlock();
 		if ( !isSign(b) )
 		{
-			Killer.instance.log.warning("Expected sign at " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + " but got " + b.getType().name());
+			KillerMinecraft.instance.log.warning("Expected sign at " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + " but got " + b.getType().name());
 			return false;
 		}
 		
@@ -182,7 +182,7 @@ public class Game
 		}
 		else
 		{
-			Killer.instance.log.warning("Invalid progress bar direction for " + getName() + ": " + dir);
+			KillerMinecraft.instance.log.warning("Invalid progress bar direction for " + getName() + ": " + dir);
 			return false;
 		}
 		

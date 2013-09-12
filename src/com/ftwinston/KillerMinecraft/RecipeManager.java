@@ -83,7 +83,7 @@ class RecipeManager
 		}
 		else 
 		{
-			Killer.instance.log.warning("Unexpected recipe - neither ShapedRecipe or ShapelessRecipe: " + recipe.toString());
+			KillerMinecraft.instance.log.warning("Unexpected recipe - neither ShapedRecipe or ShapelessRecipe: " + recipe.toString());
 			return null;
 		}
 		
@@ -106,7 +106,7 @@ class RecipeManager
 			return; // this specific recipe isn't a custom one
 		
 		// you can't craft a custom recipe if you're not in a game
-		Game game = Killer.instance.getGameForWorld(event.getView().getPlayer().getWorld());
+		Game game = KillerMinecraft.instance.getGameForWorld(event.getView().getPlayer().getWorld());
 		if ( game == null )
 		{
 			event.getInventory().setResult(null);

@@ -6,12 +6,12 @@ public abstract class WorldGeneratorPlugin extends JavaPlugin
 {
 	public void onEnable()
 	{
-		Killer.registerWorldGenerator(this);
+		KillerMinecraft.registerWorldGenerator(this);
 	}
 	
 	public abstract WorldGenerator createInstance();
 	
-	final void initialize(Killer plugin)
+	final void initialize(KillerMinecraft plugin)
 	{
 		// keep the world options in alphabetic order
 		String name = getName();

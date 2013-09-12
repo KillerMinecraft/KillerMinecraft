@@ -14,7 +14,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 public class CommandHandler
 {
-	public static boolean onCommand(Killer plugin, CommandSender sender, Command cmd, String label, String[] args)
+	public static boolean onCommand(KillerMinecraft plugin, CommandSender sender, Command cmd, String label, String[] args)
 	{
 		if (cmd.getName().equalsIgnoreCase("spec"))
 			return CommandHandler.spectatorCommand(plugin, sender, cmd, label, args);
@@ -50,7 +50,7 @@ public class CommandHandler
 		return false;
 	}
 	
-	public static boolean spectatorCommand(Killer plugin, CommandSender sender, Command cmd, String label, String[] args)
+	public static boolean spectatorCommand(KillerMinecraft plugin, CommandSender sender, Command cmd, String label, String[] args)
 	{
 		if ( !(sender instanceof Player) )
 			return false;
@@ -102,7 +102,7 @@ public class CommandHandler
 		return true;
 	}
 
-	public static boolean teamChat(Killer plugin, CommandSender sender, Command cmd, String label, String[] args)
+	public static boolean teamChat(KillerMinecraft plugin, CommandSender sender, Command cmd, String label, String[] args)
 	{
 		if ( !(sender instanceof Player) )
 			return true;
@@ -148,7 +148,7 @@ public class CommandHandler
 		return true;
 	}
 
-	public static boolean killerCommand(Killer plugin, CommandSender sender, Command cmd, String label, String[] args)
+	public static boolean killerCommand(KillerMinecraft plugin, CommandSender sender, Command cmd, String label, String[] args)
 	{
 		Player player;
 		if ( sender instanceof Player )
@@ -262,7 +262,7 @@ public class CommandHandler
 		return true;
 	}
 	
-	public static boolean stagingWorldCommand(Killer plugin, CommandSender sender, Command cmd, String label, String[] args)
+	public static boolean stagingWorldCommand(KillerMinecraft plugin, CommandSender sender, Command cmd, String label, String[] args)
 	{
 /*
 Command block commands will be as follows:
@@ -335,7 +335,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 		return true;
 	}
 	
-	private static void gameCommand(Killer plugin, Game game, String[] args)
+	private static void gameCommand(KillerMinecraft plugin, Game game, String[] args)
 	{
 		if ( game == null || !game.getGameState().canChangeGameSetup )
 			return;
@@ -400,7 +400,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			plugin.log.warning("Invalid game command: " + cmd);
 	}
 
-	private static void changeDifficulty(Killer plugin, Game game, String param)
+	private static void changeDifficulty(KillerMinecraft plugin, Game game, String param)
 	{
 		if ( param == "up ")
 		{
@@ -420,7 +420,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			plugin.log.warning("Invalid difficulty parameter, expected up/down, got: " + param);
 	}
 
-	private static void changeMonsterNumbers(Killer plugin, Game game, String param)
+	private static void changeMonsterNumbers(KillerMinecraft plugin, Game game, String param)
 	{
 		if ( param == "up ")
 		{
@@ -440,7 +440,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			plugin.log.warning("Invalid monster number parameter, expected up/down, got: " + param);
 	}
 	
-	private static void changeAnimalNumbers(Killer plugin, Game game, String param)
+	private static void changeAnimalNumbers(KillerMinecraft plugin, Game game, String param)
 	{
 		if ( param == "up ")
 		{
@@ -460,7 +460,7 @@ setup block TYPE DATA CX1 CY1 CZ1 CX2 CY2 CZ2
 			plugin.log.warning("Invalid animal number parameter, expected up/down, got: " + param);
 	}
 	
-	private static void teleportCommand(Killer plugin, String[] args)
+	private static void teleportCommand(KillerMinecraft plugin, String[] args)
 	{
 		//String playerName = args[1];
 		String cmd = args[2];

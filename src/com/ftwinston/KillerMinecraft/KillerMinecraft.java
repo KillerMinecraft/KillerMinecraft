@@ -29,9 +29,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.ftwinston.KillerMinecraft.CraftBukkit.CraftBukkitAccess;
 
-public class Killer extends JavaPlugin
+public class KillerMinecraft extends JavaPlugin
 {
-	public static Killer instance;
+	public static KillerMinecraft instance;
 	CraftBukkitAccess craftBukkit;
 	public Logger log = Logger.getLogger("Minecraft");
 
@@ -106,14 +106,14 @@ public class Killer extends JavaPlugin
 						worldManager.createStagingWorld(Settings.stagingWorldName);
 				}
 				
-				if ( !Settings.setupGames(Killer.instance) )
+				if ( !Settings.setupGames(KillerMinecraft.instance) )
 				{
 					setEnabled(false);
 					return;
 				}
 								
-				statsManager = new StatsManager(Killer.instance, Killer.instance.games.length);
-		        getServer().getPluginManager().registerEvents(eventListener, Killer.instance);
+				statsManager = new StatsManager(KillerMinecraft.instance, KillerMinecraft.instance.games.length);
+		        getServer().getPluginManager().registerEvents(eventListener, KillerMinecraft.instance);
 		        
 		        // because listening for ChunkLoadEvent is unreliable, if the relevant chunk isn't loaded when we try to write a sign,
 		        // it's saved off in this map and updated when necessary.

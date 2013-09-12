@@ -23,8 +23,8 @@ class WorldManager
 {
 	public static WorldManager instance;
 	
-	private Killer plugin;
-	public WorldManager(Killer killer)
+	private KillerMinecraft plugin;
+	public WorldManager(KillerMinecraft killer)
 	{
 		plugin = killer;
 		instance = this;

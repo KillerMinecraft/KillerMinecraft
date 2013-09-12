@@ -9,8 +9,8 @@ import java.util.Date;
 
 class StatsManager
 {
-	Killer plugin;
-	public StatsManager(Killer plugin, int numGames)
+	KillerMinecraft plugin;
+	public StatsManager(KillerMinecraft plugin, int numGames)
 	{
 		this.plugin = plugin;
 		games = new GameInfo[numGames];

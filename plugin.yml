@@ -1,5 +1,5 @@
 name: Killer Minecraft
-main: com.ftwinston.KillerMinecraft.Killer
+main: com.ftwinston.KillerMinecraft.KillerMinecraft
 version: 0.4
 load: STARTUP
 description: A plugin for managing PVP game modes played out on temporary worlds that are automatically deleted afterwards.
