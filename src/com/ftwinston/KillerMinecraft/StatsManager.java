@@ -1,4 +1,4 @@
-package com.ftwinston.Killer;
+package com.ftwinston.KillerMinecraft;
 
 import java.io.BufferedReader;
 import java.io.IOException;

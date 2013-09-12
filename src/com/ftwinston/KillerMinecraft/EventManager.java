@@ -1,4 +1,4 @@
-package com.ftwinston.Killer;
+package com.ftwinston.KillerMinecraft;
 
 import java.util.HashSet;
 import java.util.List;
@@ -51,8 +51,8 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredListener;
 
-import com.ftwinston.Killer.Game.GameState;
-import com.ftwinston.Killer.PlayerManager.Info;
+import com.ftwinston.KillerMinecraft.Game.GameState;
+import com.ftwinston.KillerMinecraft.PlayerManager.Info;
 
 class EventManager implements Listener
 {

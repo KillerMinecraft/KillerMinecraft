@@ -1,4 +1,4 @@
-package com.ftwinston.Killer;
+package com.ftwinston.KillerMinecraft;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -17,7 +17,7 @@ import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BlockPopulator;
 
-import com.ftwinston.Killer.Game.GameState;
+import com.ftwinston.KillerMinecraft.Game.GameState;
 
 class WorldManager
 {

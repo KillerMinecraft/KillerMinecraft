@@ -1,4 +1,4 @@
-package com.ftwinston.Killer;
+package com.ftwinston.KillerMinecraft;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +23,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.scoreboard.Scoreboard;
 
-import com.ftwinston.Killer.PlayerManager.Info;
+import com.ftwinston.KillerMinecraft.PlayerManager.Info;
 
 public class Game
 {

@@ -1,4 +1,4 @@
-package com.ftwinston.Killer;
+package com.ftwinston.KillerMinecraft;
 
 import java.util.HashMap;
 import java.util.Map;

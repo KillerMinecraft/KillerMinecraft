@@ -1,4 +1,4 @@
-package com.ftwinston.Killer;
+package com.ftwinston.KillerMinecraft;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

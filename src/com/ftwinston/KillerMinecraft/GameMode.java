@@ -1,5 +1,4 @@
-
-package com.ftwinston.Killer;
+package com.ftwinston.KillerMinecraft;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.scoreboard.Scoreboard;
 
-import com.ftwinston.Killer.Game.GameState;
+import com.ftwinston.KillerMinecraft.Game.GameState;
 
 
 public abstract class GameMode extends KillerModule

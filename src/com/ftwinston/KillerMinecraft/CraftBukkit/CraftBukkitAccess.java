@@ -1,4 +1,4 @@
-package com.ftwinston.Killer.CraftBukkit;
+package com.ftwinston.KillerMinecraft.CraftBukkit;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;

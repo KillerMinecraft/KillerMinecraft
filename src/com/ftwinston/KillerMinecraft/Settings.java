@@ -1,4 +1,4 @@
-package com.ftwinston.Killer;
+package com.ftwinston.KillerMinecraft;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -10,7 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import com.ftwinston.Killer.Game.GameState;
+import com.ftwinston.KillerMinecraft.Game.GameState;
 
 
 public class Settings

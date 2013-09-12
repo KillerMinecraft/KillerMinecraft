@@ -1,4 +1,4 @@
-package com.ftwinston.Killer.CraftBukkit;
+package com.ftwinston.KillerMinecraft.CraftBukkit;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,49 +8,49 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.minecraft.server.v1_6_R2.Block;
-import net.minecraft.server.v1_6_R2.ChunkPosition;
-import net.minecraft.server.v1_6_R2.ChunkProviderHell;
-import net.minecraft.server.v1_6_R2.ChunkProviderServer;
-import net.minecraft.server.v1_6_R2.EntityEnderSignal;
-import net.minecraft.server.v1_6_R2.EntityHuman;
-import net.minecraft.server.v1_6_R2.EntityTracker;
-import net.minecraft.server.v1_6_R2.EnumGamemode;
-import net.minecraft.server.v1_6_R2.IChunkProvider;
-import net.minecraft.server.v1_6_R2.IWorldAccess;
-import net.minecraft.server.v1_6_R2.MinecraftServer;
-import net.minecraft.server.v1_6_R2.Packet201PlayerInfo;
-import net.minecraft.server.v1_6_R2.Packet205ClientCommand;
-import net.minecraft.server.v1_6_R2.RegionFile;
-import net.minecraft.server.v1_6_R2.RegionFileCache;
-import net.minecraft.server.v1_6_R2.ServerNBTManager;
-import net.minecraft.server.v1_6_R2.TileEntity;
-import net.minecraft.server.v1_6_R2.TileEntityCommand;
-import net.minecraft.server.v1_6_R2.World;
-import net.minecraft.server.v1_6_R2.WorldGenNether;
-import net.minecraft.server.v1_6_R2.WorldManager;
-import net.minecraft.server.v1_6_R2.WorldServer;
-import net.minecraft.server.v1_6_R2.WorldSettings;
-import net.minecraft.server.v1_6_R2.WorldType;
+import net.minecraft.server.v1_5_R3.Block;
+import net.minecraft.server.v1_5_R3.ChunkPosition;
+import net.minecraft.server.v1_5_R3.ChunkProviderHell;
+import net.minecraft.server.v1_5_R3.ChunkProviderServer;
+import net.minecraft.server.v1_5_R3.EntityEnderSignal;
+import net.minecraft.server.v1_5_R3.EntityHuman;
+import net.minecraft.server.v1_5_R3.EntityTracker;
+import net.minecraft.server.v1_5_R3.EnumGamemode;
+import net.minecraft.server.v1_5_R3.IChunkProvider;
+import net.minecraft.server.v1_5_R3.IWorldAccess;
+import net.minecraft.server.v1_5_R3.MinecraftServer;
+import net.minecraft.server.v1_5_R3.Packet201PlayerInfo;
+import net.minecraft.server.v1_5_R3.Packet205ClientCommand;
+import net.minecraft.server.v1_5_R3.RegionFile;
+import net.minecraft.server.v1_5_R3.RegionFileCache;
+import net.minecraft.server.v1_5_R3.ServerNBTManager;
+import net.minecraft.server.v1_5_R3.TileEntity;
+import net.minecraft.server.v1_5_R3.TileEntityCommand;
+import net.minecraft.server.v1_5_R3.World;
+import net.minecraft.server.v1_5_R3.WorldGenNether;
+import net.minecraft.server.v1_5_R3.WorldManager;
+import net.minecraft.server.v1_5_R3.WorldServer;
+import net.minecraft.server.v1_5_R3.WorldSettings;
+import net.minecraft.server.v1_5_R3.WorldType;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World.Environment;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.v1_6_R2.CraftChunk;
-import org.bukkit.craftbukkit.v1_6_R2.CraftServer;
-import org.bukkit.craftbukkit.v1_6_R2.CraftWorld;
-import org.bukkit.craftbukkit.v1_6_R2.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_6_R2.generator.NetherChunkGenerator;
-import org.bukkit.craftbukkit.v1_6_R2.generator.NormalChunkGenerator;
+import org.bukkit.craftbukkit.v1_5_R3.CraftServer;
+import org.bukkit.craftbukkit.v1_5_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_5_R3.generator.NetherChunkGenerator;
+import org.bukkit.craftbukkit.v1_5_R3.generator.NormalChunkGenerator;
+import org.bukkit.craftbukkit.v1_5_R3.CraftChunk;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
 
-public class v1_6_2 extends CraftBukkitAccess
+public class v1_5_2 extends CraftBukkitAccess
 {
-	public v1_6_2(Plugin plugin)
+	public v1_5_2(Plugin plugin)
 	{
 		super(plugin);
 	}
@@ -289,7 +289,7 @@ public class v1_6_2 extends CraftBukkitAccess
         
         return world;
     }
-	
+    
 	public boolean isChunkGenerated(Chunk chunk)
 	{
 		return ((CraftChunk)chunk).getHandle().done;

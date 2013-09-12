@@ -1,4 +1,4 @@
-package com.ftwinston.Killer;
+package com.ftwinston.KillerMinecraft;
 
 import org.bukkit.ChatColor;
 import org.bukkit.conversations.Conversation;
