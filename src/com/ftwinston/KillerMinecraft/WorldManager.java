@@ -22,8 +22,9 @@ import com.ftwinston.KillerMinecraft.Game.GameState;
 class WorldManager
 {
 	public static WorldManager instance;
-	
 	private KillerMinecraft plugin;
+	public int chunkBuilderTaskID = -1;
+	
 	public WorldManager(KillerMinecraft killer)
 	{
 		plugin = killer;
@@ -307,7 +308,7 @@ class WorldManager
         int worldNumber = config.getGame().getWorlds().size(), numberOfWorlds = config.getGame().getGameMode().getWorldsToGenerate().length; 
         config.getGame().drawProgressBar((float)worldNumber / (float)numberOfWorlds);
         ChunkBuilder cb = new ChunkBuilder(config.getGame(), 12, server, world, worldNumber, numberOfWorlds, runWhenDone);
-    	cb.taskID = server.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);
+        chunkBuilderTaskID = server.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);
     	return world;
     }
     
@@ -335,7 +336,6 @@ class WorldManager
     	int numChunksFromSpawn, stepNum = 0, sideLength, numSteps, spawnX, spawnZ;
         long reportTime = System.currentTimeMillis();
         int worldNumber, numberOfWorlds;
-        public int taskID;
         Server server;
         World world;
         Runnable runWhenDone;
@@ -373,7 +373,8 @@ class WorldManager
             	if ( stepNum >= numSteps )
             	{
             		server.getPluginManager().callEvent(new WorldLoadEvent(world));
-            		server.getScheduler().cancelTask(taskID);
+            		server.getScheduler().cancelTask(chunkBuilderTaskID);
+            		chunkBuilderTaskID = -1;
             		server.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
             		
             		System.out.println("Finished generating world: " + world.getName());

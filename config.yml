@@ -21,7 +21,7 @@ games:
   - 
     name:       Game 1
     mode:
-        plugin: Mystery Killer
+        plugin: Killer
         options:
             killer-assigned-on-second-day: true
             replace-dead-killers: true
@@ -51,7 +51,7 @@ games:
   - 
     name:       Game 2
     mode:
-        plugin: Farm Killer
+        plugin: Killer
         options:
             friendly-fire: true
             diminishing-returns: true

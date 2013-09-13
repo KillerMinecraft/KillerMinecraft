@@ -432,7 +432,31 @@ public class Game
 		if ( getGameState().canCancel )
 		{
 			plugin.log.info(player.getName() + " cancelled " + getName());
-			generationQueue.remove(this);
+			
+			if ( getGameState() == GameState.worldGeneration )
+			{
+				if ( plugin.worldManager.chunkBuilderTaskID == -1 )
+				{
+					player.sendMessage("Unable to cancel");
+					return; // can't cancel
+				}
+				
+				plugin.getServer().getScheduler().cancelTask(plugin.worldManager.chunkBuilderTaskID);
+				plugin.worldManager.chunkBuilderTaskID = -1;
+			}
+			
+			// remove this game from the queue if i'm in the queue, and then let the next queued game start 
+			if ( generationQueue.peek() == this )
+			{
+				generationQueue.remove();
+				Game nextInQueue = generationQueue.peek();
+				if ( nextInQueue != null ) // start the next queued game generating
+					nextInQueue.setGameState(GameState.worldGeneration);
+			}
+			else
+				generationQueue.remove(this);
+			
+			broadcastMessage(player.getName() + " cancelled the game. Everyone has left the game, and will need to rejoin.");
 			setGameState(GameState.worldDeletion);
 			return;
 		}
@@ -462,7 +486,7 @@ public class Game
 			}
 		}
 		
-		plugin.log.info(player.getName() + " started " + getName());
+		broadcastMessage(player.getName() + " started the game");
 		setGameState(GameState.waitingToGenerate);
 	}
 
