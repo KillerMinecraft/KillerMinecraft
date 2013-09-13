@@ -206,12 +206,6 @@ public class Game
 			progressBarMaxExtent.setZ(tmp);
 		}
 		
-		/*int minChunkX = progressBarMinExtent.getBlockX() >> 4, minChunkZ = progressBarMinExtent.getBlockZ() >> 4;
-		int maxChunkX = progressBarMaxExtent.getBlockX() >> 4, maxChunkZ = progressBarMaxExtent.getBlockZ() >> 4;
-		
-		for ( int x=minChunkX; x<=maxChunkX; x++ )
-			for ( int z=minChunkZ; z<=maxChunkZ; z++ )
-				useStagingWorldChunk(new ChunkPosition(x,z));*/
 		return true;
 	}
 	
@@ -435,6 +429,14 @@ public class Game
 	}
 	
 	public void startPressed(Player player) {
+		if ( getGameState().canCancel )
+		{
+			plugin.log.info(player.getName() + " cancelled " + getName());
+			generationQueue.remove(this);
+			setGameState(GameState.worldDeletion);
+			return;
+		}
+	
 		if ( getGameState() != GameState.stagingWorldSetup )
 		{
 			player.sendMessage("This game cannot be started. You can only start a game currently being set up.");
@@ -576,19 +578,20 @@ public class Game
 	
 	enum GameState
 	{
-		stagingWorldSetup(false, true), // in staging world, players need to choose mode/world
-		worldDeletion(false, true), // in staging world, hide start buttons, delete old world, then show start button again
-		stagingWorldConfirm(false, true), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
-		waitingToGenerate(false, false),
-		worldGeneration(false, false), // in staging world, game worlds are being generated
-		active(true, false), // game is active, in game world
-		finished(true, false); // game is finished, but not yet restarted
+		stagingWorldSetup(false, true, false), // in staging world, players need to choose mode/world
+		worldDeletion(false, true, false), // in staging world, hide start buttons, delete old world, then show start button again
+		stagingWorldConfirm(false, true, false), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
+		waitingToGenerate(false, false, true),
+		worldGeneration(false, false, true), // in staging world, game worlds are being generated
+		active(true, false, false), // game is active, in game world
+		finished(true, false, false); // game is finished, but not yet restarted
 		
-		public final boolean usesGameWorlds, canChangeGameSetup;
-		GameState(boolean useGameWorlds, boolean canChangeGameSetup)
+		public final boolean usesGameWorlds, canChangeGameSetup, canCancel;
+		GameState(boolean useGameWorlds, boolean canChangeGameSetup, boolean canCancel)
 		{
 			this.usesGameWorlds = useGameWorlds;
 			this.canChangeGameSetup = canChangeGameSetup;
+			this.canCancel = canCancel;
 		}
 	}
 	
@@ -667,8 +670,8 @@ public class Game
 				{
 					updateSign(statusSign, "", "§l" + getName(), "* in queue *");
 					updateSign(joinSign, "", "Join", getName());
-					updateSign(configSign, "", "Configuration", "Locked");
 					updateSign(startSign, "", "Please", "Wait");
+					updateSign(startSign, "", "Cancel");
 				}
 				
 				generationQueue.addLast(this); // always add to the queue (head of the queue is currently generating)
@@ -679,7 +682,7 @@ public class Game
 				updateSign(statusSign, "", "§l" + getName(), "* generating *");
 				updateSign(joinSign, "", "Join", getName());
 				updateSign(configSign, "", "Configuration", "Locked");
-				updateSign(startSign, "", "Please", "Wait");
+				updateSign(startSign, "", "Cancel");
 				
 				plugin.eventListener.registerEvents(getGameMode());
 				if ( getGameMode().allowWorldGeneratorSelection() )
