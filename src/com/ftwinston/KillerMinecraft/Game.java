@@ -736,7 +736,7 @@ public class Game
 				} 
 				
 				plugin.statsManager.gameStarted(number, players.size());
-				getGameMode().startGame(!prevState.usesGameWorlds);
+				getGameMode().startGame();
 				break;
 			}
 			case finished:

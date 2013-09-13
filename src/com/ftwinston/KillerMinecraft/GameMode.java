@@ -53,7 +53,7 @@ public abstract class GameMode extends KillerModule
 	
 	public abstract Location getSpawnLocation(Player player); // where should this player spawn?
 	
-	protected abstract void gameStarted(boolean isNewWorlds); // assign player teams if we do that immediately, etc
+	protected abstract void gameStarted(); // assign player teams if we do that immediately, etc
 
 	protected abstract void gameFinished(); // clean up scheduled tasks, etc
 
@@ -288,11 +288,11 @@ public abstract class GameMode extends KillerModule
 		helper.setupScaledDestination(toWorld, entrance, blockRatio);
 	}
 
-	final void startGame(boolean isNewWorlds)
+	final void startGame()
 	{	
 		game.forcedGameEnd = false;
 		plugin.playerManager.startGame(game);
-		gameStarted(isNewWorlds);
+		gameStarted();
 		
 		for ( Player player : getOnlinePlayers() )
 			player.teleport(getSpawnLocation(player));
