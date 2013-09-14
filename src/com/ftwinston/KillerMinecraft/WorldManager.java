@@ -54,7 +54,7 @@ class WorldManager
 		if ( worldSection == null )
 			worldSection = section.createSection(name);
 		
-		worldSection.set("generator", "Killer");
+		worldSection.set("generator", "Killer Minecraft");
 		
 		// whatever the name of the staging world, it should be the only world on the server. So change the level-name to match that, temporarily, and don't let it get a nether/end.
 		final String prevLevelName = plugin.craftBukkit.getServerProperty("level-name", "world");
