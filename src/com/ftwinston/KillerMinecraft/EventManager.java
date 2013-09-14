@@ -448,7 +448,8 @@ class EventManager implements Listener
 				event.getPlayer().sendMessage("Follow mode: click to cycle target");
 				Player target = PlayerManager.instance.getNearestFollowTarget(game, event.getPlayer());
 				Helper.setTargetOf(game, event.getPlayer(), target);
-				PlayerManager.instance.checkFollowTarget(game, event.getPlayer(), target.getName());
+				if ( target != null )
+					PlayerManager.instance.checkFollowTarget(game, event.getPlayer(), target.getName());
 			}
 			else
 				Helper.setTargetOf(game, event.getPlayer(), (String)null);
