@@ -302,6 +302,10 @@ public class Game
 	public void joinPressed(Player player) {
 		if ( isPlayerInGame(player) )
 		{
+			// leaving the game should stop you configuring it
+			if ( configuringPlayer != null && configuringPlayer.equals(player.getName()) )
+				player.abandonConversation(configConversation);
+			
 			removePlayerFromGame(player);
 			return;
 		}
