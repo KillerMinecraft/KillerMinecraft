@@ -21,7 +21,7 @@ public class Settings
 	public static String
 	stagingWorldName,
 	killerWorldNamePrefix,
-	defaultGameMode = "Mystery Killer", // remove this
+	defaultGameMode = "Killer", // remove this
 	defaultWorldGenerator = "Default World"; // remove this
 	
 	public static boolean
@@ -159,7 +159,7 @@ public class Settings
 		
 		// set the game mode
 		LinkedHashMap<String, Object> section = resolveConfigSection(config.get("mode"));
-		String modeName = getString(section, "name", defaultGameMode);
+		String modeName = getString(section, "plugin", defaultGameMode);
 		
 		GameModePlugin modePlugin = GameMode.getByName(modeName);
 		if ( modePlugin == null )
