@@ -248,7 +248,7 @@ class EventManager implements Listener
 		PortalHelper helper = new PortalHelper(event.getPortalTravelAgent());
 		event.setCancelled(true); // we're going to handle implementing the portalling ourselves
 		
-		game.getGameMode().handlePortal(event.getCause(), event.getFrom(), helper); // see? I told you
+		game.getGameMode().handlePortal(event.getCause(), event.getPortalTravelAgent().findPortal(event.getFrom()), helper); // see? I told you
 		helper.performTeleport(event.getCause(), event.getPlayer());
 		fireGameEvents(event, game);
 	}
@@ -263,7 +263,7 @@ class EventManager implements Listener
 		PortalHelper helper = new PortalHelper(event.getPortalTravelAgent());
 		event.setCancelled(true); // we're going to handle implementing the portalling ourselves
 		
-		game.getGameMode().handlePortal(TeleportCause.NETHER_PORTAL, event.getFrom(), helper); // see? I told you
+		game.getGameMode().handlePortal(TeleportCause.NETHER_PORTAL, event.getPortalTravelAgent().findPortal(event.getFrom()), helper); // see? I told you
 		helper.performTeleport(TeleportCause.NETHER_PORTAL, event.getEntity());
 		fireGameEvents(event, game);
 	}
@@ -1409,17 +1409,6 @@ class EventManager implements Listener
 	public void onEvent(org.bukkit.event.server.MapInitializeEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getMap().getWorld());
-		if ( game != null )
-			fireGameEvents(event, game);
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEvent(org.bukkit.event.server.ServerCommandEvent event) throws EventException
-	{
-		Player sender = (Player)event.getSender();
-		if ( sender == null )
-			return;
-		Game game = plugin.getGameForWorld(sender.getWorld());
 		if ( game != null )
 			fireGameEvents(event, game);
 	}

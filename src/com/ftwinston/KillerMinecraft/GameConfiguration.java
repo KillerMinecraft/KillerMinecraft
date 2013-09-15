@@ -144,9 +144,9 @@ public class GameConfiguration
 			if ( game.getGameMode().allowWorldGeneratorSelection() )
 			{
 				writeColoredNumber(sb, 3);
-				sb.append("change world");
+				sb.append("change world generator");
 				writeColoredNumber(sb, 4);
-				sb.append("configure world");
+				sb.append("configure world generator");
 			}
 			else
 				sb.append("\nThis game mode configures the world itself");

@@ -58,7 +58,7 @@ public abstract class WorldGenerator extends KillerModule
 		
 		public void run()
 		{
-			String worldName = Settings.killerWorldNamePrefix + "_" + (game.getNumber()+1) + "." + num;
+			String worldName = Settings.killerWorldNamePrefix + "_" + (game.getNumber()+1) + "_" + num;
 			final WorldConfig helper = new WorldConfig(game, worldName, environment);
 			setupWorld(helper, runNext);
 		}
