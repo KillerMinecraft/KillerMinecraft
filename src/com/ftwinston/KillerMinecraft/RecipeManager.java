@@ -66,7 +66,8 @@ class RecipeManager
 				for ( int i=0 ; i<s.length(); i++ )
 				{
 					sb.append(';');
-					sb.append(ingredients.get(new Character(s.charAt(i))).hashCode());
+					ItemStack item = ingredients.get(new Character(s.charAt(i))); 
+					sb.append(item == null ? 0 : item.hashCode());
 				}
 				sb.append(';');
 			}
