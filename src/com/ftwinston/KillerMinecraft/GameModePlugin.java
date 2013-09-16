@@ -3,9 +3,8 @@ package com.ftwinston.KillerMinecraft;
 import java.util.ArrayList;
 
 import org.bukkit.inventory.Recipe;
-import org.bukkit.plugin.java.JavaPlugin;
 
-public abstract class GameModePlugin extends JavaPlugin
+public abstract class GameModePlugin extends KillerModulePlugin
 {
 	public void onEnable()
 	{

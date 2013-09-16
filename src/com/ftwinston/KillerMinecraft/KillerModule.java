@@ -6,14 +6,13 @@ import java.util.Set;
 
 import org.bukkit.event.Listener;
 import org.bukkit.event.Event;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.scheduler.BukkitScheduler;
 
 public abstract class KillerModule implements Listener
 {
-	KillerMinecraft plugin; JavaPlugin modulePlugin;
-	protected final JavaPlugin getPlugin() { return plugin; }
+	KillerMinecraft plugin; KillerModulePlugin modulePlugin;
+	protected final KillerModulePlugin getPlugin() { return modulePlugin; }
 	
 	protected final BukkitScheduler getScheduler() { return plugin.getServer().getScheduler(); }
 	
@@ -25,10 +24,8 @@ public abstract class KillerModule implements Listener
 	{
 		return name;
 	}
-	
-	public abstract String describe();
 
-	final void initialize(Game game, JavaPlugin myPlugin)
+	final void initialize(Game game, KillerModulePlugin myPlugin)
 	{
 		this.game = game;
 		plugin = game.plugin;

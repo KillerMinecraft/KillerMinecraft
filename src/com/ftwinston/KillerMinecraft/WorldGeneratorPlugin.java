@@ -1,8 +1,6 @@
 package com.ftwinston.KillerMinecraft;
 
-import org.bukkit.plugin.java.JavaPlugin;
-
-public abstract class WorldGeneratorPlugin extends JavaPlugin
+public abstract class WorldGeneratorPlugin extends KillerModulePlugin
 {
 	public void onEnable()
 	{

@@ -91,13 +91,13 @@ public class GameInfoRenderer extends MapRenderer
 		
 		if ( forGameMode )
 		{
-			ypos = drawText(canvas, font, xpos, ypos, game.getGameMode().describe());
+			ypos = drawText(canvas, font, xpos, ypos, game.getGameMode().getPlugin().describe());
 			player.sendMap(view);
 			return;
 		}
 		
 		if ( game.getGameMode().allowWorldGeneratorSelection() )
-			ypos = drawText(canvas, font, xpos, ypos, game.getWorldGenerator().describe());
+			ypos = drawText(canvas, font, xpos, ypos, game.getWorldGenerator().getPlugin().describe());
 		else
 			ypos = drawText(canvas, font, xpos, ypos, "Using a world specified by the game mode");
 		
