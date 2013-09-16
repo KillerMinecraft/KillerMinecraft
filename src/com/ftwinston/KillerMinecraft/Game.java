@@ -20,6 +20,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.conversations.Conversation;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.scoreboard.Scoreboard;
 
@@ -32,6 +33,8 @@ public class Game
 	KillerMinecraft plugin;
 	private int number, helpMessageProcess, compassProcess, spectatorFollowProcess;
 	private String name;
+	GameConfiguration configuration;
+	Inventory setupInventory;
 	
 	public Game(KillerMinecraft killer, int gameNumber)
 	{
@@ -40,7 +43,11 @@ public class Game
 	}
 	
 	public String getName() { return name; }
-	void setName(String n) { name = n; }
+	void setName(String n)
+	{
+		name = n;
+		configuration = new GameConfiguration(this);
+	}
 	
 	private Location startButton, joinButton, configButton;
 	private Location statusSign, startSign, joinSign, configSign, modeFrame, miscFrame;
@@ -429,7 +436,7 @@ public class Game
 			return;
 		}
 		
-		GameConfiguration.instance.showConversation(player, this);
+		configuration.show(player);
 	}
 	
 	public void startPressed(Player player) {
@@ -502,14 +509,13 @@ public class Game
 	private Conversation configConversation;
 	private String configuringPlayer = null;
 	public String getConfiguringPlayer() { return configuringPlayer; }
-	public void setConfiguringPlayer(String name, Conversation convo)
+	public void setConfiguringPlayer(String name)
 	{
 		configuringPlayer = name;
 		if ( name == null )
 			updateSign(configSign, "", "Configure", getName());
 		else
 			updateSign(configSign, "", "Currently being", "configured");
-		configConversation = convo;
 	}
 
 	public int getNumber() { return number; }
@@ -522,6 +528,7 @@ public class Game
 		GameMode mode = plugin.createInstance();
 		mode.initialize(this, plugin);
 		gameMode = mode;
+		configuration.gameModeChanged(mode);
 		scoreboard = mode.createScoreboard();
 	}
 	
@@ -532,6 +539,7 @@ public class Game
 		WorldGenerator world = plugin.createInstance();
 		world.initialize(this, plugin);
 		worldGenerator = world;
+		configuration.worldGeneratorChanged(world);
 	}
 
 	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();

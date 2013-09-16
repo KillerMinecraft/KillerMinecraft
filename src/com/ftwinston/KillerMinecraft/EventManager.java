@@ -553,8 +553,15 @@ class EventManager implements Listener
 			return;
 
 		World world = player.getWorld();
+		if ( world == plugin.stagingWorld )
+		{
+			// if the inventory is a game configuration inventory menu, tell the relevant game's game configuration
+			GameConfiguration.checkEvent(event);
+			return;
+		}
+		
 		Game game = plugin.getGameForWorld(world);
-		if ( game == null ) 
+		if ( game == null )
 			return;
 		
 		// spectators can't rearrange their inventory ... is that a bit mean?
@@ -1176,7 +1183,16 @@ class EventManager implements Listener
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.inventory.InventoryCloseEvent event) throws EventException
 	{
-		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
+		World world = event.getPlayer().getWorld();
+		
+		if ( world == plugin.stagingWorld )
+		{
+			// if the inventory is a game configuration inventory menu, tell the relevant game's game configuration
+			GameConfiguration.checkEvent(event);
+			return;
+		}
+		
+		Game game = plugin.getGameForWorld(world);
 		if ( game != null )
 			fireGameEvents(event, game);
 	}

@@ -1,36 +1,80 @@
 package com.ftwinston.KillerMinecraft;
 
+import java.util.Arrays;
+
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.conversations.Conversation;
-import org.bukkit.conversations.ConversationAbandonedEvent;
-import org.bukkit.conversations.ConversationAbandonedListener;
-import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.ConversationFactory;
-import org.bukkit.conversations.InactivityConversationCanceller;
-import org.bukkit.conversations.MessagePrompt;
-import org.bukkit.conversations.NumericPrompt;
-import org.bukkit.conversations.Prompt;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 
-public class GameConfiguration
+class GameConfiguration
 {
-	public static GameConfiguration instance;
-	private static ConversationFactory configConvFactory;
-	private static final ChatColor numberColor = ChatColor.GOLD;
+	Inventory rootMenu;
+	private Game game;
 	
-	public GameConfiguration()
+	ItemStack rootGameMode, rootGameModeConfig, rootWorldGen, rootWorldGenConfig, rootPlayerNumbers, rootMonsters, rootAnimals;
+	
+	public GameConfiguration(Game game)
 	{
-		configConvFactory = new ConversationFactory(KillerMinecraft.instance);
-        configConvFactory.withLocalEcho(false);
-        configConvFactory.withModality(true);
+		this.game = game;
+		createRootMenu();
 	}
 	
-	public void showConversation(Player player, Game game)
+	public void createRootMenu()
 	{
-		if ( player.isConversing() )
-			return;
+		rootMenu = Bukkit.createInventory(null, 9, game.getName() + " configuration");
 		
+		rootGameMode = new ItemStack(Material.CAKE);
+		rootGameModeConfig = new ItemStack(Material.DISPENSER);
+		rootWorldGen = new ItemStack(Material.GRASS);
+		rootWorldGenConfig = new ItemStack(Material.DROPPER);
+		//rootMutators = new ItemStack(Material.EXP_BOTTLE);
+		rootPlayerNumbers = new ItemStack(Material.SKULL_ITEM, 1, (short)3); // steve head
+		rootMonsters = new ItemStack(Material.SKULL_ITEM, 1, (short)5); // creeper head
+		rootAnimals = new ItemStack(Material.EGG);
+		
+		setNameAndLore(rootGameMode, ChatColor.RESET + "Change Game Mode", "");
+		setNameAndLore(rootGameModeConfig, ChatColor.RESET + "Configure Game Mode", "Any options the current game", "mode has can be configured here");
+		setNameAndLore(rootWorldGen, ChatColor.RESET + "Change World Generator", "");
+		setNameAndLore(rootWorldGenConfig, ChatColor.RESET + "Configure World Generator", "Any options the current world", "generator has can be configured here");
+		//setNameAndLore(rootMutators, ChatColor.RESET + "Select Mutators", "Mutators change specific aspects", "of a game, but aren't specific", "to any particular game mode");
+		setNameAndLore(rootPlayerNumbers, ChatColor.RESET + "Player limits", "Specify the maximum number of", "players allowed into the game");
+		setNameAndLore(rootMonsters, ChatColor.RESET + "Monster Numbers", "Control the number of", "monsters that spawn");
+		setNameAndLore(rootAnimals, ChatColor.RESET + "Animal Numbers", "Control the number of", "animals that spawn");
+		
+		rootMenu.setItem(0, rootGameMode);
+		rootMenu.setItem(1, rootGameModeConfig);
+		rootMenu.setItem(2, rootWorldGen);
+		rootMenu.setItem(3, rootWorldGenConfig);
+		//rootMenu.setItem(4, rootMutators);
+		rootMenu.setItem(6, rootPlayerNumbers);
+		rootMenu.setItem(7, rootMonsters);
+		rootMenu.setItem(8, rootAnimals);
+	}
+	
+	private void setNameAndLore(ItemStack item, String name, String... lore)
+	{
+		ItemMeta meta = item.getItemMeta();
+		meta.setDisplayName(name);
+		meta.setLore(Arrays.asList(lore));
+		item.setItemMeta(meta);
+	}
+	
+	private void setLore(ItemStack item, String... lore)
+	{
+		ItemMeta meta = item.getItemMeta();
+		meta.setLore(Arrays.asList(lore));
+		item.setItemMeta(meta);
+	}
+
+	public void show(Player player)
+	{
 		String configuring = game.getConfiguringPlayer();
 		if ( configuring != null )
 		{
@@ -40,524 +84,29 @@ public class GameConfiguration
 			return;
 		}
 		
-		configConvFactory.withFirstPrompt(new MainPrompt(game));
-        configConvFactory.withConversationCanceller(new InactivityCanceller(game, 30));
-        configConvFactory.addConversationAbandonedListener(new AbandonedListener(game));
-        
-		Conversation convo = configConvFactory.buildConversation(player);
-		convo.begin();
-		
-		game.setConfiguringPlayer(player.getName(), convo);
-	}
-	
-	protected void writeColoredNumber(StringBuilder sb, int number)
-	{
-		sb.append("\n");
-		sb.append(numberColor);
-		sb.append(number);
-		sb.append(". ");
-		sb.append(ChatColor.RESET);
+		game.setConfiguringPlayer(player.getName());
+		player.openInventory(rootMenu);
 	}
 
-	protected void configurationFinished(Game game)
+	public void gameModeChanged(GameMode gameMode)
 	{
-		game.setConfiguringPlayer(null, null);
+		setLore(rootGameMode, "(currently " + ChatColor.YELLOW + ChatColor.ITALIC + gameMode.getName() + ChatColor.DARK_PURPLE + ChatColor.ITALIC + ")", "The game mode is the main set of rules,", "and controls every aspect of a game.", "The current mode is ");
+		rootMenu.setItem(0, rootGameMode);
 	}
 
-	private class InactivityCanceller extends InactivityConversationCanceller
+	public void worldGeneratorChanged(WorldGenerator world)
 	{
-		private Game game;
-		public InactivityCanceller(Game game, int timeoutSeconds)
-		{
-			super(KillerMinecraft.instance, timeoutSeconds);
-			this.game = game;
-		}
-	
-		@Override
-		protected void cancelling(Conversation conversation)
-		{
-			Player player = conversation.getForWhom() instanceof Player ? (Player)conversation.getForWhom() : null;
-			if ( player != null )
-			{
-				configurationFinished(game);
-				player.sendMessage("Configuration cancelled due to inactivity");
-			}
-		}
+		setLore(rootWorldGen, "(currently " + ChatColor.YELLOW + ChatColor.ITALIC + world.getName() + ChatColor.DARK_PURPLE + ChatColor.ITALIC + ")", "The world generator controls", "the terrain in the game's world(s)");
+		rootMenu.setItem(2, rootWorldGen);
 	}
-	
-	private class AbandonedListener implements ConversationAbandonedListener
-	{
-		private Game game;
-		public AbandonedListener(Game game)
-		{
-			this.game = game;
-		}
-		
-		@Override
-		public void conversationAbandoned(ConversationAbandonedEvent arg)
-		{
-			configurationFinished(game);
-		}
-	}
-	
-	private class ClosingPrompt extends MessagePrompt
-	{
-		@Override
-		public String getPromptText(ConversationContext context)
-		{
-			return "\n\n\n\n\n\n\n\n\n\n\n ";
-		}
 
-		@Override
-		protected Prompt getNextPrompt(ConversationContext context) {
-			return Prompt.END_OF_CONVERSATION;
-		}
-	}
-	
-	private class MainPrompt extends NumericPrompt
+	public static void checkEvent(InventoryClickEvent event)
 	{
-		private Game game;
-		public MainPrompt(Game game)
-		{
-			this.game = game;
-		}
-		
-		public String getPromptText(ConversationContext context)
-		{
-			StringBuilder sb = new StringBuilder();
-			
-			sb.append("\n\n\n\n\n\n\n\n\n\n\nConfiguring " + game.getName());
-			sb.append("\n\nGame mode: ");
-			sb.append(game.getGameMode().getName());
-			
-			if ( game.getGameMode().allowWorldGeneratorSelection() )
-			{
-				sb.append("\nWorld: ");
-				sb.append(game.getWorldGenerator().getName());
-			}
-			
-			writeColoredNumber(sb, 1);
-			sb.append("change game mode");
-			writeColoredNumber(sb, 2);
-			sb.append("configure game mode");
-			
-			if ( game.getGameMode().allowWorldGeneratorSelection() )
-			{
-				writeColoredNumber(sb, 3);
-				sb.append("change world generator");
-				writeColoredNumber(sb, 4);
-				sb.append("configure world generator");
-			}
-			else
-				sb.append("\nThis game mode configures the world itself");
-			
-			writeColoredNumber(sb, 5);
-			sb.append("change player limits");
-			
-			writeColoredNumber(sb, 6);
-			sb.append("change monster numbers");
-			
-			writeColoredNumber(sb, 7);
-			sb.append("change animal numbers");
-			
-			writeColoredNumber(sb, 0);
-			sb.append("close");
-			
-			return sb.toString();
-		}
-		
-		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
-		{
-			switch ( val.intValue() )
-			{
-			case 1:
-				return new ModePrompt(game, this);
-			case 2:
-				return new ModeConfigPrompt(game, this);
-			case 3:
-				if ( game.getGameMode().allowWorldGeneratorSelection() )
-					return new WorldPrompt(game, this);
-				configurationFinished(game);
-				return new ClosingPrompt();
-			case 4:
-				if ( game.getGameMode().allowWorldGeneratorSelection() )
-					return new WorldConfigPrompt(game, this);
-				configurationFinished(game);
-				return new ClosingPrompt();
-			case 5:
-				return new PlayerLimitsPrompt(game, this);
-			case 6:
-				return new MonstersPrompt(game, this);
-			case 7:
-				return new AnimalsPrompt(game, this);
-			default:
-				configurationFinished(game);
-				return new ClosingPrompt();
-			}
-		}
+		// TODO Auto-generated method stub	
 	}
-	
-	private class ModePrompt extends NumericPrompt
-	{
-		private Game game;
-		private Prompt back;
-		public ModePrompt(Game game, MainPrompt back)
-		{
-			this.game = game;
-			this.back = back;
-		}
-		
-		public String getPromptText(ConversationContext context)
-		{
-			StringBuilder sb = new StringBuilder();
-			
-			sb.append("\n\n\n\n\n\n\n\n\n\n\nCurrent game mode: ");
-			sb.append(game.getGameMode().getName());
-			
-			for ( int i=0; i<GameMode.gameModes.size(); i++ )
-			{
-				writeColoredNumber(sb, i+1);
-				sb.append(GameMode.get(i).getName());
-			}
 
-			writeColoredNumber(sb, 0);
-			sb.append("go back");
-			
-			return sb.toString();
-		}
-		
-		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
-		{
-			if ( !game.getGameState().canChangeGameSetup )
-				return new ClosingPrompt();
-			
-			int choice = val.intValue();
-			if ( choice > 0 && choice <= GameMode.gameModes.size() )
-			{
-				// change the game mode
-				game.setGameMode(GameMode.get(choice-1));
-				game.modeRenderer.allowForChanges();
-			}
-			
-			return back;
-		}
-	}
-	
-	private class ModeConfigPrompt extends NumericPrompt
+	public static void checkEvent(InventoryCloseEvent event)
 	{
-		private Game game;
-		private Prompt back;
-		public ModeConfigPrompt(Game game, MainPrompt back)
-		{
-			this.game = game;
-			this.back = back;
-		}
-		
-		public String getPromptText(ConversationContext context)
-		{
-			StringBuilder sb = new StringBuilder();
-			
-			sb.append("\n\n\n\n\n\n\n\n\n\n\nGame mode: ");
-			sb.append(game.getGameMode().getName());
-			
-			Option[] options = game.getGameMode().getOptions();
-			
-			for ( int i=0; i<options.length; i++ )
-			{
-				writeColoredNumber(sb, i+1);
-				sb.append(options[i].getName());
-				sb.append(": ");
-				
-				if ( options[i].isEnabled() )
-				{
-					sb.append(ChatColor.GREEN);
-					sb.append("ON");
-				}
-				else
-				{
-					sb.append(ChatColor.RED);
-					sb.append("OFF");
-				}
-				sb.append(ChatColor.RESET);
-			}
-			
-			writeColoredNumber(sb, 0);
-			sb.append("go back");
-			
-			return sb.toString();
-		}
-		
-		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
-		{
-			if ( !game.getGameState().canChangeGameSetup )
-				return new ClosingPrompt();
-			
-			int choice = val.intValue();
-			if ( choice > 0 && choice <= game.getGameMode().getNumOptions() )
-			{
-				game.getGameMode().toggleOption(choice-1);
-				game.modeRenderer.allowForChanges();
-				return this;
-			}
-			
-			return back;
-		}
-	}
-	
-	private class WorldPrompt extends NumericPrompt
-	{
-		private Game game;
-		private Prompt back;
-		public WorldPrompt(Game game, MainPrompt back)
-		{
-			this.game = game;
-			this.back = back;
-		}
-		
-		public String getPromptText(ConversationContext context)
-		{
-			StringBuilder sb = new StringBuilder();
-			
-			sb.append("\n\n\n\n\n\n\n\n\n\n\nCurrent world option: ");
-			sb.append(game.getWorldGenerator().getName());
-			
-			for ( int i=0; i<WorldGenerator.worldGenerators.size(); i++ )
-			{
-				writeColoredNumber(sb, i+1);
-				sb.append(WorldGenerator.get(i).getName());
-			}
-			
-			writeColoredNumber(sb, 0);
-			sb.append("go back");
-			
-			return sb.toString();
-		}
-		
-		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
-		{
-			if ( !game.getGameState().canChangeGameSetup )
-				return new ClosingPrompt();
-			
-			int choice = val.intValue();
-			if ( choice > 0 && choice <= WorldGenerator.worldGenerators.size() && game.getGameMode().allowWorldGeneratorSelection() )
-			{
-				// change the world option
-				game.setWorldGenerator(WorldGenerator.get(choice-1));
-				game.miscRenderer.allowForChanges();
-			}
-			
-			return back;
-		}
-	}
-	
-	private class WorldConfigPrompt extends NumericPrompt
-	{
-		private Game game;
-		private Prompt back;
-		public WorldConfigPrompt(Game game, MainPrompt back)
-		{
-			this.game = game;
-			this.back = back;
-		}
-		
-		public String getPromptText(ConversationContext context)
-		{
-			StringBuilder sb = new StringBuilder();
-			
-			sb.append("\n\n\n\n\n\n\n\n\n\n\nWorld option: ");
-			sb.append(game.getGameMode().getName());
-			
-			Option[] options = game.getWorldGenerator().getOptions();
-			
-			for ( int i=0; i<options.length; i++ )
-			{
-				writeColoredNumber(sb, i+1);
-				sb.append(options[i].getName());
-				sb.append(": ");
-				
-				if ( options[i].isEnabled() )
-				{
-					sb.append(ChatColor.GREEN);
-					sb.append("ON");
-				}
-				else
-				{
-					sb.append(ChatColor.RED);
-					sb.append("OFF");
-				}
-				sb.append(ChatColor.RESET);
-			}
-			
-			writeColoredNumber(sb, 0);
-			sb.append("go back");
-			
-			return sb.toString();
-		}
-		
-		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
-		{
-			if ( !game.getGameState().canChangeGameSetup )
-				return new ClosingPrompt();
-			
-			int choice = val.intValue();
-			if ( choice > 0 && choice <= game.getWorldGenerator().getNumOptions() )
-			{
-				game.getWorldGenerator().toggleOption(choice-1);
-				game.miscRenderer.allowForChanges();
-				return this;
-			}
-			
-			return back;
-		}
-	}
-	
-	private class PlayerLimitsPrompt extends NumericPrompt
-	{
-		private Game game;
-		private Prompt back;
-		public PlayerLimitsPrompt(Game game, MainPrompt back)
-		{
-			this.game = game;
-			this.back = back;
-		}
-		
-		public String getPromptText(ConversationContext context)
-		{
-			StringBuilder sb = new StringBuilder();
-			
-			sb.append("\n\n\n\n\n\n\n\n\n\n\n");
-			if ( game.usesPlayerLimit() )
-			{
-				sb.append("Player limit: " );
-				sb.append(game.getPlayerLimit());
-				sb.append("\nEnter the player limit you want, or 0 to remove the limit.");
-			}
-			else
-				sb.append("No player limit.\nEnter the player limit you want, or 0 to leave with no limit.");
-
-			return sb.toString();
-		}
-		
-		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
-		{
-			if ( !game.getGameState().canChangeGameSetup )
-				return new ClosingPrompt();
-			
-			int limit = val.intValue();
-			if ( limit > 0 )
-			{
-				game.setUsesPlayerLimit(true);
-				game.setPlayerLimit(limit);
-			}
-			else
-				game.setUsesPlayerLimit(false);
-
-			game.miscRenderer.allowForChanges();
-			return back;
-		}
-	}
-	
-
-	
-	private class AnimalsPrompt extends NumericPrompt
-	{
-		private Game game;
-		private Prompt back;
-		public AnimalsPrompt(Game game, MainPrompt back)
-		{
-			this.game = game;
-			this.back = back;
-		}
-		
-		public String getPromptText(ConversationContext context)
-		{
-			StringBuilder sb = new StringBuilder();
-			
-			sb.append("\n\n\n\n\n\n\n\n\n\n\n");
-			sb.append("Animal numbers: " );
-			sb.append(GameInfoRenderer.getQuantityText(game.animalNumbers));
-			sb.append("\nEnter a number from ");
-			sb.append(Game.minQuantityNum);
-			sb.append(" to ");
-			sb.append(Game.maxQuantityNum);
-			sb.append(", representing the following animal numbers:\n");
-			for ( int i=Game.minQuantityNum; i<=Game.maxQuantityNum; i++)
-			{
-				sb.append(i);
-				sb.append(" - ");
-				sb.append(GameInfoRenderer.getQuantityText(i));
-				if ( i < Game.maxQuantityNum )
-					sb.append(", ");
-			}
-			
-			return sb.toString();
-		}
-		
-		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
-		{
-			if ( !game.getGameState().canChangeGameSetup )
-				return new ClosingPrompt();
-			
-			int number = val.intValue();
-			if ( number >= Game.minQuantityNum && number <= Game.maxQuantityNum )
-			{
-				game.animalNumbers = number;
-				game.miscRenderer.allowForChanges();
-			}
-			
-			return back;
-		}
-	}
-	
-
-	
-	private class MonstersPrompt extends NumericPrompt
-	{
-		private Game game;
-		private Prompt back;
-		public MonstersPrompt(Game game, MainPrompt back)
-		{
-			this.game = game;
-			this.back = back;
-		}
-		
-		public String getPromptText(ConversationContext context)
-		{
-			StringBuilder sb = new StringBuilder();
-			
-			sb.append("\n\n\n\n\n\n\n\n\n\n\n");
-			sb.append("Monster numbers: " );
-			sb.append(GameInfoRenderer.getQuantityText(game.monsterNumbers));
-			sb.append("\nEnter a number from ");
-			sb.append(Game.minQuantityNum);
-			sb.append(" to ");
-			sb.append(Game.maxQuantityNum);
-			sb.append(", representing the following monster numbers:\n");
-			for ( int i=Game.minQuantityNum; i<=Game.maxQuantityNum; i++)
-			{
-				sb.append(i);
-				sb.append(" - ");
-				sb.append(GameInfoRenderer.getQuantityText(i));
-				if ( i < Game.maxQuantityNum )
-					sb.append(", ");
-			}
-			
-			return sb.toString();
-		}
-		
-		protected Prompt acceptValidatedInput(ConversationContext context, Number val)
-		{
-			if ( !game.getGameState().canChangeGameSetup )
-				return new ClosingPrompt();
-			
-			int number = val.intValue();
-			if ( number >= Game.minQuantityNum && number <= Game.maxQuantityNum )
-			{
-				game.monsterNumbers = number;
-				game.miscRenderer.allowForChanges();
-			}
-			
-			return back;
-		}
+		// TODO Auto-generated method stub		
 	}
 }

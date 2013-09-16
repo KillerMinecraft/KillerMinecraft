@@ -70,7 +70,6 @@ public class KillerMinecraft extends JavaPlugin
         
         Settings.setup(this);
         
-        GameConfiguration.instance = new GameConfiguration();
         worldManager = new WorldManager(this);
         playerManager = new PlayerManager(this);
         recipeManager = new RecipeManager();
