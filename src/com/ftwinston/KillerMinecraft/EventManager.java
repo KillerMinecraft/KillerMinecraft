@@ -226,12 +226,17 @@ class EventManager implements Listener
 		if ( toWorld == plugin.stagingWorld )
 			PlayerManager.instance.putPlayerInStagingWorld(event.getPlayer());
 		
-		if ( event.getFrom() == plugin.stagingWorld && !nowInGame )
+		if ( event.getFrom() == plugin.stagingWorld )
 		{
+			GameConfiguration.checkEvent(event);
+			
+			if ( !nowInGame )
+			{
 			// if you leave the staging world, you leave any game you were in ... unless you are entering a game world
 			Game game = plugin.getGameForPlayer(event.getPlayer());
 			if ( game != null )
 				game.removePlayerFromGame(event.getPlayer());
+			}
 		}
 		
 		if ( wasInGame && toGame == fromGame )
@@ -741,6 +746,8 @@ class EventManager implements Listener
 		World world = event.getPlayer().getWorld();
 		if ( world == plugin.stagingWorld )
 		{
+			GameConfiguration.checkEvent(event);
+			
 			Game game = plugin.getGameForPlayer(event.getPlayer());
 			if ( game != null )
 				game.removePlayerFromGame(event.getPlayer());
@@ -769,10 +776,13 @@ class EventManager implements Listener
 	{
 		if ( !(event instanceof PlayerDeathEvent) )
 			return;
-		
+	
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 	 	if ( game == null )
+	 	{
+	 		GameConfiguration.checkEvent((PlayerDeathEvent)event);
 	 		return;
+	 	}
 		
 		PlayerDeathEvent pEvent = (PlayerDeathEvent)event;
 		
