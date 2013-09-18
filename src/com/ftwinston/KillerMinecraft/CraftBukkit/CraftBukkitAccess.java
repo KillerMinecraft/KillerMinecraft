@@ -13,6 +13,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
 
+import com.ftwinston.KillerMinecraft.KillerMinecraft;
+
 // a holder for everything that dives into the versioned CraftBukkit code that will break with every minecraft update
 
 public abstract class CraftBukkitAccess
@@ -38,6 +40,25 @@ public abstract class CraftBukkitAccess
 	protected CraftBukkitAccess(Plugin plugin) { this.plugin = plugin; }
 	
 	protected Plugin plugin;
+	
+	@SuppressWarnings("unchecked")
+	protected <T> T getField(Class<?> declaringClass, Object o, String fieldName)
+	{
+		T result;
+		try
+		{
+			Field field = declaringClass.getDeclaredField(fieldName);
+			field.setAccessible(true);
+			result = (T)field.get(o);
+		}
+		catch (Throwable t)
+		{
+			KillerMinecraft.instance.log.info("KillerMinecraft private field access error:");
+			t.printStackTrace();
+			return null;
+		}
+		return result;
+	}
 
 	@SuppressWarnings("rawtypes")
 	protected HashMap regionfiles;

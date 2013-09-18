@@ -3,9 +3,7 @@ package com.ftwinston.KillerMinecraft.CraftBukkit;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 import net.minecraft.server.v1_5_R3.Block;
@@ -19,6 +17,8 @@ import net.minecraft.server.v1_5_R3.EnumGamemode;
 import net.minecraft.server.v1_5_R3.IChunkProvider;
 import net.minecraft.server.v1_5_R3.IWorldAccess;
 import net.minecraft.server.v1_5_R3.MinecraftServer;
+import net.minecraft.server.v1_5_R3.NBTTagCompound;
+import net.minecraft.server.v1_5_R3.NBTTagList;
 import net.minecraft.server.v1_5_R3.Packet201PlayerInfo;
 import net.minecraft.server.v1_5_R3.Packet205ClientCommand;
 import net.minecraft.server.v1_5_R3.RegionFile;
@@ -38,12 +38,11 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World.Environment;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.craftbukkit.v1_5_R3.CraftChunk;
 import org.bukkit.craftbukkit.v1_5_R3.CraftServer;
 import org.bukkit.craftbukkit.v1_5_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_5_R3.generator.NetherChunkGenerator;
 import org.bukkit.craftbukkit.v1_5_R3.generator.NormalChunkGenerator;
-import org.bukkit.craftbukkit.v1_5_R3.CraftChunk;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
@@ -68,20 +67,7 @@ public class v1_5_2 extends CraftBukkitAccess
 
 	public YamlConfiguration getBukkitConfiguration()
 	{
-		YamlConfiguration config = null;
-		try
-		{
-			Field configField = CraftServer.class.getDeclaredField("configuration");
-        	configField.setAccessible(true);
-        	config = (YamlConfiguration)configField.get((CraftServer)plugin.getServer());
-			configField.setAccessible(false);
-		}
-		catch ( IllegalAccessException ex )
-		{
-		}
-		catch  ( NoSuchFieldException ex )
-		{
-		}
+		YamlConfiguration config = getField(CraftServer.class, plugin.getServer(), "configuration");
 		return config;
 	}
 	
@@ -134,22 +120,19 @@ public class v1_5_2 extends CraftBukkitAccess
         }, 1);
 	}
 	
-	@SuppressWarnings("rawtypes")
 	public void bindRegionFiles()
 	{
+		regionfiles = getField(RegionFileCache.class, null, "a"); // obfuscated
+		
 		try
 		{
-			Field a = RegionFileCache.class.getDeclaredField("a"); // obfuscated
-			a.setAccessible(true);
-			regionfiles = (HashMap) a.get(null);
 			rafField = RegionFile.class.getDeclaredField("c"); // obfuscated
-			rafField.setAccessible(true);
-			plugin.getLogger().info("Successfully bound to region file cache.");
 		}
-		catch (Throwable t)
+		catch ( NoSuchFieldException e )
 		{
 			plugin.getLogger().warning("Error binding to region file cache.");
-			t.printStackTrace();
+			e.printStackTrace();
+			rafField = null;
 		}
 	}
 	
@@ -207,26 +190,11 @@ public class v1_5_2 extends CraftBukkitAccess
 			player.kickPlayer("World is being deleted... and you were in it!");
 		
 		// formerly used server.unloadWorld at this point. But it was sometimes failing, even when I force-cleared the player list
-		CraftServer server = (CraftServer)plugin.getServer();
-		CraftWorld craftWorld = (CraftWorld)world;
-		
-		try
-		{
-			Field f = server.getClass().getDeclaredField("worlds");
-			f.setAccessible(true);
-			@SuppressWarnings("unchecked")
-			Map<String, org.bukkit.World> worlds = (Map<String, org.bukkit.World>)f.get(server);
-			worlds.remove(world.getName().toLowerCase());
-			f.setAccessible(false);
-		}
-		catch ( IllegalAccessException ex )
-		{
-		}
-		catch  ( NoSuchFieldException ex )
-		{
-		}
+		Map<String, org.bukkit.World> worlds = getField(CraftServer.class, plugin.getServer(), "worlds");
+		worlds.remove(world.getName().toLowerCase());
 		
 		MinecraftServer ms = getMinecraftServer();
+		CraftWorld craftWorld = (CraftWorld)world;
 		ms.worlds.remove(ms.worlds.indexOf(craftWorld.getHandle()));
 	}
 	
@@ -302,35 +270,13 @@ public class v1_5_2 extends CraftBukkitAccess
 		
 		WorldServer world = ((CraftWorld)loc.getWorld()).getHandle();
 		
-		IChunkProvider chunkProvider;
-		try
-		{
-			Field field = ChunkProviderServer.class.getDeclaredField("chunkProvider");
-			field.setAccessible(true);
-			chunkProvider = (IChunkProvider)field.get(world.chunkProviderServer);
-			field.setAccessible(false);
-		}
-		catch (Throwable t)
-		{
-			return null;
-		}
-		
+		IChunkProvider chunkProvider = getField(ChunkProviderServer.class, world.chunkProviderServer, "chunkProvider");
 		if ( chunkProvider == null )
 			return null;
 		
-		NetherChunkGenerator ncg = (NetherChunkGenerator)chunkProvider;
-		ChunkProviderHell hellCP;
-		try
-		{
-			Field field = NormalChunkGenerator.class.getDeclaredField("provider");
-			field.setAccessible(true);
-			hellCP = (ChunkProviderHell)field.get(ncg);
-			field.setAccessible(false);
-		}
-		catch (Throwable t)
-		{
+		ChunkProviderHell hellCP = getField(NormalChunkGenerator.class, chunkProvider, "provider");
+		if ( hellCP == null )
 			return null;
-		}
 		
 		WorldGenNether fortressGenerator = (WorldGenNether)hellCP.c; // obfuscated
 		ChunkPosition pos = fortressGenerator.getNearestGeneratedFeature(world, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
