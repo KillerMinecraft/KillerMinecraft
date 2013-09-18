@@ -1,6 +1,8 @@
 package com.ftwinston.KillerMinecraft;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -45,12 +47,13 @@ class GameConfiguration
 		ANIMALS,
 	}
 	
-	private static String loreStyle = ChatColor.DARK_PURPLE + ChatColor.ITALIC, highlightStyle = ChatColor.YELLOW + ChatColor.ITALIC;
+	private static String loreStyle = "" + ChatColor.DARK_PURPLE + ChatColor.ITALIC, highlightStyle = "" + ChatColor.YELLOW + ChatColor.ITALIC;
 	Menu currentMenu = Menu.ROOT;
+	private final short playerHeadDurability = 3; 
 	
 	private void createMenus()
 	{
-		backItem = new ItemStack(Material.WOOD_DOOR);
+		backItem = new ItemStack(Material.IRON_DOOR);
 		setNameAndLore(backItem, highlightStyle + "Go back", "Return to the previous menu");
 		
 		createRootMenu();
@@ -72,7 +75,7 @@ class GameConfiguration
 		rootWorldGen = new ItemStack(Material.GRASS);
 		rootWorldGenConfig = new ItemStack(Material.DROPPER);
 		//rootMutators = new ItemStack(Material.EXP_BOTTLE);
-		rootPlayerNumbers = new ItemStack(Material.SKULL_ITEM, 1, (short)3); // steve head
+		rootPlayerNumbers = new ItemStack(Material.SKULL_ITEM, 1, playerHeadDurability); // steve head
 		rootMonsters = new ItemStack(Material.SKULL_ITEM, 1, (short)4); // creeper head
 		rootAnimals = new ItemStack(Material.EGG);
 		
@@ -97,23 +100,26 @@ class GameConfiguration
 	
 	private void createGameModeMenu()
 	{
-		gameModeMenu = Bukkit.createInventory(null, GameMode.gameModes.size() + 1, "Game mode selection");
+		gameModeMenu = Bukkit.createInventory(null, nearestNine(GameMode.gameModes.size() + 1), "Game mode selection");
 		gameModeMenu.setItem(0, backItem);
 		
 		gameModeItems = new ItemStack[GameMode.gameModes.size()];
 		for ( int i=0; i<GameMode.gameModes.size(); i++ )
 		{
 			GameModePlugin mode = GameMode.get(i);
-			
 			ItemStack item = new ItemStack(mode.getMenuIcon());
+			
 			if ( game.getGameMode().getName().equals(mode.getName()) )
 			{
-				List<String> lore = Arrays.asList(mode.getDescription());
-				lore.set(0, highlightStyle + "(current game mode)");
+				String[] desc = mode.getDescriptionText();
+				ArrayList<String> lore = new ArrayList<String>(desc.length + 1);
+				lore.add(highlightStyle + "Current game mode");
+				for ( int j=0; j<desc.length; j++)
+					lore.add(desc[j]);
 				setNameAndLore(item, mode.getName(), lore);
 			}
 			else
-				setNameAndLore(item, mode.getName(), mode.getDescription());
+				setNameAndLore(item, mode.getName(), mode.getDescriptionText());
 
 			gameModeItems[i] = item;
 			gameModeMenu.setItem(i+1, item);
@@ -127,8 +133,8 @@ class GameConfiguration
 	
 	private void createWorldGenMenu()
 	{
-		worldGenMenu = Bukkit.createInventory(null, WorldGenerator.worldGenerators.size() + 1, "World generator selection");
-		gameModeMenu.setItem(0, backItem);
+		worldGenMenu = Bukkit.createInventory(null, nearestNine(WorldGenerator.worldGenerators.size() + 1), "World generator selection");
+		worldGenMenu.setItem(0, backItem);
 		
 		worldGenItems = new ItemStack[WorldGenerator.worldGenerators.size()];
 		for ( int i=0; i<WorldGenerator.worldGenerators.size(); i++ )
@@ -138,18 +144,21 @@ class GameConfiguration
 			ItemStack item = new ItemStack(world.getMenuIcon());
 			if ( game.getWorldGenerator().getName().equals(world.getName()) )
 			{
-				List<String> lore = Arrays.asList(world.getDescription());
-				lore.set(0, highlightStyle + "(current world generator)");
+				String[] desc = world.getDescriptionText();
+				ArrayList<String> lore = new ArrayList<String>(desc.length + 1);
+				lore.add(highlightStyle + "Current world generator");
+				for ( int j=0; j<desc.length; j++)
+					lore.add(desc[j]);
 				setNameAndLore(item, world.getName(), lore);
 			}
 			else
-				setNameAndLore(item, world.getName(), world.getDescription());
+				setNameAndLore(item, world.getName(), world.getDescriptionText());
 
 			worldGenItems[i] = item;
 			worldGenMenu.setItem(i+1, item);
 		}
 	}
-	
+
 	private void createWorldGenConfigMenu()
 	{
 		
@@ -162,63 +171,63 @@ class GameConfiguration
 	
 	private void createMonstersMenu()
 	{
-		monstersMenu = Bukkit.createInventory(null, 6, "Monster numbers");
+		monstersMenu = Bukkit.createInventory(null, 9, "Monster numbers");
 		monstersMenu.setItem(0, backItem);
 		
 		monstersNone = createQuantityItem(0, game.monsterNumbers == 0, "No monsters will spawn");
-		monstersLow = createQuantityItem(1, game.monsterNumbers == 1, "A low number of monsters will spawn");
-		monstersMed = createQuantityItem(2, game.monsterNumbers == 2, "A normal number of monsters will spawn");
-		monstersHigh = createQuantityItem(3, game.monsterNumbers == 3, "A high number of monsters will spawn");
-		monstersTooHigh = createQuantityItem(4, game.monsterNumbers == 4, "An excessive number of monsters will spawn");
+		monstersLow = createQuantityItem(1, game.monsterNumbers == 1, "Reduced monster spawn rate");
+		monstersMed = createQuantityItem(2, game.monsterNumbers == 2, "Normal monster spawn rate");
+		monstersHigh = createQuantityItem(3, game.monsterNumbers == 3, "High monster spawn rate");
+		monstersTooHigh = createQuantityItem(4, game.monsterNumbers == 4, "Excessive monster spawn rate");
 		
-		monstersMenu.setItem(1, monstersNone);
-		monstersMenu.setItem(2, monstersLow);
-		monstersMenu.setItem(3, monstersMed);
-		monstersMenu.setItem(4, monstersHigh);
-		monstersMenu.setItem(5, monstersTooHigh);
+		monstersMenu.setItem(2, monstersNone);
+		monstersMenu.setItem(3, monstersLow);
+		monstersMenu.setItem(4, monstersMed);
+		monstersMenu.setItem(5, monstersHigh);
+		monstersMenu.setItem(6, monstersTooHigh);
 	}
 	
 	private void createAnimalsMenu()
 	{
-		animalsMenu = Bukkit.createInventory(null, 6, "Animal numbers");
+		animalsMenu = Bukkit.createInventory(null, 9, "Animal numbers");
 		animalsMenu.setItem(0, backItem);
 		
 		animalsNone = createQuantityItem(0, game.animalNumbers == 0, "No animals will spawn");
-		animalsLow = createQuantityItem(1, game.animalNumbers == 1, "A low number of animals will spawn");
-		animalsMed = createQuantityItem(2, game.animalNumbers == 2, "A normal number of animals will spawn");
-		animalsHigh = createQuantityItem(3, game.animalNumbers == 3, "A high number of animals will spawn");
-		animalsTooHigh = createQuantityItem(4, game.animalNumbers == 4, "An excessive number of animals will spawn");
+		animalsLow = createQuantityItem(1, game.animalNumbers == 1, "Reduced animal spawn rate");
+		animalsMed = createQuantityItem(2, game.animalNumbers == 2, "Normal animal spawn rate");
+		animalsHigh = createQuantityItem(3, game.animalNumbers == 3, "High animal spawn rate");
+		animalsTooHigh = createQuantityItem(4, game.animalNumbers == 4, "Excessive animal spawn rate");
 		
-		animalsMenu.setItem(1, animalsNone);
-		animalsMenu.setItem(2, animalsLow);
-		animalsMenu.setItem(3, animalsMed);
-		animalsMenu.setItem(4, animalsHigh);
-		animalsMenu.setItem(5, animalsTooHigh);
+		animalsMenu.setItem(2, animalsNone);
+		animalsMenu.setItem(3, animalsLow);
+		animalsMenu.setItem(4, animalsMed);
+		animalsMenu.setItem(5, animalsHigh);
+		animalsMenu.setItem(6, animalsTooHigh);
 	}
 
 	private ItemStack createQuantityItem(int quantity, boolean selected, String lore)
 	{
-		ItemStack item;
+		ItemStack item = new ItemStack(Material.STICK);
+		
+		if ( selected )
+			setNameAndLore(item, GameInfoRenderer.getQuantityText(quantity), highlightStyle + "Current Setting", lore);
+		else
+			setNameAndLore(item, GameInfoRenderer.getQuantityText(quantity), lore);
+		
 		switch ( quantity )
 		{
-		case 0:
-			item = new ItemStack(Material.STICK); break;
 		case 1:
-			item = new ItemStack(Material.STONE_PICKAXE); break;
+			item.setType(Material.STONE_PICKAXE); break;
 		case 2:
-			item = new ItemStack(Material.IRON_PICKAXE); break;
+			item.setType(Material.IRON_PICKAXE); break;
 		case 3:
-			item = new ItemStack(Material.DIAMOND_PICKAXE); break;
+			item.setType(Material.DIAMOND_PICKAXE); break;
 		case 4:
-			item = new ItemStack(Material.DIAMOND_PICKAXE);
-			item.addEnchantment(Enchantment.DURABILITY, 1); break;
+			item.setType(Material.DIAMOND_PICKAXE);
+			item = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(item);
 			break;
 		}
 		
-		if ( selected )
-			setNameAndLore(item, GameInfoRenderer.getQuantityText(quantity), highlightStyle + "(currently selected)", lore);
-		else
-			setNameAndLore(item, GameInfoRenderer.getQuantityText(quantity), lore);
 		return item;
 	}
 	
@@ -241,6 +250,11 @@ class GameConfiguration
 		meta.setLore(Arrays.asList(lore));
 		item.setItemMeta(meta);
 	}
+	
+	private int nearestNine(int num)
+	{
+		return 9*(int)Math.ceil(num/9.0);
+	}
 
 	public void show(Player player)
 	{
@@ -254,37 +268,59 @@ class GameConfiguration
 		}
 		
 		game.setConfiguringPlayer(player.getName());
+		currentMenu = Menu.ROOT;
 		player.openInventory(rootMenu);
 	}
 
 	public void gameModeChanged(GameMode gameMode)
 	{
-		setLore(rootGameMode, "(currently " + highlightStyle + gameMode.getName() + loreStyle + ")", "The game mode is the main set of rules,", "and controls every aspect of a game.");
+		setLore(rootGameMode, highlightStyle + "Currently: " + gameMode.getName(), "The game mode is the main set of rules,", "and controls every aspect of a game.");
 		rootMenu.setItem(0, rootGameMode);
 	}
 
 	public void worldGeneratorChanged(WorldGenerator world)
 	{
-		setLore(rootWorldGen, "(currently " + highlightStyle + world.getName() + loreStyle + ")", "The world generator controls", "the terrain in the game's world(s)");
+		setLore(rootWorldGen, highlightStyle + "Currently: "+ world.getName(), "The world generator controls", "the terrain in the game's world(s)");
 		rootMenu.setItem(2, rootWorldGen);
 	}
 
 	private void rootMenuClicked(Player player, ItemStack item)
 	{
 		if ( item.getType() == rootGameMode.getType() )
+		{
 			player.openInventory(gameModeMenu);
+			currentMenu = Menu.GAME_MODE;
+		}
 		else if ( item.getType() == rootGameModeConfig.getType() )
+		{
 			player.openInventory(gameModeConfigMenu);
+			currentMenu = Menu.GAME_MODE_CONFIG;
+		}
 		else if ( item.getType() == rootWorldGen.getType() )
+		{
 			player.openInventory(worldGenMenu);
+			currentMenu = Menu.WORLD_GEN;
+		}
 		else if ( item.getType() == rootWorldGenConfig.getType() )
+		{
 			player.openInventory(worldGenConfigMenu);
-		else if ( item.getType() == rootPlayerNumbers.getType() )
+			currentMenu = Menu.WORLD_GEN_CONFIG;
+		}
+		else if ( item.getType() == rootPlayerNumbers.getType() && item.getDurability() == playerHeadDurability )
+		{
 			player.openInventory(playersMenu);
+			currentMenu = Menu.PLAYERS;
+		}
 		else if ( item.getType() == rootMonsters.getType() )
+		{
 			player.openInventory(monstersMenu);
+			currentMenu = Menu.MONSTERS;
+		}
 		else if ( item.getType() == rootAnimals.getType() )
+		{
 			player.openInventory(animalsMenu);
+			currentMenu = Menu.ANIMALS;
+		}
 	}
 
 	private void gameModeMenuClicked(Player player, ItemStack item)

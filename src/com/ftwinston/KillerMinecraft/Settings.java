@@ -235,6 +235,7 @@ public class Settings
 		}
 		
 		game.setGameState(GameState.stagingWorldSetup);
+		game.setupConfiguration();
 	}
 
 	private static void setupOptionsFromConfig(KillerModule module, LinkedHashMap<String, Object> configSection)

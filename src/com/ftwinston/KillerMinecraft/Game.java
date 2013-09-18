@@ -43,11 +43,8 @@ public class Game
 	}
 	
 	public String getName() { return name; }
-	void setName(String n)
-	{
-		name = n;
-		configuration = new GameConfiguration(this);
-	}
+	void setName(String n) { name = n; }
+	void setupConfiguration() { configuration = new GameConfiguration(this); }
 	
 	private Location startButton, joinButton, configButton;
 	private Location statusSign, startSign, joinSign, configSign, modeFrame, miscFrame;
@@ -528,7 +525,8 @@ public class Game
 		GameMode mode = plugin.createInstance();
 		mode.initialize(this, plugin);
 		gameMode = mode;
-		configuration.gameModeChanged(mode);
+		if ( configuration != null )
+			configuration.gameModeChanged(mode);
 		scoreboard = mode.createScoreboard();
 	}
 	
@@ -539,7 +537,8 @@ public class Game
 		WorldGenerator world = plugin.createInstance();
 		world.initialize(this, plugin);
 		worldGenerator = world;
-		configuration.worldGeneratorChanged(world);
+		if ( configuration != null )
+			configuration.worldGeneratorChanged(world);
 	}
 
 	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();

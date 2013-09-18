@@ -11,6 +11,7 @@ import org.bukkit.block.Block;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import com.ftwinston.KillerMinecraft.KillerMinecraft;
@@ -65,6 +66,7 @@ public abstract class CraftBukkitAccess
 	protected Field rafField;
 	
 	public abstract String getDefaultLevelName();
+
 	public abstract YamlConfiguration getBukkitConfiguration();
 	public abstract void saveBukkitConfiguration(YamlConfiguration configuration);
 	public abstract String getServerProperty(String name, String defaultVal);
@@ -95,4 +97,6 @@ public abstract class CraftBukkitAccess
 	
 	public abstract void pushButton(Block b);
 	public abstract void setCommandBlockCommand(Block b, String command);
+
+	public abstract ItemStack setEnchantmentGlow(ItemStack item);
 }

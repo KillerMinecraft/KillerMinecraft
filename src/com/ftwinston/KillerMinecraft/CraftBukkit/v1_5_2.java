@@ -16,6 +16,7 @@ import net.minecraft.server.v1_5_R3.EntityTracker;
 import net.minecraft.server.v1_5_R3.EnumGamemode;
 import net.minecraft.server.v1_5_R3.IChunkProvider;
 import net.minecraft.server.v1_5_R3.IWorldAccess;
+import net.minecraft.server.v1_5_R3.ItemStack;
 import net.minecraft.server.v1_5_R3.MinecraftServer;
 import net.minecraft.server.v1_5_R3.NBTTagCompound;
 import net.minecraft.server.v1_5_R3.NBTTagList;
@@ -43,6 +44,7 @@ import org.bukkit.craftbukkit.v1_5_R3.CraftServer;
 import org.bukkit.craftbukkit.v1_5_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_5_R3.generator.NormalChunkGenerator;
+import org.bukkit.craftbukkit.v1_5_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
@@ -316,5 +318,26 @@ public class v1_5_2 extends CraftBukkitAccess
 		
 		TileEntityCommand tec = (TileEntityCommand)tileEntity;
 		tec.b(command);
+	}
+	
+	@Override
+	public org.bukkit.inventory.ItemStack setEnchantmentGlow(org.bukkit.inventory.ItemStack item)
+	{
+		CraftItemStack output = CraftItemStack.asCraftCopy(item);
+		
+		ItemStack nmsStack = getField(CraftItemStack.class, output, "handle");
+		if ( nmsStack == null )
+			return item;
+        NBTTagCompound compound = nmsStack.tag;
+ 
+        // Initialize the compound if we need to
+        if (compound == null) {
+            compound = new NBTTagCompound();
+            nmsStack.tag = compound;
+        }
+ 
+        // Empty enchanting compound
+        compound.set("ench", new NBTTagList());
+        return output;
 	}
 }

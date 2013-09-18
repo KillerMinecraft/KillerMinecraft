@@ -8,6 +8,7 @@ import java.util.Map;
 
 import net.minecraft.server.v1_6_R2.ChunkProviderServer;
 import net.minecraft.server.v1_6_R2.IChunkProvider;
+import net.minecraft.server.v1_6_R2.ItemStack;
 import net.minecraft.server.v1_6_R2.NBTTagCompound;
 import net.minecraft.server.v1_6_R2.NBTTagList;
 import net.minecraft.server.v1_6_R2.Block;
@@ -43,6 +44,7 @@ import org.bukkit.craftbukkit.v1_6_R2.CraftServer;
 import org.bukkit.craftbukkit.v1_6_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_6_R2.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_6_R2.generator.NormalChunkGenerator;
+import org.bukkit.craftbukkit.v1_6_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
@@ -282,7 +284,6 @@ public class v1_6_2 extends CraftBukkitAccess
 		ChunkProviderHell hellCP = getField(NormalChunkGenerator.class, chunkProvider, "provider");
 		if ( hellCP == null )
 			return null;
-		}
 		
 		WorldGenNether fortressGenerator = (WorldGenNether)hellCP.c; // obfuscated
 		ChunkPosition pos = fortressGenerator.getNearestGeneratedFeature(world, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
@@ -322,5 +323,26 @@ public class v1_6_2 extends CraftBukkitAccess
 		
 		TileEntityCommand tec = (TileEntityCommand)tileEntity;
 		tec.b(command);
+	}
+	
+	@Override
+	public org.bukkit.inventory.ItemStack setEnchantmentGlow(org.bukkit.inventory.ItemStack item)
+	{
+		CraftItemStack output = CraftItemStack.asCraftCopy(item);
+		
+		ItemStack nmsStack = getField(CraftItemStack.class, output, "handle");
+		if ( nmsStack == null )
+			return item;
+        NBTTagCompound compound = nmsStack.tag;
+ 
+        // Initialize the compound if we need to
+        if (compound == null) {
+            compound = new NBTTagCompound();
+            nmsStack.tag = compound;
+        }
+ 
+        // Empty enchanting compound
+        compound.set("ench", new NBTTagList());
+        return output;
 	}
 }
