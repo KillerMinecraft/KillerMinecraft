@@ -127,6 +127,7 @@ class GameConfiguration
 			for ( int j=0; j<desc.length; j++)
 				lore.add(desc[j]);
 			setNameAndLore(item, mode.getName(), lore);
+			item = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(item);
 		}
 		else
 			setNameAndLore(item, mode.getName(), mode.getDescriptionText());
@@ -168,6 +169,7 @@ class GameConfiguration
 			for ( int j=0; j<desc.length; j++)
 				lore.add(desc[j]);
 			setNameAndLore(item, world.getName(), lore);
+			item = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(item);
 		}
 		else
 			setNameAndLore(item, world.getName(), world.getDescriptionText());
@@ -232,17 +234,17 @@ class GameConfiguration
 		switch ( quantity )
 		{
 		case 1:
-			item.setType(Material.STONE_PICKAXE); break;
+			item.setType(Material.WOOD_PICKAXE); break;
 		case 2:
-			item.setType(Material.IRON_PICKAXE); break;
+			item.setType(Material.STONE_PICKAXE); break;
 		case 3:
-			item.setType(Material.DIAMOND_PICKAXE); break;
+			item.setType(Material.IRON_PICKAXE); break;
 		case 4:
-			item.setType(Material.DIAMOND_PICKAXE);
-			item = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(item);
-			break;
+			item.setType(Material.DIAMOND_PICKAXE); break;
 		}
-		
+
+		if ( selected )
+			item = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(item);
 		return item;
 	}
 	
