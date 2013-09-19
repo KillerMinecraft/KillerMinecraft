@@ -18,6 +18,13 @@ public abstract class WorldGenerator extends KillerModule
 		
 		return null;
 	}
+	static int indexOf(WorldGeneratorPlugin plugin)
+	{
+		for ( int i=0; i<worldGenerators.size(); i++ )
+			if ( worldGenerators.get(i) == plugin ) 
+				return i;
+		return -1;
+	}
 
 	protected final World createWorld(WorldConfig worldConfig, Runnable runWhenDone)
 	{

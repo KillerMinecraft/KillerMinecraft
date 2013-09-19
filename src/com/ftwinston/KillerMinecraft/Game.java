@@ -527,6 +527,9 @@ public class Game
 		gameMode = mode;
 		if ( configuration != null )
 			configuration.gameModeChanged(mode);
+		if ( modeRenderer != null )
+			modeRenderer.allowForChanges();
+		
 		scoreboard = mode.createScoreboard();
 	}
 	
@@ -539,6 +542,8 @@ public class Game
 		worldGenerator = world;
 		if ( configuration != null )
 			configuration.worldGeneratorChanged(world);
+		if ( miscRenderer != null )
+			miscRenderer.allowForChanges();
 	}
 
 	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();

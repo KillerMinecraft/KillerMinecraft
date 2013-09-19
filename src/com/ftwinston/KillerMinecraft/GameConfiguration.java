@@ -24,6 +24,7 @@ class GameConfiguration
 	private Game game;
 	EnumMap<Menu, Inventory> inventories = new EnumMap<GameConfiguration.Menu, Inventory>(Menu.class);
 	
+	Inventory rootMenu, gameModeMenu, worldGenMenu;
 	ItemStack backItem;
 	ItemStack rootGameMode, rootGameModeConfig, rootWorldGen, rootWorldGenConfig, rootPlayerNumbers, rootMonsters, rootAnimals;
 	ItemStack[] gameModeItems, worldGenItems;
@@ -69,7 +70,7 @@ class GameConfiguration
 	
 	private void createRootMenu()
 	{
-		Inventory menu = Bukkit.createInventory(null, 9, game.getName() + " configuration");
+		rootMenu = Bukkit.createInventory(null, 9, game.getName() + " configuration");
 		
 		rootGameMode = new ItemStack(Material.CAKE);
 		rootGameModeConfig = new ItemStack(Material.DISPENSER);
@@ -92,46 +93,50 @@ class GameConfiguration
 		gameModeChanged(game.getGameMode());
 		worldGeneratorChanged(game.getWorldGenerator());
 		
-		menu.setItem(0, rootGameMode);
-		menu.setItem(1, rootGameModeConfig);
-		menu.setItem(2, rootWorldGen);
-		menu.setItem(3, rootWorldGenConfig);
+		rootMenu.setItem(0, rootGameMode);
+		rootMenu.setItem(1, rootGameModeConfig);
+		rootMenu.setItem(2, rootWorldGen);
+		rootMenu.setItem(3, rootWorldGenConfig);
 		//menu.setItem(4, rootMutators);
-		menu.setItem(6, rootPlayerNumbers);
-		menu.setItem(7, rootMonsters);
-		menu.setItem(8, rootAnimals);
+		rootMenu.setItem(6, rootPlayerNumbers);
+		rootMenu.setItem(7, rootMonsters);
+		rootMenu.setItem(8, rootAnimals);
 		
-		inventories.put(Menu.ROOT, menu);
+		inventories.put(Menu.ROOT, rootMenu);
 	}
 	
 	private void createGameModeMenu()
 	{
-		Inventory menu = Bukkit.createInventory(null, nearestNine(GameMode.gameModes.size() + 1), "Game mode selection");
-		menu.setItem(0, backItem);
+		gameModeMenu = Bukkit.createInventory(null, nearestNine(GameMode.gameModes.size() + 1), "Game mode selection");
+		gameModeMenu.setItem(0, backItem);
 		
 		gameModeItems = new ItemStack[GameMode.gameModes.size()];
 		for ( int i=0; i<GameMode.gameModes.size(); i++ )
 		{
 			GameModePlugin mode = GameMode.get(i);
-			ItemStack item = new ItemStack(mode.getMenuIcon());
-			
-			if ( game.getGameMode().getName().equals(mode.getName()) )
-			{
-				String[] desc = mode.getDescriptionText();
-				ArrayList<String> lore = new ArrayList<String>(desc.length + 1);
-				lore.add(highlightStyle + "Current game mode");
-				for ( int j=0; j<desc.length; j++)
-					lore.add(desc[j]);
-				setNameAndLore(item, mode.getName(), lore);
-			}
-			else
-				setNameAndLore(item, mode.getName(), mode.getDescriptionText());
-
-			gameModeItems[i] = item;
-			menu.setItem(i+1, item);
+			gameModeItems[i] = new ItemStack(mode.getMenuIcon());
+			setupGameModeItemLore(i, mode, game.getGameMode().getName().equals(mode.getName()));
 		}
 		
-		inventories.put(Menu.GAME_MODE, menu);
+		inventories.put(Menu.GAME_MODE, gameModeMenu);
+	}
+	
+	private void setupGameModeItemLore(int num, GameModePlugin mode, boolean current) 
+	{
+		ItemStack item = gameModeItems[num];
+		if ( current )
+		{
+			String[] desc = mode.getDescriptionText();
+			ArrayList<String> lore = new ArrayList<String>(desc.length + 1);
+			lore.add(highlightStyle + "Current game mode");
+			for ( int j=0; j<desc.length; j++)
+				lore.add(desc[j]);
+			setNameAndLore(item, mode.getName(), lore);
+		}
+		else
+			setNameAndLore(item, mode.getName(), mode.getDescriptionText());
+
+		gameModeMenu.setItem(num+1, item);
 	}
 	
 	private void createGameModeConfigMenu()
@@ -142,8 +147,8 @@ class GameConfiguration
 	
 	private void createWorldGenMenu()
 	{
-		Inventory menu = Bukkit.createInventory(null, nearestNine(WorldGenerator.worldGenerators.size() + 1), "World generator selection");
-		menu.setItem(0, backItem);
+		worldGenMenu = Bukkit.createInventory(null, nearestNine(WorldGenerator.worldGenerators.size() + 1), "World generator selection");
+		worldGenMenu.setItem(0, backItem);
 		
 		worldGenItems = new ItemStack[WorldGenerator.worldGenerators.size()];
 		for ( int i=0; i<WorldGenerator.worldGenerators.size(); i++ )
@@ -151,23 +156,29 @@ class GameConfiguration
 			WorldGeneratorPlugin world = WorldGenerator.get(i);
 			
 			ItemStack item = new ItemStack(world.getMenuIcon());
-			if ( game.getWorldGenerator().getName().equals(world.getName()) )
-			{
-				String[] desc = world.getDescriptionText();
-				ArrayList<String> lore = new ArrayList<String>(desc.length + 1);
-				lore.add(highlightStyle + "Current world generator");
-				for ( int j=0; j<desc.length; j++)
-					lore.add(desc[j]);
-				setNameAndLore(item, world.getName(), lore);
-			}
-			else
-				setNameAndLore(item, world.getName(), world.getDescriptionText());
-
 			worldGenItems[i] = item;
-			menu.setItem(i+1, item);
+			setupWorldGenItemLore(i, world, game.getWorldGenerator().getName().equals(world.getName()));
 		}
 		
-		inventories.put(Menu.WORLD_GEN, menu);
+		inventories.put(Menu.WORLD_GEN, worldGenMenu);
+	}
+
+	private void setupWorldGenItemLore(int num, WorldGeneratorPlugin world, boolean current)
+	{
+		ItemStack item = worldGenItems[num];
+		if ( current )
+		{
+			String[] desc = world.getDescriptionText();
+			ArrayList<String> lore = new ArrayList<String>(desc.length + 1);
+			lore.add(highlightStyle + "Current world generator");
+			for ( int j=0; j<desc.length; j++)
+				lore.add(desc[j]);
+			setNameAndLore(item, world.getName(), lore);
+		}
+		else
+			setNameAndLore(item, world.getName(), world.getDescriptionText());
+
+		worldGenMenu.setItem(num+1, item);
 	}
 
 	private void createWorldGenConfigMenu()
@@ -261,11 +272,16 @@ class GameConfiguration
 		setNameAndLore(item, name, Arrays.asList(lore));
 	}
 	
-	private void setLore(ItemStack item, String... lore)
+	private void setLore(ItemStack item, List<String> lore)
 	{
 		ItemMeta meta = item.getItemMeta();
-		meta.setLore(Arrays.asList(lore));
+		meta.setLore(lore);
 		item.setItemMeta(meta);
+	}
+	
+	private void setLore(ItemStack item, String... lore)
+	{
+		setLore(item, Arrays.asList(lore));
 	}
 	
 	private int nearestNine(int num)
@@ -273,6 +289,17 @@ class GameConfiguration
 		return 9*(int)Math.ceil(num/9.0);
 	}
 
+	private int findMatch(ItemStack[] set, ItemStack item)
+	{
+		for ( int i=0; i<set.length; i++ )
+		{
+			ItemStack test = set[i];
+			if ( item.getType() == test.getType() && item.getItemMeta().getDisplayName() == test.getItemMeta().getDisplayName() )
+				return i;
+		}
+		return -1;
+	}
+	
 	public void show(Player player)
 	{
 		String configuring = game.getConfiguringPlayer();
@@ -290,20 +317,29 @@ class GameConfiguration
 
 	private void showMenu(Player player, Menu menu)
 	{
-		currentMenu = menu;
-		player.openInventory(inventories.get(menu));
+		Inventory inv = inventories.get(menu);
+		if ( inv != null )
+		{
+			currentMenu = menu;
+			player.openInventory(inv);
+		}
+		else
+		{
+			currentMenu = Menu.ROOT;
+			player.openInventory(rootMenu);
+		}
 	}
 	
 	public void gameModeChanged(GameMode gameMode)
 	{
 		setLore(rootGameMode, highlightStyle + "Current mode: " + gameMode.getName(), "The game mode is the main set of rules,", "and controls every aspect of a game.");
-		//rootMenu.setItem(0, rootGameMode);
+		rootMenu.setItem(0, rootGameMode);
 	}
 
 	public void worldGeneratorChanged(WorldGenerator world)
 	{
 		setLore(rootWorldGen, highlightStyle + "Current generator: "+ world.getName(), "The world generator controls", "the terrain in the game's world(s)");
-		//rootMenu.setItem(2, rootWorldGen);
+		rootMenu.setItem(2, rootWorldGen);
 	}
 
 	private void rootMenuClicked(Player player, ItemStack item)
@@ -327,7 +363,23 @@ class GameConfiguration
 	private void gameModeMenuClicked(Player player, ItemStack item)
 	{
 		if ( item.getType() == backItem.getType() )
+		{
 			showMenu(player, Menu.ROOT);
+			return;
+		}
+		
+		int i = findMatch(gameModeItems, item);
+		if ( i < 0 )
+			return;
+
+		GameModePlugin mode = GameMode.get(i); 
+		GameModePlugin prev = (GameModePlugin)game.getGameMode().getPlugin();
+		game.setGameMode(mode);
+		showMenu(player, Menu.GAME_MODE_CONFIG);
+		
+		// update which item gets the "current game mode" lore text on the game mode menu
+		setupGameModeItemLore(GameMode.indexOf(prev), prev, false);
+		setupGameModeItemLore(i, mode, true);
 	}
 	
 	private void gameModeConfigClicked(Player player, ItemStack item)
@@ -340,8 +392,21 @@ class GameConfiguration
 	{
 		if ( item.getType() == backItem.getType() )
 			showMenu(player, Menu.ROOT);
+		
+		int i = findMatch(worldGenItems, item);
+		if ( i < 0 )
+			return;
+
+		WorldGeneratorPlugin generator = WorldGenerator.get(i); 
+		WorldGeneratorPlugin prev = (WorldGeneratorPlugin)game.getGameMode().getPlugin();
+		game.setWorldGenerator(generator);
+		showMenu(player, Menu.WORLD_GEN_CONFIG);
+		
+		// update which item gets the "current world generator" lore text
+		setupWorldGenItemLore(WorldGenerator.indexOf(prev), prev, false);
+		setupWorldGenItemLore(i, generator, true);
 	}
-	
+
 	private void worldGenConfigClicked(Player player, ItemStack item)
 	{
 		if ( item.getType() == backItem.getType() )

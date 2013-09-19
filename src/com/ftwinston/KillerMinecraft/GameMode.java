@@ -31,6 +31,13 @@ public abstract class GameMode extends KillerModule
 		
 		return null;
 	}
+	static int indexOf(GameModePlugin plugin)
+	{
+		for ( int i=0; i<gameModes.size(); i++ )
+			if ( gameModes.get(i) == plugin ) 
+				return i;
+		return -1;
+	}
 
 	protected final Random random = new Random();
 	
