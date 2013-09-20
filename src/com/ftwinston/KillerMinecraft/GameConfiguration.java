@@ -46,7 +46,7 @@ class GameConfiguration
 		ANIMALS,
 	}
 	
-	private static String /*loreStyle = "" + ChatColor.DARK_PURPLE + ChatColor.ITALIC,*/ highlightStyle = "" + ChatColor.YELLOW + ChatColor.ITALIC;
+	private static String /*loreStyle = "" + ChatColor.DARK_PURPLE + ChatColor.ITALIC,*/ highlightStyle = "" + ChatColor.YELLOW + ChatColor.ITALIC, optionEnabled = "" + ChatColor.GREEN, optionDisabled = "" + ChatColor.RED;
 	Menu currentMenu = Menu.ROOT;
 	private final short playerHeadDurability = 3; 
 	
@@ -56,9 +56,7 @@ class GameConfiguration
 		setNameAndLore(backItem, highlightStyle + "Go back", "Return to the previous menu");
 		
 		createGameModeMenu();
-		createGameModeConfigMenu();
 		createWorldGenMenu();
-		createWorldGenConfigMenu();
 		createPlayersMenu();
 		createMonstersMenu();
 		createAnimalsMenu();
@@ -135,9 +133,9 @@ class GameConfiguration
 		inventories.get(Menu.GAME_MODE).setItem(num+2, item);
 	}
 	
-	private void createGameModeConfigMenu()
+	private void createGameModeConfigMenu(GameMode mode)
 	{
-		Inventory menu = null;
+		Inventory menu = createModuleOptionsMenu(mode);
 		inventories.put(Menu.GAME_MODE_CONFIG, menu);
 	}
 	
@@ -177,12 +175,33 @@ class GameConfiguration
 		inventories.get(Menu.WORLD_GEN).setItem(num+2, item);
 	}
 
-	private void createWorldGenConfigMenu()
+	private void createWorldGenConfigMenu(WorldGenerator world)
 	{
-		Inventory menu = null;
+		Inventory menu = createModuleOptionsMenu(world);
 		inventories.put(Menu.WORLD_GEN_CONFIG, menu);
 	}
 	
+	private Inventory createModuleOptionsMenu(KillerModule module)
+	{
+		Inventory menu = Bukkit.createInventory(null, nearestNine(module.getNumOptions() + 2), module.getName() + " options");
+		generateOptionMenuItems(menu, module);
+		return menu;
+	}
+	
+	private void generateOptionMenuItems(Inventory menu, KillerModule module)
+	{
+		menu.setItem(0, backItem);
+		
+		for ( int i=0; i<module.getNumOptions(); i++ )
+		{
+			Option option = module.getOption(i);
+			ItemStack item = new ItemStack(option.isEnabled() ? Material.LAVA_BUCKET : Material.BUCKET, 1, (short)i);
+			
+			setNameAndLore(item, option.getName(), option.isEnabled() ? optionEnabled + "Enabled" : optionDisabled + "Disabled", "<option descriptions not yet implemented>");
+			menu.setItem(i+2, item);			
+		}
+	}
+
 	private void createPlayersMenu()
 	{
 		Inventory menu = null;
@@ -318,12 +337,14 @@ class GameConfiguration
 	{
 		setLore(rootGameMode, highlightStyle + "Current mode: " + gameMode.getName(), "The game mode is the main set of rules,", "and controls every aspect of a game.");
 		inventories.get(Menu.ROOT).setItem(0, rootGameMode);
+		createGameModeConfigMenu(gameMode);
 	}
 
 	public void worldGeneratorChanged(WorldGenerator world)
 	{
 		setLore(rootWorldGen, highlightStyle + "Current generator: "+ world.getName(), "The world generator controls", "the terrain in the game's world(s)");
 		inventories.get(Menu.ROOT).setItem(2, rootWorldGen);
+		createWorldGenConfigMenu(world);
 	}
 
 	private void rootMenuClicked(Player player, ItemStack item)
@@ -370,6 +391,12 @@ class GameConfiguration
 	{
 		if ( item.getType() == backItem.getType() )
 			showMenu(player, Menu.ROOT);
+		else if ( item.getType() != Material.AIR )
+		{
+			int option = item.getDurability();
+			game.getGameMode().toggleOption(option);
+			generateOptionMenuItems(inventories.get(Menu.GAME_MODE_CONFIG), game.getGameMode());
+		}
 	}
 	
 	private void worldGenMenuClicked(Player player, ItemStack item)
@@ -397,9 +424,12 @@ class GameConfiguration
 	private void worldGenConfigClicked(Player player, ItemStack item)
 	{
 		if ( item.getType() == backItem.getType() )
-		{
 			showMenu(player, Menu.ROOT);
-			return;
+		else if ( item.getType() != Material.AIR )
+		{
+			int option = item.getDurability();
+			game.getWorldGenerator().toggleOption(option);
+			generateOptionMenuItems(inventories.get(Menu.WORLD_GEN_CONFIG), game.getWorldGenerator());
 		}
 	}
 	
