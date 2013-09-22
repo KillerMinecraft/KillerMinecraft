@@ -1,77 +1,27 @@
 package com.ftwinston.KillerMinecraft;
 
-public final class Option
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+
+public abstract class Option
 {
-	public Option(String name, boolean enabledByDefault)
+	public Option(String name)
 	{
 		this.name = name;
-		this.enabled = enabledByDefault;
 	}
 	
 	private String name;
 	public String getName() { return name; }
+
+	protected abstract boolean trySetValue(String value);
+	protected abstract String getValueString();
 	
-	private boolean enabled;
-	public boolean isEnabled() { return enabled; }
-	public void setEnabled(boolean enabled) { this.enabled = enabled; }
+	protected abstract Material getDisplayMaterial();
+	protected abstract String[] getDescription(); 
+
+	protected abstract ItemStack[] optionClicked();
 	
-	public static void ensureOnlyOneEnabled(Option[] options, int changedIndex, int... indices)
-	{
-		boolean careAboutChangedIndex = false;
-		for ( int index : indices )
-			if ( index == changedIndex )
-			{
-				careAboutChangedIndex = true;
-				break;
-			}
-		
-		if ( !careAboutChangedIndex )
-			return;
-		
-		if ( options[changedIndex].isEnabled() )
-		{// turned on; turn the others off
-			for ( int index : indices )
-				if ( index != changedIndex )
-					options[index].setEnabled(false);
-		}
-		else
-		{// turned off; if all are off, turn this one back on
-			boolean allOff = true;
-			for ( int index : indices )
-				if ( options[index].isEnabled() )
-				{
-					allOff = false;
-					break;
-				}
-			if ( allOff )
-				options[changedIndex].setEnabled(true);
-		}
-	}
-	
-	public static void ensureAtLeastOneEnabled(Option[] options, int changedIndex, int... indices)
-	{
-		boolean careAboutChangedIndex = false;
-		for ( int index : indices )
-			if ( index == changedIndex )
-			{
-				careAboutChangedIndex = true;
-				break;
-			}
-		
-		if ( !careAboutChangedIndex )
-			return;
-		
-		if ( !options[changedIndex].isEnabled() )
-		{// turned off; if all are off, turn this one back on
-			boolean allOff = true;
-			for ( int index : indices )
-				if ( options[index].isEnabled() )
-				{
-					allOff = false;
-					break;
-				}
-			if ( allOff )
-				options[changedIndex].setEnabled(true);
-		}
-	}
+	private int selectedIndex = 0;
+	protected int getSelectedIndex() { return selectedIndex; }
+	protected void setSelectedIndex(int index) { selectedIndex = index; }
 }

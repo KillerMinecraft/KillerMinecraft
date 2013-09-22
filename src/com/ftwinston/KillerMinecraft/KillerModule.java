@@ -9,6 +9,7 @@ import org.bukkit.event.Event;
 import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.scheduler.BukkitScheduler;
 
+
 public abstract class KillerModule implements Listener
 {
 	KillerMinecraft plugin; KillerModulePlugin modulePlugin;
@@ -36,17 +37,8 @@ public abstract class KillerModule implements Listener
 	
 	Map<Class<? extends Event>, Set<RegisteredListener>> eventHandlers = new HashMap<Class<? extends Event>, Set<RegisteredListener>>();
 	
-	private Option[] options;
+	Option[] options;
 	protected abstract Option[] setupOptions();
-	public final Option[] getOptions() { return options; }
-	public final Option getOption(int num) { return options[num]; }
-	public final int getNumOptions() { return options.length; }
-		
-	public void toggleOption(int num)
-	{
-		Option option = options[num];
-		option.setEnabled(!option.isEnabled());
-	}
 	
 	public final Option findOption(String name)
 	{

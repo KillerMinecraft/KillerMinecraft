@@ -7,6 +7,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Date;
 
+
 class StatsManager
 {
 	KillerMinecraft plugin;
@@ -79,12 +80,12 @@ class StatsManager
 		plugin.log.info("Sending stats...");
 		
 		String modeOptions = "";
-		for ( Option option : mode.getOptions() )
-			modeOptions += option.getName().replace(":"," - ").replace(";"," - ") + ":" + (option.isEnabled() ? "1" : "0") + ";";
+		for ( Option option : mode.options )
+			modeOptions += option.getName().replace(":"," - ").replace(";"," - ") + ":" + option.getValueString() + ";";
 		
 		String worldOptions = "";
-		for ( Option option : world.getOptions() )
-			worldOptions += option.getName().replace(":"," - ").replace(";"," - ") + ":" + (option.isEnabled() ? "1" : "0") + ";";
+		for ( Option option : world.options )
+			worldOptions += option.getName().replace(":"," - ").replace(";"," - ") + ":" + option.getValueString() + ";";
 		
 		final URL statsPage;
 		try

@@ -262,7 +262,12 @@ public class Settings
 					KillerMinecraft.instance.log.warning(module.getName() + " option \"" + optionName + "\" has no value");
 					continue;
 				}
-				option.setEnabled(Boolean.parseBoolean(val));
+				
+				if ( !option.trySetValue(val) )
+				{
+					KillerMinecraft.instance.log.warning(module.getName() + " option \"" + optionName + "\" has invalid value: " + val);
+					continue;
+				}
 			}
 		}
 	}

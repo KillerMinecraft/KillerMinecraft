@@ -18,7 +18,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-
 class GameConfiguration
 {
 	private Game game;
@@ -44,9 +43,10 @@ class GameConfiguration
 		PLAYERS,
 		MONSTERS,
 		ANIMALS,
+		SPECIFIC_OPTION_CHOICE,
 	}
 	
-	private static String /*loreStyle = "" + ChatColor.DARK_PURPLE + ChatColor.ITALIC,*/ highlightStyle = "" + ChatColor.YELLOW + ChatColor.ITALIC, optionEnabled = "" + ChatColor.GREEN, optionDisabled = "" + ChatColor.RED;
+	private static String /*loreStyle = "" + ChatColor.DARK_PURPLE + ChatColor.ITALIC,*/ highlightStyle = "" + ChatColor.YELLOW + ChatColor.ITALIC;
 	Menu currentMenu = Menu.ROOT;
 	private final short playerHeadDurability = 3; 
 	
@@ -183,7 +183,7 @@ class GameConfiguration
 	
 	private Inventory createModuleOptionsMenu(KillerModule module)
 	{
-		Inventory menu = Bukkit.createInventory(null, nearestNine(module.getNumOptions() + 2), module.getName() + " options");
+		Inventory menu = Bukkit.createInventory(null, nearestNine(module.options.length + 2), module.getName() + " options");
 		generateOptionMenuItems(menu, module);
 		return menu;
 	}
@@ -192,13 +192,12 @@ class GameConfiguration
 	{
 		menu.setItem(0, backItem);
 		
-		for ( int i=0; i<module.getNumOptions(); i++ )
+		for ( int i=0; i<module.options.length; i++ )
 		{
-			Option option = module.getOption(i);
-			ItemStack item = new ItemStack(option.isEnabled() ? Material.LAVA_BUCKET : Material.BUCKET, 1, (short)i);
-			
-			setNameAndLore(item, option.getName(), option.isEnabled() ? optionEnabled + "Enabled" : optionDisabled + "Disabled", "<option descriptions not yet implemented>");
-			menu.setItem(i+2, item);			
+			Option option = module.options[i];
+			ItemStack item = new ItemStack(option.getDisplayMaterial());
+			setNameAndLore(item, option.getName(), option.getDescription());
+			menu.setItem(i+2, item);
 		}
 	}
 
@@ -387,15 +386,21 @@ class GameConfiguration
 		setupGameModeItemLore(i, mode, true);
 	}
 	
-	private void gameModeConfigClicked(Player player, ItemStack item)
+	private void gameModeConfigClicked(Player player, ItemStack item, int itemSlot)
 	{
 		if ( item.getType() == backItem.getType() )
 			showMenu(player, Menu.ROOT);
 		else if ( item.getType() != Material.AIR )
 		{
-			int option = item.getDurability();
-			game.getGameMode().toggleOption(option);
-			generateOptionMenuItems(inventories.get(Menu.GAME_MODE_CONFIG), game.getGameMode());
+			Option option = game.getGameMode().options[itemSlot];
+			
+			ItemStack[] choiceItems = option.optionClicked();
+			if ( choiceItems != null )
+			{
+				showChoiceOptionMenu(player, option, choiceItems, Menu.GAME_MODE_CONFIG);
+			}
+			else
+				generateOptionMenuItems(inventories.get(Menu.GAME_MODE_CONFIG), game.getGameMode());
 		}
 	}
 	
@@ -421,15 +426,21 @@ class GameConfiguration
 		setupWorldGenItemLore(i, generator, true);
 	}
 
-	private void worldGenConfigClicked(Player player, ItemStack item)
+	private void worldGenConfigClicked(Player player, ItemStack item, int itemSlot)
 	{
 		if ( item.getType() == backItem.getType() )
 			showMenu(player, Menu.ROOT);
 		else if ( item.getType() != Material.AIR )
 		{
-			int option = item.getDurability();
-			game.getWorldGenerator().toggleOption(option);
-			generateOptionMenuItems(inventories.get(Menu.WORLD_GEN_CONFIG), game.getWorldGenerator());
+			Option option = game.getWorldGenerator().options[itemSlot];
+			
+			ItemStack[] choiceItems = option.optionClicked();
+			if ( choiceItems != null )
+			{
+				showChoiceOptionMenu(player, option, choiceItems, Menu.WORLD_GEN_CONFIG);
+			}
+			else
+				generateOptionMenuItems(inventories.get(Menu.WORLD_GEN_CONFIG), game.getGameMode());
 		}
 	}
 	
@@ -496,6 +507,47 @@ class GameConfiguration
 			}
 	}
 	
+	Menu choiceOptionGoBackTo;
+	Option currentOption;
+	private void choiceOptionMenuClicked(Player player, ItemStack item, int itemSlot)
+	{
+		if ( item.getType() == backItem.getType() )
+		{
+			currentOption = null;
+			showMenu(player, choiceOptionGoBackTo);
+			return;
+		}
+		
+		if ( item.getType() != Material.AIR )
+		{
+			currentOption.setSelectedIndex(itemSlot-2);
+			showChoiceOptionMenu(player, currentOption, currentOption.optionClicked(), choiceOptionGoBackTo);
+		
+			// which of these could have changed depends on if this is an option for the game mode or world generator 
+			game.modeRenderer.allowForChanges();
+			game.miscRenderer.allowForChanges();
+		}
+	}
+	
+	private void showChoiceOptionMenu(Player player, Option option, ItemStack[] choiceItems, Menu goBackTo)
+	{
+		choiceOptionGoBackTo = goBackTo;
+		currentOption = option;
+		Inventory menu = Bukkit.createInventory(null, nearestNine(choiceItems.length + 2), option.getName() + " options");
+		
+		menu.setItem(0, backItem);
+		for ( int i=0; i<choiceItems.length; i++ )
+		{
+			ItemStack item = choiceItems[i];
+			if ( option.getSelectedIndex() == i )
+				item = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(item);				
+			menu.setItem(i+2, item);
+		}
+		
+		currentMenu = Menu.SPECIFIC_OPTION_CHOICE;
+		player.openInventory(menu);
+	}
+
 	private static Game getGameByConfiguringPlayer(Player player)
 	{	
 		for ( Game game : KillerMinecraft.instance.games )
@@ -533,17 +585,19 @@ class GameConfiguration
 		case GAME_MODE:
 			game.configuration.gameModeMenuClicked(player, event.getCurrentItem()); break;
 		case GAME_MODE_CONFIG:
-			game.configuration.gameModeConfigClicked(player, event.getCurrentItem()); break;
+			game.configuration.gameModeConfigClicked(player, event.getCurrentItem(), event.getRawSlot()); break;
 		case WORLD_GEN:
 			game.configuration.worldGenMenuClicked(player, event.getCurrentItem()); break;
 		case WORLD_GEN_CONFIG:
-			game.configuration.worldGenConfigClicked(player, event.getCurrentItem()); break;
+			game.configuration.worldGenConfigClicked(player, event.getCurrentItem(), event.getRawSlot()); break;
 		case PLAYERS:
 			game.configuration.playersMenuClicked(player, event.getCurrentItem()); break;
 		case MONSTERS:
 			game.configuration.monstersMenuClicked(player, event.getCurrentItem()); break;
 		case ANIMALS:
 			game.configuration.animalsMenuClicked(player, event.getCurrentItem()); break;
+		case SPECIFIC_OPTION_CHOICE:
+			game.configuration.choiceOptionMenuClicked(player, event.getCurrentItem(), event.getRawSlot()); break;
 		}
 	}
 
