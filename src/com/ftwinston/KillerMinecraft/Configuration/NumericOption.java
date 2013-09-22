@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import com.ftwinston.KillerMinecraft.KillerMinecraft;
 import com.ftwinston.KillerMinecraft.Option;
 
 public class NumericOption extends Option
@@ -15,7 +16,7 @@ public class NumericOption extends Option
 	{
 		super(name);
 		
-		if ( max > min )
+		if ( max < min )
 		{
 			this.min = max;
 			this.max = min;
@@ -85,7 +86,7 @@ public class NumericOption extends Option
     @Override
     public ItemStack[] optionClicked()
     {
-    	int numItems = Math.min(max - min, maxNumItems);
+    	int numItems = Math.min(max - min + 1, maxNumItems);
     	ItemStack[] items = new ItemStack[numItems];
     	
     	for ( int i=0; i<numItems; i++ )

@@ -392,7 +392,7 @@ class GameConfiguration
 			showMenu(player, Menu.ROOT);
 		else if ( item.getType() != Material.AIR )
 		{
-			Option option = game.getGameMode().options[itemSlot];
+			Option option = game.getGameMode().options[itemSlot-2];
 			
 			ItemStack[] choiceItems = option.optionClicked();
 			if ( choiceItems != null )
@@ -432,7 +432,7 @@ class GameConfiguration
 			showMenu(player, Menu.ROOT);
 		else if ( item.getType() != Material.AIR )
 		{
-			Option option = game.getWorldGenerator().options[itemSlot];
+			Option option = game.getWorldGenerator().options[itemSlot-2];
 			
 			ItemStack[] choiceItems = option.optionClicked();
 			if ( choiceItems != null )
@@ -440,7 +440,7 @@ class GameConfiguration
 				showChoiceOptionMenu(player, option, choiceItems, Menu.WORLD_GEN_CONFIG);
 			}
 			else
-				generateOptionMenuItems(inventories.get(Menu.WORLD_GEN_CONFIG), game.getGameMode());
+				generateOptionMenuItems(inventories.get(Menu.WORLD_GEN_CONFIG), game.getWorldGenerator());
 		}
 	}
 	
@@ -533,7 +533,7 @@ class GameConfiguration
 	{
 		choiceOptionGoBackTo = goBackTo;
 		currentOption = option;
-		Inventory menu = Bukkit.createInventory(null, nearestNine(choiceItems.length + 2), option.getName() + " options");
+		Inventory menu = Bukkit.createInventory(null, nearestNine(choiceItems.length + 2), option.getName());
 		
 		menu.setItem(0, backItem);
 		for ( int i=0; i<choiceItems.length; i++ )

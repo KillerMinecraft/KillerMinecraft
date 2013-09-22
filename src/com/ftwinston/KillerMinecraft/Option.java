@@ -7,7 +7,10 @@ public abstract class Option
 {
 	public Option(String name)
 	{
-		this.name = name;
+		if ( name.length() > 32 )
+			this.name = name.substring(0, 32);
+		else
+			this.name = name;
 	}
 	
 	private String name;
