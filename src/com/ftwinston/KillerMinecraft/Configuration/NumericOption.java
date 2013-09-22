@@ -7,7 +7,6 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.ftwinston.KillerMinecraft.KillerMinecraft;
 import com.ftwinston.KillerMinecraft.Option;
 
 public class NumericOption extends Option
@@ -27,8 +26,9 @@ public class NumericOption extends Option
 			this.max = max;
 		}
 
-		setValue(Math.min(max, Math.max(min, defaultVal)));
-		
+		int val = Math.min(max, Math.max(min, defaultVal));
+		setValue(val);
+		super.setSelectedIndex(val-min);
 		
 		this.icon = icon;
 	}

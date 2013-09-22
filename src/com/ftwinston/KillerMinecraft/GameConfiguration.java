@@ -389,19 +389,20 @@ class GameConfiguration
 	private void gameModeConfigClicked(Player player, ItemStack item, int itemSlot)
 	{
 		if ( item.getType() == backItem.getType() )
-			showMenu(player, Menu.ROOT);
-		else if ( item.getType() != Material.AIR )
 		{
-			Option option = game.getGameMode().options[itemSlot-2];
-			
-			ItemStack[] choiceItems = option.optionClicked();
-			if ( choiceItems != null )
-			{
-				showChoiceOptionMenu(player, option, choiceItems, Menu.GAME_MODE_CONFIG);
-			}
-			else
-				generateOptionMenuItems(inventories.get(Menu.GAME_MODE_CONFIG), game.getGameMode());
+			showMenu(player, Menu.ROOT);
+			return;
 		}
+		
+		Option option = game.getGameMode().options[itemSlot-2];
+			
+		ItemStack[] choiceItems = option.optionClicked();
+		if ( choiceItems != null )
+		{
+			showChoiceOptionMenu(player, option, choiceItems, Menu.GAME_MODE_CONFIG);
+		}
+		else
+			generateOptionMenuItems(inventories.get(Menu.GAME_MODE_CONFIG), game.getGameMode());
 	}
 	
 	private void worldGenMenuClicked(Player player, ItemStack item)
@@ -429,19 +430,20 @@ class GameConfiguration
 	private void worldGenConfigClicked(Player player, ItemStack item, int itemSlot)
 	{
 		if ( item.getType() == backItem.getType() )
-			showMenu(player, Menu.ROOT);
-		else if ( item.getType() != Material.AIR )
 		{
-			Option option = game.getWorldGenerator().options[itemSlot-2];
-			
-			ItemStack[] choiceItems = option.optionClicked();
-			if ( choiceItems != null )
-			{
-				showChoiceOptionMenu(player, option, choiceItems, Menu.WORLD_GEN_CONFIG);
-			}
-			else
-				generateOptionMenuItems(inventories.get(Menu.WORLD_GEN_CONFIG), game.getWorldGenerator());
+			showMenu(player, Menu.ROOT);
+			return;
 		}
+
+		Option option = game.getWorldGenerator().options[itemSlot-2];
+			
+		ItemStack[] choiceItems = option.optionClicked();
+		if ( choiceItems != null )
+		{
+			showChoiceOptionMenu(player, option, choiceItems, Menu.WORLD_GEN_CONFIG);
+		}
+		else
+			generateOptionMenuItems(inventories.get(Menu.WORLD_GEN_CONFIG), game.getWorldGenerator());
 	}
 	
 	private void playersMenuClicked(Player player, ItemStack item)
@@ -514,19 +516,17 @@ class GameConfiguration
 		if ( item.getType() == backItem.getType() )
 		{
 			currentOption = null;
+			inventories.put(Menu.SPECIFIC_OPTION_CHOICE, null);
 			showMenu(player, choiceOptionGoBackTo);
 			return;
 		}
 		
-		if ( item.getType() != Material.AIR )
-		{
-			currentOption.setSelectedIndex(itemSlot-2);
-			showChoiceOptionMenu(player, currentOption, currentOption.optionClicked(), choiceOptionGoBackTo);
-		
-			// which of these could have changed depends on if this is an option for the game mode or world generator 
-			game.modeRenderer.allowForChanges();
-			game.miscRenderer.allowForChanges();
-		}
+		currentOption.setSelectedIndex(itemSlot-2);
+		populateChoiceOptionMenu(currentOption.optionClicked(), currentOption.getSelectedIndex(), inventories.get(Menu.SPECIFIC_OPTION_CHOICE));
+	
+		// which of these could have changed depends on if this is an option for the game mode or world generator 
+		game.modeRenderer.allowForChanges();
+		game.miscRenderer.allowForChanges();
 	}
 	
 	private void showChoiceOptionMenu(Player player, Option option, ItemStack[] choiceItems, Menu goBackTo)
@@ -534,18 +534,24 @@ class GameConfiguration
 		choiceOptionGoBackTo = goBackTo;
 		currentOption = option;
 		Inventory menu = Bukkit.createInventory(null, nearestNine(choiceItems.length + 2), option.getName());
+		menu.setItem(0, backItem);	
 		
-		menu.setItem(0, backItem);
+		populateChoiceOptionMenu(choiceItems, option.getSelectedIndex(), menu);
+		
+		inventories.put(Menu.SPECIFIC_OPTION_CHOICE, menu);
+		currentMenu = Menu.SPECIFIC_OPTION_CHOICE;
+		player.openInventory(menu);
+	}
+
+	private void populateChoiceOptionMenu(ItemStack[] choiceItems, int selectedIndex, Inventory menu)
+	{
 		for ( int i=0; i<choiceItems.length; i++ )
 		{
 			ItemStack item = choiceItems[i];
-			if ( option.getSelectedIndex() == i )
+			if ( selectedIndex == i )
 				item = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(item);				
 			menu.setItem(i+2, item);
 		}
-		
-		currentMenu = Menu.SPECIFIC_OPTION_CHOICE;
-		player.openInventory(menu);
 	}
 
 	private static Game getGameByConfiguringPlayer(Player player)
@@ -562,7 +568,7 @@ class GameConfiguration
 	
 	public static void checkEvent(InventoryClickEvent event)
 	{
-		if ( !(event.getWhoClicked() instanceof Player) || event.getCurrentItem() == null )
+		if ( !(event.getWhoClicked() instanceof Player) || event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR )
 			return;
 		
 		Player player = (Player)event.getWhoClicked();
