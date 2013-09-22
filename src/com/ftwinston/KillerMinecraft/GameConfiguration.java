@@ -517,6 +517,12 @@ class GameConfiguration
 		{
 			currentOption = null;
 			inventories.put(Menu.SPECIFIC_OPTION_CHOICE, null);
+			
+			if ( choiceOptionGoBackTo == Menu.GAME_MODE_CONFIG )
+				generateOptionMenuItems(inventories.get(choiceOptionGoBackTo), game.getGameMode());
+			else if ( choiceOptionGoBackTo == Menu.WORLD_GEN_CONFIG ) 
+				generateOptionMenuItems(inventories.get(choiceOptionGoBackTo), game.getWorldGenerator());
+			
 			showMenu(player, choiceOptionGoBackTo);
 			return;
 		}

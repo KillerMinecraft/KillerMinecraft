@@ -22,7 +22,7 @@ public class ToggleOption extends Option
 	@Override
 	protected String[] getDescription()
 	{
-		return new String[] { isEnabled() ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled", "<option descriptions not yet implemented>" };
+		return new String[] { isEnabled() ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled", "<no description available>" };
 	}
 	
 	@Override

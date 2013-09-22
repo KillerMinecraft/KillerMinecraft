@@ -27,9 +27,8 @@ public class NumericOption extends Option
 		}
 
 		int val = Math.min(max, Math.max(min, defaultVal));
-		setValue(val);
-		super.setSelectedIndex(val-min);
-		
+		setSelectedIndex(val-min);
+			
 		this.icon = icon;
 	}
 	
@@ -53,7 +52,7 @@ public class NumericOption extends Option
 
 	@Override
 	protected String[] getDescription() {
-		return new String[] { ChatColor.YELLOW + "Current value: " + getValue(), "<option descriptions not yet implemented>" };
+		return new String[] { ChatColor.YELLOW + "Current value: " + getValue(), "<no description available>" };
 	}
 
 	@Override
