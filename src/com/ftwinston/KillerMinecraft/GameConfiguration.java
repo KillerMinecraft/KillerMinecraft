@@ -203,8 +203,20 @@ class GameConfiguration
 
 	private void createPlayersMenu()
 	{
-		Inventory menu = null;
+		Inventory menu = Bukkit.createInventory(null, 9, "Player settings");
+		menu.setItem(0, backItem);
 		inventories.put(Menu.PLAYERS, menu);
+		
+		// enable player limit, player limit number control
+		
+		// if game mode allows team selection, a toggle to allow manual team selection (and show the scoreboard during setup) ...
+		// if disabled, players shouldn't see the scoreboard thing (until the game starts, at least), teams will be auto-assigned
+		
+		// LOCK the game, so no one else can join (even if people leave)
+		//		if a game empties, it should automatically unlock. Likewise when it ends.
+		
+		// at some point, it'd be nice to have a screen showing all player heads (with paging if needed)
+		// allowing you to click them to set their team.
 	}
 	
 	final int numQuantityItems = 5;
