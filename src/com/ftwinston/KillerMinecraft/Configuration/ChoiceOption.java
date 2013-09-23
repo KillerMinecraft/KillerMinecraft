@@ -1,52 +1,44 @@
 package com.ftwinston.KillerMinecraft.Configuration;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.ftwinston.KillerMinecraft.KillerMinecraft;
 import com.ftwinston.KillerMinecraft.Option;
 
 public class ChoiceOption extends Option
 {
-	public ChoiceOption(String name, String[] values, Material[] icons, int selectedIndex)
+	public ChoiceOption(String name)
 	{
 		super(name);
-		
-		if ( values.length != icons.length )
-		{
-			KillerMinecraft.instance.log.warning("Value and Icon array parameters don't have the same length for choice option '" + name + "'");
-		}
-		
-		if ( selectedIndex < 0 )
-			selectedIndex = 0;
-		else if ( selectedIndex >= values.length )
-			selectedIndex = values.length - 1;
-		setSelectedIndex(selectedIndex);
-		
-		this.values = values;
-		this.icons = icons;
 	}
 	
-	private String[] values;
-	private Material[] icons;
+	private ArrayList<Choice> choices = new ArrayList<ChoiceOption.Choice>();
 	
 	@Override
-	protected Material getDisplayMaterial() { return icons[getSelectedIndex()]; }
+	protected Material getDisplayMaterial() { return choices.get(getSelectedIndex()).icon; }
 
 	@Override
 	protected String[] getDescription() {
-		return new String[] { ChatColor.YELLOW + "Current value: " + getValue(), "<no description available>" };
+		Choice c = choices.get(getSelectedIndex());
+		
+		String[] desc = new String[c.description.length+1];
+		desc[0] = ChatColor.YELLOW + "Current value: " + c.name;
+		
+		for ( int i=0; i<c.description.length; i++ )
+			desc[i+1] = c.description[i];
+		
+		return desc;
 	}
 
 	@Override
 	protected boolean trySetValue(String value)
 	{
-		for ( int i=0; i<values.length; i++ )
-			if ( value.equalsIgnoreCase(values[i]))
+		for ( int i=0; i<choices.size(); i++ )
+			if ( value.equalsIgnoreCase(choices.get(i).name))
 			{
 				setSelectedIndex(i);
 				return true;
@@ -63,7 +55,12 @@ public class ChoiceOption extends Option
 	
 	public String getValue()
 	{
-		return values[getSelectedIndex()];
+		return choices.get(getSelectedIndex()).name;
+	}
+	
+	public void addChoice(String name, Material icon, String... description)
+	{
+		choices.add(new Choice(name, icon, description));
 	}
 	
 	final int maxNumItems = 34; 
@@ -71,21 +68,24 @@ public class ChoiceOption extends Option
     @Override
     public ItemStack[] optionClicked()
     {
-    	int numItems = Math.min(values.length, maxNumItems);
+    	int numItems = Math.min(choices.size(), maxNumItems);
     	ItemStack[] items = new ItemStack[numItems];
     	
     	for ( int i=0; i<numItems; i++ )
     	{
-    		ItemStack item = new ItemStack(icons[i]);
+    		Choice c = choices.get(i);
+    		ItemStack item = new ItemStack(c.icon);
     		
     		ItemMeta meta = item.getItemMeta();
     		
-    		meta.setDisplayName(ChatColor.RESET + values[i]);
+    		meta.setDisplayName(ChatColor.RESET + c.name);
     		
+    		ArrayList<String> desc = new ArrayList<String>(c.description.length+1);
+    		for ( int j=0; j<c.description.length; j++ )
+    			desc.add(c.description[j]);
     		if ( i == getSelectedIndex() )
-    			meta.setLore(Arrays.asList("" + ChatColor.YELLOW + ChatColor.ITALIC + "Current value", "<no description available>"));
-    		else
-    			meta.setLore(Arrays.asList("<no description available>"));
+    			desc.add(0, "" + ChatColor.YELLOW + ChatColor.ITALIC + "Current value");
+    		meta.setLore(desc);
     		
     		item.setItemMeta(meta);
     		
@@ -93,5 +93,19 @@ public class ChoiceOption extends Option
     	}
     	
     	return items;
+    }
+    
+    class Choice
+    {
+    	Choice(String name, Material icon, String[] description)
+    	{
+    		this.name = name;
+    		this.icon = icon;
+    		this.description = description;
+    	}
+    	
+    	public String name;
+    	public Material icon;
+    	public String[] description;
     }
 }

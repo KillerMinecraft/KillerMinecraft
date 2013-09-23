@@ -11,7 +11,7 @@ import com.ftwinston.KillerMinecraft.Option;
 
 public class NumericOption extends Option
 {
-	public NumericOption(String name, int min, int max, Material icon, int defaultVal)
+	public NumericOption(String name, int min, int max, Material icon, int defaultVal, String... description)
 	{
 		super(name);
 		
@@ -30,10 +30,15 @@ public class NumericOption extends Option
 		setSelectedIndex(val-min);
 			
 		this.icon = icon;
+		
+		this.description = new String[description.length+1];
+		for ( int i=0; i<description.length; i++ )
+			this.description[i+1] = description[i];
 	}
 	
 	private int min, max, value;
 	private Material icon;
+	private String[] description;
 	
 	protected void setValue(int newVal)
 	{
@@ -52,7 +57,8 @@ public class NumericOption extends Option
 
 	@Override
 	protected String[] getDescription() {
-		return new String[] { ChatColor.YELLOW + "Current value: " + getValue(), "<no description available>" };
+		description[0] = ChatColor.YELLOW + "Current value: " + getValue();
+		return description;
 	}
 
 	@Override
@@ -97,9 +103,9 @@ public class NumericOption extends Option
     		meta.setDisplayName(ChatColor.RESET + "" + (i+min));
     		
     		if ( i == getSelectedIndex() )
-    			meta.setLore(Arrays.asList("" + ChatColor.YELLOW + ChatColor.ITALIC + "Current value", "<no description available>"));
+    			meta.setLore(Arrays.asList("" + ChatColor.YELLOW + ChatColor.ITALIC + "Current value"));
     		else
-    			meta.setLore(Arrays.asList("<no description available>"));
+    			meta.setLore(Arrays.asList("Click to change the value to this number"));
     		
     		item.setItemMeta(meta);
     		

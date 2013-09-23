@@ -5,7 +5,7 @@ import org.bukkit.inventory.ItemStack;
 
 public abstract class Option
 {
-	public Option(String name)
+	protected Option(String name)
 	{
 		if ( name.length() > 32 )
 			this.name = name.substring(0, 32);
@@ -15,7 +15,7 @@ public abstract class Option
 	
 	private String name;
 	public String getName() { return name; }
-
+	
 	protected abstract boolean trySetValue(String value);
 	protected abstract String getValueString();
 	

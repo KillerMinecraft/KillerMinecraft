@@ -10,19 +10,26 @@ import com.ftwinston.KillerMinecraft.Option;
 
 public class ToggleOption extends Option
 {
-	public ToggleOption(String name, boolean enabledByDefault)
+	public ToggleOption(String name, boolean enabledByDefault, String... description)
 	{
 		super(name);
 		setEnabled(enabledByDefault);
+		
+		this.description = new String[description.length+1];
+		for ( int i=0; i<description.length; i++ )
+			this.description[i+1] = description[i];
 	}
 
+	private String[] description;
+	
 	@Override
 	protected Material getDisplayMaterial() { return enabled ? Material.LAVA_BUCKET : Material.BUCKET; }
 	
 	@Override
 	protected String[] getDescription()
 	{
-		return new String[] { isEnabled() ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled", "<no description available>" };
+		description[0] = isEnabled() ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled";
+		return description;
 	}
 	
 	@Override
