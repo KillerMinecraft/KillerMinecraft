@@ -96,16 +96,17 @@ public class NumericOption extends Option
     	
     	for ( int i=0; i<numItems; i++ )
     	{
-    		ItemStack item = new ItemStack(Material.REDSTONE_TORCH_ON);
+			boolean selected = i == getSelectedIndex();
+    		ItemStack item = new ItemStack(selected ? Material.REDSTONE_TORCH_ON : Material.REDSTONE_TORCH_OFF);
     		
     		ItemMeta meta = item.getItemMeta();
     		
     		meta.setDisplayName(ChatColor.RESET + "" + (i+min));
     		
-    		if ( i == getSelectedIndex() )
+    		if ( selected )
     			meta.setLore(Arrays.asList("" + ChatColor.YELLOW + ChatColor.ITALIC + "Current value"));
     		else
-    			meta.setLore(Arrays.asList("Click to change the value to this number"));
+    			meta.setLore(Arrays.asList("Click to change the", "value to this number"));
     		
     		item.setItemMeta(meta);
     		
