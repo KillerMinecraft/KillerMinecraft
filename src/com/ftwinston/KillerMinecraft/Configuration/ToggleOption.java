@@ -47,18 +47,18 @@ public class ToggleOption extends Option
 	
 	public void toggle()
 	{
-		if ( dontDisableIfTheseDisabled != null && isEnabled() )
+		if ( enableOneIfAllDisabled != null && isEnabled() )
 		{
 			boolean anyEnabled = false;
-			for ( ToggleOption option : dontDisableIfTheseDisabled )
+			for ( ToggleOption option : enableOneIfAllDisabled )
 				if ( option.isEnabled() )
 				{
 					anyEnabled = true;
 					break;
 				}
 			
-			if (!anyEnabled)
-				return;
+			if (!anyEnabled && enableOneIfAllDisabled.size() > 0 )
+				enableOneIfAllDisabled.get(0).toggle();
 		}
 		
 		setEnabled(!enabled);
@@ -69,7 +69,7 @@ public class ToggleOption extends Option
 	}
 		
 	private ArrayList<ToggleOption> disableWhenThisEnabled;
-	private ArrayList<ToggleOption> dontDisableIfTheseDisabled;
+	private ArrayList<ToggleOption> enableOneIfAllDisabled;
 					
 	public static void ensureOnlyOneEnabled(ToggleOption... options)
 	{
@@ -89,11 +89,11 @@ public class ToggleOption extends Option
 	{
 		for ( ToggleOption option : options ) 
 		{
-			option.dontDisableIfTheseDisabled = new ArrayList<ToggleOption>();
+			option.enableOneIfAllDisabled = new ArrayList<ToggleOption>();
 			
 			for ( ToggleOption other : options )
 				if ( other != option )
-					option.dontDisableIfTheseDisabled.add(other);
+					option.enableOneIfAllDisabled.add(other);
 		}		
 	}
 }
