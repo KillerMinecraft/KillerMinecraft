@@ -7,48 +7,35 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import com.ftwinston.KillerMinecraft.KillerMinecraft;
 import com.ftwinston.KillerMinecraft.Option;
 
-public class NumericOption extends Option
+public class ChoiceOption extends Option
 {
-	public NumericOption(String name, int min, int max, Material icon, int defaultVal)
+	public ChoiceOption(String name, String[] values, Material[] icons, int selectedIndex)
 	{
 		super(name);
 		
-		if ( max < min )
+		if ( values.length != icons.length )
 		{
-			this.min = max;
-			this.max = min;
+			KillerMinecraft.instance.log.warning("Value and Icon array parameters don't have the same length for choice option '" + name + "'");
 		}
-		else
-		{
-			this.min = min;
-			this.max = max;
-		}
-
-		int val = Math.min(max, Math.max(min, defaultVal));
-		setSelectedIndex(val-min);
-			
-		this.icon = icon;
+		
+		if ( selectedIndex < 0 )
+			selectedIndex = 0;
+		else if ( selectedIndex >= values.length )
+			selectedIndex = values.length - 1;
+		setSelectedIndex(selectedIndex);
+		
+		this.values = values;
+		this.icons = icons;
 	}
 	
-	private int min, max, value;
-	private Material icon;
-	
-	protected void setValue(int newVal)
-	{
-		setSelectedIndex(value-min);
-	}
+	private String[] values;
+	private Material[] icons;
 	
 	@Override
-	protected void setSelectedIndex(int index)
-	{
-		super.setSelectedIndex(index);
-		value = index + min;
-	}
-	
-	@Override
-	protected Material getDisplayMaterial() { return icon; }
+	protected Material getDisplayMaterial() { return icons[getSelectedIndex()]; }
 
 	@Override
 	protected String[] getDescription() {
@@ -58,13 +45,12 @@ public class NumericOption extends Option
 	@Override
 	protected boolean trySetValue(String value)
 	{
-		int val = Integer.parseInt(value);
-		
-		if ( val >= min && val <= max )
-		{
-			setValue(val);
-			return true;
-		}
+		for ( int i=0; i<values.length; i++ )
+			if ( value.equalsIgnoreCase(values[i]))
+			{
+				setSelectedIndex(i);
+				return true;
+			}
 		
 		return false;
 	}
@@ -72,12 +58,12 @@ public class NumericOption extends Option
 	@Override
 	protected String getValueString()
 	{
-		return Integer.toString(getValue());
+		return getValue();
 	}
 	
-	public int getValue()
+	public String getValue()
 	{
-		return value;
+		return values[getSelectedIndex()];
 	}
 	
 	final int maxNumItems = 34; 
@@ -85,16 +71,16 @@ public class NumericOption extends Option
     @Override
     public ItemStack[] optionClicked()
     {
-    	int numItems = Math.min(max - min + 1, maxNumItems);
+    	int numItems = Math.min(values.length, maxNumItems);
     	ItemStack[] items = new ItemStack[numItems];
     	
     	for ( int i=0; i<numItems; i++ )
     	{
-    		ItemStack item = new ItemStack(Material.REDSTONE_TORCH_ON);
+    		ItemStack item = new ItemStack(icons[i]);
     		
     		ItemMeta meta = item.getItemMeta();
     		
-    		meta.setDisplayName(ChatColor.RESET + "" + (i+min));
+    		meta.setDisplayName(ChatColor.RESET + values[i]);
     		
     		if ( i == getSelectedIndex() )
     			meta.setLore(Arrays.asList("" + ChatColor.YELLOW + ChatColor.ITALIC + "Current value", "<no description available>"));
