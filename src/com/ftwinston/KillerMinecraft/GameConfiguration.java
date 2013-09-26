@@ -184,17 +184,17 @@ class GameConfiguration
 	private Inventory createModuleOptionsMenu(KillerModule module)
 	{
 		Inventory menu = Bukkit.createInventory(null, nearestNine(module.options.length + 2), module.getName() + " options");
-		generateOptionMenuItems(menu, module);
+		generateOptionMenuItems(menu, module.options);
 		return menu;
 	}
 	
-	private void generateOptionMenuItems(Inventory menu, KillerModule module)
+	private void generateOptionMenuItems(Inventory menu, Option[] options)
 	{
 		menu.setItem(0, backItem);
 		
-		for ( int i=0; i<module.options.length; i++ )
+		for ( int i=0; i<options.length; i++ )
 		{
-			Option option = module.options[i];
+			Option option = options[i];
 			ItemStack item = new ItemStack(option.getDisplayMaterial());
 			setNameAndLore(item, option.getName(), option.getDescription());
 			menu.setItem(i+2, item);
@@ -207,7 +207,14 @@ class GameConfiguration
 		menu.setItem(0, backItem);
 		inventories.put(Menu.PLAYERS, menu);
 		
+		populatePlayersMenu(menu);
+	}
+	
+	private void populatePlayersMenu(Inventory menu)
+	{
 		// enable player limit, player limit number control
+		//game.usesPlayerLimit();
+		
 		
 		// if game mode allows team selection, a toggle to allow manual team selection (and show the scoreboard during setup) ...
 		// if disabled, players shouldn't see the scoreboard thing (until the game starts, at least), teams will be auto-assigned
@@ -410,11 +417,9 @@ class GameConfiguration
 			
 		ItemStack[] choiceItems = option.optionClicked();
 		if ( choiceItems != null )
-		{
 			showChoiceOptionMenu(player, option, choiceItems, Menu.GAME_MODE_CONFIG);
-		}
 		else
-			generateOptionMenuItems(inventories.get(Menu.GAME_MODE_CONFIG), game.getGameMode());
+			generateOptionMenuItems(inventories.get(Menu.GAME_MODE_CONFIG), game.getGameMode().options);
 	}
 	
 	private void worldGenMenuClicked(Player player, ItemStack item)
@@ -451,11 +456,9 @@ class GameConfiguration
 			
 		ItemStack[] choiceItems = option.optionClicked();
 		if ( choiceItems != null )
-		{
 			showChoiceOptionMenu(player, option, choiceItems, Menu.WORLD_GEN_CONFIG);
-		}
 		else
-			generateOptionMenuItems(inventories.get(Menu.WORLD_GEN_CONFIG), game.getWorldGenerator());
+			generateOptionMenuItems(inventories.get(Menu.WORLD_GEN_CONFIG), game.getWorldGenerator().options);
 	}
 	
 	private void playersMenuClicked(Player player, ItemStack item)
@@ -531,9 +534,9 @@ class GameConfiguration
 			inventories.put(Menu.SPECIFIC_OPTION_CHOICE, null);
 			
 			if ( choiceOptionGoBackTo == Menu.GAME_MODE_CONFIG )
-				generateOptionMenuItems(inventories.get(choiceOptionGoBackTo), game.getGameMode());
+				generateOptionMenuItems(inventories.get(choiceOptionGoBackTo), game.getGameMode().options);
 			else if ( choiceOptionGoBackTo == Menu.WORLD_GEN_CONFIG ) 
-				generateOptionMenuItems(inventories.get(choiceOptionGoBackTo), game.getWorldGenerator());
+				generateOptionMenuItems(inventories.get(choiceOptionGoBackTo), game.getWorldGenerator().options);
 			
 			showMenu(player, choiceOptionGoBackTo);
 			return;
