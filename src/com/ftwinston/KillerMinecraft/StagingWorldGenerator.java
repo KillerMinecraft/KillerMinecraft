@@ -7,6 +7,7 @@ import java.util.Random;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
@@ -59,6 +60,10 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			if ( chunk.getX() >= 2 || chunk.getX() < -2 || chunk.getZ() >= 2 || chunk.getZ() < -2 )
 				return;
 
+			for ( int x=0; x<16; x++ )
+				for ( int z=0; z<16; z++ )
+					world.setBiome(chunk.getX() * 16 + x, chunk.getZ() * 16 + z, Biome.PLAINS);
+			
 			Block b;
 			final int rSquared = (groundMaxX+2) * (groundMaxX+2);
 			

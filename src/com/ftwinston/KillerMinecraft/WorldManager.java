@@ -93,7 +93,6 @@ class WorldManager
 		
 		plugin.stagingWorld = new WorldCreator(name)
 			.generator(generator)
-			//.environment(Environment.THE_END)
 			.createWorld();
 		
 		plugin.stagingWorld.setSpawnFlags(false, false);
