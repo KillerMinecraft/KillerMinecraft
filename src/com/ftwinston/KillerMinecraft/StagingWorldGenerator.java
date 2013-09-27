@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Random;
 
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.TreeType;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
@@ -59,10 +61,6 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		{
 			if ( chunk.getX() >= 2 || chunk.getX() < -2 || chunk.getZ() >= 2 || chunk.getZ() < -2 )
 				return;
-
-			for ( int x=0; x<16; x++ )
-				for ( int z=0; z<16; z++ )
-					world.setBiome(chunk.getX() * 16 + x, chunk.getZ() * 16 + z, Biome.PLAINS);
 			
 			Block b;
 			final int rSquared = (groundMaxX+2) * (groundMaxX+2);
@@ -406,6 +404,46 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 			if ( b != null )
 			{
 				b.getWorld().spawnEntity(b.getLocation(), EntityType.ITEM_FRAME);
+			}
+			
+			
+			// do a weird circly biome pattern
+			int[] data = null; Location treeLoc = null;
+			int cx = chunk.getX(), cz = chunk.getZ();
+			
+			if ( cx == -1 && cz == -1 )
+				data = new int[] { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,1,0,2,2,0,0,0,0,0,0,0,0,0,0,1,1,1,0,2,2,0,0,0,0,0,0,0,0,0,0,1,1,1,0,2,2,0,0,0,0,0,0,0,0,0,1,1,1,1 };
+			else if ( cx == 0 && cz == -1 )
+				data = new int[] { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,2,2,1,1,1,1,0,0,0,0,0,0,0,0,0,0,2,2,1,1,1,1,1,0,0,0,0,0,0,0,0,0,2,2 };
+			else if ( cx == -1 && cz == 0 )
+				data = new int[] { 0,2,2,0,0,0,0,0,0,0,0,0,1,1,1,1,0,2,2,0,0,0,0,0,0,0,0,0,1,1,1,1,0,2,2,0,0,0,0,0,0,0,0,0,0,1,1,1,0,2,2,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,1,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2 };
+			else if ( cx == 0 && cz == 0 )
+				data = new int[] { 0,1,1,1,1,0,0,0,0,0,0,0,0,0,2,2,1,1,1,1,1,0,0,0,0,0,0,0,0,0,2,2,1,1,1,1,0,0,0,0,0,0,0,0,0,0,2,2,1,1,1,1,0,0,0,0,0,0,0,0,0,0,2,2,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,0,0,0,0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0 };
+			else if ( cx == 0 && cz == -2 )
+				treeLoc = new Location(world, 0, groundMaxY+1, -18);
+			else if ( cx == 0 && cz == 1 )
+				treeLoc = new Location(world, 0, groundMaxY+1, 18);
+			else if ( cx == -2 && cz == 0 )
+				treeLoc = new Location(world, -18, groundMaxY+1, 0);
+			else if ( cx == 1 && cz == 0 )
+				treeLoc = new Location(world, 18, groundMaxY+1, 0);
+
+			if ( treeLoc != null )
+			{
+				world.generateTree(treeLoc, TreeType.TALL_REDWOOD);
+				world.getBlockAt(treeLoc).getRelative(BlockFace.DOWN).setType(Material.WATER);
+			}
+			
+			if ( data == null )
+				for ( int z=0; z<16; z++ )
+					for ( int x=0; x<16; x++ )
+						world.setBiome(chunk.getX() * 16 + x, chunk.getZ() * 16 + z, Biome.PLAINS);
+			else
+			{
+				Biome[] biomes = new Biome[] { Biome.PLAINS, Biome.DESERT, Biome.SWAMPLAND };
+				for ( int z=0; z<16; z++ )
+					for ( int x=0; x<16; x++ )
+						world.setBiome(chunk.getX() * 16 + x, chunk.getZ() * 16 + z,  biomes[data[x + z * 16]]);
 			}
 		}
 
