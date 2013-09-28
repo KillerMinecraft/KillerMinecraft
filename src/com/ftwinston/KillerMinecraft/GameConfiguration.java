@@ -91,8 +91,6 @@ class GameConfiguration
 		
 		menu.setItem(0, rootGameMode);
 		menu.setItem(1, rootGameModeConfig);
-		menu.setItem(2, rootWorldGen);
-		menu.setItem(3, rootWorldGenConfig);
 		//menu.setItem(4, rootMutators);
 		menu.setItem(6, rootPlayerNumbers);
 		menu.setItem(7, rootMonsters);
@@ -212,18 +210,46 @@ class GameConfiguration
 	
 	private void populatePlayersMenu(Inventory menu)
 	{
-		// enable player limit, player limit number control
-		//game.usesPlayerLimit();
+		ItemStack usePlayerLimit = new ItemStack(Material.HOPPER);
+		setNameAndLore(usePlayerLimit, "Use player limit", game.usesPlayerLimit() ? ChatColor.GREEN + "Current limit: " + game.getPlayerLimit() : ChatColor.RED + "No limit set");
 		
+		if ( game.usesPlayerLimit() )
+		{
+			usePlayerLimit = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(usePlayerLimit);
+			if ( game.getPlayerLimit() > 1)
+			{
+				ItemStack playerLimitDown = new ItemStack(Material.BUCKET);
+				setNameAndLore(playerLimitDown, "Decrease player limit", "Change limit to " + (game.getPlayerLimit() - 1));
+				menu.setItem(4, playerLimitDown);
+			}
+			else
+				menu.setItem(4, new ItemStack(Material.AIR));
+			
+			ItemStack playerLimitUp = new ItemStack(Material.MILK_BUCKET);
+			setNameAndLore(playerLimitUp, "Increase player limit", "Change limit to " + (game.getPlayerLimit() + 1));
+			menu.setItem(5, playerLimitUp);
+		}
+		else
+		{
+			menu.setItem(4, new ItemStack(Material.AIR));
+			menu.setItem(5, new ItemStack(Material.AIR));
+		}
+
+		menu.setItem(2, usePlayerLimit);
+		
+		ItemStack lockGame = new ItemStack(Material.IRON_FENCE);
+		if ( game.isLocked() )
+		{
+			setNameAndLore(lockGame, "Unlock the game", "This game is locked, so", "no one else can join,", "even if players leave");
+			lockGame = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(lockGame);
+		}
+		else
+			setNameAndLore(lockGame, "Lock the game", "Lock this game, so that", "no one else can join,", "even if players leave");
+		
+		menu.setItem(7, lockGame);
 		
 		// if game mode allows team selection, a toggle to allow manual team selection (and show the scoreboard during setup) ...
 		// if disabled, players shouldn't see the scoreboard thing (until the game starts, at least), teams will be auto-assigned
-		
-		// LOCK the game, so no one else can join (even if people leave)
-		//		if a game empties, it should automatically unlock. Likewise when it ends.
-		
-		// at some point, it'd be nice to have a screen showing all player heads (with paging if needed)
-		// allowing you to click them to set their team.
 	}
 	
 	final int numQuantityItems = 5;
@@ -354,8 +380,21 @@ class GameConfiguration
 	public void gameModeChanged(GameMode gameMode)
 	{
 		setLore(rootGameMode, highlightStyle + "Current mode: " + gameMode.getName(), "The game mode is the main set of rules,", "and controls every aspect of a game.");
-		inventories.get(Menu.ROOT).setItem(0, rootGameMode);
+		
+		Inventory root = inventories.get(Menu.ROOT); 
+		root.setItem(0, rootGameMode);
 		createGameModeConfigMenu(gameMode);
+		
+		if ( gameMode.allowWorldGeneratorSelection() )
+		{
+			root.setItem(2, rootWorldGen);
+			root.setItem(3, rootWorldGenConfig);
+		}
+		else
+		{
+			root.remove(2);
+			root.remove(3);
+		}	
 	}
 
 	public void worldGeneratorChanged(WorldGenerator world)
@@ -461,13 +500,32 @@ class GameConfiguration
 			generateOptionMenuItems(inventories.get(Menu.WORLD_GEN_CONFIG), game.getWorldGenerator().options);
 	}
 	
-	private void playersMenuClicked(Player player, ItemStack item)
+	private void playersMenuClicked(Player player, ItemStack item, int itemSlot)
 	{
 		if ( item.getType() == backItem.getType() )
 		{
 			showMenu(player, Menu.ROOT);
 			return;
 		}
+		
+		if ( itemSlot == 2 )
+		{
+			if ( game.usesPlayerLimit() )
+				game.setUsesPlayerLimit(false);
+			else
+			{
+				game.setUsesPlayerLimit(true);
+				game.setPlayerLimit(game.getOnlinePlayers().size());
+			}
+		}
+		else if ( itemSlot == 4 )
+			game.setPlayerLimit(Math.max(1, game.getPlayerLimit()-1));
+		else if ( itemSlot == 5 )
+			game.setPlayerLimit(game.getPlayerLimit()+1);
+		else if ( itemSlot == 7 )
+			game.setLocked(!game.isLocked());
+		
+		populatePlayersMenu(inventories.get(Menu.PLAYERS));
 	}
 	
 	private void monstersMenuClicked(Player player, ItemStack item)
@@ -618,7 +676,7 @@ class GameConfiguration
 		case WORLD_GEN_CONFIG:
 			game.configuration.worldGenConfigClicked(player, event.getCurrentItem(), event.getRawSlot()); break;
 		case PLAYERS:
-			game.configuration.playersMenuClicked(player, event.getCurrentItem()); break;
+			game.configuration.playersMenuClicked(player, event.getCurrentItem(), event.getRawSlot()); break;
 		case MONSTERS:
 			game.configuration.monstersMenuClicked(player, event.getCurrentItem()); break;
 		case ANIMALS:
