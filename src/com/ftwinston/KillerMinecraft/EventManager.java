@@ -620,7 +620,9 @@ class EventManager implements Listener
 	public void onEvent(PrepareItemCraftEvent event) throws EventException
 	{
 		plugin.recipeManager.handleCraftEvent(event);
-		
+
+		if ( event.getViewers().size() == 0 )
+			return;
 		Game game = plugin.getGameForWorld(event.getViewers().get(0).getWorld());
 		if ( game != null )
 			fireGameEvents(event, game);
