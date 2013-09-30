@@ -2,7 +2,6 @@ package com.ftwinston.KillerMinecraft;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -21,10 +20,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.conversations.Conversation;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.Recipe;
 import org.bukkit.scoreboard.Scoreboard;
 
 import com.ftwinston.KillerMinecraft.PlayerManager.Info;
+import com.ftwinston.KillerMinecraft.Configuration.Team;
 
 public class Game
 {
@@ -546,6 +545,9 @@ public class Game
 			miscRenderer.allowForChanges();
 	}
 
+	public Team[] getTeams() { return null; }
+	public Team getTeamForPlayer(Player player) { return null; }
+	
 	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();
 	public Map<String, Info> getPlayerInfo() { return playerInfo; }
 	
@@ -792,26 +794,6 @@ public class Game
 		}
 	}
 	
-	private boolean dispenserRecipeEnabled = true;
-	void toggleDispenserRecipe()
-	{
-		dispenserRecipeEnabled = !dispenserRecipeEnabled;
-		
-		if ( dispenserRecipeEnabled )
-		{
-			plugin.getServer().addRecipe(plugin.dispenserRecipe);
-			return;
-		}
-		
-		Iterator<Recipe> iterator = plugin.getServer().recipeIterator();
-        while (iterator.hasNext())
-        	if ( plugin.isDispenserRecipe(iterator.next()) )
-        	{
-        		iterator.remove();
-        		return;
-        	}
-	}
-	
 	private int playerLimit = 0;
 	private boolean hasPlayerLimit = false, locked = false;
 	boolean usesPlayerLimit() { return hasPlayerLimit; }
@@ -888,7 +870,7 @@ public class Game
 			return player.getPlayerListName();
 		
 		String listName = player.getPlayerListName();
-		ChatColor color = getGameMode().getTeamChatColor(info.getTeam()); 
+		ChatColor color = info.getTeam().getChatColor(); 
 		if ( listName.length() > 15 )
 			return color + listName.substring(0, 15);
 		

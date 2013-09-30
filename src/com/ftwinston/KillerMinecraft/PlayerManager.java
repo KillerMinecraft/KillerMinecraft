@@ -26,6 +26,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
+import com.ftwinston.KillerMinecraft.Configuration.Team;
+
 
 class PlayerManager
 {
@@ -99,15 +101,15 @@ class PlayerManager
 	
 	public class Info
 	{
-		public Info(boolean alive) { a = alive; t = -1; target = null; }
+		public Info(boolean alive) { a = alive; t = null; target = null; }
 		
 		private boolean a;
-		private int t;
-		public int getTeam() { return t; }
+		private Team t;
+		public Team getTeam() { return t; }
 		
-		public void setTeam(int i)
+		public void setTeam(Team team)
 		{
-			t = i;
+			t = team;
 		}
 		
 		// am I a survivor or a spectator?

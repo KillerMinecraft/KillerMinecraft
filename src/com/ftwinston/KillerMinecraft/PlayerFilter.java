@@ -9,6 +9,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 
 import com.ftwinston.KillerMinecraft.PlayerManager.Info;
+import com.ftwinston.KillerMinecraft.Configuration.Team;
 
 public class PlayerFilter
 {
@@ -27,7 +28,7 @@ public class PlayerFilter
 	private Setting aliveState = Setting.Ignored;
 	private Setting onlineState = Setting.Ignored;
 	
-	private int team;
+	private Team team;
 	private Setting teamState = Setting.Ignored;
 	
 	private World world;
@@ -69,16 +70,16 @@ public class PlayerFilter
 		return this;
 	}
 	
-	public PlayerFilter team(int num)
+	public PlayerFilter team(Team team)
 	{
-		team = num;
+		this.team = team;
 		teamState = Setting.Required;
 		return this;
 	}
 	
-	public PlayerFilter notTeam(int num)
+	public PlayerFilter notTeam(Team team)
 	{
-		team = num;
+		this.team = team;
 		teamState = Setting.RequiredNot;
 		return this;
 	}

@@ -18,6 +18,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import com.ftwinston.KillerMinecraft.Configuration.Team;
+
 class GameConfiguration
 {
 	private Game game;
@@ -35,15 +37,23 @@ class GameConfiguration
 	
 	enum Menu
 	{
-		ROOT,
-		GAME_MODE,
-		GAME_MODE_CONFIG,
-		WORLD_GEN,
-		WORLD_GEN_CONFIG,
-		PLAYERS,
-		MONSTERS,
-		ANIMALS,
-		SPECIFIC_OPTION_CHOICE,
+		ROOT(true),
+		GAME_MODE(true),
+		GAME_MODE_CONFIG(true),
+		WORLD_GEN(true),
+		WORLD_GEN_CONFIG(true),
+		PLAYERS(true),
+		MONSTERS(true),
+		ANIMALS(true),
+		SPECIFIC_OPTION_CHOICE(true),
+		
+		TEAM_SELECTION(false);
+		
+		public final boolean onlyOneViewer;
+		Menu(boolean onlyOneViewer)
+		{
+			this.onlyOneViewer = onlyOneViewer;
+		}
 	}
 	
 	private static String /*loreStyle = "" + ChatColor.DARK_PURPLE + ChatColor.ITALIC,*/ highlightStyle = "" + ChatColor.YELLOW + ChatColor.ITALIC;
@@ -61,6 +71,8 @@ class GameConfiguration
 		createMonstersMenu();
 		createAnimalsMenu();
 		createRootMenu();
+		
+		createTeamMenu();
 	}
 	
 	private void createRootMenu()
@@ -283,6 +295,36 @@ class GameConfiguration
 		}
 		
 		inventories.put(Menu.ANIMALS, menu);
+	}
+	
+	private void createTeamMenu()
+	{
+		Inventory menu = Bukkit.createInventory(null, 9, "Select your team");
+		
+		ItemStack autoAssign = new ItemStack(Material.MOB_SPAWNER);
+		setNameAndLore(autoAssign, "Auto assign", "Automatically assigns you to", "the team with the fewest", "players, or randomly in the", "event of a tie.");
+		menu.setItem(0, autoAssign);
+		
+		inventories.put(Menu.TEAM_SELECTION, menu);
+	}
+	
+	private void populateTeamMenu()
+	{
+		Inventory menu = inventories.get(Menu.TEAM_SELECTION);
+		int slot = 1;
+		for ( Team team : game.getTeams() )
+		{
+			ItemStack item = new ItemStack(Material.WOOL, 1, team.getWoolColor());
+			setNameAndLore(item, team.getChatColor() + team.getName(), "Join the " + team.getName());
+			menu.setItem(slot, item);
+			slot++;
+		}
+		while ( slot < 9 )
+		{
+			ItemStack item = new ItemStack(Material.AIR);
+			menu.setItem(slot, item);
+			slot++;
+		}
 	}
 
 	private ItemStack createQuantityItem(int quantity, boolean selected, String lore)

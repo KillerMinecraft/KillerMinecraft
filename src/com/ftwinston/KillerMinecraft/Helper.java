@@ -18,6 +18,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 import com.ftwinston.KillerMinecraft.PlayerManager.Info;
+import com.ftwinston.KillerMinecraft.Configuration.Team;
 
 public class Helper
 {
@@ -33,17 +34,17 @@ public class Helper
 		KillerMinecraft.instance.playerManager.setAlive(game, player, false);
 	}
 
-	public static int getTeam(Game game, OfflinePlayer player)
+	public static Team getTeam(Game game, OfflinePlayer player)
 	{
 		Info info = game.getPlayerInfo().get(player.getName());
-		return info == null ? 0 : info.getTeam();
+		return info == null ? null : info.getTeam();
 	}
 	
-	public static void setTeam(Game game, OfflinePlayer player, int teamNum)
+	public static void setTeam(Game game, OfflinePlayer player, Team team)
 	{
 		Info info = game.getPlayerInfo().get(player.getName());
 		if ( info != null )
-			info.setTeam(teamNum);
+			info.setTeam(team);
 	}
 	
 	public static Player getTargetOf(Game game, OfflinePlayer player)
