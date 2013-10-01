@@ -452,7 +452,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 						world.setBiome(chunk.getX() * 16 + x, chunk.getZ() * 16 + z, Biome.PLAINS);
 			else
 			{
-				Biome[] biomes = new Biome[] { Biome.PLAINS, Biome.DESERT, Biome.SWAMPLAND };
+				Biome[] biomes = new Biome[] { Biome.PLAINS, Biome.SWAMPLAND, Biome.DESERT };
 				for ( int z=0; z<16; z++ )
 					for ( int x=0; x<16; x++ )
 						world.setBiome(chunk.getX() * 16 + x, chunk.getZ() * 16 + z,  biomes[data[x + z * 16]]);
