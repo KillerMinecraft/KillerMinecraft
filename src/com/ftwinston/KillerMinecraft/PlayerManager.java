@@ -26,7 +26,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
-import com.ftwinston.KillerMinecraft.Configuration.Team;
+import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
 
 
 class PlayerManager
@@ -104,10 +104,10 @@ class PlayerManager
 		public Info(boolean alive) { a = alive; t = null; target = null; }
 		
 		private boolean a;
-		private Team t;
-		public Team getTeam() { return t; }
+		private TeamInfo t;
+		public TeamInfo getTeam() { return t; }
 		
-		public void setTeam(Team team)
+		public void setTeam(TeamInfo team)
 		{
 			t = team;
 		}

@@ -15,7 +15,7 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.scoreboard.Scoreboard;
 
 import com.ftwinston.KillerMinecraft.Game.GameState;
-import com.ftwinston.KillerMinecraft.Configuration.Team;
+import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
 
 
 public abstract class GameMode extends KillerModule
@@ -43,18 +43,26 @@ public abstract class GameMode extends KillerModule
 	
 	public Scoreboard createScoreboard() { return Bukkit.getScoreboardManager().getMainScoreboard(); }
 	public boolean shouldShowScoreboardBeforeStarting() { return true; }
-	
 
-	public Team[] initializeTeams() { return new Team[0]; }
-	private Team[] teams;
-	public final Team[] getTeams() { return teams; }
+	public TeamInfo[] getTeams() { return null; }
+	public int indexOfTeam(TeamInfo team)
+	{
+		TeamInfo[] teams = getTeams();
+		
+		if ( teams == null )
+			return -1;
+		for ( int i=0; i<teams.length; i++ )
+			if ( teams[i] == team )
+				return i;
+		return -1;
+	}
 	public abstract int getMinPlayers();
 
 	public boolean allowWorldGeneratorSelection() { return true; }
 	public Environment[] getWorldsToGenerate() { return new Environment[] { Environment.NORMAL, Environment.NETHER }; }
 	public void beforeWorldGeneration(int worldNumber, WorldConfig world) { }
 
-	public abstract String getHelpMessage(int messageNum, Team team);
+	public abstract String getHelpMessage(int messageNum, TeamInfo team);
 	
 	public abstract boolean teamAllocationIsSecret();
 

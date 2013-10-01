@@ -23,7 +23,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.scoreboard.Scoreboard;
 
 import com.ftwinston.KillerMinecraft.PlayerManager.Info;
-import com.ftwinston.KillerMinecraft.Configuration.Team;
+import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
 
 public class Game
 {
@@ -545,8 +545,8 @@ public class Game
 			miscRenderer.allowForChanges();
 	}
 
-	public Team[] getTeams() { return null; }
-	public Team getTeamForPlayer(Player player) { return null; }
+	public TeamInfo[] getTeams() { return null; }
+	public TeamInfo getTeamForPlayer(Player player) { return null; }
 	
 	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();
 	public Map<String, Info> getPlayerInfo() { return playerInfo; }

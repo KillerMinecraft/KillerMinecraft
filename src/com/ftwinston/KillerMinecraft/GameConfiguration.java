@@ -18,7 +18,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.ftwinston.KillerMinecraft.Configuration.Team;
+import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
 
 class GameConfiguration
 {
@@ -312,7 +312,7 @@ class GameConfiguration
 	{
 		Inventory menu = inventories.get(Menu.TEAM_SELECTION);
 		int slot = 1;
-		for ( Team team : game.getTeams() )
+		for ( TeamInfo team : game.getTeams() )
 		{
 			ItemStack item = new ItemStack(Material.WOOL, 1, team.getWoolColor());
 			setNameAndLore(item, team.getChatColor() + team.getName(), "Join the " + team.getName());
