@@ -247,13 +247,13 @@ class EventManager implements Listener
 	public void onEvent(PlayerPortalEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getFrom().getWorld());
-		if ( game == null )
+		if ( game == null || !PortalHelper.isAllowedToPortal(event.getPlayer()) )
 			return;
 		
 		PortalHelper helper = new PortalHelper(event.getPortalTravelAgent());
 		event.setCancelled(true); // we're going to handle implementing the portalling ourselves
 		
-		game.getGameMode().handlePortal(event.getCause(), event.getPortalTravelAgent().findPortal(event.getFrom()), helper); // see? I told you
+		game.getGameMode().handlePortal(event.getCause(), event.getPlayer().getLocation(), helper);
 		helper.performTeleport(event.getCause(), event.getPlayer());
 		fireGameEvents(event, game);
 	}
@@ -262,13 +262,13 @@ class EventManager implements Listener
 	public void onEvent(EntityPortalEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getFrom().getWorld());
-		if ( game == null )
+		if ( game == null || !PortalHelper.isAllowedToPortal(event.getEntity()) )
 			return;
 		
 		PortalHelper helper = new PortalHelper(event.getPortalTravelAgent());
 		event.setCancelled(true); // we're going to handle implementing the portalling ourselves
 		
-		game.getGameMode().handlePortal(TeleportCause.NETHER_PORTAL, event.getPortalTravelAgent().findPortal(event.getFrom()), helper); // see? I told you
+		game.getGameMode().handlePortal(TeleportCause.NETHER_PORTAL, event.getEntity().getLocation(), helper);
 		helper.performTeleport(TeleportCause.NETHER_PORTAL, event.getEntity());
 		fireGameEvents(event, game);
 	}

@@ -167,7 +167,7 @@ public abstract class GameMode extends KillerModule
 	protected final int getNumWorlds() { return game.getWorlds().size(); }
 	protected final World getWorld(int number) { return game.getWorlds().get(number); }
 	
-	public void handlePortal(TeleportCause cause, Location entrance, PortalHelper helper)
+	public void handlePortal(TeleportCause cause, Location entityLoc, PortalHelper helper)
 	{
 		if ( cause != TeleportCause.NETHER_PORTAL || getNumWorlds() < 2 )
 			return;
@@ -175,12 +175,12 @@ public abstract class GameMode extends KillerModule
 		World toWorld;
 		double blockRatio;
 		
-		if ( entrance.getWorld() == getWorld(0) )
+		if ( entityLoc.getWorld() == getWorld(0) )
 		{
 			toWorld = getWorld(1);
 			blockRatio = 0.125;
 		}
-		else if ( entrance.getWorld() == getWorld(1) )
+		else if ( entityLoc.getWorld() == getWorld(1) )
 		{
 			toWorld = getWorld(0);
 			blockRatio = 8;
@@ -188,7 +188,7 @@ public abstract class GameMode extends KillerModule
 		else
 			return;
 		
-		helper.setupScaledDestination(toWorld, entrance, blockRatio);
+		helper.setupScaledDestination(toWorld, entityLoc, blockRatio);
 	}
 
 	final void startGame()

@@ -139,6 +139,8 @@ public class KillerMinecraft extends JavaPlugin
 				    			game.drawProgressBar();
 				    		game.checkRenderer();
 				    	}
+				    	
+				    	PortalHelper.tidyPortalDelays(System.currentTimeMillis());
 					}
 				}, 20L, 120L); // check every 6 seconds
 			}
