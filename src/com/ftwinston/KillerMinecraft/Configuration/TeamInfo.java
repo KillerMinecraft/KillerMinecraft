@@ -22,6 +22,11 @@ public class TeamInfo
 	public ChatColor getChatColor() { return chatColor; }
 	public Color getArmorColor() { return armorColor; }
 	public byte getWoolColor() { return woolColor; }
+	
+	public void setName(String name) { this.name = name; }
+	public void setChatColor(ChatColor color) { chatColor = color; }
+	public void setArmorColor(Color color) { armorColor = color; }
+	public void setWoolColor(byte color) { woolColor = color; }
 
 	public final static TeamInfo Red = new TeamInfo("red team", ChatColor.RED, Color.RED, (byte)0xE);
 	public final static TeamInfo Blue = new TeamInfo("blue team", ChatColor.BLUE, Color.fromRGB(0x0066FF), (byte)0xB);
