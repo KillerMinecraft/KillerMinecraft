@@ -1535,6 +1535,9 @@ class EventManager implements Listener
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
 			fireGameEvents(event, game);
+		
+		if ( event.getWorld() == KillerMinecraft.instance.stagingWorld && KillerMinecraft.instance.stagingWorld.getGenerator().getClass() == StagingWorldGenerator.class)
+			event.setCancelled(true);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
