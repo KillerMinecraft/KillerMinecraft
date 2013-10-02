@@ -141,8 +141,11 @@ public class KillerMinecraft extends JavaPlugin
 				    	}
 				    	
 				    	PortalHelper.tidyPortalDelays(System.currentTimeMillis());
+				    	
+				    	if (stagingWorld.getGenerator().getClass() == StagingWorldGenerator.class)
+				    		stagingWorld.setTime(5970);
 					}
-				}, 20L, 120L); // check every 6 seconds
+				}, 20L, 60L); // check every 3 seconds
 			}
 		}, 1);
         
