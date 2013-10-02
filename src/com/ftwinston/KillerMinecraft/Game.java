@@ -433,6 +433,12 @@ public class Game
 			return;
 		}
 		
+		if ( !getGameState().canChangeGameSetup )
+		{
+			player.sendMessage("You cannot configure this game because it " + (getGameState().usesGameWorlds ? "has already started." : "is starting."));
+			return;
+		}
+		
 		configuration.show(player);
 	}
 	
