@@ -26,7 +26,6 @@ public class PortalHelper
 	public int getExitPortalSearchRadius() { return agent.getSearchRadius(); }
 	public void setExitPortalSearchRadius(int radius) { agent.setSearchRadius(radius); }
 	
-	// not clear on what this actually means
 	public int getExitPortalCreationRadius() { return agent.getCreationRadius(); }
 	public void setExitPortalCreationRadius(int radius) { agent.setCreationRadius(radius); }
 	
@@ -41,7 +40,21 @@ public class PortalHelper
 			return; // null destination means no teleporting
 		
 		if ( useExitPortal )
+		{
 			destination = agent.findOrCreate(destination);
+			
+			// the above returns the northeast (??) corner of the portal.
+			// if there's a portal block south or west, return that instead, so that the player exits in the middle of the portal rather than in the wall (and so appears above it)
+			Block other = destination.getBlock().getRelative(BlockFace.SOUTH);
+			if ( other.getType() == Material.PORTAL )
+				destination = other;
+			else
+			{
+				other = destination.getBlock().getRelative(BlockFace.WEST);
+				if ( other.getType() == Material.PORTAL )
+					destination = other;
+			}
+		}
 		
 		entity.teleport(destination, cause);
 	}
