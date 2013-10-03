@@ -552,7 +552,13 @@ public class Game
 	}
 
 	public TeamInfo[] getTeams() { return null; }
-	public TeamInfo getTeamForPlayer(Player player) { return null; }
+	public TeamInfo getTeamForPlayer(Player player)
+	{
+		Info info = playerInfo.get(player.getName());
+		if ( info == null )
+			return null;
+		return info.getTeam();
+	}
 	
 	private TreeMap<String, Info> playerInfo = new TreeMap<String, Info>();
 	public Map<String, Info> getPlayerInfo() { return playerInfo; }

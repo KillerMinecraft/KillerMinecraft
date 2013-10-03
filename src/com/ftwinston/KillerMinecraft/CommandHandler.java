@@ -12,6 +12,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
+import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
+
 public class CommandHandler
 {
 	public static boolean onCommand(KillerMinecraft plugin, CommandSender sender, Command cmd, String label, String[] args)
@@ -119,9 +121,10 @@ public class CommandHandler
 		if ( game == null || !game.getGameState().usesGameWorlds )
 			return true;
 		
-		if ( game.getGameMode().teamAllocationIsSecret() )
+		TeamInfo team = game.getTeamForPlayer(player);
+		if ( team != null && team.allowTeamChat() )
 		{
-			sender.sendMessage("Team chat is not available in " + game.getGameMode().getName() + " mode");
+			sender.sendMessage("Team chat is not available in this game mode");
 			return true;
 		}
 		
