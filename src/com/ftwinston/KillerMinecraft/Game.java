@@ -780,10 +780,23 @@ public class Game
 				if ( plugin.statsManager.isTracking(number) )
 					plugin.statsManager.gameFinished(number, getGameMode(), getWorldGenerator(), players.size(), true);
 				
+				// allocate unassigned players to teams, if game uses teams
+				if ( getTeams() != null )
+				{
+					ArrayList<Player> unallocated = new ArrayList<Player>();
+					for ( Player player : players )
+						if ( getTeamForPlayer(player) == null )
+							unallocated.add(player);
+					
+					getGameMode().allocateTeams(unallocated);
+				}	
+				
+				// now put players into the game
 				for ( Player player : players )
 				{
 					PlayerManager.instance.saveInventory(player);
 					PlayerManager.instance.resetPlayer(this, player);
+					
 					if ( !getGameMode().shouldShowScoreboardBeforeStarting() ) // if not already showing the scoreboard		
 						player.setScoreboard(scoreboard);
 					PlayerManager.instance.teleport(player, getGameMode().getSpawnLocation(player));	

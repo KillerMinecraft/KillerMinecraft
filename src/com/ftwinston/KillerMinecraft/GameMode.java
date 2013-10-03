@@ -57,6 +57,47 @@ public abstract class GameMode extends KillerModule
 		return -1;
 	}
 	public abstract int getMinPlayers();
+	
+	public void setTeam(Player player, TeamInfo team) 
+	{
+		getGame().getPlayerInfo().get(player.getName()).setTeam(team);	
+	}
+	
+	public void allocateTeams(List<Player> players)
+	{
+		TeamInfo[] teams = getTeams();
+		int[] counts = new int[teams.length];
+		for ( int i=0; i<teams.length; i++ )
+			counts[i] = getPlayers(new PlayerFilter().team(teams[i])).size();
+		
+		List<Integer> lowest = new ArrayList<Integer>();
+		
+		// move through the list of players in a random order, assigning them to (one of) the teams with the fewest players
+		while ( players.size() > 0 )
+		{
+			// recalculate which of the teams have the lowest numbers
+			if ( lowest.size() == 0 )
+			{
+				int bestNum = 0;
+				for ( int i=0; i<teams.length; i++ )
+					if ( counts[i] < bestNum )
+					{
+						lowest.clear();
+						bestNum = counts[i];
+						lowest.add(i);
+					}
+					else if ( counts[i] == bestNum )
+						lowest.add(i);
+			}
+			
+			// assign this player
+			int iTeam = lowest.remove(random.nextInt(lowest.size()));
+			Player player = players.remove(random.nextInt(players.size()));
+			setTeam(player, teams[iTeam]);
+			counts[iTeam]++;
+		} 
+	}
+	
 
 	public boolean allowWorldGeneratorSelection() { return true; }
 	public Environment[] getWorldsToGenerate() { return new Environment[] { Environment.NORMAL, Environment.NETHER }; }
