@@ -9,14 +9,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import com.ftwinston.KillerMinecraft.Option;
 
-public class ChoiceOption extends Option
+public class ChoiceOption<T extends Enum<T>> extends Option
 {
 	public ChoiceOption(String name)
 	{
 		super(name);
 	}
 	
-	private ArrayList<Choice> choices = new ArrayList<ChoiceOption.Choice>();
+	private ArrayList<Choice> choices = new ArrayList<Choice>();
 	
 	@Override
 	protected Material getDisplayMaterial() { return choices.get(getSelectedIndex()).icon; }
@@ -50,17 +50,17 @@ public class ChoiceOption extends Option
 	@Override
 	protected String getValueString()
 	{
-		return getValue();
-	}
-	
-	public String getValue()
-	{
 		return choices.get(getSelectedIndex()).name;
 	}
 	
-	public void addChoice(String name, Material icon, String... description)
+	public T getValue()
 	{
-		choices.add(new Choice(name, icon, description));
+		return choices.get(getSelectedIndex()).value;
+	}
+	
+	public void addChoice(String name, T value, Material icon, String... description)
+	{
+		choices.add(new Choice(name, value, icon, description));
 	}
 	
 	final int maxNumItems = 34; 
@@ -97,14 +97,16 @@ public class ChoiceOption extends Option
     
     class Choice
     {
-    	Choice(String name, Material icon, String[] description)
+    	Choice(String name, T value, Material icon, String[] description)
     	{
     		this.name = name;
+    		this.value = value;
     		this.icon = icon;
     		this.description = description;
     	}
     	
     	public String name;
+    	public T value;
     	public Material icon;
     	public String[] description;
     }
