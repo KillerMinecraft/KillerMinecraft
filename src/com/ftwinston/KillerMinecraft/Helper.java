@@ -40,13 +40,6 @@ public class Helper
 		return info == null ? null : info.getTeam();
 	}
 	
-	public static void setTeam(Game game, OfflinePlayer player, TeamInfo team)
-	{
-		Info info = game.getPlayerInfo().get(player.getName());
-		if ( info != null )
-			info.setTeam(team);
-	}
-	
 	public static Player getTargetOf(Game game, OfflinePlayer player)
 	{
 		Info info = game.getPlayerInfo().get(player.getName());

@@ -15,6 +15,7 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.scoreboard.Scoreboard;
 
 import com.ftwinston.KillerMinecraft.Game.GameState;
+import com.ftwinston.KillerMinecraft.PlayerManager.Info;
 import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
 
 
@@ -60,7 +61,9 @@ public abstract class GameMode extends KillerModule
 	
 	public void setTeam(Player player, TeamInfo team) 
 	{
-		getGame().getPlayerInfo().get(player.getName()).setTeam(team);	
+		Info info = game.getPlayerInfo().get(player.getName());
+		if ( info != null )
+			info.setTeam(team);	
 	}
 	
 	public void allocateTeams(List<Player> players)
