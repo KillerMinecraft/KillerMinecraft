@@ -57,6 +57,16 @@ public class ChoiceOption<T extends Enum<T>> extends Option
 	{
 		return choices.get(getSelectedIndex()).value;
 	}
+
+	public void setValue(T value)
+	{
+		for ( int i=0; i<choices.size(); i++ )
+			if ( choices.get(i).value == value )
+			{
+				setSelectedIndex(i);
+				break;
+			}
+	}
 	
 	public void addChoice(String name, T value, Material icon, String... description)
 	{

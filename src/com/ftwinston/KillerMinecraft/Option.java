@@ -26,5 +26,7 @@ public abstract class Option
 	
 	private int selectedIndex = 0;
 	protected int getSelectedIndex() { return selectedIndex; }
-	protected void setSelectedIndex(int index) { selectedIndex = index; }
+	protected void setSelectedIndex(int index) { selectedIndex = index; changed(); }
+	
+	protected void changed() { }
 }
