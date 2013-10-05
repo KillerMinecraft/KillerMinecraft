@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
+import com.ftwinston.KillerMinecraft.GameConfiguration.Menu;
 
 public class CommandHandler
 {
@@ -27,7 +28,7 @@ public class CommandHandler
 			return true;
 		}
 		else if (cmd.getName().equalsIgnoreCase("team"))
-			return CommandHandler.teamChat(plugin, sender, cmd, label, args);
+			return CommandHandler.teamCommand(plugin, sender, cmd, label, args);
 		else if (cmd.getName().equalsIgnoreCase("help"))
 		{
 			if ( !(sender instanceof Player) )
@@ -104,27 +105,43 @@ public class CommandHandler
 		return true;
 	}
 
-	public static boolean teamChat(KillerMinecraft plugin, CommandSender sender, Command cmd, String label, String[] args)
+	
+	static boolean teamCommand(KillerMinecraft plugin, CommandSender sender, Command cmd, String label, String[] args)
 	{
 		if ( !(sender instanceof Player) )
 			return true;
 		
-		if ( args.length == 0 )
-		{
-			sender.sendMessage("Usage: /team <message>");
-			return true;
-		}
-		
 		Player player = (Player)sender;
 		Game game = plugin.getGameForPlayer(player);
 		
+		if ( game == null )
+			return true;
+		
+		if ( args.length == 0 && player.getWorld() == plugin.stagingWorld )
+		{
+			if ( game.allowTeamSelection() )
+				game.configuration.showMenu(player, Menu.TEAM_SELECTION);
+			return true;
+		}
+		else
+			return teamChat(plugin, game, player, cmd, label, args);
+	}
+	
+	static boolean teamChat(KillerMinecraft plugin, Game game, Player player, Command cmd, String label, String[] args)
+	{		
+		if ( args.length == 0 )
+		{
+			player.sendMessage("Usage: /team <message>");
+			return true;
+		}
+				
 		if ( game == null || !game.getGameState().usesGameWorlds )
 			return true;
 		
 		TeamInfo team = game.getTeamForPlayer(player);
-		if ( team != null && team.allowTeamChat() )
+		if ( team == null || !team.allowTeamChat() )
 		{
-			sender.sendMessage("Team chat is not available in this game mode");
+			player.sendMessage("Team chat is not available in this game mode");
 			return true;
 		}
 		

@@ -17,7 +17,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
-import org.bukkit.conversations.Conversation;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.scoreboard.Scoreboard;
@@ -307,7 +306,7 @@ public class Game
 		{
 			// leaving the game should stop you configuring it
 			if ( configuringPlayer != null && configuringPlayer.equals(player.getName()) )
-				player.abandonConversation(configConversation);
+				player.closeInventory();
 			
 			removePlayerFromGame(player);
 			return;
@@ -490,7 +489,7 @@ public class Game
 		{
 			if ( configuringPlayer.equals(player.getName()) )
 			{// you can start a game while configuring it, but this should end the conversation
-				player.abandonConversation(configConversation);
+				player.closeInventory();
 			}
 			else
 			{
@@ -508,7 +507,6 @@ public class Game
 		return getPlayerInfo().get(player.getName()) != null;
 	}
 	
-	private Conversation configConversation;
 	private String configuringPlayer = null;
 	public String getConfiguringPlayer() { return configuringPlayer; }
 	public void setConfiguringPlayer(String name)
@@ -551,7 +549,14 @@ public class Game
 			miscRenderer.allowForChanges();
 	}
 
-	public TeamInfo[] getTeams() { return null; }
+	public final boolean allowTeamSelection()
+	{
+		if ( !getGameMode().allowTeamSelection() )
+			return false;
+		
+		return configuration.teamSelectionEnabled();
+	}
+	
 	public TeamInfo getTeamForPlayer(Player player)
 	{
 		Info info = playerInfo.get(player.getName());
@@ -781,7 +786,7 @@ public class Game
 					plugin.statsManager.gameFinished(number, getGameMode(), getWorldGenerator(), players.size(), true);
 				
 				// allocate unassigned players to teams, if game uses teams
-				if ( getTeams() != null )
+				if ( getGameMode().getTeams() != null )
 				{
 					ArrayList<Player> unallocated = new ArrayList<Player>();
 					for ( Player player : players )

@@ -243,13 +243,14 @@ public class KillerMinecraft extends JavaPlugin
 	
 	public Game getGameForPlayer(Player player)
 	{
-		Game game = getGameForWorld(player.getWorld());
-		if ( game == null )
-		{// check if this player is a member of any game
+		if ( player.getWorld() == stagingWorld )
+		{
 			for ( Game g : games )
 				if ( g.getPlayerInfo().containsKey(player.getName()))
 					return g;
+			return null;
 		}
-		return game;
+		else
+			return getGameForWorld(player.getWorld());
 	}
 }

@@ -8,6 +8,7 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -260,8 +261,20 @@ class GameConfiguration
 		
 		menu.setItem(7, lockGame);
 		
-		// if game mode allows team selection, a toggle to allow manual team selection (and show the scoreboard during setup) ...
-		// if disabled, players shouldn't see the scoreboard thing (until the game starts, at least), teams will be auto-assigned
+		// if game mode allows team selection, a toggle to allow manual team selection (and show the team selection scoreboard) ...
+		// if disabled, players shouldn't see the scoreboard thing, teams will be auto-assigned
+		if ( game.getGameMode().allowTeamSelection() )
+		{
+			ItemStack teamSelection = new ItemStack(Material.DIODE);
+			setNameAndLore(teamSelection, "Allow team selection", "When enabled, players will be", "able to choose their own teams.", "When disabled, teams will be", "allocated randomly.");
+			
+			if ( teamSelectionEnabled() )
+				teamSelection = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(teamSelection);
+			
+			menu.setItem(8, teamSelection);
+		}
+		else
+			menu.setItem(8, new ItemStack(Material.AIR));
 	}
 	
 	final int numQuantityItems = 5;
@@ -297,28 +310,32 @@ class GameConfiguration
 		inventories.put(Menu.ANIMALS, menu);
 	}
 	
+	private static final String teamSelectionMenuName = "Select your team"; 
 	private void createTeamMenu()
 	{
-		Inventory menu = Bukkit.createInventory(null, 9, "Select your team");
+		Inventory menu = Bukkit.createInventory(null, 9, teamSelectionMenuName);
 		
 		ItemStack autoAssign = new ItemStack(Material.MOB_SPAWNER);
 		setNameAndLore(autoAssign, "Auto assign", "Automatically assigns you to", "the team with the fewest", "players, or randomly in the", "event of a tie.");
 		menu.setItem(0, autoAssign);
 		
 		inventories.put(Menu.TEAM_SELECTION, menu);
+		populateTeamMenu();
 	}
 	
-	private void populateTeamMenu()
+	protected void populateTeamMenu()
 	{
 		Inventory menu = inventories.get(Menu.TEAM_SELECTION);
 		int slot = 1;
-		for ( TeamInfo team : game.getTeams() )
-		{
-			ItemStack item = new ItemStack(Material.WOOL, 1, team.getWoolColor());
-			setNameAndLore(item, team.getChatColor() + team.getName(), "Join the " + team.getName());
-			menu.setItem(slot, item);
-			slot++;
-		}
+		TeamInfo[] teams = game.getGameMode().getTeams();
+		if ( teams != null )
+			for ( TeamInfo team : teams )
+			{
+				ItemStack item = new ItemStack(Material.WOOL, 1, team.getWoolColor());
+				setNameAndLore(item, team.getChatColor() + team.getName(), "Join the " + team.getName());
+				menu.setItem(slot, item);
+				slot++;
+			}	
 		while ( slot < 9 )
 		{
 			ItemStack item = new ItemStack(Material.AIR);
@@ -326,6 +343,9 @@ class GameConfiguration
 			slot++;
 		}
 	}
+	
+	private boolean teamSelectionEnabled = true;
+	boolean teamSelectionEnabled() { return teamSelectionEnabled; }
 
 	private ItemStack createQuantityItem(int quantity, boolean selected, String lore)
 	{
@@ -409,7 +429,7 @@ class GameConfiguration
 		showMenu(player, Menu.ROOT);
 	}
 
-	private void showMenu(Player player, Menu menu)
+	void showMenu(Player player, Menu menu)
 	{
 		Inventory inv = inventories.get(menu);
 		if ( inv != null )
@@ -479,6 +499,16 @@ class GameConfiguration
 		GameModePlugin mode = GameMode.get(i); 
 		GameModePlugin prev = (GameModePlugin)game.getGameMode().getPlugin();
 		game.setGameMode(mode);
+		teamSelectionEnabled = true;
+		populatePlayersMenu(inventories.get(Menu.PLAYERS)); // repopulate players menu so that "team selection" item is present (or not) depending on new game mode
+		populateTeamMenu();
+		if ( !game.getGameMode().allowTeamSelection() )
+		{// close team selection menu for anyone that has it open
+			Inventory menu = inventories.get(Menu.TEAM_SELECTION);
+			for ( HumanEntity viewer : menu.getViewers() )
+				viewer.closeInventory();
+		}
+		
 		showMenu(player, Menu.GAME_MODE_CONFIG);
 		
 		// update which item gets the "current game mode" lore text on the game mode menu
@@ -566,6 +596,8 @@ class GameConfiguration
 			game.setPlayerLimit(game.getPlayerLimit()+1);
 		else if ( itemSlot == 7 )
 			game.setLocked(!game.isLocked());
+		else if ( itemSlot == 8 )
+			teamSelectionEnabled = !teamSelectionEnabled;
 		
 		populatePlayersMenu(inventories.get(Menu.PLAYERS));
 	}
@@ -663,6 +695,24 @@ class GameConfiguration
 		currentMenu = Menu.SPECIFIC_OPTION_CHOICE;
 		player.openInventory(menu);
 	}
+	
+	private void teamSelectionClicked(Player player, int selectedIndex)
+	{
+		KillerMinecraft.instance.log.info("Team selection clicked");
+		
+		if ( selectedIndex == 0 )
+		{
+			game.getGameMode().setTeam(player, null);
+			return;
+		}
+		
+		TeamInfo[] teams = game.getGameMode().getTeams();
+		if ( selectedIndex > teams.length )
+			return;
+		
+		TeamInfo team = teams[selectedIndex-1];
+		game.getGameMode().setTeam(player, team);
+	}
 
 	private void populateChoiceOptionMenu(ItemStack[] choiceItems, int selectedIndex, Inventory menu)
 	{
@@ -692,18 +742,32 @@ class GameConfiguration
 		if ( !(event.getWhoClicked() instanceof Player) || event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR )
 			return;
 		
+		// team selection menu clicked ... well, it depends what team the player is in, which menu to show.
+		// but we need to get the game before we can see if its a team selection inventory or not.
+		// making getGameByConfiguringPlayer a bit of a waste of time, instead we just want
+		// getGameByPlayer and isConfiguringPlayer.
+		
 		Player player = (Player)event.getWhoClicked();
-		Game game = getGameByConfiguringPlayer(player);
+		Game game = KillerMinecraft.instance.getGameForPlayer(player);
+		
 		if ( game == null )
 			return;
 		
-		event.setCancelled(true);
-		
-		if ( event.getRawSlot() >= event.getInventory().getSize() ) // click in player's own inventory
+		if ( event.getInventory().getSize() == 9 && event.getInventory().getName().equals(teamSelectionMenuName))
 		{
-			player.closeInventory();
+			if ( outOfRange(event, player) )
+				return;
+			
+			game.configuration.teamSelectionClicked(player, event.getRawSlot());
 			return;
 		}
+		
+		String configuringPlayer = game.getConfiguringPlayer();
+		if ( configuringPlayer == null ||  !configuringPlayer.equals(player.getName()) )
+			return;
+
+		if ( outOfRange(event, player) )
+			return;
 		
 		switch (game.configuration.currentMenu)
 		{
@@ -726,6 +790,17 @@ class GameConfiguration
 		case SPECIFIC_OPTION_CHOICE:
 			game.configuration.choiceOptionMenuClicked(player, event.getCurrentItem(), event.getRawSlot()); break;
 		}
+	}
+
+	private static boolean outOfRange(InventoryClickEvent event, Player player)
+	{
+		event.setCancelled(true);
+		if ( event.getRawSlot() >= event.getInventory().getSize() ) // click in player's own inventory
+		{
+			player.closeInventory();
+			return true;
+		}
+		return false;
 	}
 
 	public static void checkEvent(InventoryCloseEvent event)

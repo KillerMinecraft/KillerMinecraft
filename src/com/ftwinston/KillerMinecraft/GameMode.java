@@ -45,7 +45,17 @@ public abstract class GameMode extends KillerModule
 	public Scoreboard createScoreboard() { return Bukkit.getScoreboardManager().getMainScoreboard(); }
 	public boolean shouldShowScoreboardBeforeStarting() { return true; }
 
-	public TeamInfo[] getTeams() { return null; }
+	public abstract int getMinPlayers();
+	
+	private TeamInfo[] teams = null;
+	public final TeamInfo[] getTeams() { return teams; }
+	protected void setTeams(TeamInfo... teams)
+	{
+		this.teams = teams;
+		if ( game != null && game.configuration != null )
+			game.configuration.populateTeamMenu();
+	}
+	
 	public int indexOfTeam(TeamInfo team)
 	{
 		TeamInfo[] teams = getTeams();
@@ -57,13 +67,22 @@ public abstract class GameMode extends KillerModule
 				return i;
 		return -1;
 	}
-	public abstract int getMinPlayers();
 	
 	public void setTeam(Player player, TeamInfo team) 
 	{
 		Info info = game.getPlayerInfo().get(player.getName());
 		if ( info != null )
-			info.setTeam(team);	
+		{
+			info.setTeam(team);
+			
+			if ( allowTeamSelection() )
+			{
+				if ( team != null )
+					player.sendMessage("You are on the " + team.getChatColor() + team.getName());
+				else if ( !game.getGameState().usesGameWorlds )
+					player.sendMessage("You will team will be decided automatically");
+			}
+		}
 	}
 	
 	public void allocateTeams(List<Player> players)
@@ -108,7 +127,7 @@ public abstract class GameMode extends KillerModule
 
 	public abstract String getHelpMessage(int messageNum, TeamInfo team);
 	
-	public abstract boolean teamAllocationIsSecret();
+	public boolean allowTeamSelection() { return teams != null; }
 
 	public abstract boolean isLocationProtected(Location l, Player p); // for protecting plinth, respawn points, etc.
 
