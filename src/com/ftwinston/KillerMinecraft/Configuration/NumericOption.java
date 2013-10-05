@@ -48,8 +48,8 @@ public class NumericOption extends Option
 	@Override
 	protected void setSelectedIndex(int index)
 	{
-		super.setSelectedIndex(index);
 		value = index + min;
+		super.setSelectedIndex(index);
 	}
 	
 	@Override
