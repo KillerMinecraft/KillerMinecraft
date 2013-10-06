@@ -13,6 +13,7 @@ import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 import com.ftwinston.KillerMinecraft.Game.GameState;
 import com.ftwinston.KillerMinecraft.PlayerManager.Info;
@@ -76,6 +77,19 @@ public abstract class GameMode extends KillerModule
 		if ( info != null )
 		{
 			info.setTeam(team);
+			
+			if ( game.scoreboard != null )
+			{	
+				Team sbTeam = game.scoreboard.getPlayerTeam(player);
+				if ( sbTeam != null )
+					sbTeam.removePlayer(player);
+				
+				sbTeam = game.scoreboard.getTeam(team == null ? GameConfiguration.unallocatedTeamName : team.getName());
+				if ( sbTeam != null )
+				{
+					sbTeam.addPlayer(player);
+				}
+			}
 			
 			if ( allowTeamSelection() )
 			{

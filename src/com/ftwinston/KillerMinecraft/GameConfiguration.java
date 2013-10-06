@@ -470,6 +470,7 @@ class GameConfiguration
 		createWorldGenConfigMenu(world);
 	}
 	
+	static final String unallocatedTeamName = "Unallocated";
 	Scoreboard createTeamSelectionScoreboard()
 	{
 		Scoreboard scoreboard;
@@ -494,7 +495,7 @@ class GameConfiguration
 					team.addPlayer(player);
 		}
 		
-		Team unallocated = scoreboard.registerNewTeam("Unallocated");
+		Team unallocated = scoreboard.registerNewTeam(unallocatedTeamName);
 		for ( Player player : players )
 			if ( game.getTeamForPlayer(player) == null )
 				unallocated.addPlayer(player);
