@@ -374,7 +374,7 @@ public class Game
 		
 		if ( !getGameState().usesGameWorlds )
 		{
-			if ( getGameMode().shouldShowScoreboardBeforeStarting() )		
+			if ( allowTeamSelection() )		
 				player.setScoreboard(scoreboard);
 			return;
 		}
@@ -416,8 +416,7 @@ public class Game
 		if ( player.isOnline() )
 		{
 			Player online = (Player)player;
-			if ( getGameState().usesGameWorlds || getGameMode().shouldShowScoreboardBeforeStarting() )
-				online.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+			online.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
 			online.sendMessage("You have left " + getName());
 		}
 		getGameMode().playerQuit(player);
@@ -532,8 +531,6 @@ public class Game
 			configuration.gameModeChanged(mode);
 		if ( modeRenderer != null )
 			modeRenderer.allowForChanges();
-		
-		scoreboard = mode.createScoreboard();
 	}
 	
 	private WorldGenerator worldGenerator = null;
@@ -766,6 +763,7 @@ public class Game
 			}
 			case active:
 			{
+				scoreboard = getGameMode().createScoreboard();
 				updateSign(statusSign, "", "§l" + getName(), "* in progress *", getOnlinePlayers() + " players");
 				
 				if ( !Settings.allowLateJoiners && !Settings.allowSpectators )
@@ -802,8 +800,7 @@ public class Game
 					PlayerManager.instance.saveInventory(player);
 					PlayerManager.instance.resetPlayer(this, player);
 					
-					if ( !getGameMode().shouldShowScoreboardBeforeStarting() ) // if not already showing the scoreboard		
-						player.setScoreboard(scoreboard);
+					player.setScoreboard(scoreboard);
 					PlayerManager.instance.teleport(player, getGameMode().getSpawnLocation(player));	
 				} 
 				

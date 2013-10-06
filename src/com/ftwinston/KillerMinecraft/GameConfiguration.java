@@ -18,6 +18,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
 
@@ -456,7 +458,9 @@ class GameConfiguration
 		{
 			root.remove(2);
 			root.remove(3);
-		}	
+		}
+		
+		game.scoreboard = createTeamSelectionScoreboard();
 	}
 
 	public void worldGeneratorChanged(WorldGenerator world)
@@ -464,6 +468,40 @@ class GameConfiguration
 		setLore(rootWorldGen, highlightStyle + "Current generator: "+ world.getName(), "The world generator controls", "the terrain in the game's world(s)");
 		inventories.get(Menu.ROOT).setItem(2, rootWorldGen);
 		createWorldGenConfigMenu(world);
+	}
+	
+	Scoreboard createTeamSelectionScoreboard()
+	{
+		Scoreboard scoreboard;
+		if ( !game.allowTeamSelection() )
+		{
+			scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+			for ( Player player : game.getOnlinePlayers() )
+				player.setScoreboard(scoreboard);
+		}
+		
+		scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+		List<Player> players = game.getOnlinePlayers();
+					
+		TeamInfo[] teams = game.getGameMode().getTeams();
+		for ( TeamInfo teamInfo : teams )
+		{
+			Team team = scoreboard.registerNewTeam(teamInfo.getName());
+			team.setPrefix(teamInfo.getChatColor().toString());
+			
+			for ( Player player : players )
+				if ( game.getTeamForPlayer(player) == teamInfo )
+					team.addPlayer(player);
+		}
+		
+		Team unallocated = scoreboard.registerNewTeam("Unallocated");
+		for ( Player player : players )
+			if ( game.getTeamForPlayer(player) == null )
+				unallocated.addPlayer(player);
+		
+		for ( Player player : game.getOnlinePlayers() )
+			player.setScoreboard(scoreboard);
+		return scoreboard;
 	}
 
 	private void rootMenuClicked(Player player, ItemStack item)
@@ -597,11 +635,14 @@ class GameConfiguration
 		else if ( itemSlot == 7 )
 			game.setLocked(!game.isLocked());
 		else if ( itemSlot == 8 )
+		{
 			teamSelectionEnabled = !teamSelectionEnabled;
+			game.scoreboard = createTeamSelectionScoreboard();
+		}
 		
 		populatePlayersMenu(inventories.get(Menu.PLAYERS));
 	}
-	
+
 	private void monstersMenuClicked(Player player, ItemStack item)
 	{
 		if ( item.getType() == backItem.getType() )

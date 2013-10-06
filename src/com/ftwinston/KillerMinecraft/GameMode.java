@@ -43,7 +43,6 @@ public abstract class GameMode extends KillerModule
 	protected final Random random = new Random();
 	
 	public Scoreboard createScoreboard() { return Bukkit.getScoreboardManager().getMainScoreboard(); }
-	public boolean shouldShowScoreboardBeforeStarting() { return true; }
 
 	public abstract int getMinPlayers();
 	
@@ -53,7 +52,10 @@ public abstract class GameMode extends KillerModule
 	{
 		this.teams = teams;
 		if ( game != null && game.configuration != null )
+		{
 			game.configuration.populateTeamMenu();
+			game.scoreboard = game.configuration.createTeamSelectionScoreboard();
+		}
 	}
 	
 	public int indexOfTeam(TeamInfo team)
