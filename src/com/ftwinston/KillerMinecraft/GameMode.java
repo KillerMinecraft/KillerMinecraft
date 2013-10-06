@@ -44,7 +44,26 @@ public abstract class GameMode extends KillerModule
 
 	protected final Random random = new Random();
 	
-	public Scoreboard createScoreboard() { return Bukkit.getScoreboardManager().getMainScoreboard(); }
+	public Scoreboard createScoreboard()
+	{
+		TeamInfo[] teams = getTeams();
+		if ( teams == null || teams.length == 0 )
+			return Bukkit.getScoreboardManager().getMainScoreboard();
+		
+		for ( TeamInfo teamInfo : teams )
+			teamInfo.setScoreboardScore(null);
+		
+		Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+		for ( TeamInfo teamInfo : teams )
+		{
+			Team team = scoreboard.registerNewTeam(teamInfo.getName());
+			team.setPrefix(teamInfo.getChatColor().toString());
+			
+			for ( Player player : getOnlinePlayers(new PlayerFilter().team(teamInfo)) )
+				team.addPlayer(player);
+		}
+		return scoreboard;
+	}
 
 	public abstract int getMinPlayers();
 	
