@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -170,17 +171,11 @@ class PlayerManager
 				return;
 			}
 			
-			if ( !game.getGameMode().teamAllocationIsSecret() )
-			{// clear this player's name color (cos they're a spectator now), by removing name as it was when was alive, then sending it as it is when dead
-				info.setAlive(true);
-				String name = game.calculateColoredName(online);
-				for ( Player other : game.getOnlinePlayers() )
-					plugin.craftBukkit.sendForScoreboard(other, name, false);
-				
+			// change this player's scoreboard team, so it's obvious that they're dead 
+			if ( game.scoreboard != Bukkit.getScoreboardManager().getMainScoreboard() )
+			{
 				info.setAlive(false);
-				name = game.calculateColoredName(online);
-				for ( Player other : game.getOnlinePlayers() )
-					plugin.craftBukkit.sendForScoreboard(other, name, true);
+				info.setTeam(null); 
 			}
 		}
 		

@@ -2,6 +2,7 @@ package com.ftwinston.KillerMinecraft.Configuration;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
+import org.bukkit.scoreboard.Score;
 
 public abstract class TeamInfo
 {
@@ -10,4 +11,8 @@ public abstract class TeamInfo
 	public ChatColor getChatColor() { return ChatColor.RESET; }
 	public Color getArmorColor() { return Color.WHITE; }
 	public byte getWoolColor() { return (byte)0x0; }
+	
+	public Score getScoreboardScore() { return scoreboardScore; }
+	public void setScoreboardScore(Score score) { scoreboardScore = score; } 
+	private Score scoreboardScore = null; 
 }

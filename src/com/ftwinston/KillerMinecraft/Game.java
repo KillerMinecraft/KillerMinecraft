@@ -364,6 +364,9 @@ public class Game
 				PlayerManager.instance.saveInventory(player);
 				PlayerManager.instance.resetPlayer(this, player);
 			}
+			
+			if ( configuration.unallocatedScore != null )
+				configuration.unallocatedScore.setScore(configuration.unallocatedScore.getScore()+1);
 		}
 		else
 			isNewPlayer = false;
@@ -411,8 +414,10 @@ public class Game
 
 	public void removePlayerFromGame(OfflinePlayer player)
 	{
+		getGameMode().setTeam(player, null);
+		configuration.unallocatedScore.setScore(configuration.unallocatedScore.getScore()-1);
 		getPlayerInfo().remove(player.getName());
-				
+		
 		if ( player.isOnline() )
 		{
 			Player online = (Player)player;
@@ -531,6 +536,9 @@ public class Game
 			configuration.gameModeChanged(mode);
 		if ( modeRenderer != null )
 			modeRenderer.allowForChanges();
+		
+		for ( Player player : getOnlinePlayers() )
+			mode.setTeam(player, null);
 	}
 	
 	private WorldGenerator worldGenerator = null;
@@ -554,7 +562,7 @@ public class Game
 		return configuration.teamSelectionEnabled();
 	}
 	
-	public TeamInfo getTeamForPlayer(Player player)
+	public TeamInfo getTeamForPlayer(OfflinePlayer player)
 	{
 		Info info = playerInfo.get(player.getName());
 		if ( info == null )
@@ -887,20 +895,5 @@ public class Game
 	{
 		for ( Player player : getOnlinePlayers(recipients) )
 			player.sendMessage(message);
-	}
-	
-	public String calculateColoredName(Player player)
-	{
-		Info info = getPlayerInfo().get(player.getName());
-		
-		if ( getGameMode().teamAllocationIsSecret() || !info.isAlive() )
-			return player.getPlayerListName();
-		
-		String listName = player.getPlayerListName();
-		ChatColor color = info.getTeam().getChatColor(); 
-		if ( listName.length() > 15 )
-			return color + listName.substring(0, 15);
-		
-		return color + listName;
 	}
 }

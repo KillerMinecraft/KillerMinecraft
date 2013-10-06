@@ -119,7 +119,7 @@ public class CommandHandler
 		
 		if ( args.length == 0 && player.getWorld() == plugin.stagingWorld )
 		{
-			if ( game.allowTeamSelection() )
+			if ( game.allowTeamSelection() && game.getGameState().canChangeGameSetup )
 				game.configuration.showMenu(player, Menu.TEAM_SELECTION);
 			return true;
 		}

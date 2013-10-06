@@ -12,6 +12,7 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -71,11 +72,15 @@ public abstract class GameMode extends KillerModule
 		return -1;
 	}
 	
-	public void setTeam(Player player, TeamInfo team) 
+	public void setTeam(OfflinePlayer player, TeamInfo team) 
 	{
 		Info info = game.getPlayerInfo().get(player.getName());
 		if ( info != null )
 		{
+			TeamInfo oldTeam = game.getTeamForPlayer(player);
+			if ( oldTeam == team )
+				return;
+			
 			info.setTeam(team);
 			
 			if ( game.scoreboard != null )
@@ -83,20 +88,36 @@ public abstract class GameMode extends KillerModule
 				Team sbTeam = game.scoreboard.getPlayerTeam(player);
 				if ( sbTeam != null )
 					sbTeam.removePlayer(player);
+				if ( game.allowTeamSelection() && game.getGameState().canChangeGameSetup )
+				{
+					Score score;
+					if ( oldTeam != null )
+						score = oldTeam.getScoreboardScore();
+					else
+						score = game.configuration.unallocatedScore;
+					if ( score != null )
+						score.setScore(score.getScore()-1);
+					
+					if ( team != null )
+						score = team.getScoreboardScore();
+					else
+						score = game.configuration.unallocatedScore;
+					if ( score != null )
+						score.setScore(score.getScore()+1);
+				}
 				
 				sbTeam = game.scoreboard.getTeam(team == null ? GameConfiguration.unallocatedTeamName : team.getName());
 				if ( sbTeam != null )
-				{
 					sbTeam.addPlayer(player);
-				}
 			}
 			
-			if ( allowTeamSelection() )
+			if ( allowTeamSelection() && player.isOnline() )
 			{
+				Player online = (Player)player;
 				if ( team != null )
-					player.sendMessage("You are on the " + team.getChatColor() + team.getName());
+					online.sendMessage("You are on the " + team.getChatColor() + team.getName());
 				else if ( !game.getGameState().usesGameWorlds )
-					player.sendMessage("You will team will be decided automatically");
+					online.sendMessage("You will team will be decided automatically");
 			}
 		}
 	}

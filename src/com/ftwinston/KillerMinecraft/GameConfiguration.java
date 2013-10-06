@@ -18,6 +18,9 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -470,7 +473,8 @@ class GameConfiguration
 		createWorldGenConfigMenu(world);
 	}
 	
-	static final String unallocatedTeamName = "Unallocated";
+	static final String unallocatedTeamName = "unallocated";
+	Score unallocatedScore = null;
 	Scoreboard createTeamSelectionScoreboard()
 	{
 		Scoreboard scoreboard;
@@ -479,29 +483,55 @@ class GameConfiguration
 			scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 			for ( Player player : game.getOnlinePlayers() )
 				player.setScoreboard(scoreboard);
+			TeamInfo[] teams = game.getGameMode().getTeams();
+			if ( teams != null )
+				for ( TeamInfo teamInfo : teams )
+					teamInfo.setScoreboardScore(null);
+			unallocatedScore = null;
+			return scoreboard;
 		}
 		
 		scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
 		List<Player> players = game.getOnlinePlayers();
-					
+		Objective objective = scoreboard.registerNewObjective("teamSizes", "dummy");
+		objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+		objective.setDisplayName("Team sizes");
+		
 		TeamInfo[] teams = game.getGameMode().getTeams();
+		int playerCount;
 		for ( TeamInfo teamInfo : teams )
 		{
 			Team team = scoreboard.registerNewTeam(teamInfo.getName());
 			team.setPrefix(teamInfo.getChatColor().toString());
 			
+			Score score = objective.getScore(Bukkit.getOfflinePlayer(teamInfo.getChatColor() + teamInfo.getName()));
+			playerCount = 0;
+			
 			for ( Player player : players )
 				if ( game.getTeamForPlayer(player) == teamInfo )
+				{
 					team.addPlayer(player);
+					playerCount++;
+				}
+			score.setScore(playerCount);
+			teamInfo.setScoreboardScore(score);
 		}
 		
 		Team unallocated = scoreboard.registerNewTeam(unallocatedTeamName);
+		unallocatedScore = objective.getScore(Bukkit.getOfflinePlayer(unallocatedTeamName));
+		playerCount = 0;
+		
 		for ( Player player : players )
 			if ( game.getTeamForPlayer(player) == null )
+			{
 				unallocated.addPlayer(player);
+				playerCount ++;
+			}
 		
+		unallocatedScore.setScore(playerCount);
 		for ( Player player : game.getOnlinePlayers() )
 			player.setScoreboard(scoreboard);
+
 		return scoreboard;
 	}
 
@@ -740,8 +770,6 @@ class GameConfiguration
 	
 	private void teamSelectionClicked(Player player, int selectedIndex)
 	{
-		KillerMinecraft.instance.log.info("Team selection clicked");
-		
 		if ( selectedIndex == 0 )
 		{
 			game.getGameMode().setTeam(player, null);
