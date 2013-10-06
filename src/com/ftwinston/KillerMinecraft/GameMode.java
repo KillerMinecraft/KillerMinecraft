@@ -53,7 +53,7 @@ public abstract class GameMode extends KillerModule
 	protected void setTeams(TeamInfo... teams)
 	{
 		this.teams = teams;
-		if ( game != null && game.configuration != null )
+		if ( game != null && game.configuration != null && game.getGameState().canChangeGameSetup )
 		{
 			game.configuration.populateTeamMenu();
 			game.scoreboard = game.configuration.createTeamSelectionScoreboard();
