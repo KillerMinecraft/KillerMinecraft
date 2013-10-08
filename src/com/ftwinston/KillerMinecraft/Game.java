@@ -372,8 +372,8 @@ public class Game
 			isNewPlayer = false;
 
 		player.sendMessage("You have joined " + getName());
-		getGameMode().playerJoined(player, isNewPlayer);
 		miscRenderer.allowForChanges();
+		player.setScoreboard(scoreboard);
 		
 		if ( !getGameState().usesGameWorlds )
 		{
@@ -381,7 +381,8 @@ public class Game
 				player.setScoreboard(scoreboard);
 			return;
 		}
-		player.setScoreboard(scoreboard);
+		else
+			getGameMode().playerJoinedLate(player, isNewPlayer);
 		
 		// hide all spectators from this player
 		for ( Player spectator : getOnlinePlayers(new PlayerFilter().notAlive().exclude(player)) )

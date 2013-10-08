@@ -197,7 +197,7 @@ public abstract class GameMode extends KillerModule
 
 	public boolean useDiscreetDeathMessages() { return false; } // should we tweak death messages to keep stuff secret?
 
-	public void playerJoined(Player player, boolean isNewPlayer) { };
+	public void playerJoinedLate(Player player, boolean isNewPlayer) { };
 
 	public void playerQuit(OfflinePlayer player) { };
 	
