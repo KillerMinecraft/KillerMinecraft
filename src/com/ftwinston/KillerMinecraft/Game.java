@@ -416,7 +416,8 @@ public class Game
 	public void removePlayerFromGame(OfflinePlayer player)
 	{
 		getGameMode().setTeam(player, null);
-		configuration.unallocatedScore.setScore(configuration.unallocatedScore.getScore()-1);
+		if ( configuration.unallocatedScore != null )
+			configuration.unallocatedScore.setScore(configuration.unallocatedScore.getScore()-1);
 		getPlayerInfo().remove(player.getName());
 		
 		if ( player.isOnline() )
