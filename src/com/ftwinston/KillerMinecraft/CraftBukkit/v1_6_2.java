@@ -131,6 +131,7 @@ public class v1_6_2 extends CraftBukkitAccess
 		try
 		{
 			rafField = RegionFile.class.getDeclaredField("c"); // obfuscated
+			rafField.setAccessible(true);
 		}
 		catch ( NoSuchFieldException e )
 		{
