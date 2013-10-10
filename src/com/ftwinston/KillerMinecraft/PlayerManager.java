@@ -145,7 +145,8 @@ class PlayerManager
 			return;
 		
 		Info info = game.getPlayerInfo().get(player.getName());
-		info.setAlive(false);
+		if ( info != null )
+			info.setAlive(false);
 		
 		if ( game.getOnlinePlayers().size() == 0 )
 		{// no one still playing, so end the game
