@@ -381,7 +381,7 @@ public class Game
 				player.setScoreboard(scoreboard);
 			return;
 		}
-		else
+		else if ( isNewPlayer )
 			getGameMode().playerJoinedLate(player, isNewPlayer);
 		
 		// hide all spectators from this player
