@@ -66,7 +66,7 @@ class GameConfiguration
 	Menu currentMenu = Menu.ROOT;
 	private final short playerHeadDurability = 3; 
 	
-	private void createMenus()
+	void createMenus()
 	{
 		backItem = new ItemStack(Material.IRON_DOOR);
 		setNameAndLore(backItem, highlightStyle + "Go back", "Return to the previous menu");

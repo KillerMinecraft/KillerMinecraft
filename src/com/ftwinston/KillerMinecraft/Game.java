@@ -680,6 +680,8 @@ public class Game
 		{
 			case worldDeletion:
 			{
+				configuration.createMenus(); // regenerate these so they're relevant
+				
 				updateSign(statusSign, "", "§l" + getName(), "* vacant *");
 				updateSign(joinSign, "", "Join", getName());
 				updateSign(configSign, "", "Configure", getName());
