@@ -14,7 +14,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -64,7 +63,6 @@ class PlayerManager
 			game.removePlayerFromGame(player);
 		}
 		
-		playerKilled(game, player);
 		resetPlayer(game, player);
 		teleport(player, exitPoint);
 	}
@@ -139,7 +137,7 @@ class PlayerManager
 	}
 	
 	// player either died, or disconnected and didn't rejoin in the required time
-	public void playerKilled(final Game game, final OfflinePlayer player)
+	public void playerKilled(final Game game, final Player player)
 	{
 		if ( game == null || !game.getGameState().usesGameWorlds )
 			return;
@@ -148,7 +146,7 @@ class PlayerManager
 		if ( info != null )
 			info.setAlive(false);
 		
-		if ( game.getOnlinePlayers().size() == 0 )
+		if ( game.getOnlinePlayers(new PlayerFilter().alive()).size() == 0 )
 		{// no one still playing, so end the game
 			game.forcedGameEnd = true;
 			game.getGameMode().gameFinished();
@@ -156,34 +154,26 @@ class PlayerManager
 			return;
 		}
 		
-		plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
-			@Override
-			public void run() {
-				game.getGameMode().playerQuit(player);
-			}
-		}, 15); // game mode doesn't respond for short period, so as to be able to account for other deaths happening simultaneously (e.g. caused by the same explosion)
+		game.getGameMode().playerKilled(player);
 		
-		Player online = player.isOnline() ? (Player)player : null;
-		if ( online != null )
+		if ( game.getGameMode().isAllowedToRespawn(player) )
 		{
-			if ( game.getGameMode().isAllowedToRespawn(online) )
-			{
-				setAlive(game, online, true);
-				return;
-			}
-			
-			// change this player's scoreboard team, so it's obvious that they're dead 
-			if ( game.scoreboard != Bukkit.getScoreboardManager().getMainScoreboard() )
-			{
-				info.setAlive(false);
-				info.setTeam(null); 
-			}
+			setAlive(game, player, true);
+			return;
+		}
+		
+		game.getGameMode().playerQuit(player);
+		
+		// change this player's scoreboard team, so it's obvious that they're dead 
+		if ( game.scoreboard != Bukkit.getScoreboardManager().getMainScoreboard() )
+		{
+			info.setAlive(false);
+			info.setTeam(null); 
 		}
 		
 		if ( !Settings.allowSpectators )
 		{
-			if ( online != null )
-				putPlayerInStagingWorld(online);
+			putPlayerInStagingWorld(player);
 		}
 	}
 	

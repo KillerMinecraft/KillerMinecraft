@@ -21,11 +21,11 @@ games:
   - 
     name:       Game 1
     mode:
-        plugin: Killer
+        plugin: Killer on the Loose
         options:
-            killer-assigned-on-second-day: true
-            replace-dead-killers: true
-            allow-multiple-killers: false
+            killer-type: crazy killer
+            ghast-tear-victory: true
+            allow-crafting-monsters: true
     world:
         plugin: Default World
         options:
@@ -51,7 +51,7 @@ games:
   - 
     name:       Game 2
     mode:
-        plugin: Killer
+        plugin: Farm Killer
         options:
             friendly-fire: true
             diminishing-returns: true

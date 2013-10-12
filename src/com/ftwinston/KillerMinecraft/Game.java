@@ -428,6 +428,14 @@ public class Game
 		}
 		getGameMode().playerQuit(player);
 		miscRenderer.allowForChanges();
+		
+		if ( getGameState().usesGameWorlds && getOnlinePlayers(new PlayerFilter().alive()).size() == 0 )
+		{// no one still playing, so end the game
+			forcedGameEnd = true;
+			getGameMode().gameFinished();
+			endGame(null);
+			return;
+		}
 	}
 
 	public void configPressed(Player player) {

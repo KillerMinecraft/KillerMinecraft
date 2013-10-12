@@ -147,7 +147,7 @@ class EventManager implements Listener
 				
 				if ( fromGame != toGame )
 				{
-					PlayerManager.instance.playerKilled(fromGame, player);
+					fromGame.removePlayerFromGame(player);
 					PlayerManager.instance.clearInventory(player);
 					toGame.addPlayerToGame(player);
 					
@@ -792,19 +792,20 @@ class EventManager implements Listener
 		
 		public void run()
 		{
-			OfflinePlayer player = Bukkit.getServer().getPlayerExact(name);
-			if ( player == null )
-				player = Bukkit.getServer().getOfflinePlayer(name);
+			Player online = Bukkit.getServer().getPlayerExact(name);
+			OfflinePlayer offline = online == null ? offline = Bukkit.getServer().getOfflinePlayer(name) : online;
 			
 			if ( checkDisconnected )
 			{
-				if ( player != null && player.isOnline() )
+				if ( online != null )
 					return; // player has reconnected, so don't do anything
 				
-				if ( Helper.isAlive(game, player) )
+				if ( Helper.isAlive(game, offline) )
 					plugin.statsManager.playerQuit(game.getNumber());
+				game.removePlayerFromGame(offline);
 			}
-			PlayerManager.instance.playerKilled(game, player);
+			else if ( online != null )
+				PlayerManager.instance.playerKilled(game, online);
 		}
 	}
 	

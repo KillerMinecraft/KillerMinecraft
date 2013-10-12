@@ -599,7 +599,11 @@ class GameConfiguration
 		if ( choiceItems != null )
 			showChoiceOptionMenu(player, option, choiceItems, Menu.GAME_MODE_CONFIG);
 		else
+		{
 			generateOptionMenuItems(inventories.get(Menu.GAME_MODE_CONFIG), game.getGameMode().options);
+			if ( game.modeRenderer != null )
+				game.modeRenderer.allowForChanges();
+		}
 	}
 	
 	private void worldGenMenuClicked(Player player, ItemStack item)
@@ -696,7 +700,8 @@ class GameConfiguration
 				item = monsterItems[prev] = createQuantityItem(prev, false, monsterDescriptions[prev]);
 				inventories.get(Menu.MONSTERS).setItem(prev+2, item);
 				
-				game.miscRenderer.allowForChanges();
+				if ( game.miscRenderer != null )
+					game.miscRenderer.allowForChanges();
 				return;
 			}
 	}
@@ -723,7 +728,8 @@ class GameConfiguration
 				item = animalItems[prev] = createQuantityItem(prev, false, animalDescriptions[prev]);
 				inventories.get(Menu.ANIMALS).setItem(prev+2, item);
 				
-				game.miscRenderer.allowForChanges();
+				if ( game.miscRenderer != null )
+					game.miscRenderer.allowForChanges();
 				return;
 			}
 	}
@@ -749,9 +755,11 @@ class GameConfiguration
 		currentOption.setSelectedIndex(itemSlot-2);
 		populateChoiceOptionMenu(currentOption.optionClicked(), currentOption.getSelectedIndex(), inventories.get(Menu.SPECIFIC_OPTION_CHOICE));
 	
-		// which of these could have changed depends on if this is an option for the game mode or world generator 
-		game.modeRenderer.allowForChanges();
-		game.miscRenderer.allowForChanges();
+		// which of these could have changed depends on if this is an option for the game mode or world generator
+		if ( game.modeRenderer != null )
+			game.modeRenderer.allowForChanges();
+		if ( game.miscRenderer != null )
+			game.miscRenderer.allowForChanges();
 	}
 	
 	private void showChoiceOptionMenu(Player player, Option option, ItemStack[] choiceItems, Menu goBackTo)

@@ -199,6 +199,7 @@ public abstract class GameMode extends KillerModule
 
 	public void playerJoinedLate(Player player, boolean isNewPlayer) { };
 
+	public void playerKilled(Player player) { };
 	public void playerQuit(OfflinePlayer player) { };
 	
 	protected Location getCompassTarget(Player player) { return null; } // if compasses should follow someone / something, control that here
