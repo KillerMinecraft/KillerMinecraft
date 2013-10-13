@@ -377,7 +377,7 @@ public class Game
 		
 		if ( !getGameState().usesGameWorlds )
 		{
-			if ( allowTeamSelection() )		
+			if ( configuration.allowTeamSelection() )		
 				player.setScoreboard(scoreboard);
 			return;
 		}
@@ -564,14 +564,6 @@ public class Game
 			miscRenderer.allowForChanges();
 	}
 
-	public final boolean allowTeamSelection()
-	{
-		if ( !getGameMode().allowTeamSelection() )
-			return false;
-		
-		return configuration.teamSelectionEnabled();
-	}
-	
 	public TeamInfo getTeamForPlayer(OfflinePlayer player)
 	{
 		Info info = playerInfo.get(player.getName());

@@ -107,7 +107,7 @@ public abstract class GameMode extends KillerModule
 				Team sbTeam = game.scoreboard.getPlayerTeam(player);
 				if ( sbTeam != null )
 					sbTeam.removePlayer(player);
-				if ( game.allowTeamSelection() && game.getGameState().canChangeGameSetup )
+				if ( game.configuration.allowTeamSelection() && game.getGameState().canChangeGameSetup )
 				{
 					Score score;
 					if ( oldTeam != null )

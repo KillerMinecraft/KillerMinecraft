@@ -273,7 +273,7 @@ class GameConfiguration
 			ItemStack teamSelection = new ItemStack(Material.DIODE);
 			setNameAndLore(teamSelection, "Allow team selection", "When enabled, players will be", "able to choose their own teams.", "When disabled, teams will be", "allocated randomly.");
 			
-			if ( teamSelectionEnabled() )
+			if ( teamSelectionEnabled )
 				teamSelection = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(teamSelection);
 			
 			menu.setItem(8, teamSelection);
@@ -350,8 +350,16 @@ class GameConfiguration
 	}
 	
 	private boolean teamSelectionEnabled = true;
-	boolean teamSelectionEnabled() { return teamSelectionEnabled; }
 
+	public final boolean allowTeamSelection()
+	{
+		if ( !game.getGameMode().allowTeamSelection() )
+			return false;
+		
+		return teamSelectionEnabled;
+	}
+	
+	
 	private ItemStack createQuantityItem(int quantity, boolean selected, String lore)
 	{
 		ItemStack item = new ItemStack(Material.STICK);
@@ -478,7 +486,7 @@ class GameConfiguration
 	Scoreboard createTeamSelectionScoreboard()
 	{
 		Scoreboard scoreboard;
-		if ( !game.allowTeamSelection() )
+		if ( !allowTeamSelection() )
 		{
 			scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 			for ( Player player : game.getOnlinePlayers() )
