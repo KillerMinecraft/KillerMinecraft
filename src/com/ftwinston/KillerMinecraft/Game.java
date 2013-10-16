@@ -645,7 +645,7 @@ public class Game
 	enum GameState
 	{
 		stagingWorldSetup(false, true, false), // in staging world, players need to choose mode/world
-		worldDeletion(false, true, false), // in staging world, hide start buttons, delete old world, then show start button again
+		worldDeletion(false, false, false), // in staging world, hide start buttons, delete old world, then show start button again
 		stagingWorldConfirm(false, true, false), // in staging world, players have chosen a game mode that requires confirmation (e.g. they don't have the recommended player number)
 		waitingToGenerate(false, false, true),
 		worldGeneration(false, false, true), // in staging world, game worlds are being generated

@@ -135,8 +135,8 @@ public abstract class GameMode extends KillerModule
 				Player online = (Player)player;
 				if ( team != null )
 					online.sendMessage("You are on the " + team.getChatColor() + team.getName());
-				else if ( !game.getGameState().usesGameWorlds )
-					online.sendMessage("You will team will be decided automatically");
+				else if ( game.getGameState().canChangeGameSetup )
+					online.sendMessage("Your team will be decided automatically");
 			}
 		}
 	}
