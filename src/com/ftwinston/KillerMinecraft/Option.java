@@ -1,6 +1,5 @@
 package com.ftwinston.KillerMinecraft;
 
-import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 public abstract class Option
@@ -19,7 +18,7 @@ public abstract class Option
 	protected abstract boolean trySetValue(String value);
 	protected abstract String getValueString();
 	
-	protected abstract Material getDisplayMaterial();
+	protected abstract ItemStack getDisplayStack();
 	protected abstract String[] getDescription(); 
 
 	protected abstract ItemStack[] optionClicked();

@@ -211,7 +211,7 @@ class GameConfiguration
 		for ( int i=0; i<options.length; i++ )
 		{
 			Option option = options[i];
-			ItemStack item = new ItemStack(option.getDisplayMaterial());
+			ItemStack item = option.getDisplayStack();
 			setNameAndLore(item, option.getName(), option.getDescription());
 			menu.setItem(i+2, item);
 		}

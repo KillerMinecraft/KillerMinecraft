@@ -23,7 +23,7 @@ public class ToggleOption extends Option
 	private String[] description;
 	
 	@Override
-	protected Material getDisplayMaterial() { return enabled ? Material.LAVA_BUCKET : Material.BUCKET; }
+	protected ItemStack getDisplayStack() { return new ItemStack(enabled ? Material.LAVA_BUCKET : Material.BUCKET); }
 	
 	@Override
 	protected String[] getDescription()

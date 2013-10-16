@@ -53,7 +53,7 @@ public class NumericOption extends Option
 	}
 	
 	@Override
-	protected Material getDisplayMaterial() { return icon; }
+	protected ItemStack getDisplayStack() { return new ItemStack(icon); }
 
 	@Override
 	protected String[] getDescription() {

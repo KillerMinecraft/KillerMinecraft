@@ -19,7 +19,11 @@ public class ChoiceOption<T extends Enum<T>> extends Option
 	private ArrayList<Choice> choices = new ArrayList<Choice>();
 	
 	@Override
-	protected Material getDisplayMaterial() { return choices.get(getSelectedIndex()).icon; }
+	protected ItemStack getDisplayStack()
+	{
+		Choice c = choices.get(getSelectedIndex());
+		return new ItemStack(c.icon, 1, c.dataValue);
+	}
 
 	@Override
 	protected String[] getDescription() {
@@ -70,7 +74,12 @@ public class ChoiceOption<T extends Enum<T>> extends Option
 	
 	public void addChoice(String name, T value, Material icon, String... description)
 	{
-		choices.add(new Choice(name, value, icon, description));
+		addChoice(name, value, icon, (byte)0, description);
+	}
+	
+	public void addChoice(String name, T value, Material icon, byte dataValue, String... description)
+	{
+		choices.add(new Choice(name, value, icon, dataValue, description));
 	}
 	
 	final int maxNumItems = 34; 
@@ -84,7 +93,7 @@ public class ChoiceOption<T extends Enum<T>> extends Option
     	for ( int i=0; i<numItems; i++ )
     	{
     		Choice c = choices.get(i);
-    		ItemStack item = new ItemStack(c.icon);
+    		ItemStack item = new ItemStack(c.icon, 1, c.dataValue);
     		
     		ItemMeta meta = item.getItemMeta();
     		
@@ -107,17 +116,19 @@ public class ChoiceOption<T extends Enum<T>> extends Option
     
     class Choice
     {
-    	Choice(String name, T value, Material icon, String[] description)
+    	Choice(String name, T value, Material icon, byte dataValue, String[] description)
     	{
     		this.name = name;
     		this.value = value;
     		this.icon = icon;
+    		this.dataValue = dataValue;
     		this.description = description;
     	}
     	
     	public String name;
     	public T value;
     	public Material icon;
+    	public byte dataValue;
     	public String[] description;
     }
 }
