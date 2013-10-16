@@ -76,7 +76,7 @@ class EventManager implements Listener
 	private void fireGameEvents(Event event, Game game) throws EventException
 	{
 		fireModuleEvents(event, game.getGameMode());
-		//fireModuleEvents(event, game.getWorldOption());
+		fireModuleEvents(event, game.getWorldGenerator());
 	}
 	
 	private void fireModuleEvents(Event event, KillerModule module) throws EventException
