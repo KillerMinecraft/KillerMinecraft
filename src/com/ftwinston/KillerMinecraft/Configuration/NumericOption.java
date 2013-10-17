@@ -97,11 +97,12 @@ public class NumericOption extends Option
     	for ( int i=0; i<numItems; i++ )
     	{
 			boolean selected = i == getSelectedIndex();
-    		ItemStack item = new ItemStack(selected ? Material.REDSTONE_TORCH_ON : Material.REDSTONE_TORCH_OFF);
+			int num = i+min;
+    		ItemStack item = new ItemStack(selected ? Material.REDSTONE_TORCH_ON : Material.REDSTONE_TORCH_OFF, num > 1 && num <= 64 ? num : 1);
     		
     		ItemMeta meta = item.getItemMeta();
     		
-    		meta.setDisplayName(ChatColor.RESET + "" + (i+min));
+    		meta.setDisplayName(ChatColor.RESET + "" + num);
     		
     		if ( selected )
     			meta.setLore(Arrays.asList("" + ChatColor.YELLOW + ChatColor.ITALIC + "Current value"));
