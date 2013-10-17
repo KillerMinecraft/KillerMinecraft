@@ -211,6 +211,11 @@ class GameConfiguration
 		for ( int i=0; i<options.length; i++ )
 		{
 			Option option = options[i];
+			if ( option.isHidden() )
+			{
+				menu.setItem(i+2, new ItemStack(Material.AIR));
+				continue;
+			}
 			ItemStack item = option.getDisplayStack();
 			setNameAndLore(item, option.getName(), option.getDescription());
 			menu.setItem(i+2, item);

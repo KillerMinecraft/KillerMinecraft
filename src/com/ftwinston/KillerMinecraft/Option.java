@@ -28,4 +28,8 @@ public abstract class Option
 	protected void setSelectedIndex(int index) { selectedIndex = index; changed(); }
 	
 	protected void changed() { }
+	
+	private boolean hidden = false;
+	public boolean isHidden() { return hidden; }
+	public void setHidden(boolean val) { hidden = val; }
 }
