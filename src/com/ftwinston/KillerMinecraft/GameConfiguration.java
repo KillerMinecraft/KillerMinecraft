@@ -352,13 +352,18 @@ class GameConfiguration
 			menu.setItem(slot, item);
 			slot++;
 		}
+		
+		// close the inventory if there's no teams
+		if ( teams.length == 0 )
+			for ( HumanEntity viewer : menu.getViewers() )
+				viewer.closeInventory();
 	}
 	
 	private boolean teamSelectionEnabled = true;
 
 	public final boolean allowTeamSelection()
 	{
-		if ( !game.getGameMode().allowTeamSelection() )
+		if ( !game.getGameMode().allowTeamSelection() || game.getGameMode().getTeams().length == 0 )
 			return false;
 		
 		return teamSelectionEnabled;
