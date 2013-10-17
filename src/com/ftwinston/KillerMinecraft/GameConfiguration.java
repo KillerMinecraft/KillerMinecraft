@@ -500,7 +500,10 @@ class GameConfiguration
 		{
 			scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 			for ( Player player : game.getOnlinePlayers() )
+			{
 				player.setScoreboard(scoreboard);
+				game.getGameMode().setTeam(player, null);
+			}
 			TeamInfo[] teams = game.getGameMode().getTeams();
 			if ( teams != null )
 				for ( TeamInfo teamInfo : teams )
@@ -516,6 +519,21 @@ class GameConfiguration
 		objective.setDisplayName("Team sizes");
 		
 		TeamInfo[] teams = game.getGameMode().getTeams();
+		
+		// if a player's team isn't in the list (any more), clear it
+		for ( Player player : players )
+		{
+			boolean any = false;
+			for ( TeamInfo team : teams )
+				if ( game.getTeamForPlayer(player) == team )
+				{
+					any = true;
+					break;
+				}
+			if ( !any )
+				game.getGameMode().setTeam(player, null);
+		}
+		
 		int playerCount;
 		for ( TeamInfo teamInfo : teams )
 		{
