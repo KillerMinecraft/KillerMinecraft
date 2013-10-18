@@ -796,7 +796,7 @@ public class Game
 					plugin.statsManager.gameFinished(number, getGameMode(), getWorldGenerator(), players.size(), true);
 				
 				// allocate unassigned players to teams, if game uses teams
-				if ( getGameMode().getTeams() != null )
+				if ( getGameMode().getTeams() != null && getGameMode().getTeams().length != 0 )
 				{
 					ArrayList<Player> unallocated = new ArrayList<Player>();
 					for ( Player player : players )
