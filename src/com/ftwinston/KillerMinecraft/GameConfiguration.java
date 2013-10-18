@@ -339,24 +339,26 @@ class GameConfiguration
 		int slot = 1;
 		TeamInfo[] teams = game.getGameMode().getTeams();
 		if ( teams != null )
+		{
 			for ( TeamInfo team : teams )
 			{
 				ItemStack item = new ItemStack(Material.WOOL, 1, team.getWoolColor());
 				setNameAndLore(item, team.getChatColor() + team.getName(), "Join the " + team.getName());
 				menu.setItem(slot, item);
 				slot++;
-			}	
+			}
+			
+			// close the inventory if there's no teams
+			if ( teams.length == 0 )
+				for ( HumanEntity viewer : menu.getViewers() )
+					viewer.closeInventory();
+		}
 		while ( slot < 9 )
 		{
 			ItemStack item = new ItemStack(Material.AIR);
 			menu.setItem(slot, item);
 			slot++;
 		}
-		
-		// close the inventory if there's no teams
-		if ( teams.length == 0 )
-			for ( HumanEntity viewer : menu.getViewers() )
-				viewer.closeInventory();
 	}
 	
 	private boolean teamSelectionEnabled = true;
