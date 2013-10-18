@@ -18,7 +18,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 import com.ftwinston.KillerMinecraft.PlayerManager.Info;
-import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
 
 public class Helper
 {
@@ -32,12 +31,6 @@ public class Helper
 	public static void makeSpectator(Game game, Player player)
 	{
 		KillerMinecraft.instance.playerManager.setAlive(game, player, false);
-	}
-
-	public static TeamInfo getTeam(Game game, OfflinePlayer player)
-	{
-		Info info = game.getPlayerInfo().get(player.getName());
-		return info == null ? null : info.getTeam();
 	}
 	
 	public static Player getTargetOf(Game game, OfflinePlayer player)

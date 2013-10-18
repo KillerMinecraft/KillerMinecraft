@@ -90,6 +90,12 @@ public abstract class GameMode extends KillerModule
 				return i;
 		return -1;
 	}
+
+	public TeamInfo getTeam(OfflinePlayer player)
+	{
+		Info info = game.getPlayerInfo().get(player.getName());
+		return info == null ? null : info.getTeam();
+	}
 	
 	public void setTeam(OfflinePlayer player, TeamInfo team) 
 	{
