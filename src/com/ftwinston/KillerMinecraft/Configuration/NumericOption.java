@@ -40,7 +40,7 @@ public class NumericOption extends Option
 	private Material icon;
 	private String[] description;
 	
-	protected void setValue(int newVal)
+	public void setValue(int newVal)
 	{
 		setSelectedIndex(value-min);
 	}
