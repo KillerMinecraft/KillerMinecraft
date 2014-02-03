@@ -143,6 +143,8 @@ public class PlayerFilter
 				if ( infoVal.isAlive() )
 					continue;
 				break;
+			case Ignored:
+				break;
 			}
 			
 			switch ( teamState )
@@ -154,6 +156,8 @@ public class PlayerFilter
 			case RequiredNot:
 				if ( infoVal.getTeam() == team )
 					continue;
+				break;
+			case Ignored:
 				break;
 			}
 
@@ -170,6 +174,8 @@ public class PlayerFilter
 			case RequiredNot:
 				if ( p.getWorld() == world )
 					continue;
+			case Ignored:
+				break;
 			}
 			
 			if ( matchesAny(info.getKey(), excludedPlayers) )
@@ -198,6 +204,8 @@ public class PlayerFilter
 				if ( infoVal.isAlive() )
 					continue;
 				break;
+			case Ignored:
+				break;
 			}
 			
 			switch ( teamState )
@@ -209,6 +217,8 @@ public class PlayerFilter
 			case RequiredNot:
 				if ( infoVal.getTeam() == team )
 					continue;
+				break;
+			case Ignored:
 				break;
 			}
 
@@ -226,6 +236,8 @@ public class PlayerFilter
 				if ( op.isOnline() )
 					continue;
 				break;
+			case Ignored:
+				break;
 			}
 			
 			Player p = op.getPlayer();
@@ -238,6 +250,8 @@ public class PlayerFilter
 			case RequiredNot:
 				if ( p == null ||p.getWorld() == world )
 					continue;
+				break;
+			case Ignored:
 				break;
 			}
 			
