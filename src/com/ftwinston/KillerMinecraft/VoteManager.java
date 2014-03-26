@@ -1,5 +1,5 @@
 package com.ftwinston.KillerMinecraft;
-
+/*
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,9 +13,10 @@ import org.bukkit.conversations.NumericPrompt;
 import org.bukkit.conversations.Prompt;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-
+*/
 public class VoteManager
 {
+/*
 	static VoteManager instance;
 	public static VoteManager getInstance() { return instance; }
 	private KillerMinecraft plugin;
@@ -172,9 +173,7 @@ public class VoteManager
 					startVote(game, "End the current game?", player, new Runnable() {
 						public void run()
 						{
-							game.forcedGameEnd = true;
-							game.getGameMode().finishGame();
-							game.endGame(null);
+							game.finishGame();
 						}
 					}, null, null);
 				
@@ -210,4 +209,5 @@ public class VoteManager
 		Conversation convo = voteConvFactory.buildConversation(player);
 		convo.begin();
 	}
+*/
 }

@@ -8,7 +8,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -48,16 +47,17 @@ import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredListener;
 
 import com.ftwinston.KillerMinecraft.Game.GameState;
-import com.ftwinston.KillerMinecraft.PlayerManager.Info;
+import com.ftwinston.KillerMinecraft.Game.PlayerInfo;
 
 class EventManager implements Listener
 {
 	KillerMinecraft plugin;
-	
+
 	public EventManager(KillerMinecraft instance)
 	{
 		plugin = instance;
@@ -73,7 +73,7 @@ class EventManager implements Listener
 		module.eventHandlers.clear();
 	}
 
-	private void fireGameEvents(Event event, Game game) throws EventException
+	private void fireGameEvent(Event event, Game game) throws EventException
 	{
 		fireModuleEvents(event, game.getGameMode());
 		fireModuleEvents(event, game.getWorldGenerator());
@@ -91,137 +91,65 @@ class EventManager implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST) // run last, so we can absolutely say where you should respawn, in a Killer game
 	public void onEvent(PlayerRespawnEvent event) throws EventException
 	{
-		World world = event.getPlayer().getWorld();
-		if ( world == plugin.stagingWorld )
-		{
-			event.setRespawnLocation(plugin.worldManager.getStagingAreaSpawnPoint());
-			return;
-		}
-		
-		final Game game = plugin.getGameForWorld(world);
+		final Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game == null )
 			return;
 		
+		event.setRespawnLocation(game.getGameMode().getSpawnLocation(event.getPlayer()));
+		fireGameEvent(event, game);
+		
 		final String playerName = event.getPlayer().getName();
 		
-		if ( game.getGameState().usesGameWorlds && game.getWorlds().size() > 0 )
-			event.setRespawnLocation(game.getGameMode().getSpawnLocation(event.getPlayer()));
-		else
-			event.setRespawnLocation(plugin.worldManager.getStagingAreaSpawnPoint());
-	
-		if( !Helper.isAlive(game, event.getPlayer()) )
-		{
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-				public void run()
-				{
-					Player player = plugin.getServer().getPlayerExact(playerName);
-					if ( player != null )
-					{
-						boolean alive = game.getGameMode().isAllowedToRespawn(player);
-						PlayerManager.instance.setAlive(game, player, alive);
-						if ( alive )
-							player.setCompassTarget(PlayerManager.instance.getCompassTarget(game, player));
-					}
-				}
-			});
-		}
-		
-		fireGameEvents(event, game);
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+			public void run()
+			{
+				Player player = plugin.getServer().getPlayerExact(playerName);
+				if ( player == null )
+					return;
+				
+				if ( Helper.isSpectator(game, player) )
+					Helper.makeSpectator(game, player);
+				else
+					player.setCompassTarget(game.getCompassTarget(player));
+			}
+		});
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onEvent(PlayerChangedWorldEvent event) throws EventException
 	{
 		World toWorld = event.getPlayer().getWorld();
 		Game fromGame = plugin.getGameForWorld(event.getFrom());
 		Game toGame = plugin.getGameForWorld(toWorld);
-		
-		boolean wasInGame = fromGame != null;
-		boolean nowInGame = toGame != null;
-		Player player = event.getPlayer();
-		
-		if ( wasInGame )
-		{
-			if ( nowInGame )
-			{
-				
-				if ( fromGame != toGame )
-				{
-					fromGame.removePlayerFromGame(player);
-					PlayerManager.instance.clearInventory(player);
-					toGame.addPlayerToGame(player);
-					
-					if ( Settings.filterScoreboard )
-					{// hide from old game, show for new
-						for ( Player other : fromGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
-							plugin.craftBukkit.sendForScoreboard(other, player.getName(), false);
-						
-						for ( Player other : toGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
-							plugin.craftBukkit.sendForScoreboard(other, player.getName(), true);
-					}
-				}
-				else
-				{
-					Info info = toGame.getPlayerInfo().get(player.getName());
-					if( info != null && info.isAlive() )
-						player.setCompassTarget(PlayerManager.instance.getCompassTarget(fromGame, player));
-					else
-						PlayerManager.instance.setAlive(toGame, player, false);
-				}
-			}
-			else
-			{
-				PlayerManager.instance.restoreInventory(event.getPlayer());
-				playerQuit(fromGame, event.getPlayer(), false);
-				
-				if ( toWorld != plugin.stagingWorld )
-					PlayerManager.instance.previousLocations.remove(event.getPlayer().getName()); // they left Killer, so forget where they should be put on leaving
 
-				if ( Settings.filterScoreboard )
-				{
-					// add everyone that wasn't in this game back onto to this player's scoreboard...
-					for ( Player other : plugin.getServer().getOnlinePlayers() )
-						plugin.craftBukkit.sendForScoreboard(player, other, true);
-				}
-			}
-		}
-		else if ( nowInGame )
+		if ( fromGame != toGame )
 		{
-			toGame.addPlayerToGame(event.getPlayer());
-			
-			if ( Settings.filterScoreboard )
+			Player player = event.getPlayer();
+			Game playerGame = plugin.getGameForPlayer(player);
+
+			if ( fromGame != null && playerGame == fromGame )
 			{
-				// hide everyone that isn't in this game
-				for ( Player other : plugin.getServer().getOnlinePlayers() )
-					if ( other != player && plugin.getGameForWorld(other.getWorld()) != toGame )
-						plugin.craftBukkit.sendForScoreboard(player, other, false);
-				
-				// then send me to everyone in this game
-				for ( Player other : toGame.getOnlinePlayers() )
-					plugin.craftBukkit.sendForScoreboard(other, event.getPlayer().getName(), true);
+				// have just left a game. If we were still part of that (i.e. haven't just quit), then remove from that game
+				playerGame.removePlayerFromGame(player);
+			}
+			
+			if ( toGame != null && playerGame != toGame )
+			{
+				// not a part of this game ... chuck them back out
+				World destination = Bukkit.getServer().getWorlds().get(0);
+				Helper.teleport(player, destination.getSpawnLocation());
 			}
 		}
-		
-		if ( toWorld == plugin.stagingWorld )
-			PlayerManager.instance.putPlayerInStagingWorld(event.getPlayer());
-		
-		if ( event.getFrom() == plugin.stagingWorld )
+		else if ( fromGame != null )
 		{
-			GameConfiguration.checkEvent(event);
+			PlayerInfo info = toGame.getPlayerInfo(event.getPlayer());
+			if( info != null && !info.isSpectator() )
+				event.getPlayer().setCompassTarget(fromGame.getCompassTarget(event.getPlayer()));
 			
-			if ( !nowInGame )
-			{
-			// if you leave the staging world, you leave any game you were in ... unless you are entering a game world
-			Game game = plugin.getGameForPlayer(event.getPlayer());
-			if ( game != null )
-				game.removePlayerFromGame(event.getPlayer());
-			}
+			fireGameEvent(event, toGame);
 		}
-		
-		if ( wasInGame && toGame == fromGame )
-			fireGameEvents(event, toGame);
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onEvent(PlayerPortalEvent event) throws EventException
 	{
@@ -234,7 +162,7 @@ class EventManager implements Listener
 		
 		game.getGameMode().handlePortal(event.getCause(), event.getPlayer().getLocation(), helper);
 		helper.performTeleport(event.getCause(), event.getPlayer());
-		fireGameEvents(event, game);
+		fireGameEvent(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -249,9 +177,9 @@ class EventManager implements Listener
 		
 		game.getGameMode().handlePortal(TeleportCause.NETHER_PORTAL, event.getEntity().getLocation(), helper);
 		helper.performTeleport(TeleportCause.NETHER_PORTAL, event.getEntity());
-		fireGameEvents(event, game);
+		fireGameEvent(event, game);
 	}
-		
+
 	// prevent spectators picking up anything
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onEvent(PlayerPickupItemEvent event) throws EventException
@@ -260,10 +188,10 @@ class EventManager implements Listener
 		if ( game == null )
 			return;
 		
-		if( !Helper.isAlive(game, event.getPlayer()) )
+		if( Helper.isSpectator(game, event.getPlayer()) )
 			event.setCancelled(true);
-		
-		fireGameEvents(event, game);
+		else
+			fireGameEvent(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -274,25 +202,24 @@ class EventManager implements Listener
 		if ( game == null )
 			return;
 
-		event.setCancelled(plugin.worldManager.isProtectedLocation(game, event.getLocation(), null));
-		fireGameEvents(event, game);
+		if ( plugin.worldManager.isProtectedLocation(game, event.getLocation(), null) )
+			event.setCancelled(true);
+		else
+			fireGameEvent(event, game);
 	}
 	
 	// prevent spectators breaking anything, prevent anyone breaking protected locations
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(BlockBreakEvent event) throws EventException
 	{
-		World world = event.getBlock().getWorld();
-		Game game = plugin.getGameForWorld(world);
+		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		
-		if ( game != null || world == plugin.stagingWorld ) 
-			event.setCancelled(
-				!Helper.isAlive(game, event.getPlayer()) ||
-				plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer())
-			);
-		
-		if ( game != null )
-			fireGameEvents(event, game);
+		if ( plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer())
+			|| Helper.isSpectator(game, event.getPlayer())
+			)
+			event.setCancelled(true);
+		else if ( game != null )
+			fireGameEvent(event, game);
 	}
 	
 	// prevent spectators breaking frames, prevent anyone breaking protected frames
@@ -303,9 +230,6 @@ class EventManager implements Listener
 		Location loc = event.getEntity().getLocation();
 		Game game = plugin.getGameForWorld(loc.getWorld());
 		
-		if ( game == null && loc.getWorld() != plugin.stagingWorld )
-			return;
-		
 		Player player = null;
 		if ( event instanceof HangingBreakByEntityEvent)
 		{
@@ -313,7 +237,7 @@ class EventManager implements Listener
 			if ( entity instanceof Player )
 			{
 				player = (Player)entity;
-				if ( !Helper.isAlive(game, player) )
+				if ( Helper.isSpectator(game, player) )
 				{
 					event.setCancelled(true);
 					return;
@@ -321,9 +245,10 @@ class EventManager implements Listener
 			}
 		}
 		
-		event.setCancelled(plugin.worldManager.isProtectedLocation(game, loc, player));
-		if ( game != null )
-			fireGameEvents(event, game);
+		if ( plugin.worldManager.isProtectedLocation(game, loc, player) )
+			event.setCancelled(true);
+		else if ( game != null )
+			fireGameEvent(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -332,14 +257,12 @@ class EventManager implements Listener
 		Location loc = event.getEntity().getLocation();
 		Game game = plugin.getGameForWorld(loc.getWorld());
 		
-		if ( game != null || loc.getWorld() == plugin.stagingWorld ) 
-			event.setCancelled(
-				!Helper.isAlive(game, event.getPlayer()) ||
-				plugin.worldManager.isProtectedLocation(game, loc, event.getPlayer())
-			);
-		
-		if ( game != null )
-			fireGameEvents(event, game);
+		if (Helper.isSpectator(game, event.getPlayer())
+			|| plugin.worldManager.isProtectedLocation(game, loc, event.getPlayer())
+			)
+			event.setCancelled(true);
+		else if ( game != null )
+			fireGameEvent(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -348,14 +271,12 @@ class EventManager implements Listener
 		Location loc = event.getRightClicked().getLocation();
 		Game game = plugin.getGameForWorld(loc.getWorld());
 		
-		if ( game != null || loc.getWorld() == plugin.stagingWorld ) 
-			event.setCancelled(
-				!Helper.isAlive(game, event.getPlayer()) ||
-				plugin.worldManager.isProtectedLocation(game, loc, event.getPlayer())
-			);
-		
-		if ( game != null )
-			fireGameEvents(event, game);
+		if ( Helper.isSpectator(game, event.getPlayer())
+			|| plugin.worldManager.isProtectedLocation(game, loc, event.getPlayer())
+			) 
+			event.setCancelled(true);
+		else if ( game != null )
+			fireGameEvent(event, game);
 	}
 	
 	// prevent anyone placing blocks on protected locations
@@ -365,25 +286,27 @@ class EventManager implements Listener
 		World world = event.getBlock().getWorld();
 		Game game = plugin.getGameForWorld(world);
 		
-		if ( game != null || world == plugin.stagingWorld ) 
-			event.setCancelled(
-				!Helper.isAlive(game, event.getPlayer()) ||
-				plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer())
-			);
-		
-		if ( game != null )
-			fireGameEvents(event, game);
+		if ( Helper.isSpectator(game, event.getPlayer())
+			|| plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), event.getPlayer())
+			)
+			event.setCancelled(true);
+		else if ( game != null )
+			fireGameEvent(event, game);
 	}
 	
 	// prevent lava/water from flowing onto protected locations
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(BlockFromToEvent event) throws EventException
 	{
-		event.setCancelled(plugin.worldManager.isProtectedLocation(event.getBlock().getLocation(), null));
+		if ( plugin.worldManager.isProtectedLocation(event.getBlock().getLocation(), null) )
+		{
+			event.setCancelled(true);
+			return;
+		}
 		
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());		
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 	
 	// prevent explosions from damaging protected locations
@@ -392,76 +315,65 @@ class EventManager implements Listener
 	{
 		World world = event.getEntity().getWorld();
 		Game game = plugin.getGameForWorld(world);
-		if ( game == null && world != plugin.stagingWorld ) 
+		if ( game == null && !Settings.nothingButKiller ) 
 			return;
 		
 		List<Block> blocks = event.blockList();
 		for ( int i=0; i<blocks.size(); i++ )
-		if ( plugin.worldManager.isProtectedLocation(game, blocks.get(i).getLocation(), null) )
-			{
-				blocks.remove(i);
-				i--;
-			}
+			if ( plugin.worldManager.isProtectedLocation(game, blocks.get(i).getLocation(), null) )
+				{
+					blocks.remove(i);
+					i--;
+				}
 		
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 	
 	// switching between spectator items
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onEvent(PlayerItemHeldEvent event) throws EventException
 	{
-		World world = event.getPlayer().getWorld();
-		Game game = plugin.getGameForWorld(world);
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game == null ) 
 			return;
 		
-		if ( !Helper.isAlive(game, event.getPlayer()) )
+		if ( Helper.isSpectator(game, event.getPlayer()) )
 		{
 			ItemStack item = event.getPlayer().getInventory().getItem(event.getNewSlot());
 			
 			if ( item == null )
-				Helper.setTargetOf(game, event.getPlayer(), (String)null);
+				game.getPlayerInfo(event.getPlayer()).spectatorTarget = null;
 			else if ( item.getType() == Settings.teleportModeItem )
 			{
 				event.getPlayer().sendMessage("Free look mode: left click to teleport " + ChatColor.YELLOW + "to" + ChatColor.RESET + " where you're looking, right click to teleport " + ChatColor.YELLOW + "through" + ChatColor.RESET + " through what you're looking");
-				Helper.setTargetOf(game, event.getPlayer(), (String)null);
+				game.getPlayerInfo(event.getPlayer()).spectatorTarget = null;
 			}
 			else if ( item.getType() == Settings.followModeItem )
 			{
 				event.getPlayer().sendMessage("Follow mode: click to cycle target");
-				Player target = PlayerManager.instance.getNearestFollowTarget(game, event.getPlayer());
-				Helper.setTargetOf(game, event.getPlayer(), target);
+				Player target = plugin.spectatorManager.getNearestFollowTarget(game, event.getPlayer());
+				game.getPlayerInfo(event.getPlayer()).spectatorTarget = target.getName();
 				if ( target != null )
-					PlayerManager.instance.checkFollowTarget(game, event.getPlayer(), target.getName());
+					plugin.spectatorManager.checkFollowTarget(game, event.getPlayer(), target.getName());
 			}
 			else
-				Helper.setTargetOf(game, event.getPlayer(), (String)null);
+				game.getPlayerInfo(event.getPlayer()).spectatorTarget = null;
+			return;
 		}
 		
-		fireGameEvents(event, game);
+		fireGameEvent(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onEvent(PlayerInteractEvent event) throws EventException
 	{
-		Block b = event.getClickedBlock();
-		
-		if ( b.getWorld() == plugin.stagingWorld )
-		{
-			if ( event.getAction() == Action.RIGHT_CLICK_BLOCK && (b.getType() == Material.STONE_BUTTON || b.getType() == Material.WOOD_BUTTON) )
-				for ( Game game : plugin.games )
-					if ( game.checkButtonPressed(b.getLocation(), event.getPlayer()) )
-						break;
-			return;
-		}
-
-		Game game = plugin.getGameForPlayer(event.getPlayer());		
+		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());		
 		if ( game == null ) 
 			return;
 
 		// spectators can't interact with anything, but they do use clicking to handle their spectator stuff
-		if ( !Helper.isAlive(game, event.getPlayer()) )
+		if ( Helper.isSpectator(game, event.getPlayer()) )
 		{
 			event.setCancelled(true);
 			Material held = event.getPlayer().getItemInHand().getType();
@@ -469,39 +381,40 @@ class EventManager implements Listener
 			if ( held == Settings.teleportModeItem )
 			{
 				if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
-					PlayerManager.instance.doSpectatorTeleport(event.getPlayer(), false);
+					plugin.spectatorManager.doSpectatorTeleport(event.getPlayer(), false);
 				else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
-					PlayerManager.instance.doSpectatorTeleport(event.getPlayer(), true);
+					plugin.spectatorManager.doSpectatorTeleport(event.getPlayer(), true);
 			}
 			else if ( held == Settings.followModeItem )
 			{
-				String targetName = Helper.getTargetName(game, event.getPlayer());
+				PlayerInfo info = game.getPlayerInfo(event.getPlayer());
 				
 				if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
 				{
-					String target = PlayerManager.instance.getNextFollowTarget(game, event.getPlayer(), targetName, true);
-					Helper.setTargetOf(game, event.getPlayer(), target);
-					PlayerManager.instance.checkFollowTarget(game, event.getPlayer(), target);
+					String target = plugin.spectatorManager.getNextFollowTarget(game, event.getPlayer(), info.spectatorTarget, true);
+					info.spectatorTarget = target;
+					plugin.spectatorManager.checkFollowTarget(game, event.getPlayer(), target);
 					event.getPlayer().sendMessage("Following " + target);
 				}
 				else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
 				{
-					String target = PlayerManager.instance.getNextFollowTarget(game, event.getPlayer(), targetName, false);
-					Helper.setTargetOf(game, event.getPlayer(), target);
-					PlayerManager.instance.checkFollowTarget(game, event.getPlayer(), target);
+					String target = plugin.spectatorManager.getNextFollowTarget(game, event.getPlayer(), info.spectatorTarget, false);
+					info.spectatorTarget = target;
+					plugin.spectatorManager.checkFollowTarget(game, event.getPlayer(), target);
 					event.getPlayer().sendMessage("Following " + target);
 				}
 			}
+			return;
 		}
 		// prevent spectators from interfering with other players' block placement
 		else if ( !event.isCancelled() && event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null )
 		{
-			b = b.getRelative(event.getBlockFace());
+			Block b = event.getClickedBlock().getRelative(event.getBlockFace());
 			double minX = b.getX() - 1, maxX = b.getX() + 2,
 				   minY = b.getY() - 2, maxY = b.getY() + 1,
 				   minZ = b.getZ() - 1, maxZ = b.getZ() + 2;
 			
-			List<Player> spectators = game.getGameMode().getOnlinePlayers(new PlayerFilter().notAlive().world(b.getWorld()).exclude(event.getPlayer()));
+			List<Player> spectators = game.getGameMode().getOnlinePlayers(new PlayerFilter().onlySpectators().world(b.getWorld()).exclude(event.getPlayer()));
 			for ( Player spectator : spectators )
 			{
 				Location loc = spectator.getLocation();
@@ -512,7 +425,7 @@ class EventManager implements Listener
 			}
 		}
 		
-		fireGameEvents(event, game);
+		fireGameEvent(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -523,36 +436,29 @@ class EventManager implements Listener
 			return;
 		
 		// spectators can't drop items
-		if ( !Helper.isAlive(game, event.getPlayer()) )
+		if ( Helper.isSpectator(game, event.getPlayer()) )
 			event.setCancelled(true);
-		
-		fireGameEvents(event, game);
+		else
+			fireGameEvent(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onEvent(InventoryClickEvent event) throws EventException
 	{
 		Player player = (Player)event.getWhoClicked();
-		if ( player == null )
+		if ( player != null && MenuManager.checkEvent(player, event) )
 			return;
-
-		World world = player.getWorld();
-		if ( world == plugin.stagingWorld )
-		{
-			// if the inventory is a game configuration inventory menu, tell the relevant game's game configuration
-			GameConfiguration.checkEvent(event);
-			return;
-		}
 		
+		World world = event.getWhoClicked().getWorld();
 		Game game = plugin.getGameForWorld(world);
 		if ( game == null )
 			return;
 		
 		// spectators can't rearrange their inventory ... is that a bit mean?
-		if ( !Helper.isAlive(game, player) )
+		if ( Helper.isSpectator(game, player) )
 			event.setCancelled(true);
-		
-		fireGameEvents(event, game);
+		else
+			fireGameEvent(event, game);
 	}
 	
 	// spectators can't deal or receive damage
@@ -569,7 +475,7 @@ class EventManager implements Listener
 			Player attacker = Helper.getAttacker(event);
 			if ( attacker != null )
 			{
-				if ( !Helper.isAlive(game, attacker) )
+				if ( Helper.isSpectator(game, attacker) )
 					event.setCancelled(true);
 			}
 		}
@@ -578,21 +484,25 @@ class EventManager implements Listener
 		
 		Player victim = (Player)event.getEntity();
 		
-		if( !Helper.isAlive(game, victim) )
+		if( Helper.isSpectator(game, victim) )
 			event.setCancelled(true);
 		
-		fireGameEvents(event, game);
+		fireGameEvent(event, game);
 	}
 	
 	// can't empty buckets onto protected locations
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onEvent(PlayerBucketEmptyEvent event) throws EventException
 	{
-		event.setCancelled(plugin.worldManager.isProtectedLocation(event.getBlockClicked().getRelative(event.getBlockFace()).getLocation(), null));
+		if ( plugin.worldManager.isProtectedLocation(event.getBlockClicked().getRelative(event.getBlockFace()).getLocation(), null) )
+		{
+			event.setCancelled(true);
+			return;
+		}
 		
 		Game game = plugin.getGameForWorld(event.getBlockClicked().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)
@@ -604,7 +514,7 @@ class EventManager implements Listener
 			return;
 		Game game = plugin.getGameForWorld(event.getViewers().get(0).getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -616,10 +526,10 @@ class EventManager implements Listener
 			return;
 		
 		// monsters shouldn't target spectators
-		if( event.getTarget() != null && event.getTarget() instanceof Player && !Helper.isAlive(game, (Player)event.getTarget()) )
+		if( event.getTarget() != null && event.getTarget() instanceof Player && Helper.isSpectator(game, (Player)event.getTarget()) )
 			event.setCancelled(true);
-		
-		fireGameEvents(event, game);
+		else
+			fireGameEvent(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.NORMAL)
@@ -642,7 +552,7 @@ class EventManager implements Listener
 			
 			return;
 		}
-		
+		/*
 		boolean isVote = false;
 		if ( plugin.voteManager.isInVote() )
 		{
@@ -657,7 +567,7 @@ class EventManager implements Listener
 				isVote = true;
 			}
 		}
-		
+		*/
 		if ( Settings.filterChat )
 		{// players that are not in this game's worlds should not see this message
 				for (Player recipient : new HashSet<Player>(event.getRecipients()))
@@ -666,32 +576,47 @@ class EventManager implements Listener
 						&& plugin.getGameForWorld(recipient.getWorld()) != game )
 						event.getRecipients().remove(recipient);
 		}
-		
+		/*
 		if ( isVote )
 			return;
-		
-		if ( game.getGameState() == GameState.finished || Helper.isAlive(game, event.getPlayer()) )
-		{// colored player names shouldn't produce colored messages ... spectator chat isn't special when the game is in the "finished" state.
-			event.setMessage(ChatColor.RESET + event.getMessage());
-		}
-		else
+		*/
+		if ( game.getGameState() != GameState.FINISHED && Helper.isSpectator(game, event.getPlayer()) )
 		{// mark spectator chat, and hide it from non-spectators
 			event.setMessage(ChatColor.YELLOW + "[Spec] " + ChatColor.RESET + event.getMessage());
 			
 			for (Player recipient : new HashSet<Player>(event.getRecipients()))
-				if ( recipient != null && recipient.isOnline() && !Helper.isAlive(game, recipient.getPlayer()))
+				if ( recipient != null && recipient.isOnline() && Helper.isSpectator(game, recipient.getPlayer()))
 					event.getRecipients().remove(recipient);
+			return;
+		}
+		else
+		{// colored player names shouldn't produce colored messages ... spectator chat isn't special when the game is in the "finished" state.
+			event.setMessage(ChatColor.RESET + event.getMessage());
 		}
 		
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onEvent(PlayerJoinEvent event)
 	{
-		final World world = event.getPlayer().getWorld();
+		World world = event.getPlayer().getWorld();
 		final Game game = plugin.getGameForWorld(world);
+		if ( game == null )
+		{
+			if ( Settings.nothingButKiller )
+			{
+				ChunkGenerator gen = world.getGenerator();
+				if ( gen != null && gen.getClass() == StagingWorldGenerator.class )
+					Helper.teleport(event.getPlayer(), world.getSpawnLocation());
+			}
+			
+			if ( plugin.playerManager.restorePlayerData(event.getPlayer()) )
+				plugin.playerManager.playerDataChanged();
+			return;
+		}
+		
 		final String playerName = event.getPlayer().getName();
 		
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
@@ -701,11 +626,13 @@ class EventManager implements Listener
 				if ( player == null )
 					return;
 
-				if ( plugin.getGameForWorld(world) == null )
-					PlayerManager.instance.restoreInventory(player);
-				
-				if ( world == plugin.stagingWorld )
-					PlayerManager.instance.putPlayerInStagingWorld(player);
+				if ( plugin.getGameForPlayer(player) != game )
+				{// if you log in into a game you're not part of, get chucked straight out
+					plugin.playerManager.restorePlayerData(player);
+					plugin.playerManager.playerDataChanged();
+				}
+				else
+					game.getGameMode().playerReconnected(player);
 				
 				if ( Settings.filterScoreboard )
 				{// hide this person from the scoreboard of any games that they aren't in
@@ -716,68 +643,52 @@ class EventManager implements Listener
 				}
 			}
 		});
-		
-		if ( game != null )
-			game.addPlayerToGame(event.getPlayer());
 	}
-	
+
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onEvent(PlayerQuitEvent event)
 	{
-		World world = event.getPlayer().getWorld();
-		if ( world == plugin.stagingWorld )
-		{
-			GameConfiguration.checkEvent(event);
-			
-			Game game = plugin.getGameForPlayer(event.getPlayer());
-			if ( game != null )
-				game.removePlayerFromGame(event.getPlayer());
-		}
-		else
-		{
-			Game game = plugin.getGameForWorld(world);
-   		 	if ( game != null )
-				playerQuit(game, event.getPlayer(), true);
-		}
-	}
-	
-	private void playerQuit(Game game, Player player, boolean actuallyLeftServer)
-	{
-		game.removePlayerFromGame(player);
-		if ( actuallyLeftServer ) // the quit message should be sent to the scoreboard of anyone who this player was invisible to
-			for ( Player online : game.getOnlinePlayers() )
-				if ( !online.canSee(player) )
-					plugin.craftBukkit.sendForScoreboard(online, player, false);
+		MenuManager.inventoryClosed(event.getPlayer());
 		
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(game, player.getName(), true), 600);
-	}
-	
-	@EventHandler(priority = EventPriority.HIGH)
-	public void onEvent(EntityDeathEvent event)
-	{
-		if ( !(event instanceof PlayerDeathEvent) )
+		Game game = plugin.getGameForPlayer(event.getPlayer());
+		if ( game == null )
 			return;
-	
+		
+		if ( !game.getGameState().usesWorlds )
+			game.removePlayerFromGame(event.getPlayer()); // disconnecting when in a non-active game should just chuck you out
+		//else
+			//plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(game, player.getName(), false), 10);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onEvent(EntityDeathEvent event) throws EventException
+	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 	 	if ( game == null )
-	 	{
-	 		GameConfiguration.checkEvent((PlayerDeathEvent)event);
 	 		return;
-	 	}
-		
+	 	
+		if ( !(event instanceof PlayerDeathEvent) )
+		{
+			fireGameEvent(event, game);
+			return;
+		}
+
 		PlayerDeathEvent pEvent = (PlayerDeathEvent)event;
 		
 		Player player = pEvent.getEntity();
 		if ( player == null )
 			return;
 		
-		game.broadcastMessage(game.getGameMode().useDiscreetDeathMessages() ? ChatColor.RED + player.getName() + " died" : pEvent.getDeathMessage());
-		pEvent.setDeathMessage(""); // we only want the message to go to people in the game	
+		fireGameEvent(pEvent, game);
+		game.broadcastMessage(pEvent.getDeathMessage());
+		pEvent.setDeathMessage("");
+		
+		MenuManager.inventoryClosed(player);
 		
 		// wait half a second until they're "properly dead"
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(game, player.getName(), false), 10);
+		//plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(game, player.getName(), false), 10);
 	}
-	
+/*
 	class DelayedDeathEffect implements Runnable
 	{
 		Game game;
@@ -800,21 +711,19 @@ class EventManager implements Listener
 				if ( online != null )
 					return; // player has reconnected, so don't do anything
 				
-				if ( Helper.isAlive(game, offline) )
-					plugin.statsManager.playerQuit(game.getNumber());
 				game.removePlayerFromGame(offline);
 			}
 			else if ( online != null )
 				PlayerManager.instance.playerKilled(game, online);
 		}
 	}
-	
+	*/
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.block.BlockBurnEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -822,7 +731,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -830,7 +739,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -838,7 +747,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -846,7 +755,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -854,7 +763,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -862,7 +771,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -870,7 +779,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -878,7 +787,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -886,18 +795,22 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.block.BlockPistonExtendEvent event) throws EventException
 	{
 		// prevent pistons pushing things into/out of protected locations
-		event.setCancelled(plugin.worldManager.isProtectedLocation(event.getBlock().getLocation(), null));
+		if ( plugin.worldManager.isProtectedLocation(event.getBlock().getLocation(), null) )
+		{
+			event.setCancelled(true);
+			return;
+		}
 		
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -905,7 +818,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -913,7 +826,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -921,7 +834,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -929,7 +842,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -937,7 +850,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -945,7 +858,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -953,7 +866,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEnchanter().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -961,7 +874,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEnchanter().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -969,7 +882,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getLocation().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -977,7 +890,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -985,7 +898,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -993,7 +906,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1001,7 +914,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1009,7 +922,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1017,7 +930,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1025,7 +938,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1033,7 +946,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1041,7 +954,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1049,7 +962,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1057,7 +970,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1065,7 +978,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1073,7 +986,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1081,7 +994,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1089,7 +1002,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1097,7 +1010,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1105,7 +1018,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1113,7 +1026,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1121,7 +1034,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1129,7 +1042,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1137,7 +1050,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1145,7 +1058,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getEntity().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1153,7 +1066,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1161,7 +1074,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1169,32 +1082,31 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getBlock().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.inventory.InventoryCloseEvent event) throws EventException
 	{
-		World world = event.getPlayer().getWorld();
+		Player player = (Player)event.getPlayer();
+		if ( player != null )
+			MenuManager.inventoryClosed(player);
 		
-		if ( world == plugin.stagingWorld )
-		{
-			// if the inventory is a game configuration inventory menu, tell the relevant game's game configuration
-			GameConfiguration.checkEvent(event);
-			return;
-		}
-		
-		Game game = plugin.getGameForWorld(world);
+		Game game = plugin.getGameForWorld(player.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.inventory.InventoryDragEvent event) throws EventException
 	{
+		Player player = (Player)event.getWhoClicked();
+		if ( player != null && MenuManager.checkEvent(player, event) )
+			return;
+		
 		Game game = plugin.getGameForWorld(event.getWhoClicked().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1202,7 +1114,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getViewers().get(0).getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1210,7 +1122,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getInitiator().getViewers().get(0).getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1218,7 +1130,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1226,7 +1138,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getItem().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1234,7 +1146,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1242,7 +1154,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1250,7 +1162,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1258,7 +1170,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1266,7 +1178,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1274,7 +1186,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1282,7 +1194,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1290,7 +1202,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1298,7 +1210,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1306,7 +1218,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1314,7 +1226,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1322,7 +1234,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1330,7 +1242,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1338,7 +1250,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1346,7 +1258,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1354,7 +1266,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1362,7 +1274,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1370,7 +1282,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1378,7 +1290,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1386,7 +1298,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1394,7 +1306,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1402,7 +1314,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1410,7 +1322,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1418,7 +1330,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getMap().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1426,7 +1338,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1434,7 +1346,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1442,7 +1354,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1450,7 +1362,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1458,7 +1370,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1466,7 +1378,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1474,7 +1386,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1482,7 +1394,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1490,7 +1402,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getVehicle().getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1498,7 +1410,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1506,7 +1418,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1514,10 +1426,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
-		
-		if ( event.getWorld() == KillerMinecraft.instance.stagingWorld && KillerMinecraft.instance.stagingWorld.getGenerator().getClass() == StagingWorldGenerator.class)
-			event.setCancelled(true);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1525,7 +1434,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1533,7 +1442,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1541,7 +1450,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1549,7 +1458,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1557,7 +1466,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1565,7 +1474,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1573,7 +1482,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1581,7 +1490,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1589,7 +1498,7 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1597,6 +1506,6 @@ class EventManager implements Listener
 	{
 		Game game = plugin.getGameForWorld(event.getWorld());
 		if ( game != null )
-			fireGameEvents(event, game);
+			fireGameEvent(event, game);
 	}
 }

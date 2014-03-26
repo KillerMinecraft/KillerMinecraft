@@ -1,9 +1,12 @@
 package com.ftwinston.KillerMinecraft;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.RegisteredListener;
@@ -47,5 +50,35 @@ public abstract class KillerModule implements Listener
 			if ( option.getName().equalsIgnoreCase(name) )
 				return option;
 		return null;
+	}
+	
+	protected final List<Player> getOnlinePlayers()
+	{		
+		return game.getOnlinePlayers(new PlayerFilter());
+	}
+	
+	protected final List<Player> getOnlinePlayers(PlayerFilter filter)
+	{
+		return game.getOnlinePlayers(filter);
+	}
+	
+	protected final List<OfflinePlayer> getOfflinePlayers(PlayerFilter filter)
+	{		
+		return game.getOfflinePlayers(filter);
+	}
+	
+	protected final List<OfflinePlayer> getPlayers(PlayerFilter filter)
+	{		
+		return game.getPlayers(filter);
+	}
+	
+	protected final void broadcastMessage(String message)
+	{
+		game.broadcastMessage(message);
+	}
+	
+	protected final void broadcastMessage(PlayerFilter recipients, String message)
+	{
+		game.broadcastMessage(recipients, message);
 	}
 }

@@ -2,13 +2,12 @@ package com.ftwinston.KillerMinecraft;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.Random;
+import java.util.List;
 
-import org.bukkit.Difficulty;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
-import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -16,32 +15,27 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BlockPopulator;
+import org.bukkit.generator.ChunkGenerator;
 
 import com.ftwinston.KillerMinecraft.Game.GameState;
 
 class WorldManager
 {
-	public static WorldManager instance;
 	private KillerMinecraft plugin;
 	public int chunkBuilderTaskID = -1;
 	
 	public WorldManager(KillerMinecraft killer)
 	{
 		plugin = killer;
-		instance = this;
-		
-		seedGen = new Random();
 		plugin.craftBukkit.bindRegionFiles();
 	}
-	
+
 	public void onDisable()
 	{
 		plugin.craftBukkit.unbindRegionFiles();
 	}
-	
-	Random seedGen;
-	
-	public void hijackDefaultWorld(String name)
+
+	public void hijackDefaultWorld()
 	{
 		// in the already-loaded server configuration, create/update an entry specifying the generator to be used for the default world
 		YamlConfiguration configuration = plugin.craftBukkit.getBukkitConfiguration();
@@ -50,9 +44,10 @@ class WorldManager
 		if ( section == null )
 			section = configuration.createSection("worlds");
 		
-		ConfigurationSection worldSection = section.getConfigurationSection(name);
+		final String stagingWorldName = "world";
+		ConfigurationSection worldSection = section.getConfigurationSection(stagingWorldName);
 		if ( worldSection == null )
-			worldSection = section.createSection(name);
+			worldSection = section.createSection(stagingWorldName);
 		
 		worldSection.set("generator", "Killer Minecraft");
 		
@@ -61,7 +56,7 @@ class WorldManager
 		final String prevAllowNether = plugin.craftBukkit.getServerProperty("allow-nether", "true");
 		final boolean prevAllowEnd = configuration.getBoolean("settings.allow-end", true);
 		
-		plugin.craftBukkit.setServerProperty("level-name", name);
+		plugin.craftBukkit.setServerProperty("level-name", stagingWorldName);
 		plugin.craftBukkit.setServerProperty("allow-nether", "false");			
 		configuration.set("settings.allow-end", false);
 		
@@ -74,41 +69,15 @@ class WorldManager
 				
 				YamlConfiguration configuration = plugin.craftBukkit.getBukkitConfiguration();
 				configuration.set("settings.allow-end", prevAllowEnd);
+				configuration.set("worlds", null);
 				
-				plugin.craftBukkit.saveServerPropertiesFile();
-				plugin.craftBukkit.saveBukkitConfiguration(configuration);
+				//if we don't actually save, then the files themselves never get messed with
+				//plugin.craftBukkit.saveServerPropertiesFile();
+				//plugin.craftBukkit.saveBukkitConfiguration(configuration);
 			}
 		});
 	}
-	
-	public void createStagingWorld(final String name) 
-	{
-		plugin.stagingWorld = plugin.getServer().getWorld(name);
-		
-		// staging world must not be null when the init event is called, so we don't call this again
-		if ( plugin.stagingWorldIsServerDefault )
-			plugin.stagingWorld = plugin.getServer().getWorlds().get(0);
 
-		StagingWorldGenerator generator = new StagingWorldGenerator();
-		
-		plugin.stagingWorld = new WorldCreator(name)
-			.generator(generator)
-			.createWorld();
-		
-		plugin.stagingWorld.setSpawnFlags(false, false);
-		plugin.stagingWorld.setDifficulty(Difficulty.PEACEFUL);
-		plugin.stagingWorld.setPVP(false);
-		plugin.stagingWorld.setAutoSave(false); // don't save changes to the staging world
-	}
-	
-	public static boolean isLocationInRange(Location test, Location min, Location max)
-	{
-		int x = test.getBlockX(), y = test.getBlockY(), z = test.getBlockZ();
-		return x >= min.getBlockX() && x <= max.getBlockX()
-			&& y >= min.getBlockY() && y <= max.getBlockY()
-			&& z >= min.getBlockZ() && z <= max.getBlockZ();
-	}
-	
 	public boolean isProtectedLocation(Location loc, Player player)
 	{
 		return isProtectedLocation(plugin.getGameForWorld(loc.getWorld()), loc, player);
@@ -116,29 +85,26 @@ class WorldManager
 	
 	public boolean isProtectedLocation(Game game, Location loc, Player player)
 	{
-		if ( loc.getWorld() == plugin.stagingWorld )
-			return isLocationInRange(loc, Settings.protectionMin, Settings.protectionMax);
+		if ( game == null )
+		{
+			if ( !Settings.nothingButKiller )
+				return false;
+			
+			ChunkGenerator gen = loc.getWorld().getGenerator(); 
+			if ( gen == null || gen.getClass() != StagingWorldGenerator.class )
+				return false;
+			
+			// this is the floating island staging world. The center of that is protected.
+			int x = loc.getBlockX(), y = loc.getBlockY(), z = loc.getBlockZ();
+			
+			return x >= -4 && x <= 4
+				&& y >= 64 && y <= 68
+				&& z >= -4 && z <= 4;
+		}
 		
-		if ( game != null )
-			return game.getGameMode().isLocationProtected(loc, player);
-		else
-			return false;
+		return game.getGameMode().isLocationProtected(loc, player);
 	}
 
-	Random random = new Random();
-	public Location getRandomLocation(Location rangeMin, Location rangeMax)
-	{
-		return new Location(rangeMin.getWorld(),
-				rangeMin.getX() + (rangeMax.getX() - rangeMin.getX()) * random.nextDouble(),
-				rangeMin.getY() + (rangeMax.getY() - rangeMin.getY()) * random.nextDouble(),
-				rangeMin.getZ() + (rangeMax.getZ() - rangeMin.getZ()) * random.nextDouble(),
-				random.nextFloat() * 360.0f, 0f);
-	}
-
-	public Location getStagingAreaSpawnPoint() {
-		return getRandomLocation(Settings.spawnCoordMin, Settings.spawnCoordMax);
-	}
-	
 	public void deleteWorldFolders(final String prefix)
 	{
 		File worldFolder = plugin.getServer().getWorldContainer();
@@ -151,10 +117,10 @@ class WorldManager
 		});
 		
 		for ( String worldName : killerFolders )
-			deleteWorld(worldName);
+			deleteWorldFolder(worldName);
 	}
 	
-	public boolean deleteWorld(String worldName)
+	public boolean deleteWorldFolder(String worldName)
 	{
 		plugin.craftBukkit.clearWorldReference(worldName);
 		boolean allGood = true;
@@ -172,30 +138,51 @@ class WorldManager
 		
 		return allGood;
 	}
-		
-	public void deleteKillerWorlds(Game game, Runnable runWhenDone)
+
+	private boolean delete(File folder)
 	{
-		plugin.log.info("Clearing out old worlds...");
-		deleteWorlds(runWhenDone, game.getWorlds().toArray(new World[0]));
-		game.getWorlds().clear();
+		if ( !folder.exists() )
+			return true;
+		boolean retVal = true;
+		if (folder.isDirectory())
+			for (File f : folder.listFiles())
+				if (!delete(f))
+				{
+					retVal = false;
+					//plugin.log.warning("Failed to delete file: " + f.getName());
+				}
+		return folder.delete() && retVal;
 	}
 	
-	public void deleteWorlds(Runnable runWhenDone, World... worlds)
+	public void deleteGameWorlds(Game game, Runnable runWhenDone)
 	{
-		String[] worldNames = new String[worlds.length];
-		for ( int i=0; i<worlds.length; i++ )
+		plugin.log.info("Deleting worlds for " + game.getName());
+		
+		List<World> worlds = game.getWorlds();
+		String[] worldNames = new String[worlds.size()];
+		
+		Location ejectTo = Bukkit.getServer().getWorlds().get(0).getSpawnLocation();
+		
+		for ( int i=0; i<worldNames.length; i++ )
 		{
-			worldNames[i] = worlds[i].getName();
-			for ( Player player : worlds[i].getPlayers() )
-				plugin.playerManager.putPlayerInStagingWorld(player);
-			plugin.craftBukkit.forceUnloadWorld(worlds[i]);
+			World world = worlds.get(i);
+			worldNames[i] = world.getName();
+			
+			plugin.gamesByWorld.remove(world.getName());
+			
+			for ( Player player : world.getPlayers() )
+				Helper.teleport(player, ejectTo);
+
+			plugin.craftBukkit.forceUnloadWorld(world);
 		}
 		
+		worlds.clear();
+		
 		// now we want to try to delete the world folders
-		plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new WorldDeleter(runWhenDone, worldNames), 80);
+		plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new DelayedWorldDeleter(runWhenDone, worldNames), 80);
 	}
-	
-	private class WorldDeleter implements Runnable
+
+	private class DelayedWorldDeleter implements Runnable
 	{
 		Runnable runWhenDone;
 		String[] worlds;
@@ -204,7 +191,7 @@ class WorldManager
 		static final int maxRetries = 5;
 		int attempt;
 		
-		public WorldDeleter(Runnable runWhenDone, String... names)
+		public DelayedWorldDeleter(Runnable runWhenDone, String... names)
 		{
 			attempt = 0;
 			worlds = names;
@@ -215,7 +202,7 @@ class WorldManager
 		{
 			boolean allGood = true;
 			for ( String world : worlds )
-				allGood = allGood && deleteWorld(world);
+				allGood = allGood && deleteWorldFolder(world);
 			
 			if ( !allGood )
 				if ( attempt < maxRetries )
@@ -232,25 +219,10 @@ class WorldManager
 				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
 		}
 	}
-	
-	private boolean delete(File folder)
-	{
-		if ( !folder.exists() )
-			return true;
-		boolean retVal = true;
-		if (folder.isDirectory())
-			for (File f : folder.listFiles())
-				if (!delete(f))
-				{
-					retVal = false;
-					//plugin.log.warning("Failed to delete file: " + f.getName());
-				}
-		return folder.delete() && retVal;
-	}
-	
+
 	public void generateWorlds(final Game game, final WorldGenerator generator, final Runnable runWhenDone)
 	{
-		game.getGameMode().broadcastMessage(game.getGameMode().getNumWorlds() == 1 ? "Preparing new world..." : "Preparing new worlds...");
+		game.broadcastMessage(game.getGameMode().getNumWorlds() == 1 ? "Generating game world..." : "Generating game worlds...");
 		
 		Runnable generationComplete = new Runnable() {
 			@Override
@@ -284,9 +256,9 @@ class WorldManager
 		catch (Exception ex)
 		{
 			plugin.log.warning("A crash occurred during world generation. Aborting...");
-			game.getGameMode().broadcastMessage("An error occurred during world generation.\nPlease try again...");
+			game.broadcastMessage("An error occurred during world generation.\nPlease try again...");
 			
-			game.setGameState(GameState.worldDeletion);
+			game.setGameState(GameState.WORLD_DELETION);
 		}
 	}
 
@@ -304,8 +276,7 @@ class WorldManager
         server.getPluginManager().callEvent(new WorldInitEvent(world));
         System.out.print("Preparing start region for world: " + world.getName() + " (Seed: " + config.getSeed() + ")");
         
-        int worldNumber = config.getGame().getWorlds().size(), numberOfWorlds = config.getGame().getGameMode().getWorldsToGenerate().length; 
-        config.getGame().drawProgressBar((float)worldNumber / (float)numberOfWorlds);
+        int worldNumber = config.getGame().getWorlds().size(), numberOfWorlds = config.getGame().getGameMode().getWorldsToGenerate().length;
         ChunkBuilder cb = new ChunkBuilder(config.getGame(), 12, server, world, worldNumber, numberOfWorlds, runWhenDone);
         chunkBuilderTaskID = server.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);
     	return world;
@@ -342,13 +313,8 @@ class WorldManager
     	
     	public void run()
     	{
-            long time = System.currentTimeMillis();
-
-            if (time < reportTime) {
-                reportTime = time;
-            }
-
-            if (time > reportTime + 500L)
+    		long time = System.currentTimeMillis();
+            if (time > reportTime + 3000L)
             {
             	float fraction = (float)stepNum/numSteps;
             	if ( numberOfWorlds > 1 )
@@ -356,7 +322,7 @@ class WorldManager
             		fraction /= (float)numberOfWorlds;
             		fraction += (float)worldNumber/(float)numberOfWorlds;
             	}
-            	game.drawProgressBar(fraction);
+            	game.broadcastMessage((int)(fraction*100f) + "%");
                 reportTime = time;
             }
 
@@ -375,6 +341,9 @@ class WorldManager
             		server.getScheduler().cancelTask(chunkBuilderTaskID);
             		chunkBuilderTaskID = -1;
             		server.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
+            		
+            		game.getWorlds().add(world);
+            		plugin.gamesByWorld.put(world.getName(), game);
             		
             		System.out.println("Finished generating world: " + world.getName());
             		return;

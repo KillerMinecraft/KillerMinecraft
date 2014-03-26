@@ -30,10 +30,7 @@ public abstract class WorldGenerator extends KillerModule
 	{
 		Game game = worldConfig.getGame();
 		game.getGameMode().beforeWorldGeneration(game.getWorlds().size(), worldConfig);
-		
-		World world = plugin.worldManager.createWorld(worldConfig, runWhenDone);
-		game.getWorlds().add(world);
-		return world;
+		return plugin.worldManager.createWorld(worldConfig, runWhenDone);
 	}
 	
 	final void createWorlds(Game game, Runnable runWhenDone)
@@ -65,7 +62,7 @@ public abstract class WorldGenerator extends KillerModule
 		
 		public void run()
 		{
-			String worldName = Settings.killerWorldNamePrefix + "_" + (game.getNumber()+1) + "_" + num;
+			String worldName = Settings.killerWorldNamePrefix + "_" + game.getNumber() + "_" + num;
 			final WorldConfig helper = new WorldConfig(game, worldName, environment);
 			setupWorld(helper, runNext);
 		}

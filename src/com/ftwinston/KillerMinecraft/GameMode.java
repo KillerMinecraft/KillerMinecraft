@@ -12,12 +12,11 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import com.ftwinston.KillerMinecraft.Game.GameState;
-import com.ftwinston.KillerMinecraft.PlayerManager.Info;
+import com.ftwinston.KillerMinecraft.Game.PlayerInfo;
 import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
 
 
@@ -42,8 +41,6 @@ public abstract class GameMode extends KillerModule
 		return -1;
 	}
 
-	protected final Random random = new Random();
-	
 	public Scoreboard createScoreboard()
 	{
 		TeamInfo[] teams = getTeams();
@@ -66,19 +63,16 @@ public abstract class GameMode extends KillerModule
 	}
 
 	public abstract int getMinPlayers();
-	
+
 	private TeamInfo[] teams = null;
 	public final TeamInfo[] getTeams() { return teams; }
 	protected void setTeams(TeamInfo... teams)
 	{
 		this.teams = teams;
-		if ( game != null && game.configuration != null && game.getGameState().canChangeGameSetup )
-		{
-			game.configuration.populateTeamMenu();
-			game.scoreboard = game.configuration.createTeamSelectionScoreboard();
-		}
+		if ( game != null )
+			game.menuManager.populateTeamMenu();
 	}
-	
+/*
 	public int indexOfTeam(TeamInfo team)
 	{
 		TeamInfo[] teams = getTeams();
@@ -90,19 +84,19 @@ public abstract class GameMode extends KillerModule
 				return i;
 		return -1;
 	}
-
+*/
 	public TeamInfo getTeam(OfflinePlayer player)
 	{
-		Info info = game.getPlayerInfo().get(player.getName());
+		PlayerInfo info = game.getPlayerInfo(player);
 		return info == null ? null : info.getTeam();
 	}
-	
+
 	public void setTeam(OfflinePlayer player, TeamInfo team) 
 	{
-		Info info = game.getPlayerInfo().get(player.getName());
+		PlayerInfo info = game.getPlayerInfo().get(player.getName());
 		if ( info != null )
 		{
-			TeamInfo oldTeam = game.getTeamForPlayer(player);
+			TeamInfo oldTeam = info.getTeam();
 			if ( oldTeam == team )
 				return;
 			
@@ -113,27 +107,13 @@ public abstract class GameMode extends KillerModule
 				Team sbTeam = game.scoreboard.getPlayerTeam(player);
 				if ( sbTeam != null )
 					sbTeam.removePlayer(player);
-				if ( game.configuration.allowTeamSelection() && game.getGameState().canChangeGameSetup )
-				{
-					Score score;
-					if ( oldTeam != null )
-						score = oldTeam.getScoreboardScore();
-					else
-						score = game.configuration.unallocatedScore;
-					if ( score != null )
-						score.setScore(score.getScore()-1);
-					
-					if ( team != null )
-						score = team.getScoreboardScore();
-					else
-						score = game.configuration.unallocatedScore;
-					if ( score != null )
-						score.setScore(score.getScore()+1);
-				}
 				
-				sbTeam = game.scoreboard.getTeam(team == null ? GameConfiguration.unallocatedTeamName : team.getName());
-				if ( sbTeam != null )
-					sbTeam.addPlayer(player);
+				if ( team != null)
+				{
+					sbTeam = game.scoreboard.getTeam(team.getName());
+					if ( sbTeam != null )
+						sbTeam.addPlayer(player);
+				}
 			}
 			
 			if ( allowTeamSelection() && player.isOnline() )
@@ -141,18 +121,19 @@ public abstract class GameMode extends KillerModule
 				Player online = (Player)player;
 				if ( team != null )
 					online.sendMessage("You are on the " + team.getChatColor() + team.getName());
-				else if ( game.getGameState().canChangeGameSetup )
+				else if ( game.getGameState() == GameState.LOBBY )
 					online.sendMessage("Your team will be decided automatically");
 			}
 		}
 	}
-	
+
+	protected Random random = new Random();
 	public void allocateTeams(List<Player> players)
 	{
 		TeamInfo[] teams = getTeams();
 		int[] counts = new int[teams.length];
 		for ( int i=0; i<teams.length; i++ )
-			counts[i] = getPlayers(new PlayerFilter().team(teams[i])).size();
+			counts[i] = game.getPlayers(new PlayerFilter().team(teams[i])).size();
 		
 		List<Integer> lowest = new ArrayList<Integer>();
 		
@@ -182,65 +163,32 @@ public abstract class GameMode extends KillerModule
 		} 
 	}
 	
-
 	public boolean allowWorldGeneratorSelection() { return true; }
+
 	public Environment[] getWorldsToGenerate() { return new Environment[] { Environment.NORMAL, Environment.NETHER }; }
 	public void beforeWorldGeneration(int worldNumber, WorldConfig world) { }
 
 	public abstract String getHelpMessage(int messageNum, TeamInfo team);
-	
+
 	public boolean allowTeamSelection() { return teams != null; }
 
 	public abstract boolean isLocationProtected(Location l, Player p); // for protecting plinth, respawn points, etc.
 
-	public abstract boolean isAllowedToRespawn(Player player); // return false and player will become a spectator
-	
 	public abstract Location getSpawnLocation(Player player); // where should this player spawn?
-	
+
 	protected abstract void gameStarted(); // assign player teams if we do that immediately, etc
 
-	protected abstract void gameFinished(); // clean up scheduled tasks, etc
+	protected void gameFinished() { } // clean up scheduled tasks, etc
 
-	public boolean useDiscreetDeathMessages() { return false; } // should we tweak death messages to keep stuff secret?
+	public void playerJoinedLate(Player player) { }
+	public void playerReconnected(Player player) { }
+/*
+	public void playerKilled(Player player) { }
+*/
+	public void playerQuit(OfflinePlayer player) { }
 
-	public void playerJoinedLate(Player player, boolean isNewPlayer) { };
-
-	public void playerKilled(Player player) { };
-	public void playerQuit(OfflinePlayer player) { };
-	
 	protected Location getCompassTarget(Player player) { return null; } // if compasses should follow someone / something, control that here
-	
-	// helper methods that exist to help out the game modes	
-	protected final List<Player> getOnlinePlayers()
-	{		
-		return game.getOnlinePlayers(new PlayerFilter());
-	}
-	
-	protected final List<Player> getOnlinePlayers(PlayerFilter filter)
-	{
-		return game.getOnlinePlayers(filter);
-	}
-	
-	protected final List<OfflinePlayer> getOfflinePlayers(PlayerFilter filter)
-	{		
-		return game.getOfflinePlayers(filter);
-	}
-	
-	protected final List<OfflinePlayer> getPlayers(PlayerFilter filter)
-	{		
-		return game.getPlayers(filter);
-	}
-	
-	protected final void broadcastMessage(String message)
-	{
-		game.broadcastMessage(message);
-	}
-	
-	protected final void broadcastMessage(PlayerFilter recipients, String message)
-	{
-		game.broadcastMessage(recipients, message);
-	}
-	
+
 	public int getMonsterSpawnLimit(int quantity)
 	{
 		switch ( game.monsterNumbers )
@@ -276,23 +224,11 @@ public abstract class GameMode extends KillerModule
 			return 40;
 		}
 	}
-	
-	protected final void setPlayerVisibility(Player player, boolean visible)
-	{
-		if ( visible )
-			plugin.playerManager.makePlayerVisibleToAll(game, player);
-		else
-			plugin.playerManager.makePlayerInvisibleToAll(game, player);
-	}
-	
-	protected final void hidePlayer(Player player, Player looker)
-	{
-		plugin.playerManager.hidePlayer(looker, player);
-	}
-	
+
 	protected final int getNumWorlds() { return game.getWorlds().size(); }
+
 	protected final World getWorld(int number) { return game.getWorlds().get(number); }
-	
+
 	public void handlePortal(TeleportCause cause, Location entityLoc, PortalHelper helper)
 	{
 		if ( cause != TeleportCause.NETHER_PORTAL || getNumWorlds() < 2 )
@@ -319,39 +255,25 @@ public abstract class GameMode extends KillerModule
 
 	final void startGame()
 	{	
-		game.forcedGameEnd = false;
+		/*
 		plugin.playerManager.startGame(game);
+		*/
 		gameStarted();
-		
-		for ( Player player : getOnlinePlayers() )
-			player.teleport(getSpawnLocation(player));
 	}
 	
 	protected final boolean hasGameFinished()
 	{
-		return !game.getGameState().usesGameWorlds || game.getGameState() == GameState.finished;
+		return !game.getGameState().playersInWorld || game.getGameState() == GameState.FINISHED;
 	}
-	
-	public final void finishGame()
-	{	
+
+	protected final void finishGame()
+	{
 		if ( hasGameFinished() )
-			return;
+			return;	
 		
-		gameFinished();
-		
-		game.setGameState(GameState.finished);
-		
-		if ( !game.forcedGameEnd )
-		{
-			plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
-				@Override
-				public void run() {
-					game.endGame(null);
-				}
-			}, 220); // add a 12 second delay
-		}
+		game.setGameState(GameState.FINISHED);
 	}
-	
+
 	final void sendGameModeHelpMessage()
 	{
 		for ( Player player : getOnlinePlayers() )
@@ -360,7 +282,7 @@ public abstract class GameMode extends KillerModule
 	
 	final boolean sendGameModeHelpMessage(Player player)
 	{
-		PlayerManager.Info info = game.getPlayerInfo().get(player.getName());
+		PlayerInfo info = game.getPlayerInfo().get(player.getName());
 		String message = null;
 		
 		if ( info.nextHelpMessage >= 0 )

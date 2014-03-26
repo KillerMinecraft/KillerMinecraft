@@ -8,46 +8,35 @@ package com.ftwinston.KillerMinecraft;
  * Created 18/06/2012
  */
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.Difficulty;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Recipe;
-import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.ftwinston.KillerMinecraft.CraftBukkit.CraftBukkitAccess;
 
-public class KillerMinecraft extends JavaPlugin
+public class KillerMinecraft extends JavaPlugin implements Runnable
 {
 	public static KillerMinecraft instance;
 	CraftBukkitAccess craftBukkit;
 	public Logger log = Logger.getLogger("Minecraft");
-
-	boolean stagingWorldIsServerDefault;
 	
 	EventManager eventListener = new EventManager(this);
 	WorldManager worldManager;
 	PlayerManager playerManager;
 	RecipeManager recipeManager;
-	VoteManager voteManager;
-	StatsManager statsManager;
+	SpectatorManager spectatorManager;
+//	VoteManager voteManager;
 	Game[] games;
+	int portalUpdateProcess = -1;
 
-	World stagingWorld;
-	int stagingWorldUpdateProcess = -1;
-	
 	public static CraftBukkitAccess craftBukkitHelper()
 	{
 		return instance.craftBukkit;
@@ -55,7 +44,7 @@ public class KillerMinecraft extends JavaPlugin
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
-		return stagingWorld == null ? new StagingWorldGenerator() : null;
+		return new StagingWorldGenerator();
 	}
 	
 	public void onEnable()
@@ -71,109 +60,102 @@ public class KillerMinecraft extends JavaPlugin
         Settings.setup(this);
         
         worldManager = new WorldManager(this);
-        playerManager = new PlayerManager(this);
+        
+		playerManager = new PlayerManager(this);
         recipeManager = new RecipeManager();
-        voteManager = new VoteManager(this);
+        spectatorManager = new SpectatorManager();
+        //voteManager = new VoteManager(this);
 
         if ( Settings.nothingButKiller )
-        	worldManager.hijackDefaultWorld(Settings.stagingWorldName);
-		
+        	worldManager.hijackDefaultWorld();
+	
         // delay this by 1 tick so that the plugins are all loaded and the worlds are generated 
-        getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-			@Override
-			public void run() {
-				if ( GameMode.gameModes.size() == 0 )
-				{
-					log.warning("Killer cannot start: No game modes have been loaded!");
-					log.warning("Add some game mode plugins to your server!");
-					setEnabled(false);
-					return;
-				}
-				if ( WorldGenerator.worldGenerators.size() == 0 )
-				{
-					log.warning("Killer cannot start: No world generators have been loaded!");
-					log.warning("Add some world generator plugins to your server!");
-					setEnabled(false);
-					return;
-				}
-				
-				if ( stagingWorld == null )
-				{
-					stagingWorld = getServer().getWorld(Settings.stagingWorldName);
-					
-					if ( stagingWorld == null )
-						worldManager.createStagingWorld(Settings.stagingWorldName);
-				}
-				
-				if ( !Settings.setupGames(KillerMinecraft.instance) )
-				{
-					setEnabled(false);
-					return;
-				}
-								
-				statsManager = new StatsManager(KillerMinecraft.instance, KillerMinecraft.instance.games.length);
-		        getServer().getPluginManager().registerEvents(eventListener, KillerMinecraft.instance);
-		        
-		        // because listening for ChunkLoadEvent is unreliable, if the relevant chunk isn't loaded when we try to write a sign,
-		        // it's saved off in this map and updated when necessary.
-		        stagingWorldUpdateProcess = getServer().getScheduler().scheduleSyncRepeatingTask(instance, new Runnable() {
-					public void run()
-					{
-						boolean updateAny = false;
-						Iterator<Map.Entry<Location, String[]>> it = Game.signsNeedingUpdated.entrySet().iterator();
-					    while (it.hasNext()) {
-					        Map.Entry<Location, String[]> pair = (Map.Entry<Location, String[]>)it.next();
-
-				        	if ( craftBukkit.isChunkGenerated(pair.getKey().getChunk()))
-				        	{
-				        		if ( Game.writeSign(pair.getKey(), pair.getValue()) )
-				        			updateAny = true;
-				        		
-				        		it.remove();
-				        	}
-					    }
-				    
-				    	for ( Game game : games )
-				    	{
-				    		if ( updateAny )
-				    			game.drawProgressBar();
-				    		game.checkRenderer();
-				    	}
-				    	
-				    	PortalHelper.tidyPortalDelays(System.currentTimeMillis());
-				    	
-				    	if (stagingWorld.getGenerator().getClass() == StagingWorldGenerator.class)
-				    		stagingWorld.setTime(5970);
-					}
-				}, 20L, 60L); // check every 3 seconds
-			}
-		}, 1);
+        getServer().getScheduler().scheduleSyncDelayedTask(this, this, 1);
         
 		// remove existing Killer world files
 		worldManager.deleteWorldFolders(Settings.killerWorldNamePrefix + "_");
 	}
 	
+	GameModePlugin defaultGameMode;
+	WorldGeneratorPlugin defaultWorldGen;
+	
+	@Override
+	public void run()
+	{
+		if ( GameMode.gameModes.size() == 0 )
+		{
+			log.warning("Killer cannot start: No game modes have been loaded!");
+			log.warning("Add some game mode plugins to your server!");
+			setEnabled(false);
+			return;
+		}
+		if ( WorldGenerator.worldGenerators.size() == 0 )
+		{
+			log.warning("Killer cannot start: No world generators have been loaded!");
+			log.warning("Add some world generator plugins to your server!");
+			setEnabled(false);
+			return;
+		}
+		
+		MenuManager.createRootMenu();
+		games = new Game[Settings.numGames];
+		
+		defaultGameMode = GameMode.get(0);
+		
+		defaultWorldGen = WorldGenerator.getByName("Default World");
+		if ( defaultWorldGen == null )
+			defaultWorldGen = WorldGenerator.get(0);
+		
+		for ( int i = 0; i < games.length; i++ )
+			games[i] = new Game(this, i + 1);
+		
+        getServer().getPluginManager().registerEvents(eventListener, KillerMinecraft.instance);
+        
+		// if using the floating island staging world, ensure it is set up correctly
+		if ( Settings.nothingButKiller )
+		{
+			World world = getServer().getWorlds().get(0);
+			
+			ChunkGenerator gen = world.getGenerator(); 
+			if ( gen != null && gen.getClass() == StagingWorldGenerator.class )
+			{
+				world.setSpawnFlags(false, false);
+				world.setDifficulty(Difficulty.PEACEFUL);
+				world.setPVP(false);
+				world.setSpawnLocation(0, 65, 0);
+			}
+		}
+		
+        portalUpdateProcess = getServer().getScheduler().scheduleSyncRepeatingTask(instance, new Runnable() {
+			public void run()
+			{	
+		    	PortalHelper.checkDelays();
+			}
+		}, 20L, 60L); // check every 3 seconds
+	}
+	
 	public void onDisable()
 	{
-		if ( stagingWorldUpdateProcess != -1 )
+		if ( portalUpdateProcess != -1 )
 		{
-			getServer().getScheduler().cancelTask(stagingWorldUpdateProcess);
-			stagingWorldUpdateProcess = -1;
+			getServer().getScheduler().cancelTask(portalUpdateProcess);
+			portalUpdateProcess = -1;
 		}
 		
 		if ( games != null )
 			for ( Game game : games )
-				playerManager.reset(game);
-		
+				game.finishGame(false);
+
 		worldManager.onDisable();
 		
 		craftBukkit = null;
-        playerManager = null;
+		playerManager = null;
         worldManager = null;
+/*
         voteManager = null;
-        statsManager = null;
+*/
 	}
-	
+
 	static void registerGameMode(GameModePlugin plugin)
 	{
 		plugin.initialize(instance);
@@ -183,74 +165,15 @@ public class KillerMinecraft extends JavaPlugin
 	{
 		plugin.initialize(instance);
 	}
-	
-	List<Recipe> monsterRecipes = new ArrayList<Recipe>();
-	ShapedRecipe dispenserRecipe;
-	ShapelessRecipe enderRecipe;
 
-	boolean isDispenserRecipe(Recipe recipe)
-	{
-		if ( recipe.getResult().getType() != dispenserRecipe.getResult().getType() || !(recipe instanceof ShapedRecipe) )
-    		return false;
-    	
-    	// this is *a* dispenser recipe. it's the right one if it includes a sapling in the ingredients
-    	ShapedRecipe shaped = (ShapedRecipe)recipe;
-    	for ( ItemStack ingredient : shaped.getIngredientMap().values() )
-    		if ( ingredient.getType() == Material.SAPLING )
-				return true;
-    	
-		return false;	
-	}
-	
-	boolean isEnderEyeRecipe(Recipe recipe)
-	{
-		return recipe == enderRecipe; // any reason not to do this? 
-		/*
-		if ( recipe.getResult().getType() != enderRecipe.getResult().getType() || !(recipe instanceof ShapelessRecipe) )
-    		return false;
-    	
-    	// this is *an* eye of ender recipe. it's the right one if it includes a spider eye in the ingredients
-    	ShapelessRecipe shapeless = (ShapelessRecipe)recipe;
-    	for ( ItemStack ingredient : shapeless.getIngredientList() )
-    		if ( ingredient.getType() == Material.SPIDER_EYE )
-    			return true;
-    			
-    	return false;*/
-	}
-	
-	boolean isMonsterEggRecipe(Recipe recipe)
-	{
-		return recipe.getResult().getType() == Material.MONSTER_EGG;
-	}
-	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
 		return CommandHandler.onCommand(this, sender, cmd, label, args);
 	}
 	
-	public Game getGameForWorld(World w)
-	{
-		if ( w == stagingWorld )
-			return null;
-		
-		for ( Game game : games )
-			for ( World world : game.getWorlds() )
-				if ( w == world )
-					return game;
-		
-		return null;
-	}
+	Map<String, Game> gamesByWorld = new HashMap<String, Game>(), gamesByPlayer = new HashMap<String, Game>();
 	
-	public Game getGameForPlayer(Player player)
-	{
-		if ( player.getWorld() == stagingWorld )
-		{
-			for ( Game g : games )
-				if ( g.getPlayerInfo().containsKey(player.getName()))
-					return g;
-			return null;
-		}
-		else
-			return getGameForWorld(player.getWorld());
-	}
+	public Game getGameForWorld(World w) { return gamesByWorld.get(w.getName()); }
+	
+	public Game getGameForPlayer(Player player) { return gamesByPlayer.get(player.getName()); }
 }

@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 
-import com.ftwinston.KillerMinecraft.PlayerManager.Info;
+import com.ftwinston.KillerMinecraft.Game.PlayerInfo;
 import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
 
 public class PlayerFilter
@@ -25,7 +25,7 @@ public class PlayerFilter
 		RequiredNot,
 	}
 	
-	private Setting aliveState = Setting.Ignored;
+	private Setting spectatorState = Setting.RequiredNot;
 	private Setting onlineState = Setting.Ignored;
 	
 	private TeamInfo team;
@@ -46,15 +46,15 @@ public class PlayerFilter
 	
 	Game getGame() { return game; }
 	
-	public PlayerFilter alive()
+	public PlayerFilter includeSpectators()
 	{
-		aliveState = Setting.Required;
+		spectatorState = Setting.Ignored;
 		return this;
 	}
 	
-	public PlayerFilter notAlive()
+	public PlayerFilter onlySpectators()
 	{
-		aliveState = Setting.RequiredNot;
+		spectatorState = Setting.Required;
 		return this;
 	}
 
@@ -129,18 +129,18 @@ public class PlayerFilter
 		if ( onlineState == Setting.RequiredNot )
 			return players;
 		
-		for ( Map.Entry<String, Info> info : game.getPlayerInfo().entrySet() )
+		for ( Map.Entry<String, PlayerInfo> info : game.getPlayerInfo().entrySet() )
 		{
-			Info infoVal = info.getValue();
+			PlayerInfo infoVal = info.getValue();
 			
-			switch ( aliveState )
+			switch ( spectatorState )
 			{
 			case Required:
-				if ( !infoVal.isAlive() )
+				if ( !infoVal.isSpectator() )
 					continue;
 				break;
 			case RequiredNot:
-				if ( infoVal.isAlive() )
+				if ( infoVal.isSpectator() )
 					continue;
 				break;
 			case Ignored:
@@ -190,18 +190,18 @@ public class PlayerFilter
 	{
 		ArrayList<OfflinePlayer> players = new ArrayList<OfflinePlayer>();
 		
-		for ( Map.Entry<String, Info> info : game.getPlayerInfo().entrySet() )
+		for ( Map.Entry<String, PlayerInfo> info : game.getPlayerInfo().entrySet() )
 		{
-			Info infoVal = info.getValue();
+			PlayerInfo infoVal = info.getValue();
 			
-			switch ( aliveState )
+			switch ( spectatorState )
 			{
 			case Required:
-				if ( !infoVal.isAlive() )
+				if ( !infoVal.isSpectator() )
 					continue;
 				break;
 			case RequiredNot:
-				if ( infoVal.isAlive() )
+				if ( infoVal.isSpectator() )
 					continue;
 				break;
 			case Ignored:

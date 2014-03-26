@@ -1,80 +1,8 @@
-stagingWorldName:           staging
-killerWorldNamePrefix:      killer
-nothingButKiller:           false
-allowTeleportToStagingArea: true
-filterChat:                 true
-filterScoreboard:           true
-allowSpectators:            true
-reportStats:                true
-allowLateJoiners:           true
-allowPlayerLimits:          true
-
-stagingSpawn:
-    from:       -6, 65, -9
-    to:         6, 65, 9
-
-protected:
-    from:       -10, 64, -9
-    to:         10, 68, 9
-
-games:
-  - 
-    name:       Game 1
-    mode:
-        plugin: Killer on the Loose
-        options:
-            killer-type: crazy killer
-            ghast-tear-victory: true
-            allow-crafting-monsters: true
-    world:
-        plugin: Default World
-        options:
-            use-large-biomes: true
-    buttons:
-        join:   9, 66, -2
-        config: 9, 66, 0
-        start:  9, 66, 2
-    signs:
-        status: 9, 67, 0
-        join:   9, 65, -2
-        config: 9, 65, 0
-        start:  9, 65, 2
-    infoframes:
-        mode:   9, 66, -1
-        misc:   9, 66, 1
-    progressbar:
-        start:   8, 64, -9
-        dir:     +z
-        length:  18
-        breadth: 3
-        depth:   1
-  - 
-    name:       Game 2
-    mode:
-        plugin: Farm Killer
-        options:
-            friendly-fire: true
-            diminishing-returns: true
-            announce-scores: true
-    world:
-        plugin: Superflat
-        options:
-            classic-flat: true
-    buttons:
-        join:    -9, 66, 2
-        config:  -9, 66, 0
-        start:   -9, 66, -2
-    signs:
-        status:  -9, 67, 0
-        join:    -9, 65, 2
-        config:  -9, 65, 0
-        start:   -9, 65, -2
-    infoframes:
-        mode:   -9, 66, 1
-        misc:   -9, 66, -1
-    progressbar:
-        start:   -8, 64, 9
-        dir:     -z
-        length:  18
-        breadth: 3
-        depth:   1
+numGames:              4
+nothingButKiller:      false
+killerWorldNamePrefix: killer
+filterChat:            true
+filterScoreboard:      true
+allowSpectators:       true
+allowLateJoiners:      true
+allowPlayerLimits:     true

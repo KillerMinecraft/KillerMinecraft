@@ -22,7 +22,7 @@ public class PortalHelper
 	private TravelAgent agent;
 	private Location destination = null;
 	private boolean useExitPortal = true;
-	private static long rePortalDelay = 1000; // set this (automatically?) whenever performing a portalling.
+	private static long rePortalDelay = 1000; // wait this long after portalling before portalling again.
 	
 	private class QueueEntry
 	{
@@ -37,8 +37,9 @@ public class PortalHelper
 	private static HashMap<Integer, Long> delayedEntitiesMap = new HashMap<Integer, Long>();
 	private static LinkedList<QueueEntry> delayedEntitiesList = new LinkedList<QueueEntry>();
 	
-	static void tidyPortalDelays(long currentTime)
+	static void checkDelays()
 	{
+		long currentTime = System.currentTimeMillis();
 		QueueEntry entry = delayedEntitiesList.peek();
 		while ( entry != null && entry.value <= currentTime )
 		{

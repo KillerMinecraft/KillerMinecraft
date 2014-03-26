@@ -1,13 +1,13 @@
 package com.ftwinston.KillerMinecraft;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -16,73 +16,101 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.util.BlockIterator;
+import org.bukkit.util.Vector;
 
-import com.ftwinston.KillerMinecraft.PlayerManager.Info;
+import com.ftwinston.KillerMinecraft.Game.PlayerInfo;
 
 public class Helper
 {
-	private static Random random = new Random();
+	public static void teleport(Player player, Location loc)
+	{
+		if ( player.isDead() )
+			KillerMinecraft.instance.craftBukkit.forceRespawn(player); // stop players getting stuck at the "you are dead" screen, unable to do anything except disconnect
+		player.setVelocity(new Vector(0,0,0));
+		player.teleport(loc);
+	}
+	
+	public static void makeSpectator(Game game, Player player)
+	{
+		KillerMinecraft.instance.spectatorManager.makeSpectator(game, player);
+	}
+	
+	public static void stopSpectating(Game game, Player player)
+	{
+		KillerMinecraft.instance.spectatorManager.stopSpectating(game, player);
+	}
+	
+	public static boolean isSpectator(Game game, Player player)
+	{
+		if ( game == null )
+			return false;
+		PlayerInfo info = game.getPlayerInfo(player);
+		return info != null && info.isSpectator();
+	}
+	
+	public static void hidePlayer(Player fromMe, Player hideMe)
+	{
+		fromMe.hidePlayer(hideMe);
+		KillerMinecraft.instance.craftBukkit.sendForScoreboard(fromMe, hideMe, true); // hiding will take them out of the scoreboard, so put them back in again
+	}
+
+	public static void makePlayerInvisibleToAll(Game game, Player player)
+	{
+		for(Player p : game.getOnlinePlayers(new PlayerFilter().includeSpectators()))
+			if (p != player && p.canSee(player))
+				hidePlayer(p, player);
+	}
+	
+	public static void makePlayerVisibleToAll(Game game, Player player)
+	{
+		for(Player p : game.getOnlinePlayers(new PlayerFilter().includeSpectators()))
+			if (p != player && !p.canSee(player))
+				p.showPlayer(player);
+	}
+	
+
+	static Random random = new Random();
 	
 	public static String tidyItemName(Material m)
 	{
 		return m.name().toLowerCase().replace('_', ' ');
 	}
-	
-	public static void makeSpectator(Game game, Player player)
-	{
-		KillerMinecraft.instance.playerManager.setAlive(game, player, false);
-	}
-	
-	public static Player getTargetOf(Game game, OfflinePlayer player)
-	{
-		Info info = game.getPlayerInfo().get(player.getName());
-		if ( info == null || info.target == null )
-			return null;
-		
-		Player target = KillerMinecraft.instance.getServer().getPlayerExact(info.target);
-		
-		if ( isAlive(game, target) && KillerMinecraft.instance.getGameForPlayer(target) == game )
-			return target;
-		
-		return null;
-	}
-	
-	static String getTargetName(Game game, OfflinePlayer player)
-	{
-		Info info = game.getPlayerInfo().get(player.getName());
-		if ( info == null || info.target == null )
-			return null;
-		
-		return info.target;
-	}
-	
-	public static void setTargetOf(Game game, OfflinePlayer player, OfflinePlayer target)
-	{
-		setTargetOf(game, player, target == null ? null : target.getName());
-	}
-	
-	static void setTargetOf(Game game, OfflinePlayer player, String target)
-	{
-		Info info = game.getPlayerInfo().get(player.getName());
-		if ( target == null )
-			info.target = null;
-		else
-			info.target = target;
-	}
-	
-	public static boolean isAlive(Game game, OfflinePlayer player)
-	{
-		if ( game == null )
-			return true;
-		Info info = game.getPlayerInfo().get(player.getName());
-		return info != null && info.isAlive();
-	}
-	
-	public static boolean playerCanSeeOther(Player looker, Player target, double maxDistanceSq)
-	{
-		return KillerMinecraft.instance.playerManager.canSee(looker, target, maxDistanceSq);
-	}
 
+	private static final double maxAcceptableOffsetDot = 0.65;
+	public static boolean canSee(Player looker, Player target, double maxDistanceSq)
+	{
+		Location specLoc = looker.getEyeLocation();
+		Location targetLoc = target.getEyeLocation();
+		
+		// check they're in the same world
+		if ( specLoc.getWorld() != targetLoc.getWorld() )
+			return false;
+		
+		// then check the distance is appropriate
+		double targetDistSqr = specLoc.distanceSquared(targetLoc); 
+		if ( targetDistSqr > maxDistanceSq )
+			return false;
+		
+		// check if they're facing the right way
+		Vector specDir = specLoc.getDirection().normalize();
+		Vector dirToTarget = targetLoc.subtract(specLoc).toVector().normalize();
+		if ( specDir.dot(dirToTarget) < maxAcceptableOffsetDot )
+			return false;
+		
+		// then do a ray trace to see if there's anything in the way
+        Iterator<Block> itr = new BlockIterator(specLoc.getWorld(), specLoc.toVector(), dirToTarget, 0, (int)Math.sqrt(targetDistSqr));
+        while (itr.hasNext())
+        {
+            Block block = itr.next();
+            if ( block != null && !block.isEmpty() )
+            	return false;
+        }
+        
+        return true;
+	}
+	
+	
 	public static Location getNearestPlayerTo(Player player, List<Player> candidates)
 	{
 		Location nearest = null;
@@ -92,7 +120,7 @@ public class Helper
 		
 		for ( Player other : candidates )
 		{
-			if ( other == player || other.getWorld() != playerWorld || !isAlive(game, other))
+			if ( other == player || other.getWorld() != playerWorld || isSpectator(game, other))
 				continue;
 				
 			double distSq = other.getLocation().distanceSquared(player.getLocation());
@@ -112,7 +140,7 @@ public class Helper
 		}
 		return nearest;
 	}
-	
+
 	public static <T> List<T> selectRandom(int num, List<T> candidates)
 	{
 		List<T> results = new ArrayList<T>();
@@ -133,7 +161,7 @@ public class Helper
 	{
 		return candidates.get(random.nextInt(candidates.size()));
 	}
-	
+
 	// returns the index with the highest value. If multiple indices share the highest value, picks one of these at random.
 	public static int getHighestValueIndex(int[] values)
 	{
@@ -176,6 +204,15 @@ public class Helper
 		return selectRandom(lowestIndices);
 	}
 	
+	public Location getRandomLocation(Location rangeMin, Location rangeMax)
+	{
+		return new Location(rangeMin.getWorld(),
+				rangeMin.getX() + (rangeMax.getX() - rangeMin.getX()) * random.nextDouble(),
+				rangeMin.getY() + (rangeMax.getY() - rangeMin.getY()) * random.nextDouble(),
+				rangeMin.getZ() + (rangeMax.getZ() - rangeMin.getZ()) * random.nextDouble(),
+				random.nextFloat() * 360.0f, 0f);
+	}
+
 	// Adds a random offset to a location. Each component of the location will be offset by a value at least as different as the corresponding min, and at most as different as the max.
 	public static Location randomizeLocation(Location loc, double xMin, double yMin, double zMin, double xMax, double yMax, double zMax)
 	{
@@ -213,7 +250,7 @@ public class Helper
 		
 		return loc;
 	}
-	
+
 	public static boolean isSafeSpawnLocation(Location loc)
 	{
 		Block b = loc.getBlock();
@@ -246,7 +283,7 @@ public class Helper
 		
 		return true;
 	}
-	
+
 	private static boolean isBlockSafe(Block b)
 	{
 		//return !b.isLiquid(); // actually, we don't care about water, only lava
@@ -293,7 +330,7 @@ public class Helper
 
 		return y;
 	}
-	
+
 	public static int getHighestYIgnoring(Chunk c, int x, int z, int minY, Material ... ignoredBlockTypes)
 	{
 		int y = getHighestBlockYAt(c, x, z);
@@ -343,7 +380,7 @@ public class Helper
 
 		return y;
 	}
-	
+
 	public static Location findSpaceForPlayer(Location loc) 
 	{
 		World w = loc.getWorld();
@@ -362,7 +399,7 @@ public class Helper
 		Location highest = w.getHighestBlockAt(x, z).getLocation();
 		return new Location(w, highest.getX() + 0.5, highest.getY() + 1, highest.getZ() + 0.5);
 	}
-	
+
 	public static Player getAttacker(EntityDamageEvent event)
 	{
 		Player attacker = null;
