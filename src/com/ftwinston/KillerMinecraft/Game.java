@@ -438,11 +438,11 @@ public class Game
 	GameMode getGameMode() { return gameMode; }
 
 	Scoreboard scoreboard;
-	void setGameMode(GameModePlugin plugin)
+	boolean setGameMode(GameModePlugin plugin)
 	{
 		GameModePlugin prev = gameMode == null ? null : (GameModePlugin)gameMode.getPlugin();
 		if ( prev == plugin )
-			return;
+			return false;
 		
 		gameMode = plugin.createInstance();
 		gameMode.initialize(this, plugin);
@@ -451,6 +451,7 @@ public class Game
 
 		for ( Player player : getOnlinePlayers() )
 			gameMode.setTeam(player, null);
+		return true;
 	}
 	
 	private WorldGenerator worldGenerator = null;

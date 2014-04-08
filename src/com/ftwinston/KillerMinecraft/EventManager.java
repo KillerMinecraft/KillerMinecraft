@@ -469,23 +469,28 @@ class EventManager implements Listener
 		if ( game == null ) 
 			return;
 		
-		event.setCancelled(false);
 		if ( event instanceof EntityDamageByEntityEvent )
 		{
 			Player attacker = Helper.getAttacker(event);
 			if ( attacker != null )
 			{
 				if ( Helper.isSpectator(game, attacker) )
+				{
 					event.setCancelled(true);
+					return;
+				}
 			}
 		}
-		if ( event.isCancelled() || event.getEntity() == null || !(event.getEntity() instanceof Player))
-			return;
+		if ( event.getEntity() instanceof Player)
+		{
+			Player victim = (Player)event.getEntity();
 		
-		Player victim = (Player)event.getEntity();
-		
-		if( Helper.isSpectator(game, victim) )
-			event.setCancelled(true);
+			if( Helper.isSpectator(game, victim) )
+			{
+				event.setCancelled(true);
+				return;
+			}
+		}
 		
 		fireGameEvent(event, game);
 	}
