@@ -27,7 +27,10 @@ class SpectatorManager
 	
 	void makeSpectator(Game game, Player player)
 	{
-		Helper.makePlayerInvisibleToAll(game, player);		
+		for(Player p : game.getOnlinePlayers(new PlayerFilter().includeSpectators()))
+			if (p != player && p.canSee(player))
+				Helper.hidePlayer(p, player);
+
 		game.getPlayerInfo(player).setSpectator(true);
 		
 		if ( player.isDead() )
@@ -64,7 +67,10 @@ class SpectatorManager
 	{
 		player.sendMessage("You are no longer a spectator.");
 		
-		Helper.makePlayerVisibleToAll(game, player);
+		for(Player p : game.getOnlinePlayers(new PlayerFilter().includeSpectators()))
+			if (p != player && !p.canSee(player))
+				p.showPlayer(player);
+
 		game.getPlayerInfo(player).setSpectator(false);
 		
 		if ( player.isDead() )
@@ -74,7 +80,6 @@ class SpectatorManager
 		player.setFlying(false);
 		
 		player.getInventory().clear();
-		
 	}
 	
 	private final double maxFollowSpectateRangeSq = 40 * 40, farEnoughSpectateRangeSq = 35 * 35;

@@ -55,21 +55,6 @@ public class Helper
 		KillerMinecraft.instance.craftBukkit.sendForScoreboard(fromMe, hideMe, true); // hiding will take them out of the scoreboard, so put them back in again
 	}
 
-	public static void makePlayerInvisibleToAll(Game game, Player player)
-	{
-		for(Player p : game.getOnlinePlayers(new PlayerFilter().includeSpectators()))
-			if (p != player && p.canSee(player))
-				hidePlayer(p, player);
-	}
-	
-	public static void makePlayerVisibleToAll(Game game, Player player)
-	{
-		for(Player p : game.getOnlinePlayers(new PlayerFilter().includeSpectators()))
-			if (p != player && !p.canSee(player))
-				p.showPlayer(player);
-	}
-	
-
 	static Random random = new Random();
 	
 	public static String tidyItemName(Material m)

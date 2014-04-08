@@ -187,5 +187,4 @@ public class CommandHandler
 		// but we don't have any other commands yet. Was thinking of something like: /killer install http://ftwinston.com/killer/plugin.jar 
 		return true;
 	}
-	
 }
