@@ -276,15 +276,19 @@ class WorldManager
         server.getPluginManager().callEvent(new WorldInitEvent(world));
         System.out.print("Preparing start region for world: " + world.getName() + " (Seed: " + config.getSeed() + ")");
         
+		float firstReportFraction = ChunkBuilder.reportIntervalFraction;
+		while ( config.initialOverallProgress > firstReportFraction )
+			firstReportFraction += ChunkBuilder.reportIntervalFraction;
+		
         int worldNumber = config.getGame().getWorlds().size(), numberOfWorlds = config.getGame().getGameMode().getWorldsToGenerate().length;
-        ChunkBuilder cb = new ChunkBuilder(config.getGame(), 12, server, world, worldNumber, numberOfWorlds, runWhenDone);
+        ChunkBuilder cb = new ChunkBuilder(config.getGame(), 12, server, world, worldNumber, numberOfWorlds, firstReportFraction, runWhenDone);
         chunkBuilderTaskID = server.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);
     	return world;
     }
     
     class ChunkBuilder implements Runnable
     {
-    	public ChunkBuilder(Game game, int numChunksFromSpawn, Server server, World world, int worldNumber, int numberOfWorlds, Runnable runWhenDone)
+    	public ChunkBuilder(Game game, int numChunksFromSpawn, Server server, World world, int worldNumber, int numberOfWorlds, float firstReportFraction, Runnable runWhenDone)
     	{
     		this.numChunksFromSpawn = numChunksFromSpawn;
     		sideLength = numChunksFromSpawn * 2 + 1;
@@ -300,31 +304,33 @@ class WorldManager
     		Location spawnPos = world.getSpawnLocation();
         	spawnX = spawnPos.getBlockX() >> 4;
         	spawnZ = spawnPos.getBlockZ() >> 4;
+			
+			nextReportFraction = firstReportFraction;
     	}
     	
     	Game game;
     	int numChunksFromSpawn, stepNum = 0, sideLength, numSteps, spawnX, spawnZ;
-        long reportTime = System.currentTimeMillis();
+        float nextReportFraction;
         int worldNumber, numberOfWorlds;
         Server server;
         World world;
         Runnable runWhenDone;
+        static final float reportIntervalFraction = 0.2f;
     	
     	public void run()
     	{
-    		long time = System.currentTimeMillis();
-            if (time > reportTime + 3000L)
-            {
-            	float fraction = (float)stepNum/numSteps;
-            	if ( numberOfWorlds > 1 )
-            	{
-            		fraction /= (float)numberOfWorlds;
-            		fraction += (float)worldNumber/(float)numberOfWorlds;
-            	}
-            	game.broadcastMessage((int)(fraction*100f) + "%");
-                reportTime = time;
-            }
-
+			float fraction = (float)stepNum/numSteps;
+			if ( numberOfWorlds > 1 )
+			{
+				fraction /= (float)numberOfWorlds;
+				fraction += (float)worldNumber/(float)numberOfWorlds;
+			}
+			if ( fraction >= nextReportFraction )
+			{
+				game.broadcastMessage((int)(nextReportFraction*100f) + "%");
+				nextReportFraction += reportIntervalFraction;
+			}
+			
             for ( int i=0; i<Settings.generateChunksPerTick; i++ )
             {
             	int offsetX = stepNum / sideLength - numChunksFromSpawn;

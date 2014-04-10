@@ -12,7 +12,7 @@ import org.bukkit.generator.ChunkGenerator;
 // similar to WorldCreator, but has list of extra block populators, and no pesky createWorld method
 public class WorldConfig
 {
-	public WorldConfig(Game game, String name, Environment env)
+	public WorldConfig(Game game, String name, Environment env, float initialOverallProgress)
 	{
 		this.game = game;
 		this.name = name;
@@ -23,6 +23,7 @@ public class WorldConfig
 		this.extraPopulators = new ArrayList<BlockPopulator>();
 		this.generateStructures = true;
 		this.generatorSettings = "";
+		this.initialOverallProgress = initialOverallProgress;
 	}
 	
 	public static long getSeedFromString(String str)
@@ -56,6 +57,7 @@ public class WorldConfig
 	private List<BlockPopulator> extraPopulators;
 	private boolean generateStructures;
 	private String generatorSettings;
+	float initialOverallProgress;
 	
 	public Game getGame() {
 		return game;
@@ -119,5 +121,4 @@ public class WorldConfig
 	public void setGeneratorSettings(String settings) {
 		this.generatorSettings = settings;
 	}
-
 }

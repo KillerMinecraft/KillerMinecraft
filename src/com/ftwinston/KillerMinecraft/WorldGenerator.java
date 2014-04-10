@@ -38,7 +38,7 @@ public abstract class WorldGenerator extends KillerModule
 		final Environment[] environments = game.getGameMode().getWorldsToGenerate();
 				
 		for ( int i=environments.length-1; i>=0; i-- )
-			runWhenDone = new WorldSetupRunner(game, environments[i], i, runWhenDone);
+			runWhenDone = new WorldSetupRunner(game, environments[i], i, ((float)i)/environments.length, runWhenDone);
 		
 		runWhenDone.run();
 	}
@@ -47,23 +47,25 @@ public abstract class WorldGenerator extends KillerModule
 	
 	private class WorldSetupRunner implements Runnable
 	{
-		public WorldSetupRunner(Game game, Environment environment, int num, Runnable runNext)
+		public WorldSetupRunner(Game game, Environment environment, int num, float startFraction, Runnable runNext)
 		{
 			this.game = game;
 			this.environment = environment;
 			this.num = num;
 			this.runNext = runNext;
+			this.startFraction = startFraction;
 		}
 	
 		private Game game;
 		private Environment environment;
 		private int num;
+		private float startFraction;
 		private Runnable runNext;
 		
 		public void run()
 		{
 			String worldName = Settings.killerWorldNamePrefix + "_" + game.getNumber() + "_" + num;
-			final WorldConfig helper = new WorldConfig(game, worldName, environment);
+			final WorldConfig helper = new WorldConfig(game, worldName, environment, startFraction);
 			setupWorld(helper, runNext);
 		}
 	}
