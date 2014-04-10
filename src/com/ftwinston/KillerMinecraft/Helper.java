@@ -16,6 +16,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
@@ -402,5 +403,30 @@ public class Helper
 				}
 		}
 		return attacker;
+	}
+	
+	public static Location findNearestNetherFortress(Location loc)
+	{
+		return KillerMinecraft.instance.craftBukkit.findNearestNetherFortress(loc);
+	}
+	
+	public static boolean createFlyingEnderEye(Player player, Location target)
+	{
+		return KillerMinecraft.instance.craftBukkit.createFlyingEnderEye(player, target);
+	}
+	
+	public static void pushButton(Block b)
+	{
+		KillerMinecraft.instance.craftBukkit.pushButton(b);
+	}
+	
+	public static void setCommandBlockCommand(Block b, String command)
+	{
+		KillerMinecraft.instance.craftBukkit.setCommandBlockCommand(b, command);
+	}
+
+	public static ItemStack setEnchantmentGlow(ItemStack item)
+	{
+		return KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(item);
 	}
 }

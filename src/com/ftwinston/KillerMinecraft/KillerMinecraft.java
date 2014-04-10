@@ -36,11 +36,6 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 //	VoteManager voteManager;
 	Game[] games;
 	int portalUpdateProcess = -1;
-
-	public static CraftBukkitAccess craftBukkitHelper()
-	{
-		return instance.craftBukkit;
-	}
 	
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
