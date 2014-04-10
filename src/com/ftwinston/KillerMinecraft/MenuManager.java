@@ -163,17 +163,17 @@ class MenuManager
 		case EMPTY:
 			return new String[] { "This game is empty.", "Click to configure a new game." };
 		case SETUP:
-			return new String[] { ChatColor.RED + "Hosted by " + game.hostPlayer, "This game is being configured.", "You can't yet join." };
+			return new String[] { ChatColor.GRAY + "Hosted by " + game.hostPlayer, "This game is being configured.", "You can't yet join." };
 		case LOBBY:
 		case QUEUE_FOR_GENERATION:
-			return new String[] { ChatColor.RED + "Hosted by " + game.hostPlayer, "This game has not started.", game.canJoin() ? "Click to join." : "You can't join." }; 
+			return new String[] { ChatColor.GRAY + "Hosted by " + game.hostPlayer, "This game has not started.", game.canJoin() ? "Click to join." : "You can't join." }; 
 		case GENERATING:
-			return new String[] { ChatColor.RED + "Hosted by " + game.hostPlayer, "This game is starting.", game.canJoin() ? "Click to join." : "You can't join." };
+			return new String[] { ChatColor.GRAY + "Hosted by " + game.hostPlayer, "This game is starting.", game.canJoin() ? "Click to join." : "You can't join." };
 		case ACTIVE:
-			return new String[] { ChatColor.RED + "Hosted by " + game.hostPlayer, "This game is active.", game.canJoin() ? "Click to join." : "You can't join." };
+			return new String[] { ChatColor.GRAY + "Hosted by " + game.hostPlayer, "This game is active.", game.canJoin() ? "Click to join." : "You can't join." };
 		case FINISHED:
 		case WORLD_DELETION:
-			return new String[] { ChatColor.RED + "Hosted by " + game.hostPlayer, "This game has finished.", "Please wait." };
+			return new String[] { ChatColor.GRAY + "Hosted by " + game.hostPlayer, "This game has finished.", "Please wait." };
 		default:
 			return new String[0];
 		}
