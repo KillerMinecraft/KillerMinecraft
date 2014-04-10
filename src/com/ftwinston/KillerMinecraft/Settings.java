@@ -9,6 +9,8 @@ public class Settings
 	public static int numGames;
 	
 	public static String
+	defaultGameMode,
+	defaultWorldGen,
 	killerWorldNamePrefix;
 
 	public static boolean
@@ -28,6 +30,8 @@ public class Settings
 		plugin.saveDefaultConfig();
 		FileConfiguration config = plugin.getConfig();
 		
+		defaultGameMode = config.getString("defaultGameMode", "Killer on the Loose");
+		defaultWorldGen = config.getString("defaultWorldGen", "Default World");
 		killerWorldNamePrefix = config.getString("killerWorldNamePrefix", "killer");
 
 		nothingButKiller = config.getBoolean("nothingButKiller", false);

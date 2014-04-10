@@ -1,5 +1,7 @@
 numGames:              4
 nothingButKiller:      false
+defaultGameMode:       Killer on the Loose
+defaultWorldGen:       Default World
 killerWorldNamePrefix: killer
 filterChat:            true
 filterScoreboard:      true

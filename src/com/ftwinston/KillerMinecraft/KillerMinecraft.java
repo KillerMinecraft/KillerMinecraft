@@ -95,11 +95,19 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 		MenuManager.createRootMenu();
 		games = new Game[Settings.numGames];
 		
-		defaultGameMode = GameMode.get(0);
+		defaultGameMode = GameMode.getByName(Settings.defaultGameMode);
+		if ( defaultGameMode == null )
+		{
+			defaultGameMode = GameMode.get(0);
+			log.info("Default game mode not found: " + Settings.defaultGameMode);
+		}
 		
-		defaultWorldGen = WorldGenerator.getByName("Default World");
+		defaultWorldGen = WorldGenerator.getByName(Settings.defaultWorldGen);
 		if ( defaultWorldGen == null )
+		{
 			defaultWorldGen = WorldGenerator.get(0);
+			log.info("Default world generator not found: " + Settings.defaultWorldGen);
+		}
 		
 		for ( int i = 0; i < games.length; i++ )
 			games[i] = new Game(this, i + 1);
