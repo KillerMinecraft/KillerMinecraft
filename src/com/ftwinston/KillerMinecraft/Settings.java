@@ -6,7 +6,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 public class Settings
 {
 	public static final int absMaxGames = 8;
-	public static int numGames;
+	public static int numGames, generateChunksPerTick;
 	
 	public static String
 	defaultGameMode,
@@ -49,5 +49,9 @@ public class Settings
 			plugin.log.warning("Killer only supports up to " + absMaxGames + " games, but numGames = " + numGames + ". Ignoring the excess...");
 			numGames = absMaxGames;
 		}
+		
+		generateChunksPerTick = config.getInt("generateChunksPerTick", 3);
+		if ( generateChunksPerTick < 1 )
+			generateChunksPerTick = 1;
 	}
 }

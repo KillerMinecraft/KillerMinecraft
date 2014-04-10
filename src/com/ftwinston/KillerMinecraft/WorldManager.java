@@ -309,7 +309,6 @@ class WorldManager
         Server server;
         World world;
         Runnable runWhenDone;
-        static final int chunksPerTick = 3; // how many chunks to generate each tick? 
     	
     	public void run()
     	{
@@ -326,7 +325,7 @@ class WorldManager
                 reportTime = time;
             }
 
-            for ( int i=0; i<chunksPerTick; i++ )
+            for ( int i=0; i<Settings.generateChunksPerTick; i++ )
             {
             	int offsetX = stepNum / sideLength - numChunksFromSpawn;
             	int offsetZ = stepNum % sideLength - numChunksFromSpawn;

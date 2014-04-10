@@ -1,4 +1,5 @@
 numGames:              4
+generateChunksPerTick: 3
 nothingButKiller:      false
 defaultGameMode:       Killer on the Loose
 defaultWorldGen:       Default World
