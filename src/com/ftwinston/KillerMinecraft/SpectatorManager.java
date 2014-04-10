@@ -1,13 +1,11 @@
 package com.ftwinston.KillerMinecraft;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -17,14 +15,6 @@ import org.bukkit.util.Vector;
 
 class SpectatorManager
 {
-	SpectatorManager()
-	{
-		transparentBlocks.clear();
-		transparentBlocks.add(new Byte((byte)Material.AIR.getId()));
-		transparentBlocks.add(new Byte((byte)Material.WATER.getId()));
-		transparentBlocks.add(new Byte((byte)Material.STATIONARY_WATER.getId()));
-	}
-	
 	void makeSpectator(Game game, Player player)
 	{
 		for(Player p : game.getOnlinePlayers(new PlayerFilter().includeSpectators()))
@@ -275,12 +265,24 @@ class SpectatorManager
 	}
 	
 	private final int maxSpecTeleportDist = 64, maxSpecTeleportPenetrationDist = 32;
-	private final HashSet<Byte> transparentBlocks = new HashSet<Byte>();
 	
 	// teleport forward, to get around doors, walls, etc. that spectators can't dig through
 	void doSpectatorTeleport(Player player, boolean goThroughTarget)
 	{
-		Location lookAtPos = player.getTargetBlock(transparentBlocks, maxSpecTeleportDist).getLocation();
+		Block lookAtBlock = null;
+		
+		BlockIterator bit = new BlockIterator(player, maxSpecTeleportDist);
+		while(bit.hasNext())
+		{
+			lookAtBlock = bit.next();
+			if ( !lookAtBlock.getType().isTransparent() )
+				break;
+		}
+		
+		if (lookAtBlock == null)
+			lookAtBlock = player.getLocation().getBlock();
+		
+		Location lookAtPos = lookAtBlock.getLocation().add(0.5, 0.5, 0.5);
 		
 		Vector facingDir = player.getLocation().getDirection().normalize();
 		Location traceStartPos = goThroughTarget ? lookAtPos.add(facingDir) : lookAtPos;

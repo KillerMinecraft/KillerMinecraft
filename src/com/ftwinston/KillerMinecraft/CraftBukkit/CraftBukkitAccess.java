@@ -27,12 +27,8 @@ public abstract class CraftBukkitAccess
 		String packageName = plugin.getServer().getClass().getPackage().getName();
         String version = packageName.substring(packageName.lastIndexOf('.') + 1);
 
-        if ( version.equals("v1_6_R2"))
-        	return new v1_6_2(plugin);
-        if ( version.equals("v1_5_R3"))
-        	return new v1_5_2(plugin);
-        if ( version.equals("v1_4_R1") || version.equals("v1_4_6") || version.equals("v1_4_5") || version.equals("craftbukkit"))
-        	plugin.getLogger().warning("Killer minecraft requires at least CraftBukkit 1.5.2-R1.0 to function. Sorry.");
+        if ( version.equals("v1_6_R3"))
+        	return new v1_6_4(plugin);
         else
         	plugin.getLogger().warning("This version of Killer minecraft is not compatible with your server's version of CraftBukkit! (" + version + ") Please download a newer version of Killer minecraft.");
         return null;

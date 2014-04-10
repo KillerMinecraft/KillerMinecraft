@@ -12,7 +12,6 @@ import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Sign;
 import org.bukkit.generator.BlockPopulator;
 
 class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
@@ -103,7 +102,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				b.setType(Material.TORCH);
 				
 				b = getBlockAbs(chunk, 0, groundMaxY+1, 4);
-				setupFloorSign(b, (byte)0x8, "", "type this:", "/killer");	
+				setupFloorSign(b, BlockFace.SOUTH, "", "type this:", "/killer");	
 			}
 			else if ( cx == 0 && cz == -2 )
 				treeLoc = new Location(world, 0, groundMaxY+1, -18);
@@ -139,16 +138,19 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 		}
 	}
 	
-	public static void setupFloorSign(Block b, byte orientation, String... lines)
+	public static void setupFloorSign(Block b, BlockFace orientation, String... lines)
 	{
 		b.setType(Material.SIGN_POST);
-		b.setData(orientation);
+		org.bukkit.block.Sign state = (org.bukkit.block.Sign)b.getState();
 		
-		Sign s = (Sign)b.getState();
+		org.bukkit.material.Sign data = (org.bukkit.material.Sign)state.getData();
+		data.setFacingDirection(orientation);
+		state.setData(data);
+		
 		for ( int i=0; i<4 && i<lines.length; i++ )
-			s.setLine(i, lines[i]);
+			state.setLine(i, lines[i]);
 		for ( int i=lines.length; i<4; i++ )
-			s.setLine(i, "");
-		s.update();
+			state.setLine(i, "");
+		state.update(true);
 	}
 }
