@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -87,7 +88,6 @@ class EventManager implements Listener
 				listener.callEvent(event);
 	}
 
-	// when you die a spectator, be made able to fly again when you respawn
 	@EventHandler(priority = EventPriority.HIGHEST) // run last, so we can absolutely say where you should respawn, in a Killer game
 	public void onEvent(PlayerRespawnEvent event) throws EventException
 	{
@@ -107,6 +107,7 @@ class EventManager implements Listener
 				if ( player == null )
 					return;
 				
+				// when you die a spectator, be made able to fly again when you respawn
 				if ( Helper.isSpectator(game, player) )
 					Helper.makeSpectator(game, player);
 				else
@@ -655,14 +656,28 @@ class EventManager implements Listener
 	{
 		MenuManager.inventoryClosed(event.getPlayer());
 		
-		Game game = plugin.getGameForPlayer(event.getPlayer());
+		final Game game = plugin.getGameForPlayer(event.getPlayer());
 		if ( game == null )
 			return;
 		
 		if ( !game.getGameState().usesWorlds )
 			game.removePlayerFromGame(event.getPlayer()); // disconnecting when in a non-active game should just chuck you out
-		//else
-			//plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(game, player.getName(), false), 10);
+		else
+		{
+			final String playerName = event.getPlayer().getName();
+			
+			// if they don't reconnect within a few seconds, remove them from the game
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+				public void run()
+				{
+					OfflinePlayer player = plugin.getServer().getOfflinePlayer(playerName);
+					if ( player != null )
+						return;
+					
+					game.removePlayerFromGame(player);
+				}
+			}, 100);
+		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
@@ -689,40 +704,8 @@ class EventManager implements Listener
 		pEvent.setDeathMessage("");
 		
 		MenuManager.inventoryClosed(player);
-		
-		// wait half a second until they're "properly dead"
-		//plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new DelayedDeathEffect(game, player.getName(), false), 10);
 	}
-/*
-	class DelayedDeathEffect implements Runnable
-	{
-		Game game;
-		String name;
-		boolean checkDisconnected;
-		public DelayedDeathEffect(Game game, String playerName, boolean disconnect)
-		{
-			this.game = game;
-			name = playerName;
-			checkDisconnected = disconnect;
-		}
-		
-		public void run()
-		{
-			Player online = Bukkit.getServer().getPlayerExact(name);
-			OfflinePlayer offline = online == null ? offline = Bukkit.getServer().getOfflinePlayer(name) : online;
-			
-			if ( checkDisconnected )
-			{
-				if ( online != null )
-					return; // player has reconnected, so don't do anything
-				
-				game.removePlayerFromGame(offline);
-			}
-			else if ( online != null )
-				PlayerManager.instance.playerKilled(game, online);
-		}
-	}
-	*/
+
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.block.BlockBurnEvent event) throws EventException
 	{
