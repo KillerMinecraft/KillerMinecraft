@@ -366,7 +366,7 @@ class EventManager implements Listener
 		fireGameEvent(event, game);
 	}
 	
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onEvent(PlayerInteractEvent event) throws EventException
 	{
 		Game game = plugin.getGameForWorld(event.getPlayer().getWorld());		
@@ -426,7 +426,8 @@ class EventManager implements Listener
 			}
 		}
 		
-		fireGameEvent(event, game);
+		if ( !event.isCancelled() )
+			fireGameEvent(event, game);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

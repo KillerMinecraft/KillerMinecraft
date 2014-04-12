@@ -149,7 +149,8 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 			for ( Game game : games )
 				game.finishGame(false);
 
-		worldManager.onDisable();
+		if ( worldManager != null )
+			worldManager.onDisable();
 		
 		craftBukkit = null;
 		playerManager = null;
