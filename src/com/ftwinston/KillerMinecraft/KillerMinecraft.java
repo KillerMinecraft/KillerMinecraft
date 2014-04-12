@@ -126,6 +126,9 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 				world.setDifficulty(Difficulty.PEACEFUL);
 				world.setPVP(false);
 				world.setSpawnLocation(0, 65, 0);
+				
+				world.setTime(12000);
+				world.setGameRuleValue("doDaylightCycle", "false");
 			}
 		}
 		
