@@ -618,22 +618,28 @@ class EventManager implements Listener
 				if ( gen != null && gen.getClass() == StagingWorldGenerator.class )
 					Helper.teleport(event.getPlayer(), world.getSpawnLocation());
 			}
-			
-			if ( plugin.playerManager.restorePlayerData(event.getPlayer()) )
-				plugin.playerManager.playerDataChanged();
-			return;
+			/*
+			final String playerName = event.getPlayer().getName(); 
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+				public void run()
+				{
+					Player player = plugin.getServer().getPlayerExact(playerName);*/Player player = event.getPlayer();
+					if ( player != null && plugin.playerManager.restorePlayerData(player) )
+						plugin.playerManager.playerDataChanged();
+				/*}
+			});*/
 		}
 		
-		final String playerName = event.getPlayer().getName();
+		/*final String playerName = event.getPlayer().getName();
 		
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 			public void run()
 			{
 				Player player = plugin.getServer().getPlayerExact(playerName);
 				if ( player == null )
-					return;
+					return;*/Player player = event.getPlayer();
 
-				if ( plugin.getGameForPlayer(player) != game )
+				if ( player != null && plugin.getGameForPlayer(player) != game )
 				{// if you log in into a game you're not part of, get chucked straight out
 					plugin.playerManager.restorePlayerData(player);
 					plugin.playerManager.playerDataChanged();
@@ -648,8 +654,8 @@ class EventManager implements Listener
 							for ( Player other : otherGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
 								plugin.craftBukkit.sendForScoreboard(other, player, false);
 				}
-			}
-		});
+			/*}
+		});*/
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -662,7 +668,7 @@ class EventManager implements Listener
 			return;
 		
 		if ( !game.getGameState().usesWorlds )
-			game.removePlayerFromGame(event.getPlayer()); // disconnecting when in a non-active game should just chuck you out
+			game.removePlayerFromGame(event.getPlayer(), true); // disconnecting when in a non-active game should just chuck you out
 		else
 		{
 			final String playerName = event.getPlayer().getName();
@@ -675,7 +681,7 @@ class EventManager implements Listener
 					if ( player != null )
 						return;
 					
-					game.removePlayerFromGame(player);
+					game.removePlayerFromGame(player, true);
 				}
 			}, 100);
 		}

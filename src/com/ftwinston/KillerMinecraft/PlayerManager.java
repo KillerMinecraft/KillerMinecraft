@@ -123,7 +123,10 @@ class PlayerManager
 	{
 		ConfigurationSection section = playerData.getConfigurationSection(player.getName());
 		if ( section == null )
+		{
+			plugin.log.info("Nothing to restore for " + player.getName());
 			return false;
+		}
 		
 		resetPlayer(player);
 		

@@ -314,8 +314,13 @@ public class Game
 		
 		menuManager.updateMenus();
 	}
-
+	
 	public void removePlayerFromGame(OfflinePlayer player)
+	{
+		removePlayerFromGame(player, false);
+	}
+
+	public void removePlayerFromGame(OfflinePlayer player, boolean disconnected)
 	{
 		if ( getGameState() == GameState.ACTIVE )
 			getGameMode().playerQuit(player);
@@ -329,12 +334,12 @@ public class Game
 			broadcastMessage(ChatColor.YELLOW + "[Killer] " + player.getName() + " left the game");
 		
 		if ( player.isOnline() )
-		{
+		{	
 			Player online = (Player)player;
 			online.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
 			online.sendMessage("You have left " + getName());
 
-			if ( plugin.playerManager.restorePlayerData(online) && getGameState().playersInWorld )
+			if ( !disconnected && plugin.playerManager.restorePlayerData(online) && getGameState().playersInWorld )
 				plugin.playerManager.playerDataChanged();
 			
 			if ( Settings.filterScoreboard )
