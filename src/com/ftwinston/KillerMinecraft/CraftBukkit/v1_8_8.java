@@ -6,54 +6,57 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Map;
 
-import net.minecraft.server.v1_6_R3.ChunkProviderServer;
-import net.minecraft.server.v1_6_R3.IChunkProvider;
-import net.minecraft.server.v1_6_R3.ItemStack;
-import net.minecraft.server.v1_6_R3.NBTTagCompound;
-import net.minecraft.server.v1_6_R3.NBTTagList;
-import net.minecraft.server.v1_6_R3.Block;
-import net.minecraft.server.v1_6_R3.ChunkPosition;
-import net.minecraft.server.v1_6_R3.ChunkProviderHell;
-import net.minecraft.server.v1_6_R3.EntityEnderSignal;
-import net.minecraft.server.v1_6_R3.EntityHuman;
-import net.minecraft.server.v1_6_R3.EntityTracker;
-import net.minecraft.server.v1_6_R3.EnumGamemode;
-import net.minecraft.server.v1_6_R3.IWorldAccess;
-import net.minecraft.server.v1_6_R3.MinecraftServer;
-import net.minecraft.server.v1_6_R3.Packet201PlayerInfo;
-import net.minecraft.server.v1_6_R3.Packet205ClientCommand;
-import net.minecraft.server.v1_6_R3.RegionFile;
-import net.minecraft.server.v1_6_R3.RegionFileCache;
-import net.minecraft.server.v1_6_R3.ServerNBTManager;
-import net.minecraft.server.v1_6_R3.TileEntity;
-import net.minecraft.server.v1_6_R3.TileEntityCommand;
-import net.minecraft.server.v1_6_R3.World;
-import net.minecraft.server.v1_6_R3.WorldGenNether;
-import net.minecraft.server.v1_6_R3.WorldManager;
-import net.minecraft.server.v1_6_R3.WorldServer;
-import net.minecraft.server.v1_6_R3.WorldSettings;
-import net.minecraft.server.v1_6_R3.WorldType;
+import net.minecraft.server.v1_8_R3.ChunkProviderServer;
+import net.minecraft.server.v1_8_R3.IChunkProvider;
+import net.minecraft.server.v1_8_R3.ItemStack;
+import net.minecraft.server.v1_8_R3.NBTTagCompound;
+import net.minecraft.server.v1_8_R3.NBTTagList;
+import net.minecraft.server.v1_8_R3.BlockPosition;
+import net.minecraft.server.v1_8_R3.Blocks;
+import net.minecraft.server.v1_8_R3.ChunkProviderHell;
+import net.minecraft.server.v1_8_R3.EntityEnderSignal;
+import net.minecraft.server.v1_8_R3.EntityHuman;
+import net.minecraft.server.v1_8_R3.EntityPlayer;
+import net.minecraft.server.v1_8_R3.EntityTracker;
+import net.minecraft.server.v1_8_R3.EnumDifficulty;
+import net.minecraft.server.v1_8_R3.EnumDirection;
+import net.minecraft.server.v1_8_R3.IWorldAccess;
+import net.minecraft.server.v1_8_R3.MinecraftServer;
+import net.minecraft.server.v1_8_R3.PacketPlayOutPlayerInfo;
+import net.minecraft.server.v1_8_R3.PacketPlayInClientCommand;
+import net.minecraft.server.v1_8_R3.RegionFile;
+import net.minecraft.server.v1_8_R3.RegionFileCache;
+import net.minecraft.server.v1_8_R3.ServerNBTManager;
+import net.minecraft.server.v1_8_R3.TileEntity;
+import net.minecraft.server.v1_8_R3.TileEntityCommand;
+import net.minecraft.server.v1_8_R3.World;
+import net.minecraft.server.v1_8_R3.WorldData;
+import net.minecraft.server.v1_8_R3.WorldGenNether;
+import net.minecraft.server.v1_8_R3.WorldManager;
+import net.minecraft.server.v1_8_R3.WorldServer;
+import net.minecraft.server.v1_8_R3.WorldSettings;
+import net.minecraft.server.v1_8_R3.WorldType;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World.Environment;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.v1_6_R3.CraftChunk;
-import org.bukkit.craftbukkit.v1_6_R3.CraftServer;
-import org.bukkit.craftbukkit.v1_6_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_6_R3.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_6_R3.generator.NormalChunkGenerator;
-import org.bukkit.craftbukkit.v1_6_R3.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_8_R3.CraftChunk;
+import org.bukkit.craftbukkit.v1_8_R3.CraftServer;
+import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_8_R3.generator.NormalChunkGenerator;
+import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
 
 import com.ftwinston.KillerMinecraft.KillerMinecraft;
 
-public class v1_6_4 extends CraftBukkitAccess
+public class v1_8_8 extends CraftBukkitAccess
 {
-	public v1_6_4(Plugin plugin)
+	public v1_8_8(Plugin plugin)
 	{
 		super(plugin);
 	}
@@ -100,16 +103,19 @@ public class v1_6_4 extends CraftBukkitAccess
 	{
 		getMinecraftServer().getPropertyManager().savePropertiesFile();
 	}
-	
-	
+	/*
 	public void sendForScoreboard(Player viewer, String name, boolean show)
 	{
-		((CraftPlayer)viewer).getHandle().playerConnection.sendPacket(new Packet201PlayerInfo(name, show, 9999));
+		PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo();
+		((CraftPlayer)viewer).getHandle().playerConnection.sendPacket(packet);
 	}
-	
+	*/
 	public void sendForScoreboard(Player viewer, Player other, boolean show)
 	{
-		((CraftPlayer)viewer).getHandle().playerConnection.sendPacket(new Packet201PlayerInfo(other.getPlayerListName(), show, show ? ((CraftPlayer)other).getHandle().ping : 9999));
+		PacketPlayOutPlayerInfo.EnumPlayerInfoAction action = show ? PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER :PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER;
+		EntityPlayer subject = ((CraftPlayer)other).getHandle();
+
+		((CraftPlayer)viewer).getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(action, subject));
 	}
 	
 	public void forceRespawn(final Player player)
@@ -117,8 +123,7 @@ public class v1_6_4 extends CraftBukkitAccess
     	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
             @Override
             public void run() {
-                Packet205ClientCommand packet = new Packet205ClientCommand();
-                packet.a = 1;
+            	PacketPlayInClientCommand packet = new PacketPlayInClientCommand(PacketPlayInClientCommand.EnumClientCommand.PERFORM_RESPAWN);
                 ((CraftPlayer) player).getHandle().playerConnection.a(packet); // obfuscated
             }
         }, 1);
@@ -240,10 +245,10 @@ public class v1_6_4 extends CraftBukkitAccess
         boolean hardcore = false;
 
 		@SuppressWarnings("deprecation")
-		WorldSettings worldSettings = new WorldSettings(seed, EnumGamemode.a(server.getDefaultGameMode().getValue()), generateStructures, hardcore, worldType); // obfuscated
-		worldSettings.a(generatorSettings); // obfuscated
+		WorldSettings worldSettings = new WorldSettings(seed, WorldSettings.EnumGamemode.getById(server.getDefaultGameMode().getValue()), generateStructures, hardcore, worldType);
+		worldSettings.setGeneratorSettings(generatorSettings);
 		
-        final WorldServer worldServer = new WorldServer(console, new ServerNBTManager(server.getWorldContainer(), name, true), name, dimension, worldSettings, console.methodProfiler, console.getLogger(), env, generator);
+        final WorldServer worldServer = new WorldServer(console, new ServerNBTManager(server.getWorldContainer(), name, true), new WorldData(worldSettings, name), dimension, console.methodProfiler, env, generator);
 
         if (server.getWorld(name) == null)
             return null;
@@ -252,7 +257,7 @@ public class v1_6_4 extends CraftBukkitAccess
 
         worldServer.tracker = new EntityTracker(worldServer);
         worldServer.addIWorldAccess((IWorldAccess) new WorldManager(console, worldServer));
-        worldServer.difficulty = 3;
+        worldServer.getWorldData().setDifficulty(EnumDifficulty.HARD);
         worldServer.setSpawnFlags(true, true);
         console.worlds.add(worldServer);
 
@@ -266,7 +271,7 @@ public class v1_6_4 extends CraftBukkitAccess
 	
 	public boolean isChunkGenerated(Chunk chunk)
 	{
-		return ((CraftChunk)chunk).getHandle().done;
+		return ((CraftChunk)chunk).getHandle().isDone();
 	}
 	
 	public Location findNearestNetherFortress(Location loc)
@@ -287,12 +292,12 @@ public class v1_6_4 extends CraftBukkitAccess
 		if ( hellCP == null )
 			return null;
 		
-		WorldGenNether fortressGenerator = (WorldGenNether)hellCP.c; // obfuscated
-		ChunkPosition pos = fortressGenerator.getNearestGeneratedFeature(world, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+		WorldGenNether fortressGenerator = getField(ChunkProviderHell.class, hellCP, "B"); // obfuscated
+		BlockPosition pos = fortressGenerator.getNearestGeneratedFeature(world, new BlockPosition(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));
 		if ( pos == null )
 			return null; // this just means there isn't one nearby
 		
-		return new Location(loc.getWorld(), pos.x, pos.y, pos.z);
+		return new Location(loc.getWorld(), pos.getX(), pos.getY(), pos.getZ());
 	}
 	
 	public boolean createFlyingEnderEye(Player player, Location target)
@@ -302,29 +307,29 @@ public class v1_6_4 extends CraftBukkitAccess
 		Location playerLoc = player.getLocation();
 		EntityEnderSignal entityendersignal = new EntityEnderSignal(world, playerLoc.getX(), playerLoc.getY() + player.getEyeHeight() - 0.2, playerLoc.getZ());
 
-		entityendersignal.a(target.getX(), target.getBlockY(), target.getZ()); // obfuscated
+		entityendersignal.a(new BlockPosition(target.getX(), target.getBlockY(), target.getZ())); // obfuscated
 		world.addEntity(entityendersignal);
 		world.makeSound(((CraftPlayer)player).getHandle(), "random.bow", 0.5F, 0.4F);
-		world.a((EntityHuman) null, 1002, playerLoc.getBlockX(), playerLoc.getBlockY(), playerLoc.getBlockZ(), 0); // obfuscated
+		world.a((EntityHuman) null, 1002, new BlockPosition(playerLoc.getBlockX(), playerLoc.getBlockY(), playerLoc.getBlockZ()), 0); // obfuscated
 		return true;
 	}
 
 	@Override
 	public void pushButton(org.bukkit.block.Block b)
 	{
-		Block.STONE_BUTTON.interact(((CraftWorld)b.getWorld()).getHandle(), b.getX(), b.getY(), b.getZ(), null, 0, 0f, 0f, 0f);
+		Blocks.STONE_BUTTON.interact(((CraftWorld)b.getWorld()).getHandle(), new BlockPosition(b.getX(), b.getY(), b.getZ()), null, null, EnumDirection.DOWN, 0f, 0f, 0f);
 	}
 	
 	@Override
 	public void setCommandBlockCommand(org.bukkit.block.Block b, String command)
 	{
 		World world = ((CraftWorld)b.getWorld()).getHandle();
-		TileEntity tileEntity = world.getTileEntity(b.getX(), b.getY(), b.getZ());
+		TileEntity tileEntity = world.getTileEntity(new BlockPosition(b.getX(), b.getY(), b.getZ()));
 		if ( tileEntity == null || !(tileEntity instanceof TileEntityCommand) )
 			return;
 		
 		TileEntityCommand tec = (TileEntityCommand)tileEntity;
-		tec.b(command);
+		tec.getCommandBlock().setCommand(command);
 	}
 	
 	@Override
@@ -335,12 +340,12 @@ public class v1_6_4 extends CraftBukkitAccess
 		ItemStack nmsStack = getField(CraftItemStack.class, output, "handle");
 		if ( nmsStack == null )
 			return item;
-        NBTTagCompound compound = nmsStack.tag;
+        NBTTagCompound compound = nmsStack.getTag();
  
         // Initialize the compound if we need to
         if (compound == null) {
             compound = new NBTTagCompound();
-            nmsStack.tag = compound;
+            nmsStack.setTag(compound);
         }
  
         // Empty enchanting compound

@@ -27,8 +27,8 @@ public abstract class CraftBukkitAccess
 		String packageName = plugin.getServer().getClass().getPackage().getName();
         String version = packageName.substring(packageName.lastIndexOf('.') + 1);
 
-        if ( version.equals("v1_6_R3"))
-        	return new v1_6_4(plugin);
+        if ( version.equals("v1_8_R3"))
+        	return new v1_8_8(plugin);
         else
         	plugin.getLogger().warning("This version of Killer minecraft is not compatible with your server's version of CraftBukkit! (" + version + ") Please download a newer version of Killer minecraft.");
         return null;
@@ -69,7 +69,7 @@ public abstract class CraftBukkitAccess
 	public abstract void setServerProperty(String name, String value);	
 	public abstract void saveServerPropertiesFile();
 		
-	public abstract void sendForScoreboard(Player viewer, String name, boolean show);
+	//public abstract void sendForScoreboard(Player viewer, String name, boolean show);
 	public abstract void sendForScoreboard(Player viewer, Player other, boolean show);
 	public abstract void forceRespawn(final Player player);
 	
