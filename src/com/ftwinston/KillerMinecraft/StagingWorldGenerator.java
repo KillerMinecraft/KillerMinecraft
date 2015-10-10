@@ -102,7 +102,7 @@ class StagingWorldGenerator extends org.bukkit.generator.ChunkGenerator
 				b.setType(Material.TORCH);
 				
 				b = getBlockAbs(chunk, 0, groundMaxY+1, 4);
-				setupFloorSign(b, BlockFace.SOUTH, "", "type this:", "/killer");	
+				setupFloorSign(b, BlockFace.NORTH, "", "type this:", "/killer");	
 			}
 			else if ( cx == 0 && cz == -2 )
 				treeLoc = new Location(world, 0, groundMaxY+1, -18);

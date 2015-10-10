@@ -628,6 +628,8 @@ class EventManager implements Listener
 						plugin.playerManager.playerDataChanged();
 				/*}
 			});*/
+					
+			return;
 		}
 		
 		/*final String playerName = event.getPlayer().getName();

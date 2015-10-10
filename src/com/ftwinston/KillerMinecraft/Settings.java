@@ -30,11 +30,11 @@ public class Settings
 		plugin.saveDefaultConfig();
 		FileConfiguration config = plugin.getConfig();
 		
-		defaultGameMode = config.getString("defaultGameMode", "Killer on the Loose");
-		defaultWorldGen = config.getString("defaultWorldGen", "Default World");
+		defaultGameMode = config.getString("defaultGameMode", "Killer_on_the_Loose");
+		defaultWorldGen = config.getString("defaultWorldGen", "Default_World");
 		killerWorldNamePrefix = config.getString("killerWorldNamePrefix", "killer");
 
-		nothingButKiller = config.getBoolean("nothingButKiller", false);
+		nothingButKiller = config.getBoolean("nothingButKiller", true);
 		filterChat = config.getBoolean("filterChat", true);
 		filterScoreboard = config.getBoolean("filterScoreboard", true);
 		allowSpectators = config.getBoolean("allowSpectators", true);
