@@ -253,12 +253,14 @@ public class v1_8_8 extends CraftBukkitAccess
         if (server.getWorld(name) == null)
             return null;
 
+        worldServer.b(); // obfuscated
         worldServer.worldMaps = console.worlds.get(0).worldMaps;
 
         worldServer.tracker = new EntityTracker(worldServer);
         worldServer.addIWorldAccess((IWorldAccess) new WorldManager(console, worldServer));
         worldServer.getWorldData().setDifficulty(EnumDifficulty.HARD);
         worldServer.setSpawnFlags(true, true);
+
         console.worlds.add(worldServer);
 
         world = worldServer.getWorld();
