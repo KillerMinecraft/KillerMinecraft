@@ -57,7 +57,7 @@ public abstract class GameMode extends KillerModule
 			team.setPrefix(teamInfo.getChatColor().toString());
 			
 			for ( Player player : getOnlinePlayers(new PlayerFilter().team(teamInfo)) )
-				team.addPlayer(player);
+				team.addEntry(player.getName());
 		}
 		return scoreboard;
 	}
@@ -104,15 +104,15 @@ public abstract class GameMode extends KillerModule
 			
 			if ( game.scoreboard != null )
 			{	
-				Team sbTeam = game.scoreboard.getPlayerTeam(player);
+				Team sbTeam = game.scoreboard.getEntryTeam(player.getName());
 				if ( sbTeam != null )
-					sbTeam.removePlayer(player);
+					sbTeam.removeEntry(player.getName());
 				
 				if ( team != null)
 				{
 					sbTeam = game.scoreboard.getTeam(team.getName());
 					if ( sbTeam != null )
-						sbTeam.addPlayer(player);
+						sbTeam.addEntry(player.getName());
 				}
 			}
 			

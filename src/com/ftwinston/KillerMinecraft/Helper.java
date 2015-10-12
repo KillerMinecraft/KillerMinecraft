@@ -8,6 +8,7 @@ import java.util.Random;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -24,6 +25,18 @@ import com.ftwinston.KillerMinecraft.Game.PlayerInfo;
 
 public class Helper
 {
+	@SuppressWarnings("deprecation")
+	public static Player getPlayer(String name)
+	{
+		return KillerMinecraft.instance.getServer().getPlayerExact(name);		
+	}
+	
+	@SuppressWarnings("deprecation")
+	public static OfflinePlayer getOfflinePlayer(String name)
+	{
+		return KillerMinecraft.instance.getServer().getOfflinePlayer(name);		
+	}
+	
 	public static void teleport(Player player, Location loc)
 	{
 		if ( player.isDead() )

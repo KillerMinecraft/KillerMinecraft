@@ -3,7 +3,6 @@ package com.ftwinston.KillerMinecraft;
 import java.util.Iterator;
 import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -77,7 +76,7 @@ class SpectatorManager
 	
 	void checkFollowTarget(Game game, Player player, String targetName)
 	{
-		Player target = Bukkit.getServer().getPlayerExact(targetName);
+		Player target = Helper.getPlayer(targetName);
 		if ( target == null || Helper.isSpectator(game, target) || !target.isOnline() || KillerMinecraft.instance.getGameForPlayer(target) != game )
 		{
 			target = getNearestFollowTarget(game, player);

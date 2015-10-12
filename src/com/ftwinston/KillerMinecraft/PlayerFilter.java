@@ -161,7 +161,7 @@ public class PlayerFilter
 				break;
 			}
 
-			Player p = KillerMinecraft.instance.getServer().getPlayerExact(info.getKey());
+			Player p = Helper.getPlayer(info.getKey());
 			if ( p == null )
 				continue;
 			
@@ -222,7 +222,7 @@ public class PlayerFilter
 				break;
 			}
 
-			OfflinePlayer op = KillerMinecraft.instance.getServer().getOfflinePlayer(info.getKey());
+			OfflinePlayer op = Helper.getOfflinePlayer(info.getKey());
 			if ( op == null )
 				continue;
 			

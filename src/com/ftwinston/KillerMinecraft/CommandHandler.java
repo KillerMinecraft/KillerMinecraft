@@ -77,7 +77,7 @@ public class CommandHandler
 		}
 		else
 		{
-			Player other = plugin.getServer().getPlayer(args[0]);
+			Player other = Helper.getPlayer(args[0]);
 			PlayerInfo info = game.getPlayerInfo(player);
 			if ( other == null || !other.isOnline() || game != plugin.getGameForPlayer(other) || Helper.isSpectator(game, other))
 				sender.sendMessage("Player not found: " + args[0]);

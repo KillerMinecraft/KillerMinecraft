@@ -103,7 +103,7 @@ class EventManager implements Listener
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 			public void run()
 			{
-				Player player = plugin.getServer().getPlayerExact(playerName);
+				Player player = Helper.getPlayer(playerName);
 				if ( player == null )
 					return;
 				
@@ -679,7 +679,7 @@ class EventManager implements Listener
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				public void run()
 				{
-					OfflinePlayer player = plugin.getServer().getOfflinePlayer(playerName);
+					OfflinePlayer player = Helper.getOfflinePlayer(playerName);
 					if ( player != null )
 						return;
 					
