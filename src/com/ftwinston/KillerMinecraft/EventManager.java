@@ -608,7 +608,9 @@ class EventManager implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onEvent(PlayerJoinEvent event)
 	{
-		World world = event.getPlayer().getWorld();
+		Player player = event.getPlayer();
+		World world = player.getWorld();
+		
 		final Game game = plugin.getGameForWorld(world);
 		if ( game == null )
 		{
@@ -618,46 +620,29 @@ class EventManager implements Listener
 				if ( gen != null && gen.getClass() == StagingWorldGenerator.class )
 					Helper.teleport(event.getPlayer(), world.getSpawnLocation());
 			}
-			/*
-			final String playerName = event.getPlayer().getName(); 
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-				public void run()
-				{
-					Player player = plugin.getServer().getPlayerExact(playerName);*/Player player = event.getPlayer();
-					if ( player != null && plugin.playerManager.restorePlayerData(player) )
-						plugin.playerManager.playerDataChanged();
-				/*}
-			});*/
-					
+
+			if ( player != null && plugin.playerManager.restorePlayerData(player) )
+				plugin.playerManager.playerDataChanged();
+	
 			return;
 		}
-		
-		/*final String playerName = event.getPlayer().getName();
-		
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-			public void run()
-			{
-				Player player = plugin.getServer().getPlayerExact(playerName);
-				if ( player == null )
-					return;*/Player player = event.getPlayer();
 
-				if ( player != null && plugin.getGameForPlayer(player) != game )
-				{// if you log in into a game you're not part of, get chucked straight out
-					plugin.playerManager.restorePlayerData(player);
-					plugin.playerManager.playerDataChanged();
-				}
-				else
-					game.getGameMode().playerReconnected(player);
-				
-				if ( Settings.filterScoreboard )
-				{// hide this person from the scoreboard of any games that they aren't in
-					for ( Game otherGame : plugin.games )
-						if ( otherGame != game )
-							for ( Player other : otherGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
-								plugin.craftBukkit.sendForScoreboard(other, player, false);
-				}
-			/*}
-		});*/
+
+		if ( player != null && plugin.getGameForPlayer(player) != game )
+		{// if you log in into a game you're not part of, get chucked straight out
+			plugin.playerManager.restorePlayerData(player);
+			plugin.playerManager.playerDataChanged();
+		}
+		else
+			game.getGameMode().playerReconnected(player);
+		
+		if ( Settings.filterScoreboard )
+		{// hide this person from the scoreboard of any games that they aren't in
+			for ( Game otherGame : plugin.games )
+				if ( otherGame != game )
+					for ( Player other : otherGame.getOnlinePlayers(new PlayerFilter().exclude(player)) )
+						plugin.craftBukkit.sendForScoreboard(other, player, false);
+		}
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)

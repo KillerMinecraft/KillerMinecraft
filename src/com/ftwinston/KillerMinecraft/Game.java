@@ -226,8 +226,8 @@ public class Game
 		setGameMode(plugin.defaultGameMode);
 		setWorldGenerator(plugin.defaultWorldGen);
 		
-		menuManager.monstersMenuClicked(null, defaultMonsterNumbers + MenuManager.QUANTITY_MENU_NONE_POS);
-		menuManager.animalsMenuClicked(null, defaultAnimalNumbers + MenuManager.QUANTITY_MENU_NONE_POS);
+		monsterNumbers = defaultMonsterNumbers;
+		animalNumbers = defaultAnimalNumbers;
 		
 		menuManager.updateMenus();
 	}
