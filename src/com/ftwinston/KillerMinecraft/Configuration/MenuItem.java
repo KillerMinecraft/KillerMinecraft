@@ -1,15 +1,52 @@
 package com.ftwinston.KillerMinecraft.Configuration;
 
+import java.util.LinkedList;
+
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 public abstract class MenuItem
 {
-	public MenuItem(ItemStack item) { this.item = item; }
-	protected ItemStack item;
+	public MenuItem(Inventory menu, int slot, ItemStack stack)
+	{
+		this.menu = menu;
+		this.slot = slot;
+		this.stack = stack;
+		
+		bind();
+	}
 	
-	public ItemStack getStack() { return item; }
-	public void setStack(ItemStack item) { this.item = item; }
+	protected Inventory menu;
+	protected int slot;
+	protected ItemStack stack;
 	
-	public abstract void runWhenClicked(Player player);
+	public Inventory getMenu() { return menu; }
+	public int getSlot() { return slot; }
+	
+	public ItemStack getStack() { return stack; }
+	public void setStack(ItemStack stack) { this.stack = stack; }
+
+	protected void bind() { menu.setItem(slot, stack); }
+	protected void recalculateStack() { }
+	
+	private LinkedList<MenuItem> itemsToRecalculate = new LinkedList<MenuItem>();
+	public void recalculateOnClick(MenuItem... items)
+	{
+		for (MenuItem item : items)
+			itemsToRecalculate.add(item);
+	}
+	
+	public final void clicked(Player player)
+	{
+		runWhenClicked(player);
+		
+		// recalculate all the menu items this has linked to recalculate on click
+		for (MenuItem item : itemsToRecalculate)
+		{
+			item.recalculateStack(); 
+			item.bind();
+		}
+	}
+	protected abstract void runWhenClicked(Player player);
 }
