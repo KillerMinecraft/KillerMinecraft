@@ -45,6 +45,7 @@ public class Game
 	
 	public enum GameState
 	{
+		INITIALIZING(false, false, false, false),
 		EMPTY(false, false, true, true),
 		SETUP(false, false, false, true),
 		LOBBY(false, false, true, true),
@@ -65,7 +66,7 @@ public class Game
 		}
 	}
 	
-	private GameState gameState = GameState.EMPTY;
+	private GameState gameState = GameState.INITIALIZING;
 	GameState getGameState() { return gameState; }
 	void setGameState(GameState newState)
 	{
@@ -81,6 +82,7 @@ public class Game
 
 		switch ( gameState )
 		{
+			case INITIALIZING:
 			case EMPTY:
 			{
 				for ( OfflinePlayer player : getPlayers() )
@@ -219,8 +221,10 @@ public class Game
 	
 	public void reset()
 	{
+		boolean wasEmpty = gameState == GameState.EMPTY;
+		gameState = GameState.INITIALIZING;
+		
 		isPrivate = false;
-		setGameState(GameState.EMPTY);
 		hostPlayer = null;
 		
 		setDifficulty(defaultDifficulty);
@@ -229,8 +233,17 @@ public class Game
 		
 		monsterNumbers = defaultMonsterNumbers;
 		animalNumbers = defaultAnimalNumbers;
-		
-		menuManager.updateMenus();
+		menuManager.repopulateMenu(GameMenu.SETUP_MONSTERS);
+		menuManager.repopulateMenu(GameMenu.SETUP_ANIMALS);
+		menuManager.repopulateMenu(GameMenu.SETUP_PLAYERS);
+
+		if (wasEmpty)
+		{
+			menuManager.updateMenus();
+			gameState = GameState.EMPTY;
+		}
+		else
+			setGameState(GameState.EMPTY);
 	}
 	
 	public class PlayerInfo
@@ -313,7 +326,7 @@ public class Game
 			}
 		}
 		
-		menuManager.updateMenus();
+		menuManager.updateGameIcon();
 	}
 	
 	public void removePlayerFromGame(OfflinePlayer player)
@@ -376,7 +389,7 @@ public class Game
 			return;
 		}
 		
-		menuManager.updateMenus();
+		menuManager.updateGameIcon();
 	}
 	
 	void startGame() {

@@ -34,7 +34,7 @@ public abstract class KillerModule implements Listener
 		this.game = game;
 		plugin = game.plugin;
 		modulePlugin = myPlugin;
-		name = myPlugin.getName().replace('_', ' ');
+		name = modulePlugin.getDisplayName();
 		options = setupOptions();
 	}
 	

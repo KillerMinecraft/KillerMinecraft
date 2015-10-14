@@ -25,7 +25,7 @@ public abstract class MenuItem
 	public int getSlot() { return slot; }
 	
 	public ItemStack getStack() { return stack; }
-	public void setStack(ItemStack stack) { this.stack = stack; }
+	public void setStack(ItemStack stack) { this.stack = stack; bind(); }
 
 	protected void bind() { menu.setItem(slot, stack); }
 	public void recalculateStack() { }
@@ -43,10 +43,7 @@ public abstract class MenuItem
 		
 		// recalculate all the menu items this has linked to recalculate on click
 		for (MenuItem item : itemsToRecalculate)
-		{
-			item.recalculateStack(); 
-			item.bind();
-		}
+			item.recalculateStack();
 	}
 	protected abstract void runWhenClicked(Player player);
 }

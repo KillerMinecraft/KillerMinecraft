@@ -91,7 +91,7 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 			setEnabled(false);
 			return;
 		}
-		
+
 		MenuManager.createRootMenu();
 		games = new Game[Settings.numGames];
 		
@@ -111,7 +111,7 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 		
 		for ( int i = 0; i < games.length; i++ )
 			games[i] = new Game(this, i + 1);
-		
+
         getServer().getPluginManager().registerEvents(eventListener, KillerMinecraft.instance);
         
 		// if using the floating island staging world, ensure it is set up correctly
@@ -131,7 +131,7 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 				world.setGameRuleValue("doDaylightCycle", "false");
 			}
 		}
-		
+
         portalUpdateProcess = getServer().getScheduler().scheduleSyncRepeatingTask(instance, new Runnable() {
 			public void run()
 			{	

@@ -31,4 +31,6 @@ public abstract class KillerModulePlugin extends JavaPlugin
 		}
 		return sb.toString();
 	}
+	
+	public String getDisplayName() { return getName().replace('_', ' '); }
 }

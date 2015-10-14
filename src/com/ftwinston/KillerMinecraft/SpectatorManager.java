@@ -12,6 +12,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
+import com.ftwinston.KillerMinecraft.Game.PlayerInfo;
+
 class SpectatorManager
 {
 	void makeSpectator(Game game, Player player)
@@ -60,7 +62,9 @@ class SpectatorManager
 			if (p != player && !p.canSee(player))
 				p.showPlayer(player);
 
-		game.getPlayerInfo(player).setSpectator(false);
+		PlayerInfo info = game.getPlayerInfo(player); 
+		if (info != null)
+			info.setSpectator(false);
 		
 		if ( player.isDead() )
 			return;

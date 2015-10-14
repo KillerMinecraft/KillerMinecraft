@@ -52,17 +52,47 @@ class MenuManager
 	HashMap<Inventory, MenuItem[]> menuItems = new HashMap<Inventory, MenuItem[]>();
 	
 	public static Inventory rootMenu;
-	private static MenuItem[] rootMenuItems = new MenuItem[9]; 
+	protected static MenuItem[] rootMenuItems = new MenuItem[9]; 
 	
 	Game game;
 	MenuItem gameRootMenuItem;
 	private static ItemStack helpItem, helpBook, backItem, quitItem;
 
-	public MenuManager(Game game)
+	public MenuManager(final Game game)
 	{
 		this.game = game;
 		
-		gameRootMenuItem = rootMenuItems[game.getNumber() - 1];
+		gameRootMenuItem = new MenuItem(rootMenu, game.getNumber() - 1, new ItemStack(Material.BUCKET, 1)) {
+			@Override
+			public void runWhenClicked(Player player) {
+				if ( game.canJoin() )
+				{
+					game.addPlayerToGame(player);
+					show(player);
+				}
+				else
+					player.sendMessage(ChatColor.RED + "You can't join this game");
+			}
+			
+			@Override
+			public void recalculateStack()
+			{
+				Material mat;
+				
+				if ( game.getGameState() == GameState.EMPTY )
+					mat = Material.BUCKET;
+				else if ( game.getGameState() == GameState.SETUP )
+					mat = Material.MILK_BUCKET;
+				else
+					mat = game.canJoin() ? Material.WATER_BUCKET : Material.LAVA_BUCKET;
+				
+				ItemStack stack = new ItemStack(mat, 1);
+				setNameAndLore(stack, game.getName(), describeGame(game));
+				setStack(stack);
+			}
+		};
+		
+		addItemToMenu(null, gameRootMenuItem);
 		
 		inventories.put(GameMenu.SETUP_ROOT, createSetupMenu());
 		inventories.put(GameMenu.LOBBY, createLobbyMenu());
@@ -95,7 +125,7 @@ class MenuManager
 		else
 		{
 			items = new MenuItem[9];
-			instance.menuItems.put(menu,  items);
+			instance.menuItems.put(menu, items);
 		}
 		
 		items[item.getSlot()] = item;
@@ -121,46 +151,6 @@ class MenuManager
 				player.setItemOnCursor(helpBook);
 			}
 		});
-		
-		for (final Game game : KillerMinecraft.instance.games)
-		{
-			int slot = game.getNumber() - 1;
-			
-			ItemStack stack = new ItemStack(Material.BUCKET, 1);
-			MenuItem item = new MenuItem(rootMenu, slot, stack) {
-				@Override
-				public void runWhenClicked(Player player) {
-					if ( game.canJoin() )
-					{
-						game.addPlayerToGame(player);
-						show(player);
-					}
-					else
-						player.sendMessage(ChatColor.RED + "You can't join this game");
-				}
-				
-				@Override
-				public void recalculateStack()
-				{
-					Material mat;
-					
-					if ( game.getGameState() == GameState.EMPTY )
-						mat = Material.BUCKET;
-					else if ( game.getGameState() == GameState.SETUP )
-						mat = Material.MILK_BUCKET;
-					else
-						mat = game.canJoin() ? Material.WATER_BUCKET : Material.LAVA_BUCKET;
-					
-					ItemStack stack = new ItemStack(mat, 1);
-					setNameAndLore(stack, game.getName(), describeGame(game));
-					setStack(stack);
-				}
-			};
-			
-			addItemToMenu(null, item);
-		}
-		
-		
 		
 		// these items not used in the root menu, but are used (statically) in other menus
 		quitItem = new ItemStack(Material.TNT, 1);
@@ -390,7 +380,8 @@ class MenuManager
 		addItemToMenu(this, new MenuItem(menu, 7, rootOpen) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.LOBBY);
+				game.setGameState(GameState.LOBBY);
+				show(player);
 			}
 			
 			@Override
@@ -437,39 +428,39 @@ class MenuManager
 		for ( int i=0; i<GameMode.gameModes.size(); i++ )
 		{
 			final GameModePlugin mode = GameMode.get(i);
-			ItemStack stack = setupGameModeItem(mode, false);
 			
-			addItemToMenu(this, new MenuItem(menu, i + 2, stack) {
+			addItemToMenu(this, new MenuItem(menu, i + 2, null) {
 				@Override
 				public void runWhenClicked(Player player) {
 					if ( game.setGameMode(mode) )
-						settingsChanged(" set the game mode to " + mode.getName());
+						settingsChanged(" set the game mode to " + mode.getDisplayName());
 					
 					show(player, GameMenu.SETUP_GAME_MODE_CONFIG);
+				}
+				
+				@Override
+				public void recalculateStack() {
+					boolean current = game.getGameMode().getPlugin() == mode;
+					
+					ItemStack stack = new ItemStack(mode.getMenuIcon());
+					if ( current )
+					{
+						String[] desc = mode.getDescriptionText();
+						ArrayList<String> lore = new ArrayList<String>(desc.length + 1);
+						lore.add(highlightStyle + "Current game mode");
+						for ( int j=0; j<desc.length; j++)
+							lore.add(desc[j]);
+						setNameAndLore(stack, mode.getDisplayName(), lore);
+						stack = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(stack);
+					}
+					else
+						setNameAndLore(stack, mode.getDisplayName(), mode.getDescriptionText());
+					setStack(stack);
 				}
 			});
 		}
 		
 		return menu;
-	}
-	
-	private ItemStack setupGameModeItem(GameModePlugin mode, boolean current) 
-	{
-		ItemStack item = new ItemStack(mode.getMenuIcon());
-		if ( current )
-		{
-			String[] desc = mode.getDescriptionText();
-			ArrayList<String> lore = new ArrayList<String>(desc.length + 1);
-			lore.add(highlightStyle + "Current game mode");
-			for ( int j=0; j<desc.length; j++)
-				lore.add(desc[j]);
-			setNameAndLore(item, mode.getName(), lore);
-			item = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(item);
-		}
-		else
-			setNameAndLore(item, mode.getName(), mode.getDescriptionText());
-		
-		return item;
 	}
 	
 	private Inventory createGameModeConfigMenu()
@@ -522,9 +513,9 @@ class MenuManager
 						setStack(null);
 						return;
 					}
-					
-					ItemStack item = option.getDisplayStack();
-					setNameAndLore(item, option.getName(), option.getDescription());
+
+					ItemStack stack = option.getDisplayStack();
+					setNameAndLore(stack, option.getName(), option.getDescription());
 					setStack(stack);
 				}
 			});
@@ -546,37 +537,38 @@ class MenuManager
 		for ( int i=0; i<WorldGenerator.worldGenerators.size(); i++ )
 		{
 			final WorldGeneratorPlugin world = WorldGenerator.get(i);
-			ItemStack stack = setupWorldGenItem(world, false);
 			
-			addItemToMenu(this, new MenuItem(menu, i + 2, stack) {
+			addItemToMenu(this, new MenuItem(menu, i + 2, null) {
 				@Override
 				public void runWhenClicked(Player player) { 
 					game.setWorldGenerator(world);
-					settingsChanged(" set the world generator to " + world.getName());
+					settingsChanged(" set the world generator to " + world.getDisplayName());
 					
 					show(player, GameMenu.SETUP_WORLD_GEN_CONFIG);
+				}
+				
+				@Override
+				public void recalculateStack() {
+					boolean current = game.getWorldGenerator().getPlugin() == world;
+
+					ItemStack stack = new ItemStack(world.getMenuIcon());
+					if ( current )
+					{
+						String[] desc = world.getDescriptionText();
+						ArrayList<String> lore = new ArrayList<String>(desc.length + 1);
+						lore.add(highlightStyle + "Current world generator");
+						for ( int j=0; j<desc.length; j++)
+							lore.add(desc[j]);
+						setNameAndLore(stack, world.getDisplayName(), lore);
+						stack = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(stack);
+					}
+					else
+						setNameAndLore(stack, world.getDisplayName(), world.getDescriptionText());
+					setStack(stack);
 				}
 			});
 		}
 		return menu;
-	}
-
-	private ItemStack setupWorldGenItem(WorldGeneratorPlugin world, boolean current)
-	{
-		ItemStack item = new ItemStack(world.getMenuIcon());
-		if ( current )
-		{
-			String[] desc = world.getDescriptionText();
-			ArrayList<String> lore = new ArrayList<String>(desc.length + 1);
-			lore.add(highlightStyle + "Current world generator");
-			for ( int j=0; j<desc.length; j++)
-				lore.add(desc[j]);
-			setNameAndLore(item, world.getName(), lore);
-			item = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(item);
-		}
-		else
-			setNameAndLore(item, world.getName(), world.getDescriptionText());
-		return item;
 	}
 	
 	private Inventory createWorldGenConfigMenu()
@@ -630,8 +622,8 @@ class MenuManager
 						return;
 					}
 					
-					ItemStack item = option.getDisplayStack();
-					setNameAndLore(item, option.getName(), option.getDescription());
+					ItemStack stack = option.getDisplayStack();
+					setNameAndLore(stack, option.getName(), option.getDescription());
 					setStack(stack);
 				}
 			});
@@ -656,6 +648,7 @@ class MenuManager
 				int limit = Math.max(1, game.getPlayerLimit()-1);
 				game.setPlayerLimit(limit);
 				settingsChanged(" decreased the player limit to " + limit);
+				repopulateMenu(GameMenu.SETUP_PLAYERS);
 			}
 			
 			@Override
@@ -678,13 +671,19 @@ class MenuManager
 				int limit = game.getPlayerLimit()+1;
 				game.setPlayerLimit(limit);
 				settingsChanged(" increased the player limit to " + limit);
+				repopulateMenu(GameMenu.SETUP_PLAYERS);
 			}
 			
 			@Override
 			public void recalculateStack() {
-				ItemStack stack = new ItemStack(Material.MILK_BUCKET);
-				setNameAndLore(stack, "Increase player limit", ChatColor.YELLOW + "Current limit: " + game.getPlayerLimit(), "Increase limit to " + (game.getPlayerLimit() + 1));
-				setStack(stack);
+				if (game.usesPlayerLimit())
+				{
+					ItemStack stack = new ItemStack(Material.MILK_BUCKET);
+					setNameAndLore(stack, "Increase player limit", ChatColor.YELLOW + "Current limit: " + game.getPlayerLimit(), "Increase limit to " + (game.getPlayerLimit() + 1));
+					setStack(stack);
+				}
+				else
+					setStack(null);
 			}
 		});
 		
@@ -704,6 +703,7 @@ class MenuManager
 					game.setPlayerLimit(limit);
 					settingsChanged(" enabled a player limit of " + limit);
 				}
+				repopulateMenu(GameMenu.SETUP_PLAYERS);
 			};
 			
 			@Override
@@ -725,6 +725,7 @@ class MenuManager
 				boolean locked = !game.isLocked();
 				game.setLocked(locked);
 				settingsChanged(locked ? " locked the game" : " unlocked the game");
+				repopulateMenu(GameMenu.SETUP_PLAYERS);
 			};
 			
 			@Override
@@ -753,6 +754,7 @@ class MenuManager
 			{
 				teamSelectionEnabled = !teamSelectionEnabled;
 				settingsChanged(teamSelectionEnabled ? " enabled team selection" : " disabled team selection");
+				repopulateMenu(GameMenu.SETUP_PLAYERS);
 			};
 			
 			@Override
@@ -786,27 +788,25 @@ class MenuManager
 				show(player, GameMenu.SETUP_ROOT);
 			}
 		});
-		
-		MenuItem[] items = new MenuItem[Game.maxQuantityNum + 1];		
-		for (int i=0; i<=items.length; i++)
+			
+		for (int i=0; i<=Game.maxQuantityNum; i++)
 		{
-			ItemStack stack = createQuantityItem(i, game.monsterNumbers == i, monsterDescriptions[i]);
 			final int quantity = i;
 			
-			MenuItem item = new MenuItem(menu, i + 2, stack) {
+			addItemToMenu(this, new MenuItem(menu, i + 2, null) {
 				@Override
 				public void runWhenClicked(Player player) {
 					game.monsterNumbers = quantity;						
 					settingsChanged(" changed the monster numbers to '" + getQuantityText(quantity) + "'");
+					repopulateMenu(GameMenu.SETUP_MONSTERS);
 				}
-			};
-			
-			addItemToMenu(this, item);
-			items[i] = item;
+				
+				@Override
+				public void recalculateStack() {
+					setStack(createQuantityItem(quantity, game.monsterNumbers == quantity, monsterDescriptions[quantity]));
+				}
+			});
 		}
-		
-		for (MenuItem item : items)
-			item.recalculateOnClick(items);
 		
 		return menu;
 	}
@@ -820,28 +820,26 @@ class MenuManager
 				show(player, GameMenu.SETUP_ROOT);
 			}
 		});
-		
-		MenuItem[] items = new MenuItem[Game.maxQuantityNum + 1];		
-		for (int i=0; i<=items.length; i++)
+				
+		for (int i=0; i<=Game.maxQuantityNum; i++)
 		{
-			ItemStack stack = createQuantityItem(i, game.animalNumbers == i, animalDescriptions[i]);
 			final int quantity = i;
 			
-			MenuItem item = new MenuItem(menu, i + 2, stack) {
+			addItemToMenu(this, new MenuItem(menu, i + 2, null) {
 				@Override
 				public void runWhenClicked(Player player) {
 					game.animalNumbers = quantity;
 					settingsChanged(" changed the animal numbers to '" + getQuantityText(quantity) + "'");
+					repopulateMenu(GameMenu.SETUP_ANIMALS);
 				}
-			};
-			
-			addItemToMenu(this, item);
-			items[i] = item;
+				
+				@Override
+				public void recalculateStack() {
+					setStack(createQuantityItem(quantity, game.animalNumbers == quantity, animalDescriptions[quantity]));
+				}
+			});
 		}
 		
-		for (MenuItem item : items)
-			item.recalculateOnClick(items);
-				
 		return menu;
 	}
 	
@@ -899,9 +897,7 @@ class MenuManager
 	
 	private void addCommonLobbyItems(Inventory menu)
 	{
-		ItemStack gameSettingsItem = new ItemStack(Material.PAPER, 1);
-		setNameAndLore(gameSettingsItem, "View Game Settings", describeSettings(game));	// clicking this should write out more detailed settings to chat
-		addItemToMenu(this, new MenuItem(menu, 0, gameSettingsItem) {
+		addItemToMenu(this, new MenuItem(menu, 0, null) {
 			@Override
 			public void runWhenClicked(Player player) {
 				if ( player.getName() == game.hostPlayer && game.getGameState() == GameState.LOBBY )
@@ -911,8 +907,8 @@ class MenuManager
 			}
 			@Override
 			public void recalculateStack() {
-				ItemStack stack = getStack();
-				setLore(stack, describeSettings(game));
+				ItemStack stack = new ItemStack(Material.PAPER, 1);
+				setNameAndLore(stack, "View Game Settings", describeSettings(game));
 				setStack(stack);
 			}
 		});
@@ -1036,15 +1032,21 @@ class MenuManager
 			}
 		});
 		
-		MenuItem[] teamItems = new MenuItem[8];
 		for (int slot = 1; slot < 9; slot++)
 		{
 			final int teamIndex = slot - 1;
-			MenuItem item = new MenuItem(menu, slot, null) {
+			addItemToMenu(this, new MenuItem(menu, slot, null) {
 				@Override
 				protected void runWhenClicked(Player player)
 				{
-					TeamInfo team = game.getGameMode().getTeams()[teamIndex];
+					TeamInfo[] teams = game.getGameMode().getTeams();
+					if (teams == null || teams.length <= teamIndex)
+					{
+						setStack(null);
+						return;
+					}
+					
+					TeamInfo team = teams[teamIndex];
 					
 					game.getGameMode().setTeam(player, team);
 					game.broadcastMessage(player.getName() + " joined the " + team.getChatColor() + team.getName());
@@ -1054,7 +1056,14 @@ class MenuManager
 				@Override
 				public void recalculateStack()
 				{
-					TeamInfo team = game.getGameMode().getTeams()[teamIndex];
+					TeamInfo[] teams = game.getGameMode().getTeams();
+					if (teams == null || teams.length <= teamIndex)
+					{
+						setStack(null);
+						return;
+					}
+					
+					TeamInfo team = teams[teamIndex];
 					
 					ItemStack item = new ItemStack(Material.LEATHER_HELMET, 1);
 					LeatherArmorMeta meta = (LeatherArmorMeta)item.getItemMeta();
@@ -1062,11 +1071,9 @@ class MenuManager
 					item.setItemMeta(meta);
 					
 					setNameAndLore(item, team.getChatColor() + team.getName(), "Join the " + team.getName());
+					setStack(item);
 				};
-			};
-			
-			addItemToMenu(this, item);
-			teamItems[teamIndex] = item;
+			});
 		}
 		
 		return menu;
@@ -1148,27 +1155,32 @@ class MenuManager
 	
 	private ItemStack createQuantityItem(int quantity, boolean selected, String lore)
 	{
-		ItemStack item = new ItemStack(Material.STICK);
-		
-		if ( selected )
-			setNameAndLore(item, getQuantityText(quantity), highlightStyle + "Current Setting", lore);
-		else
-			setNameAndLore(item, getQuantityText(quantity), lore);
+		Material mat;
 		
 		switch ( quantity )
 		{
+		default:
+			mat = Material.STICK; break;
 		case 1:
-			item.setType(Material.WOOD_PICKAXE); break;
+			mat = Material.WOOD_PICKAXE; break;
 		case 2:
-			item.setType(Material.STONE_PICKAXE); break;
+			mat = Material.STONE_PICKAXE; break;
 		case 3:
-			item.setType(Material.IRON_PICKAXE); break;
+			mat = Material.IRON_PICKAXE; break;
 		case 4:
-			item.setType(Material.DIAMOND_PICKAXE); break;
+			mat = Material.DIAMOND_PICKAXE; break;
 		}
 
+		ItemStack item = new ItemStack(mat);
+
 		if ( selected )
+		{
+			setNameAndLore(item, getQuantityText(quantity), highlightStyle + "Current Setting", lore);
 			item = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(item);
+		}
+		else
+			setNameAndLore(item, getQuantityText(quantity), lore);
+		
 		return item;
 	}
 	
@@ -1184,19 +1196,6 @@ class MenuManager
 	private static void setNameAndLore(ItemStack item, String name, String... lore)
 	{
 		setNameAndLore(item, name, Arrays.asList(lore));
-	}
-	
-	private static void setLore(ItemStack item, List<String> lore)
-	{
-		ItemMeta meta = item.getItemMeta();
-		meta.setLore(lore);
-		meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_DESTROYS, ItemFlag.HIDE_PLACED_ON, ItemFlag.HIDE_POTION_EFFECTS);
-		item.setItemMeta(meta);
-	}
-	
-	private static void setLore(ItemStack item, String... lore)
-	{
-		setLore(item, Arrays.asList(lore));
 	}
 	
 	private int nearestNine(int num)
@@ -1333,7 +1332,7 @@ class MenuManager
 				@Override
 				public void runWhenClicked(Player player)
 				{
-					currentOption.setSelectedIndex(slot);
+					currentOption.setSelectedIndex(slot - 2);
 					populateChoiceOptionMenu(currentOption.optionClicked(), currentOption.getSelectedIndex(), inventories.get(GameMenu.SPECIFIC_OPTION_CHOICE));
 					settingsChanged(" set the '" + currentOption.getName() + "' setting to " + currentOption.getValueString());
 				};
@@ -1351,14 +1350,20 @@ class MenuManager
 	public void repopulateMenu(GameMenu menu)
 	{
 		Inventory inventory = inventories.get(menu);
-		MenuItem[] items = menuItems.get(inventory);
+		if (inventory == null)
+			return;
 		
+		MenuItem[] items = menuItems.get(inventory);
 		for (MenuItem item : items)
-			item.recalculateStack();
+			if (item != null)
+				item.recalculateStack();				
 	}
 	
 	public void updateMenus()
 	{
+		if (game.getGameState() == GameState.INITIALIZING)
+			return;
+
 		repopulateMenu(GameMenu.LOBBY);
 		repopulateMenu(GameMenu.SPECTATOR_LOBBY);
 		repopulateMenu(GameMenu.SETUP_ROOT);
@@ -1367,6 +1372,12 @@ class MenuManager
 		repopulateMenu(GameMenu.SETUP_WORLD_GEN);
 		repopulateMenu(GameMenu.SETUP_WORLD_GEN_CONFIG);
 		repopulateMenu(GameMenu.TEAM_SELECTION);
+		
+		updateGameIcon();
+	}
+	
+	public void updateGameIcon()
+	{		
 		gameRootMenuItem.recalculateStack();
 	}
 }
