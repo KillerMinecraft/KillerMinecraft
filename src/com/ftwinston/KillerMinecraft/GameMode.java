@@ -70,21 +70,9 @@ public abstract class GameMode extends KillerModule
 	{
 		this.teams = teams;
 		if ( game != null )
-			game.menuManager.populateTeamMenu();
+			game.menuManager.repopulateMenu(MenuManager.GameMenu.TEAM_SELECTION);
 	}
-/*
-	public int indexOfTeam(TeamInfo team)
-	{
-		TeamInfo[] teams = getTeams();
-		
-		if ( teams == null )
-			return -1;
-		for ( int i=0; i<teams.length; i++ )
-			if ( teams[i] == team )
-				return i;
-		return -1;
-	}
-*/
+
 	public TeamInfo getTeam(OfflinePlayer player)
 	{
 		PlayerInfo info = game.getPlayerInfo(player);

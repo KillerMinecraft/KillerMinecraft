@@ -28,7 +28,7 @@ public abstract class MenuItem
 	public void setStack(ItemStack stack) { this.stack = stack; }
 
 	protected void bind() { menu.setItem(slot, stack); }
-	protected void recalculateStack() { }
+	public void recalculateStack() { }
 	
 	private LinkedList<MenuItem> itemsToRecalculate = new LinkedList<MenuItem>();
 	public void recalculateOnClick(MenuItem... items)

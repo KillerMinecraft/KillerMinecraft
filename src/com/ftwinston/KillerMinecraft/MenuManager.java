@@ -48,41 +48,6 @@ class MenuManager
 		ACTIVE,
 	}
 	
-	private static final int
-	ROOT_MENU_HELP_POS = 8,
-	SETUP_MENU_MODE_POS = 0,
-	SETUP_MENU_WORLD_POS = 1,
-	//SETUP_MENU_MUTATOR_POS = 2,
-	SETUP_MENU_PLAYERS_POS = 3,
-	SETUP_MENU_MONSTERS_POS = 4,
-	SETUP_MENU_ANIMALS_POS = 5,
-	SETUP_MENU_OPEN_POS = 7,
-	SETUP_MENU_QUIT_POS = 8,
-	LOBBY_MENU_SETTINGS_POS = 0,
-	LOBBY_MENU_PLAYER_LIST_POS = 1,
-	LOBBY_MENU_SPECTATE_POS = 2,
-	LOBBY_MENU_TEAM_POS = 3,
-	LOBBY_MENU_START_POS = 5,
-	LOBBY_MENU_QUIT_POS = 7,
-	LOBBY_MENU_HELP_POS = 8,
-	GAME_MODE_MENU_BACK_POS = 0,
-	GAME_MODE_MENU_FIRST_POS = 2,
-	MODULE_CONFIG_MENU_FIRST_POS = 2,
-	WORLD_GEN_MENU_BACK_POS = 0,
-	WORLD_GEN_MENU_FIRST_POS = 2,
-	SETUP_PLAYERS_BACK_POS = 0,
-	SETUP_PLAYERS_USE_PLAYER_LIMIT = 2,
-	SETUP_PLAYERS_LIMIT_DOWN = 3,
-	SETUP_PLAYERS_LIMIT_UP = 4,
-	SETUP_PLAYERS_LOCK_GAME = 7,
-	SETUP_PLAYERS_TEAM_SELECTION = 8,
-	QUANTITY_MENU_BACK_POS = 0,
-	CHOICE_OPTION_BACK_POS = 0,
-	ACTIVE_MENU_QUIT_POS = 8;
-	
-	static final int
-	QUANTITY_MENU_NONE_POS = 2;
-	
 	EnumMap<GameMenu, Inventory> inventories = new EnumMap<GameMenu, Inventory>(GameMenu.class);
 	HashMap<Inventory, MenuItem[]> menuItems = new HashMap<Inventory, MenuItem[]>();
 	
@@ -91,7 +56,7 @@ class MenuManager
 	
 	Game game;
 	MenuItem gameRootMenuItem;
-	private static ItemStack helpItem, helpBook, becomeSpectatorItem, backItem, quitItem, teamSelectionItem;
+	private static ItemStack helpItem, helpBook, backItem, quitItem;
 
 	public MenuManager(Game game)
 	{
@@ -106,7 +71,9 @@ class MenuManager
 		inventories.put(GameMenu.ACTIVE, createActiveMenu());
 		
 		inventories.put(GameMenu.SETUP_GAME_MODE, createGameModeMenu());
+		inventories.put(GameMenu.SETUP_GAME_MODE_CONFIG, createGameModeConfigMenu());
 		inventories.put(GameMenu.SETUP_WORLD_GEN, createWorldGenMenu());
+		inventories.put(GameMenu.SETUP_WORLD_GEN_CONFIG, createWorldGenConfigMenu());
 		inventories.put(GameMenu.SETUP_PLAYERS, createPlayersMenu());
 		inventories.put(GameMenu.SETUP_MONSTERS, createMonstersMenu());
 		inventories.put(GameMenu.SETUP_ANIMALS, createAnimalsMenu());
@@ -148,7 +115,7 @@ class MenuManager
 		metaData.addPage("This book should explain how Killer Minecraft works.", "But it doesn't really. Not yet.", "Sorry.");
 		helpBook.setItemMeta(metaData);
 		
-		addItemToMenu(null, new MenuItem(rootMenu, ROOT_MENU_HELP_POS, helpItem) {
+		addItemToMenu(null, new MenuItem(rootMenu, 8, helpItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				player.setItemOnCursor(helpBook);
@@ -199,13 +166,10 @@ class MenuManager
 		quitItem = new ItemStack(Material.TNT, 1);
 		setNameAndLore(quitItem, "Quit", "Click to exit this game");
 		
-		teamSelectionItem = new ItemStack(Material.IRON_HELMET, 1);
-		setNameAndLore(teamSelectionItem, "Choose Team", "Pick which team you will", "play on in this game");
-
 		backItem = new ItemStack(Material.WOOD_DOOR);
 		setNameAndLore(backItem, highlightStyle + "Go back", "Return to the previous menu");
 		
-		becomeSpectatorItem = new ItemStack(Material.EYE_OF_ENDER, 1);
+		ItemStack becomeSpectatorItem = new ItemStack(Material.EYE_OF_ENDER, 1);
 		setNameAndLore(becomeSpectatorItem, "Spectate", "Click to become a spectator", "in this game"); // clicking marks your playerInfo as spectator, and moves you to the "spectator lobby"
 	}
 
@@ -343,21 +307,19 @@ class MenuManager
 		
 		return output;
 	}
-
-	private ItemStack rootPlayerNumbers, rootMonsters, rootAnimals, rootOpen;
 	
 	private Inventory createSetupMenu()
 	{
 		Inventory menu = Bukkit.createInventory(null, 9, "Killer Minecraft: Game setup");
 		
-		MenuItem gameModeItem = new MenuItem(menu, SETUP_MENU_MODE_POS, null) {
+		MenuItem gameModeItem = new MenuItem(menu, 0, null) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.SETUP_GAME_MODE);
 			}
 			
 			@Override
-			protected void recalculateStack() {
+			public void recalculateStack() {
 				ItemStack stack = new ItemStack(Material.CAKE);
 				setNameAndLore(stack, "Change Game Mode", highlightStyle + "Current mode: " + game.getGameMode().getName(), "The game mode is the main set of rules,", "and controls every aspect of a game.");
 				setStack(stack);
@@ -367,14 +329,14 @@ class MenuManager
 		
 		ItemStack worldGenStack = new ItemStack(Material.GRASS);
 		setNameAndLore(worldGenStack, "Change World Generator", "");
-		MenuItem worldGenItem = new MenuItem(menu, SETUP_MENU_WORLD_POS, worldGenStack) {
+		MenuItem worldGenItem = new MenuItem(menu, 1, worldGenStack) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.SETUP_WORLD_GEN);
 			}
 			
 			@Override
-			protected void recalculateStack() {
+			public void recalculateStack() {
 				if ( game.getGameMode().allowWorldGeneratorSelection() )
 				{
 					ItemStack stack = new ItemStack(Material.GRASS);
@@ -387,58 +349,57 @@ class MenuManager
 		};
 		addItemToMenu(this, worldGenItem);				
 		/*
-		rootMutators = new ItemStack(Material.EXP_BOTTLE);
+		final ItemStack rootMutators = new ItemStack(Material.EXP_BOTTLE);
 		setNameAndLore(rootMutators, "Select Mutators", "Mutators change specific aspects", "of a game, but aren't specific", "to any particular game mode");
-		addItemToMenu(this, new MenuItem(menu, SETUP_MENU_MUTATOR_POS, rootMutators) {
+		addItemToMenu(this, new MenuItem(menu, 2, rootMutators) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.SETUP_MUTATORS);
 			}
 		});
 		*/
-		rootPlayerNumbers = new ItemStack(Material.SKULL_ITEM, 1, (short)3); // steve head
+		final ItemStack rootPlayerNumbers = new ItemStack(Material.SKULL_ITEM, 1, (short)3); // steve head
 		setNameAndLore(rootPlayerNumbers, "Player limits", "Specify the maximum number of", "players allowed into the game");
-		addItemToMenu(this, new MenuItem(menu, SETUP_MENU_PLAYERS_POS, rootPlayerNumbers) {
+		addItemToMenu(this, new MenuItem(menu, 3, rootPlayerNumbers) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.SETUP_PLAYERS);
 			}
 		});
 		
-		rootMonsters = new ItemStack(Material.SKULL_ITEM, 1, (short)4); // creeper head
+		final ItemStack rootMonsters = new ItemStack(Material.SKULL_ITEM, 1, (short)4); // creeper head
 		setNameAndLore(rootMonsters, "Monster Numbers", "Control the number of", "monsters that spawn");
-		addItemToMenu(this, new MenuItem(menu, SETUP_MENU_MONSTERS_POS, rootMonsters) {
+		addItemToMenu(this, new MenuItem(menu, 4, rootMonsters) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.SETUP_MONSTERS);
 			}
 		});
 		
-		rootAnimals = new ItemStack(Material.EGG);
+		final ItemStack rootAnimals = new ItemStack(Material.EGG);
 		setNameAndLore(rootAnimals, "Animal Numbers", "Control the number of", "animals that spawn");
-		addItemToMenu(this, new MenuItem(menu, SETUP_MENU_ANIMALS_POS, rootAnimals) {
+		addItemToMenu(this, new MenuItem(menu, 5, rootAnimals) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.SETUP_ANIMALS);
 			}
 		});
 		
-		rootOpen = new ItemStack(Material.IRON_DOOR);
+		final ItemStack rootOpen = new ItemStack(Material.IRON_DOOR);
 		setNameAndLore(rootOpen, "Open game lobby", "Open this game, so", "that players can join");
-		MenuItem open = new MenuItem(menu, SETUP_MENU_OPEN_POS, rootOpen) {
+		addItemToMenu(this, new MenuItem(menu, 7, rootOpen) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.LOBBY);
 			}
 			
 			@Override
-			protected void recalculateStack() {
+			public void recalculateStack() {
 				setStack(game.getGameState() == GameState.SETUP ? rootOpen : null);
 			}
-		};
-		addItemToMenu(this, open);
+		});
 
-		MenuItem quit = new MenuItem(menu, SETUP_MENU_QUIT_POS, quitItem) {
+		addItemToMenu(this, new MenuItem(menu, 8, quitItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				if ( game.getGameState() == GameState.SETUP )
@@ -454,13 +415,10 @@ class MenuManager
 			}
 			
 			@Override
-			protected void recalculateStack() {
+			public void recalculateStack() {
 				setStack(game.getGameState() == GameState.SETUP ? quitItem : backItem);
 			}
-		};
-		addItemToMenu(this, quit);
-		
-		MenuItem[] recalulatingItems = new MenuItem[] { open, quit };
+		});
 		
 		return menu;
 	}
@@ -469,7 +427,7 @@ class MenuManager
 	{
 		Inventory menu = Bukkit.createInventory(null, nearestNine(GameMode.gameModes.size() + 2), "Game mode selection");
 		
-		addItemToMenu(this, new MenuItem(menu, GAME_MODE_MENU_BACK_POS, backItem) {
+		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.SETUP_ROOT);
@@ -481,7 +439,7 @@ class MenuManager
 			final GameModePlugin mode = GameMode.get(i);
 			ItemStack stack = setupGameModeItem(mode, false);
 			
-			addItemToMenu(this, new MenuItem(menu, i + GAME_MODE_MENU_FIRST_POS, stack) {
+			addItemToMenu(this, new MenuItem(menu, i + 2, stack) {
 				@Override
 				public void runWhenClicked(Player player) {
 					if ( game.setGameMode(mode) )
@@ -514,16 +472,71 @@ class MenuManager
 		return item;
 	}
 	
-	private Inventory createGameModeConfigMenu(GameMode mode)
+	private Inventory createGameModeConfigMenu()
 	{
-		return createModuleOptionsMenu(mode, GameMenu.SETUP_GAME_MODE, GameMenu.SETUP_GAME_MODE_CONFIG);
+		Inventory menu = Bukkit.createInventory(null, 9, "Game mode options");
+
+		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
+			@Override
+			public void runWhenClicked(Player player) {
+				show(player, GameMenu.SETUP_GAME_MODE);
+			}
+		});
+		
+		for (int i=1; i<9; i++)
+		{
+			final int optionNum = i - 1;
+			
+			addItemToMenu(this, new MenuItem(menu, i, null) {
+				@Override
+				public void runWhenClicked(Player player) {
+					Option[] options = game.getGameMode().options;
+					if (optionNum >= options.length)
+						return;
+					
+					Option option = options[optionNum];
+					
+					ItemStack[] choiceItems = option.optionClicked();
+					if ( choiceItems != null )
+						showChoiceOptionMenu(player, option, choiceItems, GameMenu.SETUP_GAME_MODE_CONFIG);
+					else
+					{
+						repopulateMenu(GameMenu.SETUP_GAME_MODE_CONFIG);
+						settingsChanged(" set the '" + option.getName() + "' setting to " + option.getValueString());
+					}
+				}
+				
+				@Override
+				public void recalculateStack() {
+					Option[] options = game.getGameMode().options;
+					if (optionNum >= options.length)
+					{
+						setStack(null);
+						return;
+					}
+					
+					final Option option = options[optionNum];
+					
+					if ( option.isHidden() )
+					{
+						setStack(null);
+						return;
+					}
+					
+					ItemStack item = option.getDisplayStack();
+					setNameAndLore(item, option.getName(), option.getDescription());
+					setStack(stack);
+				}
+			});
+		}
+		return menu;
 	}
 	
 	private Inventory createWorldGenMenu()
 	{
 		Inventory menu = Bukkit.createInventory(null, nearestNine(WorldGenerator.worldGenerators.size() + 2), "World generator selection");
 		
-		addItemToMenu(this, new MenuItem(menu, WORLD_GEN_MENU_BACK_POS, backItem) {
+		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.SETUP_ROOT);
@@ -535,7 +548,7 @@ class MenuManager
 			final WorldGeneratorPlugin world = WorldGenerator.get(i);
 			ItemStack stack = setupWorldGenItem(world, false);
 			
-			addItemToMenu(this, new MenuItem(menu, i + WORLD_GEN_MENU_FIRST_POS, stack) {
+			addItemToMenu(this, new MenuItem(menu, i + 2, stack) {
 				@Override
 				public void runWhenClicked(Player player) { 
 					game.setWorldGenerator(world);
@@ -565,66 +578,78 @@ class MenuManager
 			setNameAndLore(item, world.getName(), world.getDescriptionText());
 		return item;
 	}
+	
+	private Inventory createWorldGenConfigMenu()
+	{
+		Inventory menu = Bukkit.createInventory(null, 9, "World generator options");
 
-	private Inventory createWorldGenConfigMenu(WorldGenerator world)
-	{
-		return createModuleOptionsMenu(world, GameMenu.SETUP_WORLD_GEN, GameMenu.SETUP_WORLD_GEN_CONFIG);
-	}
-	
-	private Inventory createModuleOptionsMenu(KillerModule module, GameMenu backMenu, GameMenu currentMenu)
-	{
-		Inventory menu = Bukkit.createInventory(null, nearestNine(module.options.length + MODULE_CONFIG_MENU_FIRST_POS), module.getName() + " options");
-		generateOptionMenuItems(menu, module.options, backMenu, currentMenu);
-		return menu;
-	}
-	
-	private void generateOptionMenuItems(final Inventory menu, final Option[] options, final GameMenu backMenu, final GameMenu currentMenu)
-	{
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, backMenu);
+				show(player, GameMenu.SETUP_WORLD_GEN);
 			}
 		});
 		
-		for ( int i=0; i<options.length; i++ )
+		for (int i=1; i<9; i++)
 		{
-			final Option option = options[i];
-			if ( option.isHidden() )
-			{
-				menu.setItem(i + MODULE_CONFIG_MENU_FIRST_POS, null);
-				continue;
-			}
-			ItemStack item = option.getDisplayStack();
-			setNameAndLore(item, option.getName(), option.getDescription());
+			final int optionNum = i - 1;
 			
-			addItemToMenu(this, new MenuItem(menu, i + MODULE_CONFIG_MENU_FIRST_POS, item) {
+			addItemToMenu(this, new MenuItem(menu, i, null) {
 				@Override
 				public void runWhenClicked(Player player) {
+					Option[] options = game.getWorldGenerator().options;
+					if (optionNum >= options.length)
+						return;
+					
+					Option option = options[optionNum];
+					
 					ItemStack[] choiceItems = option.optionClicked();
 					if ( choiceItems != null )
-						showChoiceOptionMenu(player, option, choiceItems, currentMenu);
+						showChoiceOptionMenu(player, option, choiceItems, GameMenu.SETUP_WORLD_GEN_CONFIG);
 					else
 					{
-						generateOptionMenuItems(menu, options, backMenu, currentMenu);
+						repopulateMenu(GameMenu.SETUP_WORLD_GEN_CONFIG);
 						settingsChanged(" set the '" + option.getName() + "' setting to " + option.getValueString());
 					}
 				}
+				
+				@Override
+				public void recalculateStack() {
+					Option[] options = game.getWorldGenerator().options;
+					if (optionNum >= options.length)
+					{
+						setStack(null);
+						return;
+					}
+					
+					final Option option = options[optionNum];
+					
+					if ( option.isHidden() )
+					{
+						setStack(null);
+						return;
+					}
+					
+					ItemStack item = option.getDisplayStack();
+					setNameAndLore(item, option.getName(), option.getDescription());
+					setStack(stack);
+				}
 			});
 		}
+		return menu;
 	}
 
 	private Inventory createPlayersMenu()
 	{
 		Inventory menu = Bukkit.createInventory(null, 9, "Player settings");
-		addItemToMenu(this, new MenuItem(menu, SETUP_PLAYERS_BACK_POS, backItem) {
+		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player); // go back to lobby or setup, depending on state
 			}
 		});
 		
-		addItemToMenu(this, new MenuItem(menu, SETUP_PLAYERS_LIMIT_DOWN, null) {
+		addItemToMenu(this, new MenuItem(menu, 3, null) {
 			@Override
 			public void runWhenClicked(Player player)
 			{
@@ -634,7 +659,7 @@ class MenuManager
 			}
 			
 			@Override
-			protected void recalculateStack() {
+			public void recalculateStack() {
 				if (game.usesPlayerLimit() && game.getPlayerLimit() > 1)
 				{
 					ItemStack stack = new ItemStack(Material.BUCKET);
@@ -646,7 +671,7 @@ class MenuManager
 			}
 		});
 		
-		addItemToMenu(this, new MenuItem(menu, SETUP_PLAYERS_LIMIT_UP, null) {
+		addItemToMenu(this, new MenuItem(menu, 4, null) {
 			@Override
 			public void runWhenClicked(Player player)
 			{
@@ -656,14 +681,14 @@ class MenuManager
 			}
 			
 			@Override
-			protected void recalculateStack() {
+			public void recalculateStack() {
 				ItemStack stack = new ItemStack(Material.MILK_BUCKET);
 				setNameAndLore(stack, "Increase player limit", ChatColor.YELLOW + "Current limit: " + game.getPlayerLimit(), "Increase limit to " + (game.getPlayerLimit() + 1));
 				setStack(stack);
 			}
 		});
 		
-		addItemToMenu(this, new MenuItem(menu, SETUP_PLAYERS_USE_PLAYER_LIMIT, null) {
+		addItemToMenu(this, new MenuItem(menu, 2, null) {
 			@Override
 			public void runWhenClicked(Player player)
 			{
@@ -682,7 +707,7 @@ class MenuManager
 			};
 			
 			@Override
-			protected void recalculateStack() {
+			public void recalculateStack() {
 				ItemStack stack = new ItemStack(Material.HOPPER);
 				setNameAndLore(stack, "Use player limit", game.usesPlayerLimit() ? ChatColor.YELLOW + "Current limit: " + game.getPlayerLimit() : ChatColor.RED + "No limit set");
 				
@@ -693,7 +718,7 @@ class MenuManager
 			}
 		});
 		
-		addItemToMenu(this, new MenuItem(menu, SETUP_PLAYERS_LOCK_GAME, null) {
+		addItemToMenu(this, new MenuItem(menu, 7, null) {
 			@Override
 			public void runWhenClicked(Player player)
 			{
@@ -703,7 +728,7 @@ class MenuManager
 			};
 			
 			@Override
-			protected void recalculateStack() {
+			public void recalculateStack() {
 				ItemStack stack;
 				if ( game.getGameState() == GameState.EMPTY || game.getGameState() == GameState.SETUP )
 					stack = null;
@@ -722,7 +747,7 @@ class MenuManager
 			}
 		});
 		
-		addItemToMenu(this, new MenuItem(menu, SETUP_PLAYERS_TEAM_SELECTION, null) {
+		addItemToMenu(this, new MenuItem(menu, 8, null) {
 			@Override
 			public void runWhenClicked(Player player)
 			{
@@ -731,7 +756,7 @@ class MenuManager
 			};
 			
 			@Override
-			protected void recalculateStack() {
+			public void recalculateStack() {
 				// if game mode allows team selection, a toggle to allow manual team selection (and show the team selection scoreboard) ...
 				// if disabled, players shouldn't see the scoreboard thing, teams will be auto-assigned
 				if ( game.getGameMode().allowTeamSelection() )
@@ -755,7 +780,7 @@ class MenuManager
 	private Inventory createMonstersMenu()
 	{
 		final Inventory menu = Bukkit.createInventory(null, 9, "Monster numbers");
-		addItemToMenu(this, new MenuItem(menu, QUANTITY_MENU_BACK_POS, backItem) {
+		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.SETUP_ROOT);
@@ -768,7 +793,7 @@ class MenuManager
 			ItemStack stack = createQuantityItem(i, game.monsterNumbers == i, monsterDescriptions[i]);
 			final int quantity = i;
 			
-			MenuItem item = new MenuItem(menu, i + QUANTITY_MENU_NONE_POS, stack) {
+			MenuItem item = new MenuItem(menu, i + 2, stack) {
 				@Override
 				public void runWhenClicked(Player player) {
 					game.monsterNumbers = quantity;						
@@ -789,7 +814,7 @@ class MenuManager
 	private Inventory createAnimalsMenu()
 	{
 		final Inventory menu = Bukkit.createInventory(null, 9, "Monster numbers");
-		addItemToMenu(this, new MenuItem(menu, QUANTITY_MENU_BACK_POS, backItem) {
+		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.SETUP_ROOT);
@@ -802,7 +827,7 @@ class MenuManager
 			ItemStack stack = createQuantityItem(i, game.animalNumbers == i, animalDescriptions[i]);
 			final int quantity = i;
 			
-			MenuItem item = new MenuItem(menu, i + QUANTITY_MENU_NONE_POS, stack) {
+			MenuItem item = new MenuItem(menu, i + 2, stack) {
 				@Override
 				public void runWhenClicked(Player player) {
 					game.animalNumbers = quantity;
@@ -826,21 +851,23 @@ class MenuManager
 	{
 		Inventory menu = Bukkit.createInventory(null, 9, "Killer Minecraft: " + game.getName());
 		
-		addItemToMenu(this, new MenuItem(menu, LOBBY_MENU_TEAM_POS, teamSelectionItem) {
+		addItemToMenu(this, new MenuItem(menu, 3, null) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.TEAM_SELECTION);
 			}
 			
 			@Override
-			protected void recalculateStack() {
-				setStack(allowTeamSelection() ? teamSelectionItem : null);
+			public void recalculateStack() {
+				ItemStack stack = new ItemStack(Material.IRON_HELMET, 1);
+				setNameAndLore(stack, "Choose Team", "Pick which team you will", "play on in this game");
+				setStack(allowTeamSelection() ? stack : null);
 			}
 		});
 		
-		becomeSpectatorItem = new ItemStack(Material.EYE_OF_ENDER, 1);
+		ItemStack becomeSpectatorItem = new ItemStack(Material.EYE_OF_ENDER, 1);
 		setNameAndLore(becomeSpectatorItem, "Spectate", "Click to become a spectator", "in this game"); // clicking marks your playerInfo as spectator, and moves you to the "spectator lobby"
-		addItemToMenu(this, new MenuItem(menu, LOBBY_MENU_SPECTATE_POS, becomeSpectatorItem) {
+		addItemToMenu(this, new MenuItem(menu, 2, becomeSpectatorItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				PlayerInfo info = game.getPlayerInfo(player);
@@ -852,7 +879,7 @@ class MenuManager
 
 		addCommonLobbyItems(menu);
 		
-		addItemToMenu(this, new MenuItem(menu, LOBBY_MENU_QUIT_POS, quitItem) {
+		addItemToMenu(this, new MenuItem(menu, 7, quitItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				game.removePlayerFromGame(player);
@@ -860,7 +887,7 @@ class MenuManager
 			}
 		});
 		
-		addItemToMenu(this, new MenuItem(menu, LOBBY_MENU_HELP_POS, helpItem) {
+		addItemToMenu(this, new MenuItem(menu, 8, helpItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				player.setItemOnCursor(helpBook);
@@ -874,7 +901,7 @@ class MenuManager
 	{
 		ItemStack gameSettingsItem = new ItemStack(Material.PAPER, 1);
 		setNameAndLore(gameSettingsItem, "View Game Settings", describeSettings(game));	// clicking this should write out more detailed settings to chat
-		addItemToMenu(this, new MenuItem(menu, LOBBY_MENU_SETTINGS_POS, gameSettingsItem) {
+		addItemToMenu(this, new MenuItem(menu, 0, gameSettingsItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				if ( player.getName() == game.hostPlayer && game.getGameState() == GameState.LOBBY )
@@ -883,14 +910,14 @@ class MenuManager
 					player.sendMessage(listAllSettings(game));
 			}
 			@Override
-			protected void recalculateStack() {
+			public void recalculateStack() {
 				ItemStack stack = getStack();
 				setLore(stack, describeSettings(game));
 				setStack(stack);
 			}
 		});
 		
-		addItemToMenu(this, new MenuItem(menu, LOBBY_MENU_PLAYER_LIST_POS, null) {
+		addItemToMenu(this, new MenuItem(menu, 1, null) {
 			@Override
 			public void runWhenClicked(Player player) {
 				player.sendMessage(listPlayers(game));
@@ -904,7 +931,7 @@ class MenuManager
 			}
 		});
 
-		addItemToMenu(this, new MenuItem(menu, LOBBY_MENU_START_POS, null) {
+		addItemToMenu(this, new MenuItem(menu, 5, null) {
 			@Override
 			public void runWhenClicked(Player player) {
 				if ( game.getGameState() != GameState.LOBBY )
@@ -923,7 +950,7 @@ class MenuManager
 			}
 			
 			@Override
-			protected void recalculateStack() {
+			public void recalculateStack() {
 				ItemStack stack;
 				if ( game.getGameState() == GameState.QUEUE_FOR_GENERATION )
 				{
@@ -950,7 +977,7 @@ class MenuManager
 	{
 		Inventory menu = Bukkit.createInventory(null, 9, "Killer: Spectating " + game.getName());
 		
-		addItemToMenu(this, new MenuItem(menu, LOBBY_MENU_QUIT_POS, quitItem) {
+		addItemToMenu(this, new MenuItem(menu, 7, quitItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				game.removePlayerFromGame(player);
@@ -958,7 +985,7 @@ class MenuManager
 			}
 		});
 		
-		addItemToMenu(this, new MenuItem(menu, LOBBY_MENU_HELP_POS, helpItem) {
+		addItemToMenu(this, new MenuItem(menu, 8, helpItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				player.setItemOnCursor(helpBook);
@@ -967,7 +994,7 @@ class MenuManager
 
 		addCommonLobbyItems(menu);
 
-		addItemToMenu(this, new MenuItem(menu, LOBBY_MENU_SPECTATE_POS, null) {
+		addItemToMenu(this, new MenuItem(menu, 2, null) {
 			@Override
 			public void runWhenClicked(Player player) {
 				if ( game.canJoin() )
@@ -979,7 +1006,7 @@ class MenuManager
 			}
 			
 			@Override
-			protected void recalculateStack() {
+			public void recalculateStack() {
 				if (game.canJoin())
 				{
 					ItemStack stack = new ItemStack(Material.EYE_OF_ENDER, 1);
@@ -1025,7 +1052,7 @@ class MenuManager
 				}
 				
 				@Override
-				protected void recalculateStack()
+				public void recalculateStack()
 				{
 					TeamInfo team = game.getGameMode().getTeams()[teamIndex];
 					
@@ -1051,7 +1078,7 @@ class MenuManager
 
 		// TODO: call a vote?
 		
-		addItemToMenu(this, new MenuItem(menu, ACTIVE_MENU_QUIT_POS, quitItem) {
+		addItemToMenu(this, new MenuItem(menu, 8, quitItem) {
 			@Override
 			public void runWhenClicked(Player player) {
 				game.removePlayerFromGame(player);
@@ -1271,23 +1298,19 @@ class MenuManager
 		currentOption = option;
 		Inventory menu = Bukkit.createInventory(null, nearestNine(choiceItems.length + 2), option.getName());
 		
-		addItemToMenu(this, new MenuItem(menu, CHOICE_OPTION_BACK_POS, backItem) {
+		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player)
 			{
 				currentOption = null;
 				inventories.put(GameMenu.SPECIFIC_OPTION_CHOICE, null);
 				
-				if ( choiceOptionGoBackTo == GameMenu.SETUP_GAME_MODE_CONFIG )
-					generateOptionMenuItems(inventories.get(choiceOptionGoBackTo), game.getGameMode().options, GameMenu.SETUP_GAME_MODE, choiceOptionGoBackTo);
-				else if ( choiceOptionGoBackTo == GameMenu.SETUP_WORLD_GEN_CONFIG ) 
-					generateOptionMenuItems(inventories.get(choiceOptionGoBackTo), game.getWorldGenerator().options, GameMenu.SETUP_WORLD_GEN, choiceOptionGoBackTo);
-				
+				repopulateMenu(choiceOptionGoBackTo);
 				show(player, choiceOptionGoBackTo);
 			};
 		});
 		
-		menu.setItem(CHOICE_OPTION_BACK_POS, backItem);	
+		menu.setItem(0, backItem);	
 		
 		populateChoiceOptionMenu(choiceItems, option.getSelectedIndex(), menu);
 		
@@ -1323,5 +1346,27 @@ class MenuManager
 		// only broadcast when in the lobby
 		if ( game.getGameState() == GameState.LOBBY )
 			game.broadcastMessage(game.hostPlayer + message);
+	}
+	
+	public void repopulateMenu(GameMenu menu)
+	{
+		Inventory inventory = inventories.get(menu);
+		MenuItem[] items = menuItems.get(inventory);
+		
+		for (MenuItem item : items)
+			item.recalculateStack();
+	}
+	
+	public void updateMenus()
+	{
+		repopulateMenu(GameMenu.LOBBY);
+		repopulateMenu(GameMenu.SPECTATOR_LOBBY);
+		repopulateMenu(GameMenu.SETUP_ROOT);
+		repopulateMenu(GameMenu.SETUP_GAME_MODE);
+		repopulateMenu(GameMenu.SETUP_GAME_MODE_CONFIG);
+		repopulateMenu(GameMenu.SETUP_WORLD_GEN);
+		repopulateMenu(GameMenu.SETUP_WORLD_GEN_CONFIG);
+		repopulateMenu(GameMenu.TEAM_SELECTION);
+		gameRootMenuItem.recalculateStack();
 	}
 }

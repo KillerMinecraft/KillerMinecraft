@@ -16,6 +16,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 
+import com.ftwinston.KillerMinecraft.MenuManager.GameMenu;
 import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
 
 public class Game
@@ -112,7 +113,7 @@ public class Game
 			}
 			case LOBBY:
 			{
-				menuManager.repopulatePlayersMenu(); // add ability to lock the game
+				menuManager.repopulateMenu(GameMenu.SETUP_PLAYERS);
 				break;
 			}
 			case QUEUE_FOR_GENERATION:		
@@ -197,7 +198,7 @@ public class Game
 					public void run() {
 						setGameState(GameState.WORLD_DELETION);
 					}
-				}, 220); // 12 second delay
+				}, 220); // 11 second delay
 				break;
 			}
 		}
@@ -452,7 +453,7 @@ public class Game
 		gameMode = plugin.createInstance();
 		gameMode.initialize(this, plugin);
 		
-		menuManager.gameModeChanged(prev, plugin);
+		menuManager.updateMenus();
 
 		for ( Player player : getOnlinePlayers() )
 			gameMode.setTeam(player, null);
@@ -470,7 +471,7 @@ public class Game
 		worldGenerator = plugin.createInstance();
 		worldGenerator.initialize(this, plugin);
 
-		menuManager.worldGenChanged(prev, plugin);
+		menuManager.updateMenus();
 	}
 
 	private TreeMap<String, PlayerInfo> playerInfo = new TreeMap<String, PlayerInfo>();
