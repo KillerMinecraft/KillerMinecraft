@@ -1208,7 +1208,7 @@ class EventManager implements Listener
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEvent(org.bukkit.event.inventory.InventoryCreativeEvent event) throws EventException
 	{
-		Game game = plugin.getGameForWorld(event.getViewers().get(0).getWorld());
+		Game game = plugin.getGameForWorld(event.getWhoClicked().getWorld());
 		if ( game != null )
 			fireGameEvent(event, game);
 	}
