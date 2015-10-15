@@ -98,7 +98,7 @@ public class NumericOption extends Option
     	{
 			boolean selected = i == getSelectedIndex();
 			int num = i+min;
-    		ItemStack item = new ItemStack(selected ? Material.REDSTONE_TORCH_ON : Material.REDSTONE_TORCH_OFF, num > 1 && num <= 64 ? num : 1);
+    		ItemStack item = new ItemStack(selected ? Material.REDSTONE_BLOCK : Material.COAL_BLOCK, num > 1 && num <= 64 ? num : 1);
     		
     		ItemMeta meta = item.getItemMeta();
     		
