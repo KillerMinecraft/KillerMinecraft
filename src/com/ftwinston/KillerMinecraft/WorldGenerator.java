@@ -21,7 +21,7 @@ public abstract class WorldGenerator extends KillerModule
 	static int indexOf(WorldGeneratorPlugin plugin)
 	{
 		for ( int i=0; i<worldGenerators.size(); i++ )
-			if ( worldGenerators.get(i) == plugin ) 
+			if ( worldGenerators.get(i) == plugin )
 				return i;
 		return -1;
 	}

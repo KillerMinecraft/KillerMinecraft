@@ -31,7 +31,7 @@ public class Settings
 		defaultWorldGen = config.getString("defaultWorldGen", "Default_World");
 		killerWorldNamePrefix = config.getString("killerWorldNamePrefix", "killer");
 
-		nothingButKiller = config.getBoolean("nothingButKiller", true);
+		nothingButKiller = config.getBoolean("nothingButKiller", false);
 		filterChat = config.getBoolean("filterChat", true);
 		filterScoreboard = config.getBoolean("filterScoreboard", true);
 		allowSpectators = config.getBoolean("allowSpectators", true);
