@@ -1,6 +1,6 @@
 package com.ftwinston.KillerMinecraft;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +34,7 @@ public class PlayerFilter
 	private World world;
 	private Setting worldState = Setting.Ignored;
 	
-	private ArrayList<String> excludedPlayers = new ArrayList<String>();
+	private LinkedList<String> excludedPlayers = new LinkedList<String>();
 	
 	private Game game = null;
 
@@ -122,9 +122,9 @@ public class PlayerFilter
 	}
 	
 	// not to be called directly by game modes (so that Game can be set by the GameMode), but to be returned by an equivalent method in GameMode
-	List<Player> getOnlinePlayers()
+	LinkedList<Player> getOnlinePlayers()
 	{
-		ArrayList<Player> players = new ArrayList<Player>();
+		LinkedList<Player> players = new LinkedList<Player>();
 		
 		if ( onlineState == Setting.RequiredNot )
 			return players;
@@ -186,9 +186,9 @@ public class PlayerFilter
 		return players;
 	}
 	
-	List<OfflinePlayer> getPlayers()
+	LinkedList<OfflinePlayer> getPlayers()
 	{
-		ArrayList<OfflinePlayer> players = new ArrayList<OfflinePlayer>();
+		LinkedList<OfflinePlayer> players = new LinkedList<OfflinePlayer>();
 		
 		for ( Map.Entry<String, PlayerInfo> info : game.getPlayerInfo().entrySet() )
 		{

@@ -583,32 +583,32 @@ public class Game
 	private List<World> worlds = new ArrayList<World>();
 	List<World> getWorlds() { return worlds; }
 
-	public List<Player> getOnlinePlayers()
+	public LinkedList<Player> getOnlinePlayers()
 	{		
 		return getOnlinePlayers(new PlayerFilter());
 	}
 	
-	public List<Player> getOnlinePlayers(PlayerFilter filter)
+	public LinkedList<Player> getOnlinePlayers(PlayerFilter filter)
 	{
 		return filter.setGame(this).getOnlinePlayers();
 	}
 	
-	public List<OfflinePlayer> getOfflinePlayers()
+	public LinkedList<OfflinePlayer> getOfflinePlayers()
 	{
 		return getOfflinePlayers(new PlayerFilter());
 	}
 	
-	public List<OfflinePlayer> getOfflinePlayers(PlayerFilter filter)
+	public LinkedList<OfflinePlayer> getOfflinePlayers(PlayerFilter filter)
 	{		
 		return filter.offline().setGame(this).getPlayers();
 	}
 	
-	public List<OfflinePlayer> getPlayers()
+	public LinkedList<OfflinePlayer> getPlayers()
 	{
 		return getPlayers(new PlayerFilter());
 	}
 	
-	public List<OfflinePlayer> getPlayers(PlayerFilter filter)
+	public LinkedList<OfflinePlayer> getPlayers(PlayerFilter filter)
 	{		
 		return filter.setGame(this).getPlayers();
 	}

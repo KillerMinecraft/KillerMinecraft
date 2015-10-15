@@ -1,7 +1,7 @@
 package com.ftwinston.KillerMinecraft;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,9 +16,9 @@ import org.bukkit.scheduler.BukkitScheduler;
 public abstract class KillerModule implements Listener
 {
 	KillerMinecraft plugin; KillerModulePlugin modulePlugin;
-	protected final KillerModulePlugin getPlugin() { return modulePlugin; }
+	public final KillerModulePlugin getPlugin() { return modulePlugin; }
 	
-	protected final BukkitScheduler getScheduler() { return plugin.getServer().getScheduler(); }
+	public final BukkitScheduler getScheduler() { return plugin.getServer().getScheduler(); }
 	
 	Game game;
 	protected Game getGame() { return game; }
@@ -52,32 +52,32 @@ public abstract class KillerModule implements Listener
 		return null;
 	}
 	
-	protected final List<Player> getOnlinePlayers()
+	public final LinkedList<Player> getOnlinePlayers()
 	{		
 		return game.getOnlinePlayers(new PlayerFilter());
 	}
 	
-	protected final List<Player> getOnlinePlayers(PlayerFilter filter)
+	public final LinkedList<Player> getOnlinePlayers(PlayerFilter filter)
 	{
 		return game.getOnlinePlayers(filter);
 	}
 	
-	protected final List<OfflinePlayer> getOfflinePlayers(PlayerFilter filter)
+	public final LinkedList<OfflinePlayer> getOfflinePlayers(PlayerFilter filter)
 	{		
 		return game.getOfflinePlayers(filter);
 	}
 	
-	protected final List<OfflinePlayer> getPlayers(PlayerFilter filter)
+	public final LinkedList<OfflinePlayer> getPlayers(PlayerFilter filter)
 	{		
 		return game.getPlayers(filter);
 	}
 	
-	protected final void broadcastMessage(String message)
+	public final void broadcastMessage(String message)
 	{
 		game.broadcastMessage(message);
 	}
 	
-	protected final void broadcastMessage(PlayerFilter recipients, String message)
+	public final void broadcastMessage(PlayerFilter recipients, String message)
 	{
 		game.broadcastMessage(recipients, message);
 	}
