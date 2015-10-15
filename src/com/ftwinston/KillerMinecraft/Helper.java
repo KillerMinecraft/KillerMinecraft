@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -47,12 +48,39 @@ public class Helper
 	
 	public static void makeSpectator(Game game, Player player)
 	{
-		KillerMinecraft.instance.spectatorManager.makeSpectator(game, player);
+		for (Player p : game.getOnlinePlayers(new PlayerFilter().includeSpectators()))
+			if (p != player && p.canSee(player))
+				Helper.hidePlayer(p, player);
+
+		game.getPlayerInfo(player).setSpectator(true);
+		
+		if ( player.isDead() )
+			return;
+
+		player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Clicking has different effects depending on the selected item. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
+		
+		player.setGameMode(org.bukkit.GameMode.SPECTATOR);
+				
+		// hide from everyone else
+		for ( Player online : game.getOnlinePlayers() )
+			if ( online != player && !online.canSee(player) )
+				KillerMinecraft.instance.craftBukkit.sendForScoreboard(online, player, true);
 	}
 	
 	public static void stopSpectating(Game game, Player player)
 	{
-		KillerMinecraft.instance.spectatorManager.stopSpectating(game, player);
+		player.sendMessage("You are no longer a spectator.");
+
+		PlayerInfo info = game.getPlayerInfo(player); 
+		if (info != null)
+			info.setSpectator(false);
+		
+		if ( player.isDead() )
+			return;
+		
+		player.setGameMode(org.bukkit.GameMode.SURVIVAL);
+		
+		player.getInventory().clear();
 	}
 	
 	public static boolean isSpectator(Game game, Player player)

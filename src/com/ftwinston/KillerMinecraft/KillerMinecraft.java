@@ -32,7 +32,6 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 	WorldManager worldManager;
 	PlayerManager playerManager;
 	RecipeManager recipeManager;
-	SpectatorManager spectatorManager;
 //	VoteManager voteManager;
 	Game[] games;
 	int portalUpdateProcess = -1;
@@ -58,7 +57,6 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
         
 		playerManager = new PlayerManager(this);
         recipeManager = new RecipeManager();
-        spectatorManager = new SpectatorManager();
         //voteManager = new VoteManager(this);
 
         if ( Settings.nothingButKiller )

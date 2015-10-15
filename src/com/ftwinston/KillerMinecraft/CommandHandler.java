@@ -4,8 +4,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.bukkit.ChatColor;
-import org.bukkit.World;
-import org.bukkit.World.Environment;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -29,66 +27,10 @@ public class CommandHandler
 		}
 		else if (cmd.getName().equalsIgnoreCase("team"))
 			return teamCommand(plugin, sender, cmd, label, args);
-		else if (cmd.getName().equalsIgnoreCase("spec"))
-			return spectatorCommand(plugin, sender, cmd, label, args);
 		else if (cmd.getName().equalsIgnoreCase("help"))
 			return helpCommand(plugin, sender, cmd, label, args);
 		
 		return false;
-	}
-
-	private static boolean spectatorCommand(KillerMinecraft plugin, CommandSender sender, Command cmd, String label, String[] args)
-	{
-		if ( !(sender instanceof Player) )
-			return false;
-		
-		if ( args.length == 0 )
-		{
-			sender.sendMessage("Usage: /spec main, /spec nether, /spec <player name>, or /spec follow");
-			return true;
-		}
-		Player player = (Player)sender;
-		
-		Game game = plugin.getGameForWorld(player.getWorld());
-		if ( game == null || !Helper.isSpectator(game, player) )
-		{
-			sender.sendMessage("Only spectators can use this command");
-			return true;
-		}
-		
-		if ( args[0].equalsIgnoreCase("main") )
-		{
-			Helper.teleport(player, game.getGameMode().getSpawnLocation(player));
-		}
-		else if ( args[0].equalsIgnoreCase("nether") )
-		{
-			World nether = null;
-			for ( World world : game.getWorlds() )
-				if ( world.getEnvironment() == Environment.NETHER )
-				{
-					nether = world;
-					break;
-				}
-			
-			if ( nether != null )
-				Helper.teleport(player, nether.getSpawnLocation());
-			else
-				sender.sendMessage("Nether world not found, please try again");
-		}
-		else
-		{
-			Player other = Helper.getPlayer(args[0]);
-			PlayerInfo info = game.getPlayerInfo(player);
-			if ( other == null || !other.isOnline() || game != plugin.getGameForPlayer(other) || Helper.isSpectator(game, other))
-				sender.sendMessage("Player not found: " + args[0]);
-			else
-			{
-				info.spectatorTarget = other.getName();
-				plugin.spectatorManager.moveToSee(player, other);
-			}
-		}
-		
-		return true;
 	}
 
 	private static boolean teamCommand(KillerMinecraft plugin, CommandSender sender, Command cmd, String label, String[] args)

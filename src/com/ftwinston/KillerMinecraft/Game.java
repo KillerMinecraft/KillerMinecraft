@@ -24,7 +24,7 @@ public class Game
 	static LinkedList<Game> generationQueue = new LinkedList<Game>();
 
 	KillerMinecraft plugin;
-	private int number, helpMessageProcess, compassProcess, spectatorFollowProcess;
+	private int number, helpMessageProcess, compassProcess;
 	
 	MenuManager menuManager;
 
@@ -98,7 +98,7 @@ public class Game
 				plugin.eventListener.unregisterEvents(getWorldGenerator());
 
 				for ( Player player : getOnlinePlayers(new PlayerFilter().onlySpectators()) )
-					plugin.spectatorManager.stopSpectating(this, player);
+					Helper.stopSpectating(this, player);
 				
 				for ( OfflinePlayer player : getPlayers() )
 					removePlayerFromGame(player);
@@ -179,7 +179,7 @@ public class Game
 					Helper.teleport(player, getGameMode().getSpawnLocation(player));
 					
 					if ( getPlayerInfo(player).isSpectator() )
-						plugin.spectatorManager.makeSpectator(this, player);
+						Helper.makeSpectator(this, player);
 				}
 				plugin.playerManager.playerDataChanged();
 
@@ -370,7 +370,7 @@ public class Game
 			
 			// if they're a spectator, let them be seen again
 			if ( info.isSpectator() )
-				plugin.spectatorManager.stopSpectating(this, online);
+				Helper.stopSpectating(this, online);
 
 			// this player just quit, so let them see all spectators again (when those players leave the game)
 			if ( getGameState() != GameState.WORLD_DELETION )
@@ -504,8 +504,6 @@ public class Game
 
 	void startProcesses()
 	{
-		final Game game = this;
-		
 		// start sending out help messages explaining the game rules
 		helpMessageProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			public void run()
@@ -522,18 +520,6 @@ public class Game
 	        			player.setCompassTarget(getCompassTarget(player));
         	}
         }, 20, 10);
-	        			
-		spectatorFollowProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-        	public void run()
-        	{
-	        	for ( Player player : getGameMode().getOnlinePlayers(new PlayerFilter().onlySpectators()) )
-	        	{
-	        		PlayerInfo info = playerInfo.get(player.getName());
-	        		if (info.spectatorTarget != null )
-	        			plugin.spectatorManager.checkFollowTarget(game, player, info.spectatorTarget);
-	        	}
-        	}
-        }, 40, 40);
 	}
 	
 	void stopProcesses()
@@ -548,12 +534,6 @@ public class Game
 		{
 			plugin.getServer().getScheduler().cancelTask(compassProcess);
 			compassProcess = -1;
-		}
-		
-		if ( spectatorFollowProcess != -1 )
-		{
-			plugin.getServer().getScheduler().cancelTask(spectatorFollowProcess);
-			spectatorFollowProcess = -1;
 		}
 	}
 	

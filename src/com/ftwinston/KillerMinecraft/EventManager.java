@@ -7,7 +7,6 @@ import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -49,7 +48,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.generator.ChunkGenerator;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredListener;
 
 import com.ftwinston.KillerMinecraft.Game.GameState;
@@ -347,30 +345,6 @@ class EventManager implements Listener
 		if ( game == null ) 
 			return;
 		
-		if ( Helper.isSpectator(game, event.getPlayer()) )
-		{
-			ItemStack item = event.getPlayer().getInventory().getItem(event.getNewSlot());
-			
-			if ( item == null )
-				game.getPlayerInfo(event.getPlayer()).spectatorTarget = null;
-			else if ( item.getType() == Settings.teleportModeItem )
-			{
-				event.getPlayer().sendMessage("Free look mode: left click to teleport " + ChatColor.YELLOW + "to" + ChatColor.RESET + " where you're looking, right click to teleport " + ChatColor.YELLOW + "through" + ChatColor.RESET + " through what you're looking");
-				game.getPlayerInfo(event.getPlayer()).spectatorTarget = null;
-			}
-			else if ( item.getType() == Settings.followModeItem )
-			{
-				event.getPlayer().sendMessage("Follow mode: click to cycle target");
-				Player target = plugin.spectatorManager.getNearestFollowTarget(game, event.getPlayer());
-				game.getPlayerInfo(event.getPlayer()).spectatorTarget = target.getName();
-				if ( target != null )
-					plugin.spectatorManager.checkFollowTarget(game, event.getPlayer(), target.getName());
-			}
-			else
-				game.getPlayerInfo(event.getPlayer()).spectatorTarget = null;
-			return;
-		}
-		
 		fireGameEvent(event, game);
 	}
 	
@@ -385,34 +359,6 @@ class EventManager implements Listener
 		if ( Helper.isSpectator(game, event.getPlayer()) )
 		{
 			event.setCancelled(true);
-			Material held = event.getPlayer().getItemInHand().getType();
-			
-			if ( held == Settings.teleportModeItem )
-			{
-				if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
-					plugin.spectatorManager.doSpectatorTeleport(event.getPlayer(), false);
-				else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
-					plugin.spectatorManager.doSpectatorTeleport(event.getPlayer(), true);
-			}
-			else if ( held == Settings.followModeItem )
-			{
-				PlayerInfo info = game.getPlayerInfo(event.getPlayer());
-				
-				if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK )
-				{
-					String target = plugin.spectatorManager.getNextFollowTarget(game, event.getPlayer(), info.spectatorTarget, true);
-					info.spectatorTarget = target;
-					plugin.spectatorManager.checkFollowTarget(game, event.getPlayer(), target);
-					event.getPlayer().sendMessage("Following " + target);
-				}
-				else if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK )
-				{
-					String target = plugin.spectatorManager.getNextFollowTarget(game, event.getPlayer(), info.spectatorTarget, false);
-					info.spectatorTarget = target;
-					plugin.spectatorManager.checkFollowTarget(game, event.getPlayer(), target);
-					event.getPlayer().sendMessage("Following " + target);
-				}
-			}
 			return;
 		}
 		// prevent spectators from interfering with other players' block placement

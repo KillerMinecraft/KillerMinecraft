@@ -1,6 +1,5 @@
 package com.ftwinston.KillerMinecraft;
 
-import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class Settings
@@ -22,8 +21,6 @@ public class Settings
 	allowLateJoiners;
 	
 	public static final int minPlayerLimit = 2, maxPlayerLimit = 200;
-		
-	public static Material teleportModeItem = Material.WATCH, followModeItem = Material.ARROW;
 	
 	public static void setup(KillerMinecraft plugin)
 	{
