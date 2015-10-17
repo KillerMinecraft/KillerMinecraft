@@ -115,7 +115,7 @@ public abstract class GameMode extends KillerModule
 		}
 	}
 
-	protected Random random = new Random();
+	public Random random = new Random();
 	public void allocateTeams(List<Player> players)
 	{
 		TeamInfo[] teams = getTeams();
@@ -215,7 +215,7 @@ public abstract class GameMode extends KillerModule
 
 	protected final int getNumWorlds() { return game.getWorlds().size(); }
 
-	protected final World getWorld(int number) { return game.getWorlds().get(number); }
+	public final World getWorld(int number) { return game.getWorlds().get(number); }
 
 	public void handlePortal(TeleportCause cause, Location entityLoc, PortalHelper helper)
 	{

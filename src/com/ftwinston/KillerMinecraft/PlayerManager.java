@@ -31,48 +31,7 @@ class PlayerManager
 		else
 			playerData = new YamlConfiguration();		
 	}
-/*
-	// player either died, or disconnected and didn't rejoin in the required time
-	public void playerKilled(final Game game, final Player player)
-	{
-		if ( game == null || !game.getGameState().usesGameWorlds )
-			return;
-		
-		Info info = game.getPlayerInfo().get(player.getName());
-		if ( info != null )
-			info.setAlive(false);
-		
-		if ( game.getOnlinePlayers(new PlayerFilter().alive()).size() == 0 )
-		{// no one still playing, so end the game
-			game.getGameMode().gameFinished();
-			game.endGame(null);
-			return;
-		}
-		
-		game.getGameMode().playerKilled(player);
-		
-		if ( game.getGameMode().isAllowedToRespawn(player) )
-		{
-			setAlive(game, player, true);
-			return;
-		}
-		
-		game.getGameMode().playerQuit(player);
-		
-		// change this player's scoreboard team, so it's obvious that they're dead 
-		if ( game.scoreboard != Bukkit.getScoreboardManager().getMainScoreboard() )
-		{
-			info.setAlive(false);
-			info.setTeam(null); 
-		}
-		
-		if ( !Settings.allowSpectators )
-		{
-			putPlayerInStagingWorld(player);
-		}
-	}
-*/	
-
+	
 	private File playerDataFile;
 	private YamlConfiguration playerData = null;
 		

@@ -105,11 +105,7 @@ class EventManager implements Listener
 				if ( player == null )
 					return;
 				
-				// when you die a spectator, be made able to fly again when you respawn
-				if ( Helper.isSpectator(game, player) )
-					Helper.makeSpectator(game, player);
-				else
-					player.setCompassTarget(game.getCompassTarget(player));
+				player.setCompassTarget(game.getCompassTarget(player));
 			}
 		});
 	}
