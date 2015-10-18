@@ -315,10 +315,6 @@ public class Game
 			getGameMode().playerJoinedLate(player);
 
 			getGameMode().sendGameModeHelpMessage(player);
-			
-			// hide all spectators from this player
-			for ( Player spectator : getOnlinePlayers(new PlayerFilter().onlySpectators().exclude(player)) )
-				Helper.hidePlayer(player, spectator);
 						
 			if ( player.getInventory().contains(Material.COMPASS) )
 			{

@@ -48,16 +48,12 @@ public class Helper
 	
 	public static void makeSpectator(Game game, Player player)
 	{
-		for (Player p : game.getOnlinePlayers(new PlayerFilter().includeSpectators()))
-			if (p != player && p.canSee(player))
-				Helper.hidePlayer(p, player);
-
 		game.getPlayerInfo(player).setSpectator(true);
 		
 		if ( player.isDead() )
 			return;
 
-		player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Clicking has different effects depending on the selected item. Type " + ChatColor.YELLOW + "/spec" + ChatColor.RESET + " to list available commands.");
+		player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact.");
 		
 		player.setGameMode(org.bukkit.GameMode.SPECTATOR);
 				

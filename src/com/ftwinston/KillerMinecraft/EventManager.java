@@ -105,6 +105,8 @@ class EventManager implements Listener
 				if ( player == null )
 					return;
 				
+				if (Helper.isSpectator(game, player))
+					Helper.makeSpectator(game, player);
 				player.setCompassTarget(game.getCompassTarget(player));
 			}
 		});
