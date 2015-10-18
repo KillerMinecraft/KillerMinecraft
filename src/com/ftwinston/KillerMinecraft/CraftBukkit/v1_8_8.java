@@ -118,15 +118,10 @@ public class v1_8_8 extends CraftBukkitAccess
 		((CraftPlayer)viewer).getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(action, subject));
 	}
 	
-	public void forceRespawn(final Player player)
-    {
-    	plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-            @Override
-            public void run() {
-            	PacketPlayInClientCommand packet = new PacketPlayInClientCommand(PacketPlayInClientCommand.EnumClientCommand.PERFORM_RESPAWN);
-                ((CraftPlayer) player).getHandle().playerConnection.a(packet); // obfuscated
-            }
-        }, 1);
+	public void forceRespawn(Player player)
+	{
+    	PacketPlayInClientCommand packet = new PacketPlayInClientCommand(PacketPlayInClientCommand.EnumClientCommand.PERFORM_RESPAWN);
+        ((CraftPlayer) player).getHandle().playerConnection.a(packet); // obfuscated;
 	}
 	
 	public void bindRegionFiles()
@@ -196,16 +191,11 @@ public class v1_8_8 extends CraftBukkitAccess
 	public void forceUnloadWorld(org.bukkit.World world)
 	{
 		world.setAutoSave(false);
+
 		for ( Player player : world.getPlayers() )
 			player.kickPlayer("World is being deleted... and you were in it!");
 		
-		// formerly used server.unloadWorld at this point. But it was sometimes failing, even when I force-cleared the player list
-		Map<String, org.bukkit.World> worlds = getField(CraftServer.class, plugin.getServer(), "worlds");
-		worlds.remove(world.getName().toLowerCase());
-		
-		MinecraftServer ms = getMinecraftServer();
-		CraftWorld craftWorld = (CraftWorld)world;
-		ms.worlds.remove(ms.worlds.indexOf(craftWorld.getHandle()));
+		plugin.getServer().unloadWorld(world, false);
 	}
 	
 	public void accountForDefaultWorldDeletion(org.bukkit.World newDefault)

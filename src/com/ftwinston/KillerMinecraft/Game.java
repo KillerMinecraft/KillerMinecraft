@@ -100,8 +100,13 @@ public class Game
 				for ( Player player : getOnlinePlayers(new PlayerFilter().onlySpectators()) )
 					Helper.stopSpectating(this, player);
 				
-				for ( OfflinePlayer player : getPlayers() )
+				for ( Player player : getOnlinePlayers() )
+				{
+					if (player.isDead())
+						plugin.craftBukkit.forceRespawn(player);
+					
 					removePlayerFromGame(player);
+				}
 				plugin.playerManager.playerDataChanged();
 				
 				plugin.worldManager.deleteGameWorlds(this, new Runnable() {
@@ -195,7 +200,7 @@ public class Game
 			{
 				getGameMode().gameFinished();
 				
-				plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
+				plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
 					@Override
 					public void run() {
 						setGameState(GameState.WORLD_DELETION);

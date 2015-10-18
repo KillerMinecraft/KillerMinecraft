@@ -158,7 +158,7 @@ class WorldManager
 	{
 		plugin.log.info("Deleting worlds for " + game.getName());
 		
-		List<World> worlds = game.getWorlds();
+		final List<World> worlds = game.getWorlds();
 		String[] worldNames = new String[worlds.size()];
 		
 		Location ejectTo = Bukkit.getServer().getWorlds().get(0).getSpawnLocation();
@@ -172,7 +172,7 @@ class WorldManager
 			
 			for ( Player player : world.getPlayers() )
 				Helper.teleport(player, ejectTo);
-
+			
 			plugin.craftBukkit.forceUnloadWorld(world);
 		}
 		
