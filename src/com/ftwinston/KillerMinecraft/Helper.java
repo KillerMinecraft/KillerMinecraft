@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -52,7 +53,7 @@ public class Helper
 		if ( player.isDead() )
 			return;
 
-		player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact.");
+		player.sendMessage("You are now a spectator. You can fly, but can't be seen or interact. Press " + ChatColor.GOLD + "1" + ChatColor.RESET + " to show players you can teleport to, and left click on them to view from their perspective.");
 		
 		player.setGameMode(org.bukkit.GameMode.SPECTATOR);
 				

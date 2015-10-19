@@ -1151,7 +1151,14 @@ class MenuManager
 	{
 		Inventory menu = Bukkit.createInventory(null, 9, "Killer Minecraft: " + game.getName());
 
-		// TODO: call a vote?
+		ItemStack voteItem = new ItemStack(Material.ENCHANTED_BOOK);
+		setNameAndLore(voteItem, "Call a vote", "Click to see options");
+		addItemToMenu(this, new MenuItem(menu, 0, voteItem) {
+			@Override
+			public void runWhenClicked(Player player) {
+				Vote.showVoteMenu(player);
+			}
+		});
 		
 		addItemToMenu(this, new MenuItem(menu, 8, quitItem) {
 			@Override
