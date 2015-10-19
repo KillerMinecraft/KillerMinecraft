@@ -243,7 +243,8 @@ public class v1_8_8 extends CraftBukkitAccess
         if (server.getWorld(name) == null)
             return null;
 
-        worldServer.b(); // obfuscated
+        worldServer.a(worldSettings); // obfuscated - choose a sensible spawn point
+        worldServer.b(); // obfuscated - set villages object that will otherwise cause a crash
         worldServer.worldMaps = console.worlds.get(0).worldMaps;
 
         worldServer.tracker = new EntityTracker(worldServer);
