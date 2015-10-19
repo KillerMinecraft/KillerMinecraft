@@ -1,5 +1,7 @@
 package com.ftwinston.KillerMinecraft;
 
+import java.util.List;
+
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class Settings
@@ -20,6 +22,9 @@ public class Settings
 	allowSpectators,
 	allowLateJoiners;
 	
+	public static double defaultWorldBorderSize;
+	public static double[] worldBorderSizes;
+	
 	public static final int minPlayerLimit = 2, maxPlayerLimit = 200;
 	
 	public static void setup(KillerMinecraft plugin)
@@ -37,6 +42,14 @@ public class Settings
 		allowSpectators = config.getBoolean("allowSpectators", true);
 		allowLateJoiners = config.getBoolean("allowLateJoiners", true);
 		allowPlayerLimits = config.getBoolean("allowPlayerLimits", true);
+		
+		defaultWorldBorderSize = config.getDouble("defaultWorldBorderSize", 0);
+		
+		List<Double> sizes = config.getDoubleList("worldBorderSizes");
+		worldBorderSizes = new double[sizes == null ? 0 : sizes.size()];
+		if (sizes != null)
+			for (int i=0; i<worldBorderSizes.length; i++)
+				worldBorderSizes[i] = sizes.get(i).doubleValue();
 		
 		numGames = config.getInt("numGames", 4);
 		if ( numGames < 1 )

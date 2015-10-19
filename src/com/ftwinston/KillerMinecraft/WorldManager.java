@@ -9,6 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
+import org.bukkit.WorldBorder;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -239,6 +240,15 @@ class WorldManager
 					{
 						world.setTicksPerAnimalSpawns(400);
 						world.setMonsterSpawnLimit(game.getGameMode().getAnimalSpawnLimit(game.animalNumbers));
+					}
+					
+					if (game.getWorldBorderSize() != 0)
+					{
+						WorldBorder border = world.getWorldBorder();
+						border.setSize(game.getWorldBorderSize());
+						border.setDamageAmount(1);
+						border.setDamageBuffer(0);
+						border.setWarningDistance(8);
 					}
 				}
 				

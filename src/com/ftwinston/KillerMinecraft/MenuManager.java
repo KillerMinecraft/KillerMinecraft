@@ -39,6 +39,7 @@ class MenuManager
 		SETUP_PLAYERS,
 		SETUP_MONSTERS,
 		SETUP_ANIMALS,
+		SETUP_WORLD_BORDERS,
 
 		SPECIFIC_OPTION_CHOICE,
 
@@ -107,6 +108,7 @@ class MenuManager
 		inventories.put(GameMenu.SETUP_PLAYERS, createPlayersMenu());
 		inventories.put(GameMenu.SETUP_MONSTERS, createMonstersMenu());
 		inventories.put(GameMenu.SETUP_ANIMALS, createAnimalsMenu());
+		inventories.put(GameMenu.SETUP_WORLD_BORDERS, createWorldBordersMenu());
 	}
 	
 	static void addItemToMenu(MenuManager instance, MenuItem item) 
@@ -348,7 +350,7 @@ class MenuManager
 			}
 		});
 		*/
-		final ItemStack rootPlayerNumbers = new ItemStack(Material.SKULL_ITEM, 1, (short)3); // steve head
+		ItemStack rootPlayerNumbers = new ItemStack(Material.SKULL_ITEM, 1, (short)3); // steve head
 		setNameAndLore(rootPlayerNumbers, "Player limits", "Specify the maximum number of", "players allowed into the game");
 		addItemToMenu(this, new MenuItem(menu, 3, rootPlayerNumbers) {
 			@Override
@@ -357,7 +359,7 @@ class MenuManager
 			}
 		});
 		
-		final ItemStack rootMonsters = new ItemStack(Material.SKULL_ITEM, 1, (short)4); // creeper head
+		ItemStack rootMonsters = new ItemStack(Material.SKULL_ITEM, 1, (short)4); // creeper head
 		setNameAndLore(rootMonsters, "Monster Numbers", "Control the number of", "monsters that spawn");
 		addItemToMenu(this, new MenuItem(menu, 4, rootMonsters) {
 			@Override
@@ -366,7 +368,7 @@ class MenuManager
 			}
 		});
 		
-		final ItemStack rootAnimals = new ItemStack(Material.EGG);
+		ItemStack rootAnimals = new ItemStack(Material.EGG);
 		setNameAndLore(rootAnimals, "Animal Numbers", "Control the number of", "animals that spawn");
 		addItemToMenu(this, new MenuItem(menu, 5, rootAnimals) {
 			@Override
@@ -374,6 +376,18 @@ class MenuManager
 				show(player, GameMenu.SETUP_ANIMALS);
 			}
 		});
+		
+		if (Settings.worldBorderSizes.length > 0)
+		{
+			ItemStack worldBorders = new ItemStack(Material.GLASS);
+			setNameAndLore(worldBorders, "World Borders", "Limit the size of", "game worlds");
+			addItemToMenu(this, new MenuItem(menu, 6, worldBorders) {
+				@Override
+				public void runWhenClicked(Player player) {
+					show(player, GameMenu.SETUP_WORLD_BORDERS);
+				}
+			});
+		}
 		
 		final ItemStack rootOpen = new ItemStack(Material.IRON_DOOR);
 		setNameAndLore(rootOpen, "Open game lobby", "Open this game, so", "that players can join");
@@ -843,6 +857,60 @@ class MenuManager
 		return menu;
 	}
 	
+	private Inventory createWorldBordersMenu()
+	{
+		final Inventory menu = Bukkit.createInventory(null, 9, "World Borders");
+		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
+			@Override
+			public void runWhenClicked(Player player) {
+				show(player, GameMenu.SETUP_ROOT);
+			}
+		});
+		
+		int pos = 1;
+		for (double d : Settings.worldBorderSizes)
+		{
+			if (pos >= 9)
+				break;
+			
+			final double size = d;
+			
+			addItemToMenu(this, new MenuItem(menu, pos++, null) {
+				@Override
+				public void runWhenClicked(Player player) {
+					game.setWorldBorderSize(size);
+					if (size == 0)
+						settingsChanged(" disabled world borders");
+					else
+						settingsChanged(" changed the world border size to '" + size + "'");
+					repopulateMenu(GameMenu.SETUP_WORLD_BORDERS);
+				}
+				
+				@Override
+				public void recalculateStack() {
+					ItemStack stack;
+					
+					if (size == 0)
+					{
+						stack = new ItemStack(Material.THIN_GLASS);
+						setNameAndLore(stack, "No borders");
+					}
+					else
+					{
+						stack = new ItemStack(Material.BRICK);
+						setNameAndLore(stack, size + " metres");
+					}
+					
+					if (game.getWorldBorderSize() == size)
+						stack = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(stack);
+					
+					setStack(stack);
+				}
+			});
+		}
+			
+		return menu;
+	}
 	ItemStack startItem;
 	
 	private Inventory createLobbyMenu()

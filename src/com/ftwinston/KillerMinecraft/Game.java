@@ -33,6 +33,7 @@ public class Game
 		plugin = killer;
 		number = gameNumber;
 		
+		worldBorderSize = Settings.defaultWorldBorderSize;
 		menuManager = new MenuManager(this);
 		reset();
 	}
@@ -213,6 +214,10 @@ public class Game
 		menuManager.updateMenus();
 	}
 	
+	private double worldBorderSize = 0;
+	public double getWorldBorderSize() { return worldBorderSize; }
+	public void setWorldBorderSize(double size) { worldBorderSize = size; }
+	
 	private boolean isPrivate;
 	public boolean isPrivate() { return isPrivate; }
 	public void setPrivate(boolean b) { isPrivate = b; }
@@ -229,6 +234,7 @@ public class Game
 		boolean wasEmpty = gameState == GameState.EMPTY;
 		gameState = GameState.INITIALIZING;
 		
+		worldBorderSize = Settings.defaultWorldBorderSize;
 		isPrivate = false;
 		hostPlayer = null;
 		

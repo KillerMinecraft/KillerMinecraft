@@ -4,6 +4,8 @@ nothingButKiller:      false
 defaultGameMode:       Killer_on_the_Loose
 defaultWorldGen:       Default_World
 killerWorldNamePrefix: killer
+defaultWorldBorderSize: 0
+worldBorderSizes:      [0, 400, 800, 1200, 1600, 2000]
 filterChat:            true
 filterScoreboard:      true
 allowSpectators:       true
