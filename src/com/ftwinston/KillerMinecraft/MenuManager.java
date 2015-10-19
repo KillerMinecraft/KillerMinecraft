@@ -730,20 +730,20 @@ class MenuManager
 			
 			@Override
 			public void recalculateStack() {
-				ItemStack stack;
 				if ( game.getGameState() == GameState.EMPTY || game.getGameState() == GameState.SETUP )
-					stack = null;
-				else
 				{
-					stack = new ItemStack(Material.IRON_FENCE);
-					if ( game.isLocked() )
-					{
-						setNameAndLore(stack, "Unlock the game", "This game is locked, so", "no one else can join,", "even if players leave");
-						stack = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(stack);
-					}
-					else
-						setNameAndLore(stack, "Lock the game", "Lock this game, so that", "no one else can join,", "even if players leave");
+					setStack(null);
+					return;
 				}
+
+				ItemStack stack = new ItemStack(Material.IRON_FENCE);
+				if ( game.isLocked() )
+				{
+					setNameAndLore(stack, "Unlock the game", "This game is locked, so", "no one else can join,", "even if players leave");
+					stack = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(stack);
+				}
+				else
+					setNameAndLore(stack, "Lock the game", "Lock this game, so that", "no one else can join,", "even if players leave");
 				setStack(stack);
 			}
 		});
@@ -1371,6 +1371,7 @@ class MenuManager
 		repopulateMenu(GameMenu.SETUP_GAME_MODE_CONFIG);
 		repopulateMenu(GameMenu.SETUP_WORLD_GEN);
 		repopulateMenu(GameMenu.SETUP_WORLD_GEN_CONFIG);
+		repopulateMenu(GameMenu.SETUP_PLAYERS);
 		repopulateMenu(GameMenu.TEAM_SELECTION);
 		
 		updateGameIcon();
