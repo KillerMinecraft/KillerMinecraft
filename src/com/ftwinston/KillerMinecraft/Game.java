@@ -74,6 +74,12 @@ public class Game
 		if ( gameState == newState )
 			return;
 		
+		if (currentVote != null)
+		{
+			currentVote.cancelTask();
+			currentVote = null;
+		}
+		
 		if ( newState == GameState.ACTIVE )
 			startProcesses();
 		else if ( gameState == GameState.ACTIVE )
@@ -398,41 +404,19 @@ public class Game
 		
 		menuManager.updateGameIcon();
 	}
+
+	Vote currentVote = null;
+	
+	public void startVote(final Vote vote)	
+	{
+		if (currentVote != null)
+			return;
+		
+		currentVote = vote;
+		vote.start();
+	}
 	
 	void startGame() {
-		/*
-		if ( getGameState().canCancel )
-		{
-			plugin.log.info(hostPlayer + " cancelled " + getName());
-			
-			if ( getGameState() == GameState.worldGeneration )
-			{
-				if ( plugin.worldManager.chunkBuilderTaskID == -1 )
-				{
-					player.sendMessage("Unable to cancel");
-					return; // can't cancel
-				}
-				
-				plugin.getServer().getScheduler().cancelTask(plugin.worldManager.chunkBuilderTaskID);
-				plugin.worldManager.chunkBuilderTaskID = -1;
-			}
-			
-			// remove this game from the queue if i'm in the queue, and then let the next queued game start 
-			if ( generationQueue.peek() == this )
-			{
-				generationQueue.remove();
-				Game nextInQueue = generationQueue.peek();
-				if ( nextInQueue != null ) // start the next queued game generating
-					nextInQueue.setGameState(GameState.worldGeneration);
-			}
-			else
-				generationQueue.remove(this);
-			
-			broadcastMessage(player.getName() + " cancelled the game. Everyone has left the game, and will need to rejoin.");
-			setGameState(GameState.worldDeletion);
-			return;
-		}
-		*/
 		if ( getGameState() != GameState.LOBBY )
 			return;
 		
@@ -441,7 +425,7 @@ public class Game
 	}
 
 	void finishGame(boolean delayCleanup)
-	{
+	{	
 		if ( !plugin.isEnabled() )
 			setGameState(GameState.EMPTY);
 		

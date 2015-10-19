@@ -519,34 +519,30 @@ class EventManager implements Listener
 			
 			return;
 		}
-		/*
-		boolean isVote = false;
-		if ( plugin.voteManager.isInVote() )
-		{
-			if ( event.getMessage().equalsIgnoreCase("Y") && plugin.voteManager.doVote(event.getPlayer(), true) )
-			{
-				event.setMessage(ChatColor.GREEN + "Y");
-				isVote = true;
-			}
-			else if ( event.getMessage().equalsIgnoreCase("N") && plugin.voteManager.doVote(event.getPlayer(), false) )
-			{
-				event.setMessage(ChatColor.RED + "N");
-				isVote = true;
-			}
-		}
-		*/
+		
 		if ( Settings.filterChat )
 		{// players that are not in this game's worlds should not see this message
-				for (Player recipient : new HashSet<Player>(event.getRecipients()))
-					if ( recipient != null && recipient.isOnline()
-						&& recipient.getWorld() != world
-						&& plugin.getGameForWorld(recipient.getWorld()) != game )
-						event.getRecipients().remove(recipient);
+			for (Player recipient : new HashSet<Player>(event.getRecipients()))
+				if ( recipient != null && recipient.isOnline()
+					&& recipient.getWorld() != world
+					&& plugin.getGameForWorld(recipient.getWorld()) != game )
+					event.getRecipients().remove(recipient);
 		}
-		/*
-		if ( isVote )
-			return;
-		*/
+		
+		if (game.currentVote != null)
+		{
+			if ( event.getMessage().equalsIgnoreCase("Y") && game.currentVote.placeVote(event.getPlayer(), true) )
+			{
+				event.setMessage(ChatColor.GREEN + "Y");
+				return;
+			}
+			else if ( event.getMessage().equalsIgnoreCase("N") && game.currentVote.placeVote(event.getPlayer(), false) )
+			{
+				event.setMessage(ChatColor.RED + "N");
+				return;
+			}
+		}
+
 		if ( game.getGameState() != GameState.FINISHED && Helper.isSpectator(game, event.getPlayer()) )
 		{// mark spectator chat, and hide it from non-spectators
 			event.setMessage(ChatColor.YELLOW + "[Spec] " + ChatColor.RESET + event.getMessage());

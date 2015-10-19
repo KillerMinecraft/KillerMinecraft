@@ -57,7 +57,7 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
         
 		playerManager = new PlayerManager(this);
         recipeManager = new RecipeManager();
-        //voteManager = new VoteManager(this);
+        Vote.setupConversation();
 
         if ( Settings.nothingButKiller )
         	worldManager.hijackDefaultWorld();
