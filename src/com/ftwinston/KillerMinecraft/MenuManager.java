@@ -377,7 +377,7 @@ class MenuManager
 			}
 		});
 		
-		if (Settings.worldBorderSizes.length > 0)
+		if (Settings.worldBorderSizes.length > 1)
 		{
 			ItemStack worldBorders = new ItemStack(Material.GLASS);
 			setNameAndLore(worldBorders, "World Borders", "Limit the size of", "game worlds");
@@ -874,8 +874,8 @@ class MenuManager
 				break;
 			
 			final double size = d;
-			
-			addItemToMenu(this, new MenuItem(menu, pos++, null) {
+
+			MenuItem item = new MenuItem(menu, pos++, null) {
 				@Override
 				public void runWhenClicked(Player player) {
 					game.setWorldBorderSize(size);
@@ -906,9 +906,11 @@ class MenuManager
 					
 					setStack(stack);
 				}
-			});
+			};
+			item.recalculateStack();
+			addItemToMenu(this, item);
 		}
-			
+
 		return menu;
 	}
 	ItemStack startItem;
