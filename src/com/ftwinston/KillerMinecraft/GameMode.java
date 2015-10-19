@@ -12,6 +12,7 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.scoreboard.NameTagVisibility;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -47,14 +48,17 @@ public abstract class GameMode extends KillerModule
 		if ( teams == null || teams.length == 0 )
 			return Bukkit.getScoreboardManager().getMainScoreboard();
 		
-		for ( TeamInfo teamInfo : teams )
-			teamInfo.setScoreboardScore(null);
-		
 		Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
 		for ( TeamInfo teamInfo : teams )
 		{
+			teamInfo.setScoreboardScore(null);
+			
 			Team team = scoreboard.registerNewTeam(teamInfo.getName());
+			team.setAllowFriendlyFire(true);
+			team.setCanSeeFriendlyInvisibles(true);
+			team.setNameTagVisibility(NameTagVisibility.HIDE_FOR_OTHER_TEAMS);
 			team.setPrefix(teamInfo.getChatColor().toString());
+			teamInfo.setScoreboardTeam(team);
 			
 			for ( Player player : getOnlinePlayers(new PlayerFilter().team(teamInfo)) )
 				team.addEntry(player.getName());
