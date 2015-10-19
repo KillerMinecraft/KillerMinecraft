@@ -266,6 +266,8 @@ class WorldManager
 		catch (Exception ex)
 		{
 			plugin.log.warning("A crash occurred during world generation. Aborting...");
+			plugin.log.warning(ex.toString());
+			
 			game.broadcastMessage("An error occurred during world generation.\nPlease try again...");
 			
 			game.setGameState(GameState.WORLD_DELETION);
@@ -274,9 +276,9 @@ class WorldManager
 
 	// this is a clone of CraftServer.createWorld, amended to accept extra block populators
 	// it also spreads chunk creation across multiple ticks, instead of locking up the server while it generates 
-    public World createWorld(WorldConfig config, final Runnable runWhenDone)
+    public World createWorld(final WorldConfig config, final Runnable runWhenDone)
     {
-    	World world = plugin.craftBukkit.createWorld(config.getWorldType(), config.getEnvironment(), config.getName(), config.getSeed(), config.getGenerator(), config.getGeneratorSettings(), config.getGenerateStructures());
+    	final World world = plugin.craftBukkit.createWorld(config.getWorldType(), config.getEnvironment(), config.getName(), config.getSeed(), config.getGenerator(), config.getGeneratorSettings(), config.getGenerateStructures());
     	
         for ( BlockPopulator populator : config.getExtraPopulators() )
         	world.getPopulators().add(populator);
@@ -291,7 +293,13 @@ class WorldManager
 			firstReportFraction += ChunkBuilder.reportIntervalFraction;
 		
         int worldNumber = config.getGame().getWorlds().size(), numberOfWorlds = config.getGame().getGameMode().getWorldsToGenerate().length;
-        ChunkBuilder cb = new ChunkBuilder(config.getGame(), 12, server, world, worldNumber, numberOfWorlds, firstReportFraction, runWhenDone);
+        ChunkBuilder cb = new ChunkBuilder(config.getGame(), 12, server, world, worldNumber, numberOfWorlds, firstReportFraction, new Runnable() {
+        	public void run()
+        	{
+        		plugin.craftBukkit.finishCreateWorld(world, config.getWorldType(), config.getEnvironment(), config.getName(), config.getSeed(), config.getGenerator(), config.getGeneratorSettings(), config.getGenerateStructures());
+            	runWhenDone.run();
+        	};
+    	});
         chunkBuilderTaskID = server.getScheduler().scheduleSyncRepeatingTask(plugin, cb, 1L, 1L);
     	return world;
     }

@@ -86,6 +86,8 @@ public abstract class CraftBukkitAccess
 	public abstract void accountForDefaultWorldDeletion(World newDefault);
 	
 	public abstract World createWorld(org.bukkit.WorldType type, Environment env, String name, long seed, ChunkGenerator generator, String generatorSettings, boolean generateStructures);
+	public abstract void finishCreateWorld(org.bukkit.World world, org.bukkit.WorldType type, Environment env, String name, long seed, ChunkGenerator generator, String generatorSettings, boolean generateStructures);
+	
 	public abstract boolean isChunkGenerated(Chunk chunk);
 	
 	public abstract Location findNearestNetherFortress(Location loc);
