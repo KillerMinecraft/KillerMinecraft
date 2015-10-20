@@ -168,13 +168,14 @@ class WorldManager
 		{
 			World world = worlds.get(i);
 			worldNames[i] = world.getName();
+			world.setAutoSave(false);
 			
 			plugin.gamesByWorld.remove(world.getName());
 			
 			for ( Player player : world.getPlayers() )
 				Helper.teleport(player, ejectTo);
 			
-			plugin.craftBukkit.forceUnloadWorld(world);
+			plugin.getServer().unloadWorld(world, false);
 		}
 		
 		worlds.clear();

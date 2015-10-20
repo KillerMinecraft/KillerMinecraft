@@ -188,16 +188,6 @@ public class v1_8_8 extends CraftBukkitAccess
 		return true;
 	}
 	
-	public void forceUnloadWorld(org.bukkit.World world)
-	{
-		world.setAutoSave(false);
-
-		for ( Player player : world.getPlayers() )
-			player.kickPlayer("World is being deleted... and you were in it!");
-		
-		plugin.getServer().unloadWorld(world, false);
-	}
-	
 	public void accountForDefaultWorldDeletion(org.bukkit.World newDefault)
 	{
 		// playerFileData in the player list must point to that of the new default world, instead of the deleted original world

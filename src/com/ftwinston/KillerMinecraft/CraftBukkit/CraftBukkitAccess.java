@@ -81,7 +81,6 @@ public abstract class CraftBukkitAccess
 	}
 	
 	public abstract boolean clearWorldReference(String worldName);
-	public abstract void forceUnloadWorld(World world);
 	
 	public abstract void accountForDefaultWorldDeletion(World newDefault);
 	
