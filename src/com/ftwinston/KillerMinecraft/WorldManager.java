@@ -175,7 +175,7 @@ class WorldManager
 			for ( Player player : world.getPlayers() )
 				Helper.teleport(player, ejectTo);
 			
-			plugin.getServer().unloadWorld(world, false);
+			plugin.getServer().unloadWorld(world, true);
 		}
 		
 		worlds.clear();
