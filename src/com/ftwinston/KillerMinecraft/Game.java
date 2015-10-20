@@ -101,6 +101,7 @@ public class Game
 				break;
 			case WORLD_DELETION:
 			{
+				plugin.log.info("Deleting worlds for game " + getNumber() + "...");
 				plugin.eventListener.unregisterEvents(getGameMode());
 				plugin.eventListener.unregisterEvents(getWorldGenerator());
 

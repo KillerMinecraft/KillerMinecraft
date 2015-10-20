@@ -892,7 +892,7 @@ class MenuManager
 					
 					if (size == 0)
 					{
-						stack = new ItemStack(Material.THIN_GLASS);
+						stack = new ItemStack(Material.BARRIER);
 						setNameAndLore(stack, "No borders");
 					}
 					else
