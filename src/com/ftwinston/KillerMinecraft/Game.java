@@ -397,6 +397,10 @@ public class Game
 			finishGame(false);
 		else if ( player.getName() == hostPlayer && !getGameState().usesWorlds )
 		{
+			for ( Player other : getOnlinePlayers() )
+				if (other != player)
+					other.closeInventory();
+				
 			broadcastMessage("The host has left, so the game has been cancelled.");
 			setGameState(GameState.EMPTY);
 			return;
