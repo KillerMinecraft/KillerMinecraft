@@ -620,10 +620,13 @@ class EventManager implements Listener
 			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				public void run()
 				{
-					OfflinePlayer player = Helper.getOfflinePlayer(playerName);
-					if ( player != null )
+					OfflinePlayer player = Helper.getPlayer(playerName);
+					if (player != null && player.isOnline())
+					{
 						return;
+					}
 					
+					player = Helper.getOfflinePlayer(playerName);
 					game.removePlayerFromGame(player, true);
 				}
 			}, 100);
