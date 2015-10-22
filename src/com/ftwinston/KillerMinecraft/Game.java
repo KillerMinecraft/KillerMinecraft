@@ -149,7 +149,7 @@ public class Game
 					plugin.eventListener.registerEvents(getWorldGenerator());
 				
 				final Game game = this;
-				plugin.worldManager.generateWorlds(this, worldGenerator, new Runnable() {
+				plugin.worldManager.generateWorlds(this, new Runnable() {
 					@Override
 					public void run() {
 						setGameState(GameState.STARTING);

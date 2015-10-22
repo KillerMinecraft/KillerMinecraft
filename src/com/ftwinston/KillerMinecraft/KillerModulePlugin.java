@@ -33,4 +33,6 @@ public abstract class KillerModulePlugin extends JavaPlugin
 	}
 	
 	public String getDisplayName() { return getName().replace('_', ' '); }
+	
+	abstract void initialize(KillerMinecraft plugin);
 }

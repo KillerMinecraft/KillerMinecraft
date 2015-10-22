@@ -222,7 +222,7 @@ class WorldManager
 		}
 	}
 
-	public void generateWorlds(final Game game, final WorldGenerator generator, final Runnable runWhenDone)
+	public void generateWorlds(final Game game, final Runnable runWhenDone)
 	{
 		game.broadcastMessage(game.getGameMode().getNumWorlds() == 1 ? "Generating game world..." : "Generating game worlds...");
 		
@@ -262,7 +262,7 @@ class WorldManager
 	
 		try
 		{
-			generator.createWorlds(game, generationComplete);
+			createWorlds(game, generationComplete);
 		}
 		catch (Exception ex)
 		{
@@ -275,6 +275,58 @@ class WorldManager
 		}
 	}
 
+	void createWorlds(Game game, Runnable runWhenDone)
+	{
+		final Environment[] environments = game.getGameMode().getWorldsToGenerate();
+				
+		for ( int i=environments.length-1; i>=0; i-- )
+			runWhenDone = new WorldSetupRunner(game, environments[i], i, ((float)i)/environments.length, runWhenDone);
+		
+		runWhenDone.run();
+	}
+	
+	private class WorldSetupRunner implements Runnable
+	{
+		public WorldSetupRunner(Game game, Environment environment, int num, float startFraction, Runnable runNext)
+		{
+			this.game = game;
+			this.environment = environment;
+			this.num = num;
+			this.runNext = runNext;
+			this.startFraction = startFraction;
+		}
+	
+		private Game game;
+		private Environment environment;
+		private int num;
+		private float startFraction;
+		private Runnable runNext;
+		
+		public void run()
+		{
+			String worldName = Settings.killerWorldNamePrefix + "_" + game.getNumber() + "_" + num;
+			final WorldConfig worldConfig = new WorldConfig(game, worldName, environment, startFraction);
+			
+			WorldGenerator generator;
+			switch (environment)
+			{
+			case NORMAL:
+				generator = game.getWorldGenerator(); break;
+			case NETHER:
+				generator = game.getWorldGenerator(); break;
+			case THE_END:
+				generator = game.getWorldGenerator(); break;
+			default:
+				generator = null; break;
+			}
+			
+			if (generator == null)
+				createWorld(worldConfig, runNext);
+			else
+				generator.setupWorld(worldConfig, runNext);
+		}
+	}
+	
 	// this is a clone of CraftServer.createWorld, amended to accept extra block populators
 	// it also spreads chunk creation across multiple ticks, instead of locking up the server while it generates 
     public World createWorld(final WorldConfig config, final Runnable runWhenDone)

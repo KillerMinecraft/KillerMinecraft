@@ -161,12 +161,7 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 */
 	}
 
-	static void registerGameMode(GameModePlugin plugin)
-	{
-		plugin.initialize(instance);
-	}
-	
-	static void registerWorldGenerator(WorldGeneratorPlugin plugin)
+	static void registerPlugin(KillerModulePlugin plugin)
 	{
 		plugin.initialize(instance);
 	}

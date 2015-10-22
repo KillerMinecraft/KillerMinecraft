@@ -1,14 +1,19 @@
 package com.ftwinston.KillerMinecraft;
 
+import org.bukkit.World.Environment;
+
 public abstract class WorldGeneratorPlugin extends KillerModulePlugin
 {
 	public void onEnable()
 	{
-		KillerMinecraft.registerWorldGenerator(this);
+		KillerMinecraft.registerPlugin(this);
 	}
+	
+	public abstract Environment getWorldType();
 	
 	public abstract WorldGenerator createInstance();
 	
+	@Override
 	final void initialize(KillerMinecraft plugin)
 	{
 		// keep the world options in alphabetic order
