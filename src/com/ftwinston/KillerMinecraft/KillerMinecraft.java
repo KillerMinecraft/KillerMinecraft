@@ -70,7 +70,6 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 	}
 	
 	GameModePlugin defaultGameMode;
-	WorldGeneratorPlugin defaultWorldGen;
 	
 	@Override
 	public void run()
@@ -82,7 +81,7 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 			setEnabled(false);
 			return;
 		}
-		if ( WorldGenerator.worldGenerators.size() == 0 )
+		if ( WorldGenerator.overworldGenerators.size() == 0 )
 		{
 			log.warning("Killer cannot start: No world generators have been loaded!");
 			log.warning("Add some world generator plugins to your server!");
@@ -99,14 +98,7 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 			defaultGameMode = GameMode.get(0);
 			log.info("Default game mode not found: " + Settings.defaultGameMode);
 		}
-		
-		defaultWorldGen = WorldGenerator.getByName(Settings.defaultWorldGen);
-		if ( defaultWorldGen == null )
-		{
-			defaultWorldGen = WorldGenerator.get(0);
-			log.info("Default world generator not found: " + Settings.defaultWorldGen);
-		}
-		
+				
 		for ( int i = 0; i < games.length; i++ )
 			games[i] = new Game(this, i + 1);
 

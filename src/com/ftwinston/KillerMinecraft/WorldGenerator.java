@@ -4,18 +4,43 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 
 public abstract class WorldGenerator extends KillerModule
 {
-	static List<WorldGeneratorPlugin> worldGenerators = new ArrayList<WorldGeneratorPlugin>();
-	static WorldGeneratorPlugin get(int num) { return worldGenerators.get(num); }
-	static WorldGeneratorPlugin getByName(String name)
-	{
-		for ( WorldGeneratorPlugin plugin : worldGenerators )
-			if ( name.equalsIgnoreCase(plugin.getName()) )
-				return plugin;
+	static List<WorldGeneratorPlugin> overworldGenerators = new ArrayList<WorldGeneratorPlugin>();
+	static List<WorldGeneratorPlugin> netherGenerators = new ArrayList<WorldGeneratorPlugin>();
+	static List<WorldGeneratorPlugin> endGenerators = new ArrayList<WorldGeneratorPlugin>();
 		
-		return null;
+	static WorldGeneratorPlugin getDefault(Environment worldType)
+	{
+		List<WorldGeneratorPlugin> generators;
+		String defaultValue;
+		
+		switch(worldType)
+		{
+		case NORMAL:
+			generators = overworldGenerators;
+			defaultValue = Settings.defaultWorldGen;
+			break;
+		case NETHER:
+			generators = netherGenerators;
+			defaultValue = Settings.defaultNetherGen;
+			break;
+		case THE_END:
+			generators = endGenerators;
+			defaultValue = Settings.defaultEndGen;
+			break;
+		default:
+			return null;
+		}
+		
+		for (WorldGeneratorPlugin generator : overworldGenerators)
+			if (defaultValue.equalsIgnoreCase(generator.getName()))
+				return generator;
+		
+		KillerMinecraft.instance.log.info("Default " + worldType.name() + " world generator not found: " + defaultValue);
+		return generators.get(0);
 	}
 
 	protected final World createWorld(WorldConfig worldConfig, Runnable runWhenDone)

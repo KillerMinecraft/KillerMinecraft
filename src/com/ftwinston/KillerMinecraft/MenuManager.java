@@ -539,7 +539,7 @@ class MenuManager
 	
 	private Inventory createWorldGenMenu()
 	{
-		Inventory menu = Bukkit.createInventory(null, nearestNine(WorldGenerator.worldGenerators.size() + 2), "World generator selection");
+		Inventory menu = Bukkit.createInventory(null, nearestNine(WorldGenerator.overworldGenerators.size() + 2), "World generator selection");
 		
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
@@ -548,9 +548,9 @@ class MenuManager
 			}
 		});
 		
-		for ( int i=0; i<WorldGenerator.worldGenerators.size(); i++ )
+		for ( int i=0; i<WorldGenerator.overworldGenerators.size(); i++ )
 		{
-			final WorldGeneratorPlugin world = WorldGenerator.get(i);
+			final WorldGeneratorPlugin world = WorldGenerator.overworldGenerators.get(i);
 			
 			addItemToMenu(this, new MenuItem(menu, i + 2, null) {
 				@Override

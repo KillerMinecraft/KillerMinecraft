@@ -12,6 +12,8 @@ public class Settings
 	public static String
 	defaultGameMode,
 	defaultWorldGen,
+	defaultNetherGen,
+	defaultEndGen,
 	killerWorldNamePrefix;
 
 	public static boolean
@@ -34,6 +36,8 @@ public class Settings
 		
 		defaultGameMode = config.getString("defaultGameMode", "Killer_on_the_Loose");
 		defaultWorldGen = config.getString("defaultWorldGen", "Default_World");
+		defaultNetherGen = config.getString("defaultNetherGen", "Default_Nether");
+		defaultEndGen = config.getString("defaultEndGen", "Default_End");
 		killerWorldNamePrefix = config.getString("killerWorldNamePrefix", "killer");
 
 		nothingButKiller = config.getBoolean("nothingButKiller", false);

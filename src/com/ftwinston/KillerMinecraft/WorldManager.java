@@ -307,18 +307,7 @@ class WorldManager
 			String worldName = Settings.killerWorldNamePrefix + "_" + game.getNumber() + "_" + num;
 			final WorldConfig worldConfig = new WorldConfig(game, worldName, environment, startFraction);
 			
-			WorldGenerator generator;
-			switch (environment)
-			{
-			case NORMAL:
-				generator = game.getWorldGenerator(); break;
-			case NETHER:
-				generator = game.getWorldGenerator(); break;
-			case THE_END:
-				generator = game.getWorldGenerator(); break;
-			default:
-				generator = null; break;
-			}
+			WorldGenerator generator = game.getWorldGenerator(environment);
 			
 			if (generator == null)
 				createWorld(worldConfig, runNext);

@@ -13,6 +13,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 
@@ -103,7 +104,13 @@ public class Game
 			{
 				plugin.log.info("Deleting worlds for game " + getNumber() + "...");
 				plugin.eventListener.unregisterEvents(getGameMode());
-				plugin.eventListener.unregisterEvents(getWorldGenerator());
+				
+				if (overworldGenerator != null)
+					plugin.eventListener.unregisterEvents(overworldGenerator);
+				if (netherWorldGenerator != null)
+					plugin.eventListener.unregisterEvents(netherWorldGenerator);
+				if (endWorldGenerator != null)
+					plugin.eventListener.unregisterEvents(endWorldGenerator);
 
 				for ( Player player : getOnlinePlayers(new PlayerFilter().onlySpectators()) )
 					Helper.stopSpectating(this, player);
@@ -146,7 +153,14 @@ public class Game
 			{	
 				plugin.eventListener.registerEvents(getGameMode());
 				if ( getGameMode().allowWorldGeneratorSelection() )
-					plugin.eventListener.registerEvents(getWorldGenerator());
+				{				
+					if (overworldGenerator != null)
+						plugin.eventListener.unregisterEvents(overworldGenerator);
+					if (netherWorldGenerator != null)
+						plugin.eventListener.unregisterEvents(netherWorldGenerator);
+					if (endWorldGenerator != null)
+						plugin.eventListener.unregisterEvents(endWorldGenerator);
+				}
 				
 				final Game game = this;
 				plugin.worldManager.generateWorlds(this, new Runnable() {
@@ -247,7 +261,10 @@ public class Game
 		
 		setDifficulty(defaultDifficulty);
 		setGameMode(plugin.defaultGameMode);
-		setWorldGenerator(plugin.defaultWorldGen);
+		
+		setWorldGenerator(Environment.NORMAL, WorldGenerator.getDefault(Environment.NORMAL));
+		setWorldGenerator(Environment.NETHER, WorldGenerator.getDefault(Environment.NETHER));
+		setWorldGenerator(Environment.THE_END, WorldGenerator.getDefault(Environment.THE_END));
 		
 		monsterNumbers = defaultMonsterNumbers;
 		animalNumbers = defaultAnimalNumbers;
@@ -469,16 +486,41 @@ public class Game
 		return true;
 	}
 	
-	private WorldGenerator worldGenerator = null;
-	WorldGenerator getWorldGenerator() { return worldGenerator; }
-	void setWorldGenerator(WorldGeneratorPlugin plugin)
+	private WorldGenerator overworldGenerator = null, netherWorldGenerator = null, endWorldGenerator = null;
+	WorldGenerator getWorldGenerator(Environment worldType)
 	{
-		WorldGeneratorPlugin prev = worldGenerator == null ? null : (WorldGeneratorPlugin)worldGenerator.getPlugin();
-		if ( prev == plugin )
+		switch (worldType)
+		{
+		case NORMAL:
+			return overworldGenerator;
+		case NETHER:
+			return netherWorldGenerator;
+		case THE_END:
+			return endWorldGenerator;
+		default:
+			return null;
+		}
+	}
+	
+	void setWorldGenerator(Environment worldType, WorldGeneratorPlugin plugin)
+	{
+		WorldGenerator prev = getWorldGenerator(worldType);
+		WorldGeneratorPlugin prevPlugin = prev == null ? null : (WorldGeneratorPlugin)prev.getPlugin();
+		if (prevPlugin == plugin)
 			return;
 		
-		worldGenerator = plugin.createInstance();
-		worldGenerator.initialize(this, plugin);
+		WorldGenerator generator = plugin.createInstance();
+		generator.initialize(this, plugin);
+		
+		switch (worldType)
+		{
+		case NORMAL:
+			overworldGenerator = generator; break;
+		case NETHER:
+			netherWorldGenerator = generator; break;
+		case THE_END:
+			endWorldGenerator = generator; break;
+		}
 
 		menuManager.updateMenus();
 	}
