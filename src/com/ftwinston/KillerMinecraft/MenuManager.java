@@ -108,7 +108,7 @@ class MenuManager
 		
 		inventories.put(GameMenu.GAME_MODE, createGameModeMenu());
 		inventories.put(GameMenu.GAME_MODE_CONFIG, createGameModeConfigMenu());
-		inventories.put(GameMenu.WORLDS, createWorldMenu());
+		inventories.put(GameMenu.WORLDS, createWorldsMenu());
 		inventories.put(GameMenu.WORLD_SETTINGS, createWorldSettingsMenu());
 		inventories.put(GameMenu.WORLD_GEN, createWorldGenMenu());
 		inventories.put(GameMenu.WORLD_GEN_CONFIG, createWorldGenConfigMenu());
@@ -391,7 +391,7 @@ class MenuManager
 		addItemToMenu(this, new MenuItem(menu, 2, worldGenStack) {
 			@Override
 			public void runWhenClicked(Player player) {
-				if (game.getGameMode().allowWorldGeneratorSelection())
+				if (shouldShowWorldSelection(Environment.NORMAL) || shouldShowWorldSelection(Environment.NETHER) || shouldShowWorldSelection(Environment.THE_END))
 					show(player, GameMenu.WORLDS);
 				else
 					show(player, GameMenu.WORLD_SETTINGS);
@@ -562,7 +562,18 @@ class MenuManager
 		return menu;
 	}
 	
-	private Inventory createWorldMenu()
+	private boolean shouldShowWorldSelection(Environment worldType)
+	{
+		if (!game.getGameMode().allowWorldGeneratorSelection())
+			return false;
+		
+		if (!game.getGameMode().usesWorldType(worldType))
+			return false;
+		
+		return WorldGenerator.getGenerators(worldType).size() > 1;
+	}
+	
+	private Inventory createWorldsMenu()
 	{
 		Inventory menu = Bukkit.createInventory(null, 9, "World Configuration");
 		
@@ -592,7 +603,7 @@ class MenuManager
 
 			@Override
 			public void recalculateStack() {
-				if (game.getGameMode().allowWorldGeneratorSelection() && game.getGameMode().usesWorldType(Environment.NORMAL))
+				if (shouldShowWorldSelection(Environment.NORMAL))
 				{
 					ItemStack stack = new ItemStack(Material.GRASS);
 					WorldGenerator generator = game.getWorldGenerator(Environment.NORMAL);
@@ -637,7 +648,7 @@ class MenuManager
 
 			@Override
 			public void recalculateStack() {
-				if (game.getGameMode().allowWorldGeneratorSelection() && game.getGameMode().usesWorldType(Environment.NETHER))
+				if (shouldShowWorldSelection(Environment.NETHER))
 				{
 					ItemStack stack = new ItemStack(Material.NETHERRACK);
 					WorldGenerator generator = game.getWorldGenerator(Environment.NETHER);
@@ -682,7 +693,7 @@ class MenuManager
 
 			@Override
 			public void recalculateStack() {
-				if (game.getGameMode().allowWorldGeneratorSelection() && game.getGameMode().usesWorldType(Environment.NETHER))
+				if (shouldShowWorldSelection(Environment.THE_END))
 				{
 					ItemStack stack = new ItemStack(Material.ENDER_STONE);
 					WorldGenerator generator = game.getWorldGenerator(Environment.THE_END);
@@ -850,7 +861,7 @@ class MenuManager
 			@Override
 			public void runWhenClicked(Player player) {
 				
-				if (game.getGameMode().allowWorldGeneratorSelection())
+				if (shouldShowWorldSelection(Environment.NORMAL) || shouldShowWorldSelection(Environment.NETHER) || shouldShowWorldSelection(Environment.THE_END))
 					show(player, GameMenu.WORLDS);
 				else
 					show(player, GameMenu.SETUP);

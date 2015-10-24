@@ -262,9 +262,13 @@ public class Game
 		setDifficulty(defaultDifficulty);
 		setGameMode(plugin.defaultGameMode);
 		
-		setWorldGenerator(Environment.NORMAL, WorldGenerator.getDefault(Environment.NORMAL));
-		setWorldGenerator(Environment.NETHER, WorldGenerator.getDefault(Environment.NETHER));
-		setWorldGenerator(Environment.THE_END, WorldGenerator.getDefault(Environment.THE_END));
+		overworldGenerator = netherWorldGenerator = endWorldGenerator = null;
+		if (gameMode.allowWorldGeneratorSelection())
+		{
+			for (Environment worldType : Environment.values())
+				if (gameMode.usesWorldType(worldType))
+					setWorldGenerator(worldType, WorldGenerator.getDefault(worldType));
+		}
 		
 		monsterNumbers = defaultMonsterNumbers;
 		animalNumbers = defaultAnimalNumbers;
