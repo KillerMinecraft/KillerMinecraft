@@ -135,7 +135,7 @@ public class Game
 			}
 			case LOBBY:
 			{
-				menuManager.repopulateMenu(GameMenu.SETUP_PLAYERS);
+				menuManager.repopulateMenu(GameMenu.PLAYERS);
 				break;
 			}
 			case QUEUE_FOR_GENERATION:		
@@ -268,9 +268,7 @@ public class Game
 		
 		monsterNumbers = defaultMonsterNumbers;
 		animalNumbers = defaultAnimalNumbers;
-		menuManager.repopulateMenu(GameMenu.SETUP_MONSTERS);
-		menuManager.repopulateMenu(GameMenu.SETUP_ANIMALS);
-		menuManager.repopulateMenu(GameMenu.SETUP_PLAYERS);
+		menuManager.repopulateMenu(GameMenu.PLAYERS);
 
 		if (wasEmpty)
 		{
@@ -479,6 +477,21 @@ public class Game
 		gameMode = plugin.createInstance();
 		gameMode.initialize(this, plugin);
 		
+		if (gameMode.allowWorldGeneratorSelection())
+		{
+			for (Environment worldType : Environment.values())
+			{
+				if (gameMode.usesWorldType(worldType))
+					setWorldGenerator(worldType, WorldGenerator.getDefault(worldType));
+				else
+					setWorldGenerator(worldType, null);
+			}
+		}
+		else
+		{
+			overworldGenerator = netherWorldGenerator = endWorldGenerator = null;
+		}
+		
 		menuManager.updateMenus();
 
 		for ( Player player : getOnlinePlayers() )
@@ -509,8 +522,9 @@ public class Game
 		if (prevPlugin == plugin)
 			return;
 		
-		WorldGenerator generator = plugin.createInstance();
-		generator.initialize(this, plugin);
+		WorldGenerator generator = plugin == null ? null : plugin.createInstance();
+		if (generator != null)
+			generator.initialize(this, plugin);
 		
 		switch (worldType)
 		{
@@ -521,8 +535,6 @@ public class Game
 		case THE_END:
 			endWorldGenerator = generator; break;
 		}
-
-		menuManager.updateMenus();
 	}
 
 	private TreeMap<String, PlayerInfo> playerInfo = new TreeMap<String, PlayerInfo>();

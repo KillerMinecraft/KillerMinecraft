@@ -1,6 +1,7 @@
 package com.ftwinston.KillerMinecraft;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 
 import org.bukkit.World;
@@ -8,12 +9,31 @@ import org.bukkit.World.Environment;
 
 public abstract class WorldGenerator extends KillerModule
 {
-	static List<WorldGeneratorPlugin> overworldGenerators = new ArrayList<WorldGeneratorPlugin>();
-	static List<WorldGeneratorPlugin> netherGenerators = new ArrayList<WorldGeneratorPlugin>();
-	static List<WorldGeneratorPlugin> endGenerators = new ArrayList<WorldGeneratorPlugin>();
-		
+	private static List<WorldGeneratorPlugin> overworldGenerators = new ArrayList<WorldGeneratorPlugin>();
+	private static List<WorldGeneratorPlugin> netherGenerators = new ArrayList<WorldGeneratorPlugin>();
+	private static List<WorldGeneratorPlugin> endGenerators = new ArrayList<WorldGeneratorPlugin>();
+	
+	static List<WorldGeneratorPlugin> getGenerators(Environment worldType)
+	{
+		switch(worldType)
+		{
+		case NORMAL:
+			return overworldGenerators;
+		case NETHER:
+			return netherGenerators;
+		case THE_END:
+			return endGenerators;
+		default:
+			return null;
+		}
+	}
+	
+	private static EnumMap<Environment, WorldGeneratorPlugin> defaultWorldGenerators = new EnumMap<Environment, WorldGeneratorPlugin>(Environment.class);
 	static WorldGeneratorPlugin getDefault(Environment worldType)
 	{
+		if (defaultWorldGenerators.containsKey(worldType))
+			return defaultWorldGenerators.get(worldType);
+		
 		List<WorldGeneratorPlugin> generators;
 		String defaultValue;
 		
@@ -35,12 +55,17 @@ public abstract class WorldGenerator extends KillerModule
 			return null;
 		}
 		
-		for (WorldGeneratorPlugin generator : overworldGenerators)
+		for (WorldGeneratorPlugin generator : generators)
 			if (defaultValue.equalsIgnoreCase(generator.getName()))
+			{
+				defaultWorldGenerators.put(worldType, generator);
 				return generator;
+			}
 		
 		KillerMinecraft.instance.log.info("Default " + worldType.name() + " world generator not found: " + defaultValue);
-		return generators.get(0);
+		WorldGeneratorPlugin generator = generators.size() > 0 ? generators.get(0) : null;
+		defaultWorldGenerators.put(worldType, generator);
+		return generator;
 	}
 
 	protected final World createWorld(WorldConfig worldConfig, Runnable runWhenDone)

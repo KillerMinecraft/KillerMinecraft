@@ -19,18 +19,7 @@ public abstract class WorldGeneratorPlugin extends KillerModulePlugin
 	final void initialize(KillerMinecraft plugin)
 	{
 		// keep the world options in alphabetic order
-		List<WorldGeneratorPlugin> pluginList;
-		switch (getWorldType())
-		{
-		case NORMAL:
-			pluginList = WorldGenerator.overworldGenerators; break;
-		case NETHER:
-			pluginList = WorldGenerator.netherGenerators; break;
-		case THE_END:
-			pluginList = WorldGenerator.endGenerators; break;
-		default:
-			return;
-		}
+		List<WorldGeneratorPlugin> pluginList = WorldGenerator.getGenerators(getWorldType());
 		
 		String name = getName();
 		for ( int i=0; i<pluginList.size(); i++ )

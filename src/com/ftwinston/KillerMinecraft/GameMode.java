@@ -151,6 +151,14 @@ public abstract class GameMode extends KillerModule
 	public boolean allowWorldGeneratorSelection() { return true; }
 
 	public Environment[] getWorldsToGenerate() { return new Environment[] { Environment.NORMAL, Environment.NETHER }; }
+	boolean usesWorldType(Environment type)
+	{
+		for (Environment test : getWorldsToGenerate())
+			if (test == type)
+				return true;
+		return false;
+	}
+	
 	public void beforeWorldGeneration(int worldNumber, WorldConfig world) { }
 
 	public abstract String getHelpMessage(int messageNum, TeamInfo team);

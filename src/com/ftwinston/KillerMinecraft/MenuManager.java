@@ -9,7 +9,9 @@ import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Difficulty;
 import org.bukkit.Material;
+import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -31,15 +33,18 @@ class MenuManager
 {
 	enum GameMenu
 	{
-		SETUP_ROOT,
-		SETUP_GAME_MODE,
-		SETUP_GAME_MODE_CONFIG,
-		SETUP_WORLD_GEN,
-		SETUP_WORLD_GEN_CONFIG,
-		SETUP_PLAYERS,
-		SETUP_MONSTERS,
-		SETUP_ANIMALS,
-		SETUP_WORLD_BORDERS,
+		SETUP,
+		GAME_MODE,
+		GAME_MODE_CONFIG,
+		WORLDS,
+		WORLD_GEN,
+		WORLD_GEN_CONFIG,
+		WORLD_SETTINGS,
+		PLAYERS,
+		DIFFICULTY,
+		MONSTERS,
+		ANIMALS,
+		WORLD_BORDERS,
 
 		SPECIFIC_OPTION_CHOICE,
 
@@ -95,20 +100,23 @@ class MenuManager
 		
 		addItemToMenu(null, gameRootMenuItem);
 		
-		inventories.put(GameMenu.SETUP_ROOT, createSetupMenu());
+		inventories.put(GameMenu.SETUP, createSetupMenu());
 		inventories.put(GameMenu.LOBBY, createLobbyMenu());
 		inventories.put(GameMenu.SPECTATOR_LOBBY, createSpectatorLobbyMenu());
 		inventories.put(GameMenu.TEAM_SELECTION, createTeamMenu());
 		inventories.put(GameMenu.ACTIVE, createActiveMenu());
 		
-		inventories.put(GameMenu.SETUP_GAME_MODE, createGameModeMenu());
-		inventories.put(GameMenu.SETUP_GAME_MODE_CONFIG, createGameModeConfigMenu());
-		inventories.put(GameMenu.SETUP_WORLD_GEN, createWorldGenMenu());
-		inventories.put(GameMenu.SETUP_WORLD_GEN_CONFIG, createWorldGenConfigMenu());
-		inventories.put(GameMenu.SETUP_PLAYERS, createPlayersMenu());
-		inventories.put(GameMenu.SETUP_MONSTERS, createMonstersMenu());
-		inventories.put(GameMenu.SETUP_ANIMALS, createAnimalsMenu());
-		inventories.put(GameMenu.SETUP_WORLD_BORDERS, createWorldBordersMenu());
+		inventories.put(GameMenu.GAME_MODE, createGameModeMenu());
+		inventories.put(GameMenu.GAME_MODE_CONFIG, createGameModeConfigMenu());
+		inventories.put(GameMenu.WORLDS, createWorldMenu());
+		inventories.put(GameMenu.WORLD_SETTINGS, createWorldSettingsMenu());
+		inventories.put(GameMenu.WORLD_GEN, createWorldGenMenu());
+		inventories.put(GameMenu.WORLD_GEN_CONFIG, createWorldGenConfigMenu());
+		inventories.put(GameMenu.PLAYERS, createPlayersMenu());
+		inventories.put(GameMenu.DIFFICULTY, createDifficultyMenu());
+		inventories.put(GameMenu.MONSTERS, createMonstersMenu());
+		inventories.put(GameMenu.ANIMALS, createAnimalsMenu());
+		inventories.put(GameMenu.WORLD_BORDERS, createWorldBordersMenu());
 	}
 	
 	static void addItemToMenu(MenuManager instance, MenuItem item) 
@@ -190,9 +198,26 @@ class MenuManager
 	
 	private static String[] describeSettings(Game game)
 	{
-		if ( game.getGameMode().allowWorldGeneratorSelection() )
-			return new String[] { "Game mode: " + game.getGameMode().getName(), "World: " + game.getWorldGenerator().getName() };
-		return new String[] { "Game mode: " + game.getGameMode().getName() };
+		if (!game.getGameMode().allowWorldGeneratorSelection())
+			return new String[] { "Game mode: " + game.getGameMode().getName() };
+		
+		ArrayList<String> settings = new ArrayList<String>();
+		settings.add("Game mode: " + game.getGameMode().getName());
+		
+		WorldGenerator world = game.getWorldGenerator(Environment.NORMAL);
+		if (world != null)
+			settings.add("World: " + world.getName());
+
+		world = game.getWorldGenerator(Environment.NETHER);
+		if (world != null)
+			settings.add("Nether: " + world.getName());
+
+		world = game.getWorldGenerator(Environment.THE_END);
+		if (world != null)
+			settings.add("End: " + world.getName());
+		
+		String[] help = new String[0];
+		return settings.toArray(help);
 	}
 	
 	private static String listAllSettings(Game game)
@@ -205,10 +230,32 @@ class MenuManager
 		
 		if ( game.getGameMode().allowWorldGeneratorSelection() )
 		{
-			output += "\nWorld generator: " + game.getWorldGenerator().getName();
-			for ( Option o : game.getWorldGenerator().options )
-				if ( !o.isHidden() )
-					output += "\n  " + o.getName() + ": " + o.getValueString();	
+			WorldGenerator world = game.getWorldGenerator(Environment.NORMAL);
+			if (world != null)
+			{
+				output += "\nWorld generator: " + world.getName();
+				for ( Option o : world.options )
+					if ( !o.isHidden() )
+						output += "\n  " + o.getName() + ": " + o.getValueString();	
+			}
+			
+			world = game.getWorldGenerator(Environment.NETHER);
+			if (world != null)
+			{
+				output += "\nNether generator: " + world.getName();
+				for ( Option o : world.options )
+					if ( !o.isHidden() )
+						output += "\n  " + o.getName() + ": " + o.getValueString();	
+			}
+			
+			world = game.getWorldGenerator(Environment.THE_END);
+			if (world != null)
+			{
+				output += "\nEnd generator: " + world.getName();
+				for ( Option o : world.options )
+					if ( !o.isHidden() )
+						output += "\n  " + o.getName() + ": " + o.getValueString();	
+			}
 		}
 		
 		// player settings
@@ -304,10 +351,10 @@ class MenuManager
 	{
 		Inventory menu = Bukkit.createInventory(null, 9, "Killer Minecraft: Game setup");
 		
-		MenuItem gameModeItem = new MenuItem(menu, 0, null) {
+		addItemToMenu(this, new MenuItem(menu, 0, null) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP_GAME_MODE);
+				show(player, GameMenu.GAME_MODE);
 			}
 			
 			@Override
@@ -316,34 +363,44 @@ class MenuManager
 				setNameAndLore(stack, "Change Game Mode", highlightStyle + "Current mode: " + game.getGameMode().getName(), "The game mode is the main set of rules,", "and controls every aspect of a game.");
 				setStack(stack);
 			}
-		};
-		addItemToMenu(this, gameModeItem);
+		});
 		
-		ItemStack worldGenStack = new ItemStack(Material.GRASS);
-		setNameAndLore(worldGenStack, "Change World Generator", "");
-		MenuItem worldGenItem = new MenuItem(menu, 1, worldGenStack) {
+		addItemToMenu(this, new MenuItem(menu, 1, null) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP_WORLD_GEN);
+				show(player, GameMenu.GAME_MODE_CONFIG);
 			}
 			
 			@Override
 			public void recalculateStack() {
-				if ( game.getGameMode().allowWorldGeneratorSelection() )
+				Option[] options = game.getGameMode().options; 
+				if (options == null || options.length == 0)
 				{
-					ItemStack stack = new ItemStack(Material.GRASS);
-					setNameAndLore(stack, "Change World Generator", highlightStyle + "Current generator: "+ game.getWorldGenerator().getName(), "The world generator controls", "the terrain in the game's world(s)");
-					setStack(stack);
-				}
-				else
 					setStack(null);
+					return;
+				}
+				
+				ItemStack stack = new ItemStack(Material.IRON_PICKAXE);
+				setNameAndLore(stack, "Configure Game Mode", highlightStyle + "Current mode: " + game.getGameMode().getName(), "Change any settings specific to,", "the current game mode.");
+				setStack(stack);
 			}
-		};
-		addItemToMenu(this, worldGenItem);				
+		});
+
+		ItemStack worldGenStack = new ItemStack(Material.GRASS);
+		setNameAndLore(worldGenStack, "Configure Worlds", "");
+		addItemToMenu(this, new MenuItem(menu, 2, worldGenStack) {
+			@Override
+			public void runWhenClicked(Player player) {
+				if (game.getGameMode().allowWorldGeneratorSelection())
+					show(player, GameMenu.WORLDS);
+				else
+					show(player, GameMenu.WORLD_SETTINGS);
+			}
+		});
 		/*
 		final ItemStack rootMutators = new ItemStack(Material.EXP_BOTTLE);
 		setNameAndLore(rootMutators, "Select Mutators", "Mutators change specific aspects", "of a game, but aren't specific", "to any particular game mode");
-		addItemToMenu(this, new MenuItem(menu, 2, rootMutators) {
+		addItemToMenu(this, new MenuItem(menu, 3, rootMutators) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.SETUP_MUTATORS);
@@ -352,42 +409,12 @@ class MenuManager
 		*/
 		ItemStack rootPlayerNumbers = new ItemStack(Material.SKULL_ITEM, 1, (short)3); // steve head
 		setNameAndLore(rootPlayerNumbers, "Player limits", "Specify the maximum number of", "players allowed into the game");
-		addItemToMenu(this, new MenuItem(menu, 3, rootPlayerNumbers) {
+		addItemToMenu(this, new MenuItem(menu, 4, rootPlayerNumbers) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP_PLAYERS);
+				show(player, GameMenu.PLAYERS);
 			}
 		});
-		
-		ItemStack rootMonsters = new ItemStack(Material.SKULL_ITEM, 1, (short)4); // creeper head
-		setNameAndLore(rootMonsters, "Monster Numbers", "Control the number of", "monsters that spawn");
-		addItemToMenu(this, new MenuItem(menu, 4, rootMonsters) {
-			@Override
-			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP_MONSTERS);
-			}
-		});
-		
-		ItemStack rootAnimals = new ItemStack(Material.EGG);
-		setNameAndLore(rootAnimals, "Animal Numbers", "Control the number of", "animals that spawn");
-		addItemToMenu(this, new MenuItem(menu, 5, rootAnimals) {
-			@Override
-			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP_ANIMALS);
-			}
-		});
-		
-		if (Settings.worldBorderSizes.length > 1)
-		{
-			ItemStack worldBorders = new ItemStack(Material.GLASS);
-			setNameAndLore(worldBorders, "World Borders", "Limit the size of", "game worlds");
-			addItemToMenu(this, new MenuItem(menu, 6, worldBorders) {
-				@Override
-				public void runWhenClicked(Player player) {
-					show(player, GameMenu.SETUP_WORLD_BORDERS);
-				}
-			});
-		}
 		
 		final ItemStack rootOpen = new ItemStack(Material.IRON_DOOR);
 		setNameAndLore(rootOpen, "Open game lobby", "Open this game, so", "that players can join");
@@ -430,12 +457,12 @@ class MenuManager
 
 	private Inventory createGameModeMenu()
 	{
-		Inventory menu = Bukkit.createInventory(null, nearestNine(GameMode.gameModes.size() + 2), "Game mode selection");
+		Inventory menu = Bukkit.createInventory(null, nearestNine(GameMode.gameModes.size() + 1), "Game Mode selection");
 		
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP_ROOT);
+				show(player, GameMenu.SETUP);
 			}
 		});
 		
@@ -443,13 +470,11 @@ class MenuManager
 		{
 			final GameModePlugin mode = GameMode.get(i);
 			
-			addItemToMenu(this, new MenuItem(menu, i + 2, null) {
+			addItemToMenu(this, new MenuItem(menu, i + 1, null) {
 				@Override
 				public void runWhenClicked(Player player) {
 					if ( game.setGameMode(mode) )
 						settingsChanged(" set the game mode to " + mode.getDisplayName());
-					
-					show(player, GameMenu.SETUP_GAME_MODE_CONFIG);
 				}
 				
 				@Override
@@ -479,12 +504,12 @@ class MenuManager
 	
 	private Inventory createGameModeConfigMenu()
 	{
-		Inventory menu = Bukkit.createInventory(null, 9, "Game mode options");
+		Inventory menu = Bukkit.createInventory(null, 9, "Game Mode options");
 
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP_GAME_MODE);
+				show(player, GameMenu.SETUP);
 			}
 		});
 		
@@ -503,10 +528,10 @@ class MenuManager
 					
 					ItemStack[] choiceItems = option.optionClicked();
 					if ( choiceItems != null )
-						showChoiceOptionMenu(player, option, choiceItems, GameMenu.SETUP_GAME_MODE_CONFIG);
+						showChoiceOptionMenu(player, option, choiceItems, GameMenu.GAME_MODE_CONFIG);
 					else
 					{
-						repopulateMenu(GameMenu.SETUP_GAME_MODE_CONFIG);
+						repopulateMenu(GameMenu.GAME_MODE_CONFIG);
 						settingsChanged(" set the '" + option.getName() + "' setting to " + option.getValueString());
 					}
 				}
@@ -537,47 +562,218 @@ class MenuManager
 		return menu;
 	}
 	
-	private Inventory createWorldGenMenu()
+	private Inventory createWorldMenu()
 	{
-		Inventory menu = Bukkit.createInventory(null, nearestNine(WorldGenerator.overworldGenerators.size() + 2), "World generator selection");
+		Inventory menu = Bukkit.createInventory(null, 9, "World Configuration");
 		
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP_ROOT);
+				show(player, GameMenu.SETUP);
 			}
 		});
 		
-		for ( int i=0; i<WorldGenerator.overworldGenerators.size(); i++ )
-		{
-			final WorldGeneratorPlugin world = WorldGenerator.overworldGenerators.get(i);
+		ItemStack worldSettings = new ItemStack(Material.COMMAND);
+		setNameAndLore(worldSettings, "World Settings", "Edit settings that apply to", "all worlds in this game");
+		addItemToMenu(this, new MenuItem(menu, 1, worldSettings) {
+			@Override
+			public void runWhenClicked(Player player) {
+				show(player, GameMenu.WORLD_SETTINGS);
+			}
+		});
+		
+		addItemToMenu(this, new MenuItem(menu, 2, null) {
+			@Override
+			public void runWhenClicked(Player player) {
+				worldGeneratorType = Environment.NORMAL;
+				repopulateMenu(GameMenu.WORLD_GEN);
+				show(player, GameMenu.WORLD_GEN);
+			}
+
+			@Override
+			public void recalculateStack() {
+				if (game.getGameMode().allowWorldGeneratorSelection() && game.getGameMode().usesWorldType(Environment.NORMAL))
+				{
+					ItemStack stack = new ItemStack(Material.GRASS);
+					WorldGenerator generator = game.getWorldGenerator(Environment.NORMAL);
+					setNameAndLore(stack, "Change World Generator", highlightStyle + "Current generator: " + (generator == null ? "<none>" : generator.getName()), "The world generator controls", "the terrain in the game's world(s)");
+					setStack(stack);
+				}
+				else
+					setStack(null);
+			}
+		});
+		
+		addItemToMenu(this, new MenuItem(menu, 3, null) {
+			@Override
+			public void runWhenClicked(Player player) {
+				worldGeneratorType = Environment.NORMAL;
+				show(player, GameMenu.WORLD_GEN_CONFIG);
+			}
 			
-			addItemToMenu(this, new MenuItem(menu, i + 2, null) {
+			@Override
+			public void recalculateStack() {
+				WorldGenerator generator = game.getWorldGenerator(Environment.NORMAL);
+				Option[] options = generator == null ? null : generator.options; 
+				if (options == null || options.length == 0)
+				{
+					setStack(null);
+					return;
+				}
+				
+				ItemStack stack = new ItemStack(Material.IRON_PICKAXE);
+				setNameAndLore(stack, "Configure World Generator", highlightStyle + "Current generator: " + generator.getName(), "Change any settings specific to,", "the current world generator.");
+				setStack(stack);
+			}
+		});
+
+		addItemToMenu(this, new MenuItem(menu, 4, null) {
+			@Override
+			public void runWhenClicked(Player player) {
+				worldGeneratorType = Environment.NETHER;
+				repopulateMenu(GameMenu.WORLD_GEN);
+				show(player, GameMenu.WORLD_GEN);
+			}
+
+			@Override
+			public void recalculateStack() {
+				if (game.getGameMode().allowWorldGeneratorSelection() && game.getGameMode().usesWorldType(Environment.NETHER))
+				{
+					ItemStack stack = new ItemStack(Material.NETHERRACK);
+					WorldGenerator generator = game.getWorldGenerator(Environment.NETHER);
+					setNameAndLore(stack, "Change Nether Generator", highlightStyle + "Current generator: " + (generator == null ? "<none>" : generator.getName()), "The nether generator controls", "the terrain in the game's world(s)");
+					setStack(stack);
+				}
+				else
+					setStack(null);
+			}
+		});
+		
+		addItemToMenu(this, new MenuItem(menu, 5, null) {
+			@Override
+			public void runWhenClicked(Player player) {
+				worldGeneratorType = Environment.NETHER;
+				show(player, GameMenu.WORLD_GEN_CONFIG);
+			}
+			
+			@Override
+			public void recalculateStack() {
+				WorldGenerator generator = game.getWorldGenerator(Environment.NETHER);
+				Option[] options = generator == null ? null : generator.options; 
+				if (options == null || options.length == 0)
+				{
+					setStack(null);
+					return;
+				}
+				
+				ItemStack stack = new ItemStack(Material.IRON_PICKAXE);
+				setNameAndLore(stack, "Configure Nether Generator", highlightStyle + "Current generator: " + generator.getName(), "Change any settings specific to,", "the current nether generator.");
+				setStack(stack);
+			}
+		});
+
+		addItemToMenu(this, new MenuItem(menu, 6, null) {
+			@Override
+			public void runWhenClicked(Player player) {
+				worldGeneratorType = Environment.THE_END;
+				repopulateMenu(GameMenu.WORLD_GEN);
+				show(player, GameMenu.WORLD_GEN);
+			}
+
+			@Override
+			public void recalculateStack() {
+				if (game.getGameMode().allowWorldGeneratorSelection() && game.getGameMode().usesWorldType(Environment.NETHER))
+				{
+					ItemStack stack = new ItemStack(Material.ENDER_STONE);
+					WorldGenerator generator = game.getWorldGenerator(Environment.THE_END);
+					setNameAndLore(stack, "Change End Generator", highlightStyle + "Current generator: " + (generator == null ? "<none>" : generator.getName()), "The end generator controls", "the terrain in the game's world(s)");
+					setStack(stack);
+				}
+				else
+					setStack(null);
+			}
+		});
+		
+		addItemToMenu(this, new MenuItem(menu, 7, null) {
+			@Override
+			public void runWhenClicked(Player player) {
+				worldGeneratorType = Environment.THE_END;
+				show(player, GameMenu.WORLD_GEN_CONFIG);
+			}
+			
+			@Override
+			public void recalculateStack() {
+				WorldGenerator generator = game.getWorldGenerator(Environment.THE_END);
+				Option[] options = generator == null ? null : generator.options; 
+				if (options == null || options.length == 0)
+				{
+					setStack(null);
+					return;
+				}
+				
+				ItemStack stack = new ItemStack(Material.IRON_PICKAXE);
+				setNameAndLore(stack, "Configure End Generator", highlightStyle + "Current generator: " + generator.getName(), "Change any settings specific to,", "the current end generator.");
+				setStack(stack);
+			}
+		});
+		
+		return menu;
+	}
+	
+	Environment worldGeneratorType = Environment.NORMAL;
+	private Inventory createWorldGenMenu()
+	{
+		int maxGenerators = Math.max(Math.max(WorldGenerator.getGenerators(Environment.NORMAL).size(), WorldGenerator.getGenerators(Environment.NETHER).size()), WorldGenerator.getGenerators(Environment.THE_END).size());
+		Inventory menu = Bukkit.createInventory(null, nearestNine(maxGenerators + 1), "World Generator selection");
+		
+		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
+			@Override
+			public void runWhenClicked(Player player) {
+				show(player, GameMenu.WORLDS);
+			}
+		});
+		
+		for (int i=0; i<maxGenerators; i++)
+		{
+			final int generatorNumber = i;
+			addItemToMenu(this, new MenuItem(menu, i + 1, null) {
 				@Override
-				public void runWhenClicked(Player player) { 
-					game.setWorldGenerator(world);
-					settingsChanged(" set the world generator to " + world.getDisplayName());
+				public void runWhenClicked(Player player) {
+					List<WorldGeneratorPlugin> worldGenerators = WorldGenerator.getGenerators(worldGeneratorType);
+					if (generatorNumber >= worldGenerators.size())
+						return;
 					
-					show(player, GameMenu.SETUP_WORLD_GEN_CONFIG);
+					WorldGeneratorPlugin worldGenerator = worldGenerators.get(generatorNumber);
+					game.setWorldGenerator(worldGeneratorType, worldGenerator);
+					settingsChanged(" set the world generator to " + worldGenerator.getDisplayName());
+					updateMenus();
 				}
 				
 				@Override
 				public void recalculateStack() {
-					boolean current = game.getWorldGenerator().getPlugin() == world;
+					List<WorldGeneratorPlugin> worldGenerators = WorldGenerator.getGenerators(worldGeneratorType);
+					if (generatorNumber >= worldGenerators.size())
+					{
+						setStack(null);
+						return;
+					}
+					
+					WorldGeneratorPlugin worldGenerator = worldGenerators.get(generatorNumber);
+					boolean current = game.getWorldGenerator(worldGeneratorType).getPlugin() == worldGenerator;
 
-					ItemStack stack = new ItemStack(world.getMenuIcon());
+					ItemStack stack = new ItemStack(worldGenerator.getMenuIcon());
 					if ( current )
 					{
-						String[] desc = world.getDescriptionText();
+						String[] desc = worldGenerator.getDescriptionText();
 						ArrayList<String> lore = new ArrayList<String>(desc.length + 1);
 						lore.add(highlightStyle + "Current world generator");
 						for ( int j=0; j<desc.length; j++)
 							lore.add(desc[j]);
-						setNameAndLore(stack, world.getDisplayName(), lore);
+						setNameAndLore(stack, worldGenerator.getDisplayName(), lore);
 						stack = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(stack);
 					}
 					else
-						setNameAndLore(stack, world.getDisplayName(), world.getDescriptionText());
+						setNameAndLore(stack, worldGenerator.getDisplayName(), worldGenerator.getDescriptionText());
 					setStack(stack);
 				}
 			});
@@ -587,12 +783,12 @@ class MenuManager
 	
 	private Inventory createWorldGenConfigMenu()
 	{
-		Inventory menu = Bukkit.createInventory(null, 9, "World generator options");
+		Inventory menu = Bukkit.createInventory(null, 9, "World Generator options");
 
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP_WORLD_GEN);
+				show(player, GameMenu.WORLDS);
 			}
 		});
 		
@@ -603,7 +799,7 @@ class MenuManager
 			addItemToMenu(this, new MenuItem(menu, i, null) {
 				@Override
 				public void runWhenClicked(Player player) {
-					Option[] options = game.getWorldGenerator().options;
+					Option[] options = game.getWorldGenerator(worldGeneratorType).options;
 					if (optionNum >= options.length)
 						return;
 					
@@ -611,18 +807,19 @@ class MenuManager
 					
 					ItemStack[] choiceItems = option.optionClicked();
 					if ( choiceItems != null )
-						showChoiceOptionMenu(player, option, choiceItems, GameMenu.SETUP_WORLD_GEN_CONFIG);
+						showChoiceOptionMenu(player, option, choiceItems, GameMenu.WORLD_GEN_CONFIG);
 					else
 					{
-						repopulateMenu(GameMenu.SETUP_WORLD_GEN_CONFIG);
+						repopulateMenu(GameMenu.WORLD_GEN_CONFIG);
 						settingsChanged(" set the '" + option.getName() + "' setting to " + option.getValueString());
 					}
 				}
 				
 				@Override
 				public void recalculateStack() {
-					Option[] options = game.getWorldGenerator().options;
-					if (optionNum >= options.length)
+					WorldGenerator generator = game.getWorldGenerator(worldGeneratorType); 
+					Option[] options = generator == null ? null : generator.options;
+					if (options == null || optionNum >= options.length)
 					{
 						setStack(null);
 						return;
@@ -642,6 +839,66 @@ class MenuManager
 				}
 			});
 		}
+		return menu;
+	}
+	
+	private Inventory createWorldSettingsMenu()
+	{
+		Inventory menu = Bukkit.createInventory(null, 9, "General World settings");
+
+		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
+			@Override
+			public void runWhenClicked(Player player) {
+				
+				if (game.getGameMode().allowWorldGeneratorSelection())
+					show(player, GameMenu.WORLDS);
+				else
+					show(player, GameMenu.SETUP);
+			}
+		});
+		
+		ItemStack difficulty = new ItemStack(Material.BEACON);
+		setNameAndLore(difficulty, "Gameplay Difficulty", "Controls the minecraft difficulty level.", "Hard is recommended in most cases.");
+		addItemToMenu(this, new MenuItem(menu, 1, difficulty) {
+			@Override
+			public void runWhenClicked(Player player) {
+				repopulateMenu(GameMenu.DIFFICULTY);
+				show(player, GameMenu.DIFFICULTY);
+			}
+		});
+		
+		ItemStack monsters = new ItemStack(Material.SKULL_ITEM, 1, (short)4); // creeper head
+		setNameAndLore(monsters, "Monster Numbers", "Control the number of", "monsters that spawn");
+		addItemToMenu(this, new MenuItem(menu, 2, monsters) {
+			@Override
+			public void runWhenClicked(Player player) {
+				repopulateMenu(GameMenu.MONSTERS);
+				show(player, GameMenu.MONSTERS);
+			}
+		});
+		
+		ItemStack animals = new ItemStack(Material.EGG);
+		setNameAndLore(animals, "Animal Numbers", "Control the number of", "animals that spawn");
+		addItemToMenu(this, new MenuItem(menu, 3, animals) {
+			@Override
+			public void runWhenClicked(Player player) {
+				repopulateMenu(GameMenu.ANIMALS);
+				show(player, GameMenu.ANIMALS);
+			}
+		});
+		
+		if (Settings.worldBorderSizes.length > 1)
+		{
+			ItemStack worldBorders = new ItemStack(Material.GLASS);
+			setNameAndLore(worldBorders, "World Borders", "Limit the size of", "game worlds");
+			addItemToMenu(this, new MenuItem(menu, 4, worldBorders) {
+				@Override
+				public void runWhenClicked(Player player) {
+					show(player, GameMenu.WORLD_BORDERS);
+				}
+			});
+		}
+		
 		return menu;
 	}
 
@@ -662,7 +919,7 @@ class MenuManager
 				int limit = Math.max(1, game.getPlayerLimit()-1);
 				game.setPlayerLimit(limit);
 				settingsChanged(" decreased the player limit to " + limit);
-				repopulateMenu(GameMenu.SETUP_PLAYERS);
+				repopulateMenu(GameMenu.PLAYERS);
 			}
 			
 			@Override
@@ -685,7 +942,7 @@ class MenuManager
 				int limit = game.getPlayerLimit()+1;
 				game.setPlayerLimit(limit);
 				settingsChanged(" increased the player limit to " + limit);
-				repopulateMenu(GameMenu.SETUP_PLAYERS);
+				repopulateMenu(GameMenu.PLAYERS);
 			}
 			
 			@Override
@@ -717,7 +974,7 @@ class MenuManager
 					game.setPlayerLimit(limit);
 					settingsChanged(" enabled a player limit of " + limit);
 				}
-				repopulateMenu(GameMenu.SETUP_PLAYERS);
+				repopulateMenu(GameMenu.PLAYERS);
 			};
 			
 			@Override
@@ -739,7 +996,7 @@ class MenuManager
 				boolean locked = !game.isLocked();
 				game.setLocked(locked);
 				settingsChanged(locked ? " locked the game" : " unlocked the game");
-				repopulateMenu(GameMenu.SETUP_PLAYERS);
+				repopulateMenu(GameMenu.PLAYERS);
 			};
 			
 			@Override
@@ -768,7 +1025,7 @@ class MenuManager
 			{
 				teamSelectionEnabled = !teamSelectionEnabled;
 				settingsChanged(teamSelectionEnabled ? " enabled team selection" : " disabled team selection");
-				repopulateMenu(GameMenu.SETUP_PLAYERS);
+				repopulateMenu(GameMenu.PLAYERS);
 			};
 			
 			@Override
@@ -793,13 +1050,51 @@ class MenuManager
 		return menu;
 	}
 	
+	private Inventory createDifficultyMenu()
+	{
+		final Inventory menu = Bukkit.createInventory(null, 9, "Gameplay difficulty");
+		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
+			@Override
+			public void runWhenClicked(Player player) {
+				show(player, GameMenu.WORLD_SETTINGS);
+			}
+		});
+		
+		for (int i=0; i<difficultyNames.length; i++)
+		{
+			final int quantity = i;
+			@SuppressWarnings("deprecation")
+			final Difficulty difficulty = Difficulty.getByValue(quantity);
+			
+			addItemToMenu(this, new MenuItem(menu, i + 1, null) {
+				@Override
+				public void runWhenClicked(Player player) {
+					game.setDifficulty(difficulty);						
+					settingsChanged(" changed the gameplay difficulty to '" + difficultyNames[quantity] + "'");
+					repopulateMenu(GameMenu.DIFFICULTY);
+				}
+				
+				@Override
+				public void recalculateStack() {
+					ItemStack stack = createQuantityItem(quantity, game.getDifficulty() == difficulty, difficultyDescriptions[quantity]);
+					ItemMeta meta = stack.getItemMeta();
+					meta.setDisplayName(difficultyNames[quantity]);
+					stack.setItemMeta(meta);
+					setStack(stack);
+				}
+			});
+		}
+		
+		return menu;
+	}
+	
 	private Inventory createMonstersMenu()
 	{
 		final Inventory menu = Bukkit.createInventory(null, 9, "Monster numbers");
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP_ROOT);
+				show(player, GameMenu.WORLD_SETTINGS);
 			}
 		});
 			
@@ -807,12 +1102,12 @@ class MenuManager
 		{
 			final int quantity = i;
 			
-			addItemToMenu(this, new MenuItem(menu, i + 2, null) {
+			addItemToMenu(this, new MenuItem(menu, i + 1, null) {
 				@Override
 				public void runWhenClicked(Player player) {
 					game.monsterNumbers = quantity;						
 					settingsChanged(" changed the monster numbers to '" + getQuantityText(quantity) + "'");
-					repopulateMenu(GameMenu.SETUP_MONSTERS);
+					repopulateMenu(GameMenu.MONSTERS);
 				}
 				
 				@Override
@@ -827,11 +1122,11 @@ class MenuManager
 	
 	private Inventory createAnimalsMenu()
 	{
-		final Inventory menu = Bukkit.createInventory(null, 9, "Monster numbers");
+		final Inventory menu = Bukkit.createInventory(null, 9, "Animal numbers");
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP_ROOT);
+				show(player, GameMenu.WORLD_SETTINGS);
 			}
 		});
 				
@@ -839,12 +1134,12 @@ class MenuManager
 		{
 			final int quantity = i;
 			
-			addItemToMenu(this, new MenuItem(menu, i + 2, null) {
+			addItemToMenu(this, new MenuItem(menu, i + 1, null) {
 				@Override
 				public void runWhenClicked(Player player) {
 					game.animalNumbers = quantity;
 					settingsChanged(" changed the animal numbers to '" + getQuantityText(quantity) + "'");
-					repopulateMenu(GameMenu.SETUP_ANIMALS);
+					repopulateMenu(GameMenu.ANIMALS);
 				}
 				
 				@Override
@@ -863,7 +1158,7 @@ class MenuManager
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP_ROOT);
+				show(player, GameMenu.SETUP);
 			}
 		});
 		
@@ -883,7 +1178,7 @@ class MenuManager
 						settingsChanged(" disabled world borders");
 					else
 						settingsChanged(" changed the world border size to '" + size + "'");
-					repopulateMenu(GameMenu.SETUP_WORLD_BORDERS);
+					repopulateMenu(GameMenu.WORLD_BORDERS);
 				}
 				
 				@Override
@@ -971,7 +1266,7 @@ class MenuManager
 			@Override
 			public void runWhenClicked(Player player) {
 				if ( player.getName() == game.hostPlayer && game.getGameState() == GameState.LOBBY )
-					show(player, GameMenu.SETUP_ROOT);
+					show(player, GameMenu.SETUP);
 				else
 					player.sendMessage(listAllSettings(game));
 			}
@@ -1175,6 +1470,8 @@ class MenuManager
 
 	static final String[] animalDescriptions = new String[] { "No animals will spawn", "Reduced animal spawn rate", "Normal animal spawn rate", "High animal spawn rate", "Excessive animal spawn rate" };
 	static final String[] monsterDescriptions = new String[] { "No monsters will spawn", "Reduced monster spawn rate", "Normal monster spawn rate", "High monster spawn rate", "Excessive monster spawn rate" };
+	static final String[] difficultyNames = new String[] { "Peaceful", "Easy", "Medium", "Hard" };
+	static final String[] difficultyDescriptions = new String[] { "No monsters, cannot starve, regenerate health", "Easy monsters, starving hurts a little", "Medium monsters, starving hurts more", "Hard monsters, starving can kill you" };
 	private static String highlightStyle = "" + ChatColor.YELLOW + ChatColor.ITALIC;
 	
 	public static void show(Player player)
@@ -1193,7 +1490,7 @@ class MenuManager
 				game.menuManager.show(player, GameMenu.ACTIVE); break;
 			case EMPTY:
 			case SETUP:
-				game.menuManager.show(player, GameMenu.SETUP_ROOT); break;
+				game.menuManager.show(player, GameMenu.SETUP); break;
 			default:
 				PlayerInfo info = game.getPlayerInfo(player.getName());
 				game.menuManager.show(player, info.isSpectator() ? GameMenu.SPECTATOR_LOBBY : GameMenu.LOBBY); break;
@@ -1443,12 +1740,13 @@ class MenuManager
 
 		repopulateMenu(GameMenu.LOBBY);
 		repopulateMenu(GameMenu.SPECTATOR_LOBBY);
-		repopulateMenu(GameMenu.SETUP_ROOT);
-		repopulateMenu(GameMenu.SETUP_GAME_MODE);
-		repopulateMenu(GameMenu.SETUP_GAME_MODE_CONFIG);
-		repopulateMenu(GameMenu.SETUP_WORLD_GEN);
-		repopulateMenu(GameMenu.SETUP_WORLD_GEN_CONFIG);
-		repopulateMenu(GameMenu.SETUP_PLAYERS);
+		repopulateMenu(GameMenu.SETUP);
+		repopulateMenu(GameMenu.GAME_MODE);
+		repopulateMenu(GameMenu.GAME_MODE_CONFIG);
+		repopulateMenu(GameMenu.WORLDS);
+		repopulateMenu(GameMenu.WORLD_GEN);
+		repopulateMenu(GameMenu.WORLD_GEN_CONFIG);
+		repopulateMenu(GameMenu.PLAYERS);
 		repopulateMenu(GameMenu.TEAM_SELECTION);
 		
 		updateGameIcon();

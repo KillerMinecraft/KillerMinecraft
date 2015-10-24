@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 import org.bukkit.Difficulty;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -81,7 +82,7 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 			setEnabled(false);
 			return;
 		}
-		if ( WorldGenerator.overworldGenerators.size() == 0 )
+		if ( WorldGenerator.getGenerators(Environment.NORMAL).size() == 0 )
 		{
 			log.warning("Killer cannot start: No world generators have been loaded!");
 			log.warning("Add some world generator plugins to your server!");
