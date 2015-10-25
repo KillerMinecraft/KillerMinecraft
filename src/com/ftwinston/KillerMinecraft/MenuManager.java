@@ -1398,9 +1398,16 @@ class MenuManager
 	{
 		Inventory menu = Bukkit.createInventory(null, 9, "Killer Minecraft: Pick a team");
 		
+		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
+			@Override
+			public void runWhenClicked(Player player) {
+				show(player, GameMenu.WORLD_SETTINGS);
+			}
+		});
+		
 		ItemStack autoAssign = new ItemStack(Material.MOB_SPAWNER);
 		setNameAndLore(autoAssign, "Auto assign", "Automatically assigns you to", "the team with the fewest", "players, or randomly in the", "event of a tie.");
-		addItemToMenu(this, new MenuItem(menu, 0, autoAssign) {
+		addItemToMenu(this, new MenuItem(menu, 1, autoAssign) {
 			@Override
 			public void runWhenClicked(Player player) {
 				game.getGameMode().setTeam(player, null);
@@ -1408,9 +1415,9 @@ class MenuManager
 			}
 		});
 		
-		for (int slot = 1; slot < 9; slot++)
+		for (int slot = 2; slot < 9; slot++)
 		{
-			final int teamIndex = slot - 1;
+			final int teamIndex = slot - 2;
 			addItemToMenu(this, new MenuItem(menu, slot, null) {
 				@Override
 				protected void runWhenClicked(Player player)
@@ -1426,7 +1433,6 @@ class MenuManager
 					
 					game.getGameMode().setTeam(player, team);
 					game.broadcastMessage(player.getName() + " joined the " + team.getChatColor() + team.getName());
-					show(player);
 				}
 				
 				@Override
@@ -1443,7 +1449,7 @@ class MenuManager
 					
 					ItemStack item = new ItemStack(Material.LEATHER_HELMET, 1);
 					LeatherArmorMeta meta = (LeatherArmorMeta)item.getItemMeta();
-					meta.setColor(team.getArmorColor());
+					meta.setColor(team.getDyeColor().getFireworkColor());
 					item.setItemMeta(meta);
 					
 					setNameAndLore(item, team.getChatColor() + team.getName(), "Join the " + team.getName());
