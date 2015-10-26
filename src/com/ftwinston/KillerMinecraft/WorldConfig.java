@@ -58,6 +58,7 @@ public class WorldConfig
 	private boolean generateStructures;
 	private String generatorSettings;
 	float initialOverallProgress;
+	boolean loadingPersistentWorlds;
 	
 	public Game getGame() {
 		return game;

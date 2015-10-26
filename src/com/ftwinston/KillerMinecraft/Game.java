@@ -153,16 +153,7 @@ public class Game
 			}
 			case GENERATING:
 			{	
-				plugin.eventListener.registerEvents(getGameMode());
-				if ( getGameMode().allowWorldGeneratorSelection() )
-				{				
-					if (overworldGenerator != null)
-						plugin.eventListener.registerEvents(overworldGenerator);
-					if (netherWorldGenerator != null)
-						plugin.eventListener.registerEvents(netherWorldGenerator);
-					if (endWorldGenerator != null)
-						plugin.eventListener.registerEvents(endWorldGenerator);
-				}
+				registerEvents();
 				
 				final Game game = this;
 				plugin.worldManager.generateWorlds(this, new Runnable() {
@@ -178,7 +169,7 @@ public class Game
 						if ( nextInQueue != null ) // start the next queued game generating
 							nextInQueue.setGameState(GameState.GENERATING);
 					}
-				});
+				}, false);
 				break;
 			}
 			case STARTING:
@@ -243,6 +234,20 @@ public class Game
 		menuManager.updateMenus();
 	}
 	
+	private void registerEvents()
+	{
+		plugin.eventListener.registerEvents(getGameMode());
+		if ( getGameMode().allowWorldGeneratorSelection() )
+		{				
+			if (overworldGenerator != null)
+				plugin.eventListener.registerEvents(overworldGenerator);
+			if (netherWorldGenerator != null)
+				plugin.eventListener.registerEvents(netherWorldGenerator);
+			if (endWorldGenerator != null)
+				plugin.eventListener.registerEvents(endWorldGenerator);
+		}
+	}
+
 	private double worldBorderSize = 0;
 	public double getWorldBorderSize() { return worldBorderSize; }
 	public void setWorldBorderSize(double size) { worldBorderSize = size; }
@@ -710,8 +715,9 @@ public class Game
 					((PersistentGameMode)getGameMode()).loadPersistentData(section.getConfigurationSection("mode"));
 
 				setGameState(GameState.ACTIVE);
+				registerEvents();
 			}
-		});
+		}, true);
 	}
 	
 	private void loadPersistentModuleOptions(KillerModule module, ConfigurationSection configData)

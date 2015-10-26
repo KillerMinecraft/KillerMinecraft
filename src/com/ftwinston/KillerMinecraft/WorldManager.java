@@ -222,9 +222,10 @@ class WorldManager
 		}
 	}
 
-	public void generateWorlds(final Game game, final Runnable runWhenDone)
+	public void generateWorlds(final Game game, final Runnable runWhenDone, boolean loadingPersistentWorlds)
 	{
-		game.broadcastMessage(game.getGameMode().getNumWorlds() == 1 ? "Generating game world..." : "Generating game worlds...");
+		if (!loadingPersistentWorlds)
+			game.broadcastMessage(game.getGameMode().getNumWorlds() == 1 ? "Generating game world..." : "Generating game worlds...");
 		
 		Runnable generationComplete = new Runnable() {
 			@Override
@@ -262,7 +263,7 @@ class WorldManager
 	
 		try
 		{
-			createWorlds(game, generationComplete);
+			createWorlds(game, generationComplete, loadingPersistentWorlds);
 		}
 		catch (Exception ex)
 		{
@@ -275,25 +276,26 @@ class WorldManager
 		}
 	}
 
-	void createWorlds(Game game, Runnable runWhenDone)
+	void createWorlds(Game game, Runnable runWhenDone, boolean loadingPersistentWorlds)
 	{
 		final Environment[] environments = game.getGameMode().getWorldsToGenerate();
 				
 		for ( int i=environments.length-1; i>=0; i-- )
-			runWhenDone = new WorldSetupRunner(game, environments[i], i, ((float)i)/environments.length, runWhenDone);
+			runWhenDone = new WorldSetupRunner(game, environments[i], i, ((float)i)/environments.length, runWhenDone, loadingPersistentWorlds);
 		
 		runWhenDone.run();
 	}
 	
 	private class WorldSetupRunner implements Runnable
 	{
-		public WorldSetupRunner(Game game, Environment environment, int num, float startFraction, Runnable runNext)
+		public WorldSetupRunner(Game game, Environment environment, int num, float startFraction, Runnable runNext, boolean loadingPersistentWorlds)
 		{
 			this.game = game;
 			this.environment = environment;
 			this.num = num;
 			this.runNext = runNext;
 			this.startFraction = startFraction;
+			this.loadingPersistentWorlds = loadingPersistentWorlds;
 		}
 	
 		private Game game;
@@ -301,11 +303,13 @@ class WorldManager
 		private int num;
 		private float startFraction;
 		private Runnable runNext;
+		private boolean loadingPersistentWorlds;
 		
 		public void run()
 		{
 			String worldName = Settings.killerWorldNamePrefix + "_" + game.getNumber() + "_" + num;
 			final WorldConfig worldConfig = new WorldConfig(game, worldName, environment, startFraction);
+			worldConfig.loadingPersistentWorlds = loadingPersistentWorlds;
 			
 			WorldGenerator generator = game.getWorldGenerator(environment);
 			
@@ -329,6 +333,12 @@ class WorldManager
         		
         server.getPluginManager().callEvent(new WorldInitEvent(world));
         System.out.print("Preparing start region for world: " + world.getName() + " (Seed: " + config.getSeed() + ")");
+        
+        if (config.loadingPersistentWorlds)
+        {// don't run through all the chunks again, just "link up" to the existing folder  
+        	server.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone, 1L);        	
+        	return world;
+        }
         
 		float firstReportFraction = ChunkBuilder.reportIntervalFraction;
 		while ( config.initialOverallProgress > firstReportFraction )
