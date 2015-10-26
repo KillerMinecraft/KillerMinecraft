@@ -1,5 +1,9 @@
 package com.ftwinston.KillerMinecraft;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
 /*
  * Killer Minecraft
  * a Minecraft Bukkit Mod by 
@@ -17,13 +21,15 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.ftwinston.KillerMinecraft.CraftBukkit.CraftBukkitAccess;
 
-public class KillerMinecraft extends JavaPlugin implements Runnable
+public class KillerMinecraft extends JavaPlugin
 {
 	public static KillerMinecraft instance;
 	CraftBukkitAccess craftBukkit;
@@ -63,17 +69,23 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
         if ( Settings.nothingButKiller )
         	worldManager.hijackDefaultWorld();
 	
-        // delay this by 1 tick so that the plugins are all loaded and the worlds are generated 
-        getServer().getScheduler().scheduleSyncDelayedTask(this, this, 1);
+        final YamlConfiguration persistentData = loadPersistentData();
         
-		// remove existing Killer world files
-		worldManager.deleteWorldFolders(Settings.killerWorldNamePrefix + "_");
+        // delay this by 1 tick so that the plugins are all loaded and the worlds are deleted 
+        getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+			
+			@Override
+			public void run() {
+				afterPluginsEnabled(persistentData);
+			}
+		}, 1);
+        
+        deleteNonPersistentWorldFolders(persistentData);
 	}
-	
+
 	GameModePlugin defaultGameMode;
 	
-	@Override
-	public void run()
+	public void afterPluginsEnabled(YamlConfiguration persistentData)
 	{
 		if ( GameMode.gameModes.size() == 0 )
 		{
@@ -129,8 +141,10 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 		    	PortalHelper.checkDelays();
 			}
 		}, 20L, 60L); // check every 3 seconds
+        
+        restorePersistentGames(persistentData);
 	}
-	
+
 	public void onDisable()
 	{
 		if ( portalUpdateProcess != -1 )
@@ -140,18 +154,97 @@ public class KillerMinecraft extends JavaPlugin implements Runnable
 		}
 		
 		if ( games != null )
+		{
 			for ( Game game : games )
-				game.finishGame(false);
+				if (!game.getGameMode().isPersistent())
+					game.finishGame();
 
+			savePersistentGameData();
+		}
+		
 		if ( worldManager != null )
 			worldManager.onDisable();
 		
 		craftBukkit = null;
 		playerManager = null;
         worldManager = null;
-/*
-        voteManager = null;
-*/
+	}
+	
+	private YamlConfiguration loadPersistentData()
+	{
+
+		File persistentDataFile = new File(getDataFolder(), "persistentGames.yml");
+			
+		if (!persistentDataFile.exists() )
+			return null;
+		
+		return YamlConfiguration.loadConfiguration(persistentDataFile);	
+	}
+	
+	private void restorePersistentGames(YamlConfiguration persistentData)
+	{	
+		for (int i=1; i<=games.length; i++)
+		{
+			ConfigurationSection section = persistentData.getConfigurationSection(Integer.toString(i));
+			if (section == null)
+				continue;
+			
+			games[i-1].loadPersistentData(section);
+		}
+	}
+	
+	private void savePersistentGameData()
+	{
+		YamlConfiguration persistentData = new YamlConfiguration();
+		
+		boolean any = false;
+		for ( Game game : games )
+			if (game.getGameMode().isPersistent())
+			{
+				any = true;
+				
+				ConfigurationSection section = persistentData.createSection(Integer.toString(game.getNumber()));
+				game.savePersistentData(section);
+			}
+		
+		File persistentDataFile = new File(getDataFolder(), "persistentGames.yml");
+		
+		if (any)
+		{
+			try
+			{
+				persistentData.save(persistentDataFile);
+			}
+			catch ( IOException ex )
+			{
+				log.warning("Unable to save persistentGames.yml file: " + ex.getMessage());
+			}
+		}
+		else if (persistentDataFile.exists())
+		{
+			try
+			{
+				Files.delete(persistentDataFile.toPath());
+			}
+			catch ( IOException ex )
+			{
+				log.warning("Unable to delete old persistentGames.yml file: " + ex.getMessage());
+			}
+		}
+	}
+	
+	private void deleteNonPersistentWorldFolders(YamlConfiguration persistentData)
+	{
+		for (int i=1; i<=games.length; i++)
+		{
+			String gameNum = Integer.toString(i);
+			
+			ConfigurationSection section = persistentData.getConfigurationSection(gameNum);
+			if (section != null)
+				continue; // this is a persistent game, it's worlds must be left intact 
+			
+			worldManager.deleteWorldFolders(Settings.killerWorldNamePrefix + "_" + gameNum + "_");
+		}
 	}
 
 	static void registerPlugin(KillerModulePlugin plugin)

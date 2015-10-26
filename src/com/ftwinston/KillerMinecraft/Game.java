@@ -14,10 +14,12 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 
 import com.ftwinston.KillerMinecraft.MenuManager.GameMenu;
+
 import com.ftwinston.KillerMinecraft.Configuration.TeamInfo;
 
 public class Game
@@ -155,11 +157,11 @@ public class Game
 				if ( getGameMode().allowWorldGeneratorSelection() )
 				{				
 					if (overworldGenerator != null)
-						plugin.eventListener.unregisterEvents(overworldGenerator);
+						plugin.eventListener.registerEvents(overworldGenerator);
 					if (netherWorldGenerator != null)
-						plugin.eventListener.unregisterEvents(netherWorldGenerator);
+						plugin.eventListener.registerEvents(netherWorldGenerator);
 					if (endWorldGenerator != null)
-						plugin.eventListener.unregisterEvents(endWorldGenerator);
+						plugin.eventListener.registerEvents(endWorldGenerator);
 				}
 				
 				final Game game = this;
@@ -381,7 +383,10 @@ public class Game
 		getGameMode().setTeam(player, null);
 			
 		plugin.gamesByPlayer.remove(player.getName());
-		PlayerInfo info = playerInfo.remove(player.getName());
+		
+		boolean persistent = gameMode.isPersistent();
+		
+		PlayerInfo info = persistent ? playerInfo.get(player.getName()) : playerInfo.remove(player.getName());
 		
 		if ( getGameState().playersInWorld )
 			broadcastMessage(ChatColor.YELLOW + "[Killer] " + player.getName() + " left the game");
@@ -419,8 +424,8 @@ public class Game
 		
 		if ( getGameState() == GameState.WORLD_DELETION )
 			return;
-		else if ( getOnlinePlayers().size() == 0 )
-			finishGame(false);
+		else if ( getOnlinePlayers().size() == 0 && !persistent )
+			finishGame();
 		else if ( player.getName() == hostPlayer && !getGameState().usesWorlds )
 		{
 			for ( Player other : getOnlinePlayers() )
@@ -454,7 +459,7 @@ public class Game
 		setGameState(GameState.QUEUE_FOR_GENERATION);
 	}
 
-	void finishGame(boolean delayCleanup)
+	void finishGame()
 	{	
 		if ( !plugin.isEnabled() )
 			setGameState(GameState.EMPTY);
@@ -663,5 +668,106 @@ public class Game
 	{
 		for ( Player player : getOnlinePlayers(recipients) )
 			player.sendMessage(message);
+	}
+
+	public void loadPersistentData(ConfigurationSection section)
+	{
+		// set game mode and world generator plugins
+		GameModePlugin mode = GameMode.getByName(section.getString("gameMode"));
+		if (mode == null)
+		{
+			plugin.log.warning("Cannot find \"" + section.getString("gameMode") + "\" game mode, used by persistent game");
+			return;
+		}
+		setGameMode(mode);
+		loadPersistentModuleOptions(getGameMode(), section.getConfigurationSection("gameModeOptions"));
+		
+
+		String[] fieldNames = new String[] { "worldGenerator", "netherGenerator", "endGenerator" };
+		
+		for (Environment worldType : Environment.values())
+		{
+			@SuppressWarnings("deprecation")
+			String fieldName = fieldNames[worldType.getId()];
+			
+			WorldGeneratorPlugin gen = WorldGenerator.getByName(worldType, section.getString(fieldName));
+			if (gen != null)
+			{
+				setWorldGenerator(worldType, gen);
+				loadPersistentModuleOptions(getWorldGenerator(worldType), section.getConfigurationSection(fieldName + "Options"));
+			}
+		}
+		
+		// "create" server worlds that will link up to existing worlds' data
+		plugin.worldManager.generateWorlds(this, new Runnable() {
+			@Override
+			public void run() {
+				// recreate the scoreboard
+				scoreboard = getGameMode().createScoreboard();
+				
+				// lastly, load any game mode internal data
+				if (getGameMode().isPersistent())
+					((PersistentGameMode)getGameMode()).loadPersistentData(section.getConfigurationSection("mode"));
+
+				setGameState(GameState.ACTIVE);
+			}
+		});
+	}
+	
+	private void loadPersistentModuleOptions(KillerModule module, ConfigurationSection configData)
+	{
+		if (configData == null || module.options == null || module.options.length == 0)
+			return;
+		
+		for (Option o : module.options)
+		{
+			String keyName = o.getName().replace(" ", "_");
+			String saved = configData.getString(keyName);
+			if (saved != null)
+				if (!o.trySetValue(saved))
+					plugin.log.warning("Got invalid value saved for " + module.getName() + "'s " + keyName + " value: " + saved);
+		}
+	}
+
+	public void savePersistentData(ConfigurationSection section)
+	{
+		GameMode mode = getGameMode();
+		section.set("gameMode", mode.getName());
+		if (mode.options != null && mode.options.length > 0)
+		{
+			ConfigurationSection options = section.createSection("gameModeOptions");
+			savePersistentModuleOptions(mode, options);
+		}
+		
+		String[] fieldNames = new String[] { "worldGenerator", "netherGenerator", "endGenerator" };
+		
+		for (Environment worldType : Environment.values())
+		{
+			WorldGenerator gen = getWorldGenerator(worldType); 
+			if (gen != null)
+			{
+				@SuppressWarnings("deprecation")
+				String fieldName = fieldNames[worldType.getId()];
+				section.set(fieldName, gen.getName());
+				if (gen.options != null && gen.options.length > 0)
+				{
+					ConfigurationSection options = section.createSection(fieldName + "Options");
+					savePersistentModuleOptions(gen, options);
+				}
+			}
+		}
+		
+		// lastly, save any game mode internal data
+		if (getGameMode().isPersistent())
+			((PersistentGameMode)getGameMode()).savePersistentData(section.getConfigurationSection("mode"));
+	}
+
+	private void savePersistentModuleOptions(KillerModule module, ConfigurationSection configDestination)
+	{
+		for (Option o : module.options)
+		{
+			String keyName = o.getName().replace(" ", "_");
+			configDestination.set(keyName, o.getValueString());
+		}
 	}
 }

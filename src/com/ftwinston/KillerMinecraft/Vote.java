@@ -152,7 +152,7 @@ public abstract class Vote
 				Vote vote = null;
 				if ( choice == 1 )
 					vote = new Vote(game, "End the current game?", player) {
-						protected void runOnYes() { game.finishGame(true); }
+						protected void runOnYes() { game.finishGame(); }
 						protected void runOnNo() {}
 						protected void runOnDraw() {}
 					};

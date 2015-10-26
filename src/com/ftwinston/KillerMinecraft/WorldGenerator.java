@@ -28,6 +28,18 @@ public abstract class WorldGenerator extends KillerModule
 		}
 	}
 	
+	static WorldGeneratorPlugin getByName(Environment worldType, String name)
+	{
+		if (name == null)
+			return null;
+		
+		for ( WorldGeneratorPlugin plugin : getGenerators(worldType) )
+			if ( name.equalsIgnoreCase(plugin.getName()) )
+				return plugin;
+		
+		return null;
+	}
+	
 	private static EnumMap<Environment, WorldGeneratorPlugin> defaultWorldGenerators = new EnumMap<Environment, WorldGeneratorPlugin>(Environment.class);
 	static WorldGeneratorPlugin getDefault(Environment worldType)
 	{

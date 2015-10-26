@@ -29,7 +29,7 @@ class PlayerManager
 		if ( playerDataFile.exists() )
 			playerData = YamlConfiguration.loadConfiguration(playerDataFile);
 		else
-			playerData = new YamlConfiguration();		
+			playerData = new YamlConfiguration();
 	}
 	
 	private File playerDataFile;

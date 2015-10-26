@@ -35,6 +35,8 @@ public abstract class GameMode extends KillerModule
 		return null;
 	}
 
+	boolean isPersistent() { return false; }
+	
 	public Scoreboard createScoreboard()
 	{
 		TeamInfo[] teams = getTeams();

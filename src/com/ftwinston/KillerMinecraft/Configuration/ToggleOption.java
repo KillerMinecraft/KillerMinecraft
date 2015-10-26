@@ -42,7 +42,7 @@ public class ToggleOption extends Option
 	@Override
 	protected String getValueString()
 	{
-		return isEnabled() ? "1" : "0";
+		return Boolean.toString(enabled);
 	}
 	
 	@Override
