@@ -381,7 +381,7 @@ class MenuManager
 				}
 				
 				ItemStack stack = new ItemStack(Material.IRON_PICKAXE);
-				setNameAndLore(stack, "Configure Game Mode", highlightStyle + "Current mode: " + game.getGameMode().getName(), "Change any settings specific to,", "the current game mode.");
+				setNameAndLore(stack, "Configure Game Mode", highlightStyle + "Current mode: " + game.getGameMode().getName(), "Change any settings specific to", "the current game mode.");
 				setStack(stack);
 			}
 		});
@@ -633,7 +633,7 @@ class MenuManager
 				}
 				
 				ItemStack stack = new ItemStack(Material.IRON_PICKAXE);
-				setNameAndLore(stack, "Configure World Generator", highlightStyle + "Current generator: " + generator.getName(), "Change any settings specific to,", "the current world generator.");
+				setNameAndLore(stack, "Configure World Generator", highlightStyle + "Current generator: " + generator.getName(), "Change any settings specific to", "the current world generator.");
 				setStack(stack);
 			}
 		});
@@ -678,7 +678,7 @@ class MenuManager
 				}
 				
 				ItemStack stack = new ItemStack(Material.IRON_PICKAXE);
-				setNameAndLore(stack, "Configure Nether Generator", highlightStyle + "Current generator: " + generator.getName(), "Change any settings specific to,", "the current nether generator.");
+				setNameAndLore(stack, "Configure Nether Generator", highlightStyle + "Current generator: " + generator.getName(), "Change any settings specific to", "the current nether generator.");
 				setStack(stack);
 			}
 		});
@@ -723,7 +723,7 @@ class MenuManager
 				}
 				
 				ItemStack stack = new ItemStack(Material.IRON_PICKAXE);
-				setNameAndLore(stack, "Configure End Generator", highlightStyle + "Current generator: " + generator.getName(), "Change any settings specific to,", "the current end generator.");
+				setNameAndLore(stack, "Configure End Generator", highlightStyle + "Current generator: " + generator.getName(), "Change any settings specific to", "the current end generator.");
 				setStack(stack);
 			}
 		});
