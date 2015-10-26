@@ -19,9 +19,9 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 import com.ftwinston.KillerMinecraft.Game.GameState;
 import com.ftwinston.KillerMinecraft.Game.PlayerInfo;
@@ -1446,14 +1446,12 @@ class MenuManager
 					}
 					
 					TeamInfo team = teams[teamIndex];
-					
-					ItemStack item = new ItemStack(Material.LEATHER_HELMET, 1);
-					LeatherArmorMeta meta = (LeatherArmorMeta)item.getItemMeta();
-					meta.setColor(team.getDyeColor().getFireworkColor());
-					item.setItemMeta(meta);
-					
-					setNameAndLore(item, team.getChatColor() + team.getName(), "Join the " + team.getName());
-					setStack(item);
+					ItemStack stack = new ItemStack(Material.BANNER);
+					BannerMeta banner = (BannerMeta)stack.getItemMeta();
+					banner.setBaseColor(team.getDyeColor());
+					stack.setItemMeta(banner);
+					setNameAndLore(stack, team.getChatColor() + team.getName(), "Join the " + team.getName());
+					setStack(stack);
 				};
 			});
 		}
