@@ -128,7 +128,7 @@ public abstract class GameMode extends KillerModule
 			// recalculate which of the teams have the lowest numbers
 			if ( lowest.size() == 0 )
 			{
-				int bestNum = 0;
+				int bestNum = Integer.MAX_VALUE;
 				for ( int i=0; i<teams.length; i++ )
 					if ( counts[i] < bestNum )
 					{
