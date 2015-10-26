@@ -203,7 +203,13 @@ public class Game
 					plugin.playerManager.savePlayerData(player);
 					player.setScoreboard(scoreboard);
 					
-					Helper.teleport(player, getGameMode().getSpawnLocation(player));
+					Location spawnLocation = getGameMode().getSpawnLocation(player);
+					if (spawnLocation == null)
+					{
+						plugin.log.warning(getGameMode().name + " returned a null spawn point");
+						spawnLocation = worlds.get(0).getSpawnLocation();
+					}
+					Helper.teleport(player, spawnLocation);
 					
 					if ( getPlayerInfo(player).isSpectator() )
 						Helper.makeSpectator(this, player);
