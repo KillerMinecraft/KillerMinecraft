@@ -335,7 +335,11 @@ class WorldManager
         System.out.print("Preparing start region for world: " + world.getName() + " (Seed: " + config.getSeed() + ")");
         
         if (config.loadingPersistentWorlds)
-        {// don't run through all the chunks again, just "link up" to the existing folder  
+        {// don't run through all the chunks again, just "link up" to the existing folder
+    		server.getPluginManager().callEvent(new WorldLoadEvent(world));
+    		config.getGame().getWorlds().add(world);
+    		plugin.gamesByWorld.put(world.getName(), config.getGame());
+    		
         	server.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone, 1L);        	
         	return world;
         }

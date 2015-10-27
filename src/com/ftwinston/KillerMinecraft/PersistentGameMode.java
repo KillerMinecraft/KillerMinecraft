@@ -8,7 +8,7 @@ public abstract class PersistentGameMode extends GameMode {
 		return true;
 	}
 
-	abstract void savePersistentData(ConfigurationSection data);
+	protected abstract void savePersistentData(ConfigurationSection data);
 
-	abstract void loadPersistentData(ConfigurationSection data);
+	protected abstract void loadPersistentData(ConfigurationSection data);
 }

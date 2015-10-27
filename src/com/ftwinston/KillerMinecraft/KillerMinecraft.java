@@ -142,7 +142,8 @@ public class KillerMinecraft extends JavaPlugin
 			}
 		}, 20L, 60L); // check every 3 seconds
         
-        restorePersistentGames(persistentData);
+        if (persistentData != null)
+        	restorePersistentGames(persistentData);
 	}
 
 	public void onDisable()
@@ -235,11 +236,11 @@ public class KillerMinecraft extends JavaPlugin
 	
 	private void deleteNonPersistentWorldFolders(YamlConfiguration persistentData)
 	{
-		for (int i=1; i<=games.length; i++)
+		for (int i=1; i<=Settings.numGames; i++)
 		{
 			String gameNum = Integer.toString(i);
 			
-			ConfigurationSection section = persistentData.getConfigurationSection(gameNum);
+			ConfigurationSection section = persistentData == null ? null : persistentData.getConfigurationSection(gameNum);
 			if (section != null)
 				continue; // this is a persistent game, it's worlds must be left intact 
 			

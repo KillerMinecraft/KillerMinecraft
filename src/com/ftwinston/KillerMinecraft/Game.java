@@ -1,6 +1,7 @@
 package com.ftwinston.KillerMinecraft;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -365,6 +366,14 @@ public class Game
 			getGameMode().playerJoinedLate(player);
 
 			getGameMode().sendGameModeHelpMessage(player);
+			
+			Location spawnLocation = getGameMode().getSpawnLocation(player);
+			if (spawnLocation == null)
+			{
+				plugin.log.warning(getGameMode().name + " returned a null spawn point");
+				spawnLocation = worlds.get(0).getSpawnLocation();
+			}
+			Helper.teleport(player, spawnLocation);
 						
 			if ( player.getInventory().contains(Material.COMPASS) )
 			{
@@ -675,7 +684,7 @@ public class Game
 			player.sendMessage(message);
 	}
 
-	public void loadPersistentData(ConfigurationSection section)
+	public void loadPersistentData(final ConfigurationSection section)
 	{
 		// set game mode and world generator plugins
 		GameModePlugin mode = GameMode.getByName(section.getString("gameMode"));
@@ -687,13 +696,14 @@ public class Game
 		setGameMode(mode);
 		loadPersistentModuleOptions(getGameMode(), section.getConfigurationSection("gameModeOptions"));
 		
-
-		String[] fieldNames = new String[] { "worldGenerator", "netherGenerator", "endGenerator" };
+		EnumMap<Environment, String> fieldNames = new EnumMap<>(Environment.class);
+		fieldNames.put(Environment.NORMAL, "worldGenerator");
+		fieldNames.put(Environment.NETHER, "netherGenerator");
+		fieldNames.put(Environment.THE_END, "endGenerator");
 		
 		for (Environment worldType : Environment.values())
 		{
-			@SuppressWarnings("deprecation")
-			String fieldName = fieldNames[worldType.getId()];
+			String fieldName = fieldNames.get(worldType);
 			
 			WorldGeneratorPlugin gen = WorldGenerator.getByName(worldType, section.getString(fieldName));
 			if (gen != null)
@@ -745,15 +755,17 @@ public class Game
 			savePersistentModuleOptions(mode, options);
 		}
 		
-		String[] fieldNames = new String[] { "worldGenerator", "netherGenerator", "endGenerator" };
+		EnumMap<Environment, String> fieldNames = new EnumMap<>(Environment.class);
+		fieldNames.put(Environment.NORMAL, "worldGenerator");
+		fieldNames.put(Environment.NETHER, "netherGenerator");
+		fieldNames.put(Environment.THE_END, "endGenerator");
 		
 		for (Environment worldType : Environment.values())
 		{
 			WorldGenerator gen = getWorldGenerator(worldType); 
 			if (gen != null)
 			{
-				@SuppressWarnings("deprecation")
-				String fieldName = fieldNames[worldType.getId()];
+				String fieldName = fieldNames.get(worldType);
 				section.set(fieldName, gen.getName());
 				if (gen.options != null && gen.options.length > 0)
 				{

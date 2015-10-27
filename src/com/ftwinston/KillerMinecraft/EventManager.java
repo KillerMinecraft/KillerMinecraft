@@ -629,7 +629,7 @@ class EventManager implements Listener
 		
 		if ( !game.getGameState().usesWorlds )
 			game.removePlayerFromGame(event.getPlayer(), true); // disconnecting when in a non-active game should just chuck you out
-		else
+		else if (!game.getGameMode().isPersistent())
 		{
 			final String playerName = event.getPlayer().getName();
 			
