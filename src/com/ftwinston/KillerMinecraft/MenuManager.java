@@ -74,7 +74,10 @@ class MenuManager
 				if ( game.canJoin() )
 				{
 					game.addPlayerToGame(player);
-					show(player);
+					if (game.getGameState() == GameState.ACTIVE)
+						player.closeInventory();
+					else
+						show(player);
 				}
 				else
 					player.sendMessage(ChatColor.RED + "You can't join this game");
