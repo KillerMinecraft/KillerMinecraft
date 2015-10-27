@@ -299,7 +299,7 @@ public class Game
 	
 	public class PlayerInfo
 	{
-		public PlayerInfo(boolean spectator) { spec = spectator; team = null; spectatorTarget = null; }
+		public PlayerInfo(boolean spectator) { spec = spectator; team = null; }
 		
 		private boolean spec;
 		private TeamInfo team;
@@ -317,9 +317,6 @@ public class Game
 		{
 			spec = b;
 		}
-		
-		// who this player (as a spectator) is following
-		public String spectatorTarget;
 		
 		public int nextHelpMessage = 0;
 	}
@@ -712,6 +709,26 @@ public class Game
 				loadPersistentModuleOptions(getWorldGenerator(worldType), section.getConfigurationSection(fieldName + "Options"));
 			}
 		}
+
+		// load player data
+		ConfigurationSection players = section.getConfigurationSection("players");
+		TeamInfo[] teams = getGameMode().getTeams();
+		
+		for (String playerName : players.getKeys(false))
+		{
+			ConfigurationSection playerSection = players.getConfigurationSection(playerName);
+			if (playerSection == null)
+				continue;
+			
+			boolean spectator = playerSection.getBoolean("spectator", false);
+			PlayerInfo info = new PlayerInfo(spectator);
+			
+			int teamNum = playerSection.getInt("team", -1);
+			if (teamNum != -1 && teams != null && teamNum < teams.length)
+				info.setTeam(teams[teamNum]);
+			
+			playerInfo.put(playerName,  info);
+		}
 		
 		// "create" server worlds that will link up to existing worlds' data
 		plugin.worldManager.generateWorlds(this, new Runnable() {
@@ -773,6 +790,28 @@ public class Game
 					savePersistentModuleOptions(gen, options);
 				}
 			}
+		}
+		
+		// save player data
+		ConfigurationSection players = section.createSection("players");
+		TeamInfo[] teams = getGameMode().getTeams();
+		for (Map.Entry<String, PlayerInfo> entry : playerInfo.entrySet())
+		{
+			ConfigurationSection playerSection = players.createSection(entry.getKey());			
+			PlayerInfo info = entry.getValue();
+			
+			playerSection.set("spectator", info.isSpectator());
+
+			TeamInfo team = info.getTeam(); 
+			if (team == null)
+				continue;
+			
+			for (int i=0; i<teams.length; i++)
+				if (teams[i] == team)
+				{
+					playerSection.set("team", i);
+					break;
+				}
 		}
 		
 		// lastly, save any game mode internal data
