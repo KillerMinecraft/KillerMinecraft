@@ -1677,7 +1677,7 @@ class MenuManager
 
 	public final boolean allowTeamSelection()
 	{
-		if ( !game.getGameState().keepLobbyUpToDate || !game.getGameMode().allowTeamSelection() || game.getGameMode().getTeams().length == 0 )
+		if ( !game.getGameState().usesLobby || !game.getGameMode().allowTeamSelection() || game.getGameMode().getTeams().length == 0 )
 			return false;
 		
 		return teamSelectionEnabled;

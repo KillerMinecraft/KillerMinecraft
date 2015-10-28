@@ -62,13 +62,13 @@ public class Game
 		FINISHED(true, true, false, false),
 		WORLD_DELETION(true, false, false, false);
 
-		public final boolean usesWorlds, playersInWorld, canJoin, keepLobbyUpToDate;
-		private GameState(boolean usesWorlds, boolean playersInWorld, boolean canJoin, boolean keepLobbyUpToDate)
+		public final boolean usesWorlds, playersInWorld, canJoin, usesLobby;
+		private GameState(boolean usesWorlds, boolean playersInWorld, boolean canJoin, boolean usesLobby)
 		{
 			this.usesWorlds = usesWorlds;
 			this.playersInWorld = playersInWorld;
 			this.canJoin = canJoin;
-			this.keepLobbyUpToDate = keepLobbyUpToDate;
+			this.usesLobby = usesLobby;
 		}
 	}
 	
@@ -413,7 +413,7 @@ public class Game
 			online.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
 			online.sendMessage("You have left " + getName());
 
-			if ( !disconnected && plugin.playerManager.restorePlayerData(online) && getGameState().playersInWorld )
+			if ( !disconnected && !getGameState().usesLobby && plugin.playerManager.restorePlayerData(online) )
 				plugin.playerManager.playerDataChanged();
 			
 			if ( Settings.filterScoreboard )
