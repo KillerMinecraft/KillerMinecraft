@@ -205,12 +205,7 @@ class EventManager implements Listener
 		World world = event.getLocation().getWorld();
 		Game game = plugin.getGameForWorld(world);
 		
-		if ( game == null )
-			return;
-
-		if ( plugin.worldManager.isProtectedLocation(game, event.getLocation(), null) )
-			event.setCancelled(true);
-		else
+		if (game != null)
 			fireGameEvent(event, game, world);
 	}
 	
