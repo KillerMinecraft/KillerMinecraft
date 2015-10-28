@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -216,6 +217,9 @@ public class Game
 			}
 			case ACTIVE:
 			{
+				for (Player player : getOnlinePlayers())
+					setupHelpMessages(player);
+				
 				break;
 			}
 			case FINISHED:
@@ -318,7 +322,7 @@ public class Game
 			spec = b;
 		}
 		
-		public int nextHelpMessage = 0;
+		public ListIterator<String> helpMessageIterator = null;
 	}
 
 	public void addPlayerToGame(Player player)
@@ -362,7 +366,8 @@ public class Game
 			
 			getGameMode().playerJoinedLate(player);
 
-			getGameMode().sendGameModeHelpMessage(player);
+			setupHelpMessages(player);
+			sendHelpMessage(player);
 			
 			Location spawnLocation = getGameMode().getSpawnLocation(player);
 			if (spawnLocation == null)
@@ -449,6 +454,39 @@ public class Game
 		}
 		
 		menuManager.updateGameIcon();
+	}
+		
+	final void setupHelpMessages(Player player)
+	{
+		PlayerInfo info = getPlayerInfo(player); 
+		info.helpMessageIterator = getGameMode().getHelpMessages(info.getTeam()).listIterator();
+	}
+
+	final void sendHelpMessages()
+	{
+		for (Player player : getOnlinePlayers())
+			sendHelpMessage(player);
+	}
+	
+	final boolean sendHelpMessage(Player player)
+	{
+		PlayerInfo info = getPlayerInfo().get(player.getName());
+		
+		if (info.helpMessageIterator != null && info.helpMessageIterator.hasNext())
+		{
+			boolean firstMessage = !info.helpMessageIterator.hasPrevious();
+			
+			String message = info.helpMessageIterator.next(); 
+			if (message != null)
+			{
+				if (firstMessage)
+					message = ChatColor.YELLOW + getName() + ChatColor.RESET + "\n" + message; // put the game mode name on the front of the first message
+				
+				player.sendMessage(message);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	Vote currentVote = null;
@@ -584,7 +622,7 @@ public class Game
 		helpMessageProcess = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			public void run()
 			{
-				getGameMode().sendGameModeHelpMessage();
+				sendHelpMessages();
 			}
 		}, 0, 550L); // send every 25 seconds
 		

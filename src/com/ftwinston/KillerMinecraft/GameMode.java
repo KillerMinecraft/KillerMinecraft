@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Random;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -163,7 +162,7 @@ public abstract class GameMode extends KillerModule
 	
 	public void beforeWorldGeneration(int worldNumber, WorldConfig world) { }
 
-	public abstract String getHelpMessage(int messageNum, TeamInfo team);
+	public abstract List<String> getHelpMessages(TeamInfo team);
 
 	public boolean allowTeamSelection() { return teams != null; }
 
@@ -246,10 +245,7 @@ public abstract class GameMode extends KillerModule
 	}
 
 	final void startGame()
-	{	
-		/*
-		plugin.playerManager.startGame(game);
-		*/
+	{
 		gameStarted();
 	}
 	
@@ -264,32 +260,5 @@ public abstract class GameMode extends KillerModule
 			return;	
 		
 		game.setGameState(GameState.FINISHED);
-	}
-
-	final void sendGameModeHelpMessage()
-	{
-		for ( Player player : getOnlinePlayers() )
-			sendGameModeHelpMessage(player);
-	}
-	
-	final boolean sendGameModeHelpMessage(Player player)
-	{
-		PlayerInfo info = game.getPlayerInfo().get(player.getName());
-		String message = null;
-		
-		if ( info.nextHelpMessage >= 0 )
-		{
-			message = getHelpMessage(info.nextHelpMessage, info.getTeam()); // 0 ... n
-			if ( message != null )
-			{
-				if ( info.nextHelpMessage == 0 )
-					message = ChatColor.YELLOW + getName() + ChatColor.RESET + "\n" + message; // put the game mode name on the front of the first message
-				
-				player.sendMessage(message);
-				info.nextHelpMessage ++;
-				return true;
-			}
-		}
-		return false;
 	}
 }

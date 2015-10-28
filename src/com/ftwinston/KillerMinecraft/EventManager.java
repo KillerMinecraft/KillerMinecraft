@@ -11,6 +11,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventException;
@@ -915,7 +916,12 @@ class EventManager implements Listener
 		World world = event.getBlock().getWorld();
 		Game game = plugin.getGameForWorld(world);
 		if ( game != null )
-			fireGameEvent(event, game, world);
+		{
+			if (event.getEntityType() == EntityType.FALLING_BLOCK && plugin.worldManager.isProtectedLocation(game, event.getBlock().getLocation(), null))
+				event.setCancelled(true);
+			else
+				fireGameEvent(event, game, world);
+		}
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)

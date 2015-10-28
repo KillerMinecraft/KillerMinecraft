@@ -94,10 +94,10 @@ public class CommandHandler
 		if ( game == null )
 			return true;
 		
-		if ( !game.getGameMode().sendGameModeHelpMessage(player) )
+		if (!game.sendHelpMessage(player))
 		{// if there was no message to send, restart from the beginning
-			game.getPlayerInfo(player).nextHelpMessage = 0;
-			game.getGameMode().sendGameModeHelpMessage(player);
+			game.setupHelpMessages(player);
+			game.sendHelpMessage(player);
 		}
 		return true;
 	}
