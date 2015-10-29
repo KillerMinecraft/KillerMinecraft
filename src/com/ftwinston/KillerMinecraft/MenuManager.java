@@ -1466,14 +1466,65 @@ class MenuManager
 	{
 		Inventory menu = Bukkit.createInventory(null, 9, "Killer Minecraft: " + game.getName());
 
-		ItemStack voteItem = new ItemStack(Material.ENCHANTED_BOOK);
-		setNameAndLore(voteItem, "Call a vote", "Click to see options");
-		addItemToMenu(this, new MenuItem(menu, 0, voteItem) {
+		ItemStack stack = new ItemStack(Material.BOOK_AND_QUILL);
+		setNameAndLore(stack, "Vote: End game", "Click to start a vote", "to end the current game");
+		addItemToMenu(this, new MenuItem(menu, 0, stack) {
 			@Override
 			public void runWhenClicked(Player player) {
-				Vote.showVoteMenu(player);
+				if (game.currentVote != null)
+				{
+					player.sendMessage("Cannot start a vote: another vote is in progress"); 
+					return;
+				}
+				
+				Vote vote = new Vote(game, "End the current game?", player) {
+					protected void runOnYes() { game.finishGame(); }
+					protected void runOnNo() {}
+					protected void runOnDraw() {}
+				};
+
+				game.startVote(vote);
 			}
 		});
+
+		if (Settings.allowLateJoiners)
+		{
+			addItemToMenu(this, new MenuItem(menu, 2, null) {
+				@Override
+				protected void runWhenClicked(Player player) {
+					if (game.currentVote != null)
+					{
+						player.sendMessage("Cannot start a vote: another vote is in progress"); 
+						return;
+					}
+					
+					Vote vote;
+					if (game.isPrivate())
+						vote = new Vote(game, "Open the game to other players?", player) {
+							protected void runOnYes() { game.setPrivate(false); game.setPlayerLimit(0); updateMenus(); }
+							protected void runOnNo() {}
+							protected void runOnDraw() {}
+						};
+					else
+						vote = new Vote(game, "Prevent other players from joining the game?", player) {
+							protected void runOnYes() { game.setPrivate(true); updateMenus(); }
+							protected void runOnNo() {}
+							protected void runOnDraw() {}
+						};
+					game.startVote(vote);
+				};
+				
+				@Override
+				public void recalculateStack() {
+					stack = new ItemStack(Material.IRON_DOOR);
+					if (game.isPrivate())
+						setNameAndLore(stack, "Vote: Open game", "Click to start a vote", "to open this game to other players");
+					else
+						setNameAndLore(stack, "Vote: Lock game", "Click to start a vote", "to prevent other players from joining");					
+					setStack(stack);
+				};
+			});
+		}
 		
 		addItemToMenu(this, new MenuItem(menu, 8, quitItem) {
 			@Override
@@ -1766,6 +1817,7 @@ class MenuManager
 		repopulateMenu(GameMenu.WORLD_GEN_CONFIG);
 		repopulateMenu(GameMenu.PLAYERS);
 		repopulateMenu(GameMenu.TEAM_SELECTION);
+		repopulateMenu(GameMenu.ACTIVE);
 		
 		updateGameIcon();
 	}

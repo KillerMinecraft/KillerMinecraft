@@ -3,13 +3,6 @@ package com.ftwinston.KillerMinecraft;
 import java.util.LinkedList;
 
 import org.bukkit.ChatColor;
-import org.bukkit.conversations.Conversation;
-import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.ConversationFactory;
-import org.bukkit.conversations.InactivityConversationCanceller;
-import org.bukkit.conversations.MessagePrompt;
-import org.bukkit.conversations.NumericPrompt;
-import org.bukkit.conversations.Prompt;
 import org.bukkit.entity.Player;
 
 public abstract class Vote
@@ -105,77 +98,5 @@ public abstract class Vote
 	{
 		game.plugin.getServer().getScheduler().cancelTask(processID);
 		processID = -1;
-	}
-	
-	static void showVoteMenu(Player player)
-	{
-		Conversation convo = voteConvFactory.buildConversation(player);
-		convo.begin();
-	}
-	
-	private static ConversationFactory voteConvFactory;
-	
-	static void setupConversation()
-	{
-		final MessagePrompt cantVotePrompt = new MessagePrompt() {
-			@Override
-			public String getPromptText(ConversationContext context) {
-				return "You cannot start a vote right now, as another vote is in progress.";
-			}
-			
-			@Override
-			protected Prompt getNextPrompt(ConversationContext context)
-			{
-				return Prompt.END_OF_CONVERSATION;
-			}
-		};
-		
-        final NumericPrompt initialPrompt = new NumericPrompt() {
-        	
-			public String getPromptText(ConversationContext context)
-			{
-				return "What do you want to start a vote on? Say the number to choose:\n" + ChatColor.GOLD + "1." + ChatColor.RESET + " End game\n" + ChatColor.GOLD + "0." + ChatColor.RESET + " Cancel";
-			}
-			
-			protected Prompt acceptValidatedInput(ConversationContext context, Number val)
-			{
-				Player player = context.getForWhom() instanceof Player ? (Player)context.getForWhom() : null;
-				final Game game = KillerMinecraft.instance.getGameForPlayer(player);
-				if (game == null)
-					return Prompt.END_OF_CONVERSATION;
-				
-				if (game.currentVote != null)
-					return cantVotePrompt;
-				
-				int choice = val.intValue();
-				
-				Vote vote = null;
-				if ( choice == 1 )
-					vote = new Vote(game, "End the current game?", player) {
-						protected void runOnYes() { game.finishGame(); }
-						protected void runOnNo() {}
-						protected void runOnDraw() {}
-					};
-				
-				
-				if (vote != null)
-					game.startVote(vote);
-				
-				return Prompt.END_OF_CONVERSATION;
-			}
-		};
-        
-        voteConvFactory = new ConversationFactory(KillerMinecraft.instance);
-        voteConvFactory.withFirstPrompt(initialPrompt);
-        voteConvFactory.withLocalEcho(false);
-        voteConvFactory.withModality(false);
-        voteConvFactory.withConversationCanceller(new InactivityConversationCanceller(KillerMinecraft.instance, 30) {
-        	@Override
-        	protected void cancelling(Conversation conversation) {
-        		Player player = conversation.getForWhom() instanceof Player ? (Player)conversation.getForWhom() : null;
-    			if ( player != null )
-    				player.sendMessage("Vote setup cancelled");
-        	};
-        });
 	}
 }
