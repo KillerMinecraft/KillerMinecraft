@@ -463,6 +463,7 @@ class MenuManager
 				String generatorName = generator == null ? "<none>" : generator.getName(); 
 				ItemStack stack = new ItemStack(Material.GRASS);
 				setNameAndLore(stack, "Configure World Generator", highlightStyle + "Current generator: " + generatorName, "Change how the overworld is", "generated in your game");
+				setStack(stack);
 			}
 		});
 
@@ -491,6 +492,7 @@ class MenuManager
 				String generatorName = generator == null ? "<none>" : generator.getName();
 				ItemStack stack = new ItemStack(Material.NETHERRACK);
 				setNameAndLore(stack, "Configure Nether Generator", highlightStyle + "Current generator: " + generatorName, "Change how the nether is", "generated in your game");
+				setStack(stack);
 			}
 		});
 
@@ -519,6 +521,7 @@ class MenuManager
 				String generatorName = generator == null ? "<none>" : generator.getName();
 				ItemStack stack = new ItemStack(Material.ENDER_STONE);
 				setNameAndLore(stack, "Configure End Generator", highlightStyle + "Current generator: " + generatorName, "Change how the End is", "generated in your game");
+				setStack(stack);
 			}
 		});
 		
@@ -1451,7 +1454,7 @@ class MenuManager
 				game.menuManager.show(player, GameMenu.ACTIVE); break;
 			case EMPTY:
 			case SETUP:
-				game.menuManager.show(player, GameMenu.SETUP); break;
+				game.menuManager.show(player, game.menuManager.moduleSetupComplete ? GameMenu.SETUP : GameMenu.GAME_MODE_SELECT); break;
 			default:
 				PlayerInfo info = game.getPlayerInfo(player.getName());
 				game.menuManager.show(player, info.isSpectator() ? GameMenu.SPECTATOR_LOBBY : GameMenu.LOBBY); break;
