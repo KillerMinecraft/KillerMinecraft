@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Random;
 
 import net.minecraft.server.v1_8_R3.ChunkProviderServer;
 import net.minecraft.server.v1_8_R3.IChunkProvider;
@@ -13,6 +14,7 @@ import net.minecraft.server.v1_8_R3.NBTTagCompound;
 import net.minecraft.server.v1_8_R3.NBTTagList;
 import net.minecraft.server.v1_8_R3.BlockPosition;
 import net.minecraft.server.v1_8_R3.Blocks;
+import net.minecraft.server.v1_8_R3.ChunkProviderGenerate;
 import net.minecraft.server.v1_8_R3.ChunkProviderHell;
 import net.minecraft.server.v1_8_R3.EntityEnderSignal;
 import net.minecraft.server.v1_8_R3.EntityHuman;
@@ -27,11 +29,14 @@ import net.minecraft.server.v1_8_R3.PacketPlayInClientCommand;
 import net.minecraft.server.v1_8_R3.RegionFile;
 import net.minecraft.server.v1_8_R3.RegionFileCache;
 import net.minecraft.server.v1_8_R3.ServerNBTManager;
+import net.minecraft.server.v1_8_R3.StructureBoundingBox;
+import net.minecraft.server.v1_8_R3.StructureStart;
 import net.minecraft.server.v1_8_R3.TileEntity;
 import net.minecraft.server.v1_8_R3.TileEntityCommand;
 import net.minecraft.server.v1_8_R3.World;
 import net.minecraft.server.v1_8_R3.WorldData;
 import net.minecraft.server.v1_8_R3.WorldGenNether;
+import net.minecraft.server.v1_8_R3.WorldGenVillage.WorldGenVillageStart;
 import net.minecraft.server.v1_8_R3.WorldManager;
 import net.minecraft.server.v1_8_R3.WorldServer;
 import net.minecraft.server.v1_8_R3.WorldSettings;
@@ -348,5 +353,18 @@ public class v1_8_8 extends CraftBukkitAccess
         // Empty enchanting compound
         compound.set("ench", new NBTTagList());
         return output;
+	}
+
+	@Override
+	public void generateVillage(org.bukkit.World w, int minX, int maxX, int minZ, int maxZ)
+	{
+		CraftWorld craftworld = (CraftWorld)w;
+		ChunkProviderGenerate chunkProvider = (ChunkProviderGenerate)craftworld.getHandle().worldProvider.getChunkProvider();
+		Random random = getField(ChunkProviderGenerate.class, chunkProvider, "k");
+		
+		org.bukkit.block.Block center = w.getBlockAt((minX + maxX) / 2, 64, (minZ + maxZ) / 2);
+		
+		StructureStart start = new WorldGenVillageStart(craftworld.getHandle(), random, center.getChunk().getZ(), center.getChunk().getZ(), 0);
+		start.a(craftworld.getHandle(), random, new StructureBoundingBox(minX, minZ, maxX, maxZ));
 	}
 }

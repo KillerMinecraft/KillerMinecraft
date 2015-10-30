@@ -446,6 +446,11 @@ public class Helper
 	{
 		return KillerMinecraft.instance.craftBukkit.findNearestNetherFortress(loc);
 	}
+
+	public static void generateVillage(World w, int minX, int maxX, int minZ, int maxZ)
+	{
+		KillerMinecraft.instance.craftBukkit.generateVillage(w, minX, maxX, minZ, maxZ);
+	}
 	
 	public static boolean createFlyingEnderEye(Player player, Location target)
 	{

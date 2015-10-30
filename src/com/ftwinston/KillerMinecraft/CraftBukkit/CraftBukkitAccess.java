@@ -96,4 +96,6 @@ public abstract class CraftBukkitAccess
 	public abstract void setCommandBlockCommand(Block b, String command);
 
 	public abstract ItemStack setEnchantmentGlow(ItemStack item);
+	
+	public abstract void generateVillage(World w, int minX, int maxX, int minZ, int maxZ);
 }
