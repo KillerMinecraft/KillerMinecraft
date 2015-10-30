@@ -34,16 +34,13 @@ class MenuManager
 	enum GameMenu
 	{
 		SETUP,
-		GAME_MODE,
+		GAME_MODE_SELECT,
 		GAME_MODE_CONFIG,
-		WORLDS,
-		WORLD_GEN,
+		WORLD_GEN_SELECT,
 		WORLD_GEN_CONFIG,
-		WORLD_SETTINGS,
+		//MUTATORS,
 		PLAYERS,
 		DIFFICULTY,
-		MONSTERS,
-		ANIMALS,
 		WORLD_BORDERS,
 
 		SPECIFIC_OPTION_CHOICE,
@@ -109,16 +106,13 @@ class MenuManager
 		inventories.put(GameMenu.TEAM_SELECTION, createTeamMenu());
 		inventories.put(GameMenu.ACTIVE, createActiveMenu());
 		
-		inventories.put(GameMenu.GAME_MODE, createGameModeMenu());
+		inventories.put(GameMenu.GAME_MODE_SELECT, createGameModeSelectionMenu());
 		inventories.put(GameMenu.GAME_MODE_CONFIG, createGameModeConfigMenu());
-		inventories.put(GameMenu.WORLDS, createWorldsMenu());
-		inventories.put(GameMenu.WORLD_SETTINGS, createWorldSettingsMenu());
-		inventories.put(GameMenu.WORLD_GEN, createWorldGenMenu());
+		inventories.put(GameMenu.WORLD_GEN_SELECT, createWorldGenSelectionMenu());
 		inventories.put(GameMenu.WORLD_GEN_CONFIG, createWorldGenConfigMenu());
+		//inventories.put(GameMenu.MUTATORS, createMutatorsMenu());
 		inventories.put(GameMenu.PLAYERS, createPlayersMenu());
 		inventories.put(GameMenu.DIFFICULTY, createDifficultyMenu());
-		inventories.put(GameMenu.MONSTERS, createMonstersMenu());
-		inventories.put(GameMenu.ANIMALS, createAnimalsMenu());
 		inventories.put(GameMenu.WORLD_BORDERS, createWorldBordersMenu());
 	}
 	
@@ -350,6 +344,76 @@ class MenuManager
 		return output;
 	}
 	
+	GameMenu getNextSetupMenu(GameMenu current)
+	{
+		switch (current)
+		{
+		case GAME_MODE_SELECT:
+			if (shouldShowWorldSelection(Environment.NORMAL))
+			{
+				worldGeneratorType = Environment.NORMAL;
+				return GameMenu.WORLD_GEN_SELECT;
+			}
+		case WORLD_GEN_SELECT:
+			switch (worldGeneratorType)
+			{
+			case NORMAL:
+				if (shouldShowWorldSelection(Environment.NETHER))
+				{
+					worldGeneratorType = Environment.NETHER;
+					return GameMenu.WORLD_GEN_SELECT;
+				}
+			case NETHER:
+				if (shouldShowWorldSelection(Environment.THE_END))
+				{
+					worldGeneratorType = Environment.THE_END;
+					return GameMenu.WORLD_GEN_SELECT;
+				}
+			case THE_END:
+				//return GameMenu.MUTATORS;
+			}
+		default:
+			break;
+		}
+		
+		moduleSetupComplete = true;
+		return GameMenu.SETUP;
+	}
+	
+	GameMenu getPrevSetupMenu(GameMenu current)
+	{
+		if (moduleSetupComplete)
+		{
+			if (current == GameMenu.GAME_MODE_SELECT)
+				return GameMenu.GAME_MODE_CONFIG;
+			else if (current == GameMenu.WORLD_GEN_SELECT)
+				return GameMenu.WORLD_GEN_CONFIG;
+			
+			return GameMenu.SETUP;
+		}
+		
+		if (current == GameMenu.WORLD_GEN_SELECT)
+			switch (worldGeneratorType)
+			{
+			case THE_END:
+				if (shouldShowWorldSelection(Environment.NETHER))
+				{
+					worldGeneratorType = Environment.NETHER;
+					return GameMenu.WORLD_GEN_SELECT;
+				}
+			case NETHER:
+				if (shouldShowWorldSelection(Environment.NORMAL))
+				{
+					worldGeneratorType = Environment.NORMAL;
+					return GameMenu.WORLD_GEN_SELECT;
+				}
+			case NORMAL:
+				
+			}
+		
+		return GameMenu.GAME_MODE_SELECT;
+	}
+	
 	private Inventory createSetupMenu()
 	{
 		Inventory menu = Bukkit.createInventory(null, 9, "Killer Minecraft: Game setup");
@@ -357,62 +421,143 @@ class MenuManager
 		addItemToMenu(this, new MenuItem(menu, 0, null) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.GAME_MODE);
+				Option[] options = game.getGameMode().options;
+				GameMenu menu = options == null || options.length == 0 ? GameMenu.GAME_MODE_SELECT : GameMenu.GAME_MODE_CONFIG;
+				show(player, menu);
 			}
 			
 			@Override
 			public void recalculateStack() {
-				ItemStack stack = new ItemStack(Material.CAKE);
-				setNameAndLore(stack, "Change Game Mode", highlightStyle + "Current mode: " + game.getGameMode().getName(), "The game mode is the main set of rules,", "and controls every aspect of a game.");
-				setStack(stack);
-			}
-		});
-		
-		addItemToMenu(this, new MenuItem(menu, 1, null) {
-			@Override
-			public void runWhenClicked(Player player) {
-				show(player, GameMenu.GAME_MODE_CONFIG);
-			}
-			
-			@Override
-			public void recalculateStack() {
-				Option[] options = game.getGameMode().options; 
-				if (options == null || options.length == 0)
-				{
-					setStack(null);
-					return;
-				}
+				Option[] options = game.getGameMode().options;
+				String label = options == null || options.length == 0 ? "Change game mode" : "Configure game mode";
 				
-				ItemStack stack = new ItemStack(Material.IRON_PICKAXE);
-				setNameAndLore(stack, "Configure Game Mode", highlightStyle + "Current mode: " + game.getGameMode().getName(), "Change any settings specific to", "the current game mode.");
+				ItemStack stack = new ItemStack(Material.CAKE);
+				setNameAndLore(stack, label, highlightStyle + "Current mode: " + game.getGameMode().getName(), "The game mode is the main set of rules,", "and controls every aspect of a game.");
 				setStack(stack);
 			}
 		});
 
-		ItemStack worldGenStack = new ItemStack(Material.GRASS);
-		setNameAndLore(worldGenStack, "Configure Worlds", "");
-		addItemToMenu(this, new MenuItem(menu, 2, worldGenStack) {
+		addItemToMenu(this, new MenuItem(menu, 1, null) {
 			@Override
 			public void runWhenClicked(Player player) {
-				if (shouldShowWorldSelection(Environment.NORMAL) || shouldShowWorldSelection(Environment.NETHER) || shouldShowWorldSelection(Environment.THE_END))
-					show(player, GameMenu.WORLDS);
-				else
-					show(player, GameMenu.WORLD_SETTINGS);
+				worldGeneratorType = Environment.NORMAL;
+				repopulateMenu(GameMenu.WORLD_GEN_SELECT);
+				repopulateMenu(GameMenu.WORLD_GEN_CONFIG);
+				show(player, GameMenu.WORLD_GEN_CONFIG);
+			}
+			
+			@Override
+			public void recalculateStack()
+			{
+				WorldGenerator generator = game.getWorldGenerator(Environment.NORMAL);
+				if (!shouldShowWorldSelection(Environment.NORMAL))
+				{
+					Option[] options = generator == null ? null : generator.options;
+					if (options == null || options.length == 0)
+					{
+						setStack(null);
+						return;
+					}
+				}
+				
+				String generatorName = generator == null ? "<none>" : generator.getName(); 
+				ItemStack stack = new ItemStack(Material.GRASS);
+				setNameAndLore(stack, "Configure World Generator", highlightStyle + "Current generator: " + generatorName, "Change how the overworld is", "generated in your game");
 			}
 		});
+
+		addItemToMenu(this, new MenuItem(menu, 2, null) {
+			@Override
+			public void runWhenClicked(Player player) {
+				worldGeneratorType = Environment.NETHER;
+				repopulateMenu(GameMenu.WORLD_GEN_SELECT);
+				repopulateMenu(GameMenu.WORLD_GEN_CONFIG);
+				show(player, GameMenu.WORLD_GEN_CONFIG);
+			}
+			
+			@Override
+			public void recalculateStack()
+			{
+				WorldGenerator generator = game.getWorldGenerator(Environment.NETHER);
+				if (!shouldShowWorldSelection(Environment.NETHER))
+				{
+					Option[] options = generator == null ? null : generator.options;
+					if (options == null || options.length == 0)
+					{
+						setStack(null);
+						return;
+					}
+				}
+				String generatorName = generator == null ? "<none>" : generator.getName();
+				ItemStack stack = new ItemStack(Material.NETHERRACK);
+				setNameAndLore(stack, "Configure Nether Generator", highlightStyle + "Current generator: " + generatorName, "Change how the nether is", "generated in your game");
+			}
+		});
+
+		addItemToMenu(this, new MenuItem(menu, 3, null) {
+			@Override
+			public void runWhenClicked(Player player) {
+				worldGeneratorType = Environment.THE_END;
+				repopulateMenu(GameMenu.WORLD_GEN_SELECT);
+				repopulateMenu(GameMenu.WORLD_GEN_CONFIG);
+				show(player, GameMenu.WORLD_GEN_CONFIG);
+			}
+			
+			@Override
+			public void recalculateStack()
+			{
+				WorldGenerator generator = game.getWorldGenerator(Environment.THE_END);
+				if (!shouldShowWorldSelection(Environment.THE_END))
+				{
+					Option[] options = generator == null ? null : generator.options;
+					if (options == null || options.length == 0)
+					{
+						setStack(null);
+						return;
+					}
+				}
+				String generatorName = generator == null ? "<none>" : generator.getName();
+				ItemStack stack = new ItemStack(Material.ENDER_STONE);
+				setNameAndLore(stack, "Configure End Generator", highlightStyle + "Current generator: " + generatorName, "Change how the End is", "generated in your game");
+			}
+		});
+		
 		/*
 		final ItemStack rootMutators = new ItemStack(Material.EXP_BOTTLE);
 		setNameAndLore(rootMutators, "Select Mutators", "Mutators change specific aspects", "of a game, but aren't specific", "to any particular game mode");
-		addItemToMenu(this, new MenuItem(menu, 3, rootMutators) {
+		addItemToMenu(this, new MenuItem(menu, 4, rootMutators) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.SETUP_MUTATORS);
 			}
 		});
 		*/
+
+		if (Settings.worldBorderSizes.length > 1)
+		{
+			ItemStack worldBorders = new ItemStack(Material.GLASS);
+			setNameAndLore(worldBorders, "World Borders", "Limit the size of", "game worlds");
+			addItemToMenu(this, new MenuItem(menu, 5, worldBorders) {
+				@Override
+				public void runWhenClicked(Player player) {
+					show(player, GameMenu.WORLD_BORDERS);
+				}
+			});
+		}
+		
+		ItemStack difficulty = new ItemStack(Material.SKULL_ITEM, 1, (short)4); // creeper head
+		setNameAndLore(difficulty, "Gameplay Difficulty", "Controls the minecraft difficulty level.", "Hard is recommended in most cases.");
+		addItemToMenu(this, new MenuItem(menu, 6, difficulty) {
+			@Override
+			public void runWhenClicked(Player player) {
+				repopulateMenu(GameMenu.DIFFICULTY);
+				show(player, GameMenu.DIFFICULTY);
+			}
+		});
+		
 		ItemStack rootPlayerNumbers = new ItemStack(Material.SKULL_ITEM, 1, (short)3); // steve head
 		setNameAndLore(rootPlayerNumbers, "Player limits", "Specify the maximum number of", "players allowed into the game");
-		addItemToMenu(this, new MenuItem(menu, 4, rootPlayerNumbers) {
+		addItemToMenu(this, new MenuItem(menu, 7, rootPlayerNumbers) {
 			@Override
 			public void runWhenClicked(Player player) {
 				show(player, GameMenu.PLAYERS);
@@ -421,51 +566,39 @@ class MenuManager
 		
 		final ItemStack rootOpen = new ItemStack(Material.IRON_DOOR);
 		setNameAndLore(rootOpen, "Open game lobby", "Open this game, so", "that players can join");
-		addItemToMenu(this, new MenuItem(menu, 7, rootOpen) {
+		addItemToMenu(this, new MenuItem(menu, 8, rootOpen) {
 			@Override
 			public void runWhenClicked(Player player) {
-				game.setGameState(GameState.LOBBY);
+				if ( game.getGameState() == GameState.SETUP )
+					game.setGameState(GameState.LOBBY);
+				
+				player.closeInventory();
 				show(player);
 			}
 			
 			@Override
 			public void recalculateStack() {
-				setStack(game.getGameState() == GameState.SETUP ? rootOpen : null);
-			}
-		});
-
-		addItemToMenu(this, new MenuItem(menu, 8, quitItem) {
-			@Override
-			public void runWhenClicked(Player player) {
-				if ( game.getGameState() == GameState.SETUP )
-				{
-					game.removePlayerFromGame(player);
-					player.closeInventory();
-				}
-				else
-				{
-					player.closeInventory();
-					show(player, GameMenu.LOBBY);
-				}
-			}
-			
-			@Override
-			public void recalculateStack() {
-				setStack(game.getGameState() == GameState.SETUP ? quitItem : backItem);
+				setStack(game.getGameState() == GameState.SETUP ? rootOpen : backItem);
 			}
 		});
 		
 		return menu;
 	}
 
-	private Inventory createGameModeMenu()
+	private Inventory createGameModeSelectionMenu()
 	{
 		Inventory menu = Bukkit.createInventory(null, nearestNine(GameMode.gameModes.size() + 1), "Game Mode selection");
 		
-		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
+		addItemToMenu(this, new MenuItem(menu, 0, null) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP);
+				show(player, getPrevSetupMenu(GameMenu.GAME_MODE_SELECT));
+			}
+			
+			@Override
+			public void recalculateStack()
+			{
+				setStack(moduleSetupComplete ? backItem : null);
 			}
 		});
 		
@@ -478,6 +611,8 @@ class MenuManager
 				public void runWhenClicked(Player player) {
 					if ( game.setGameMode(mode) )
 						settingsChanged(" set the game mode to " + mode.getDisplayName());
+					
+					show(player, getNextSetupMenu(GameMenu.GAME_MODE_SELECT));
 				}
 				
 				@Override
@@ -507,7 +642,7 @@ class MenuManager
 	
 	private Inventory createGameModeConfigMenu()
 	{
-		Inventory menu = Bukkit.createInventory(null, 9, "Game Mode options");
+		Inventory menu = Bukkit.createInventory(null, 9, "Game Mode configuration");
 
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
@@ -516,9 +651,24 @@ class MenuManager
 			}
 		});
 		
-		for (int i=1; i<9; i++)
+		addItemToMenu(this, new MenuItem(menu, 1, null) {
+			@Override
+			public void runWhenClicked(Player player) {
+				show(player, GameMenu.GAME_MODE_SELECT);
+			}
+			
+			@Override
+			public void recalculateStack()
+			{
+				ItemStack stack = new ItemStack(game.getGameMode().getPlugin().getMenuIcon());
+				setNameAndLore(stack, "Change game mode", highlightStyle + "Current mode: " + game.getGameMode().getName(), "Change to a different game mode");
+				setStack(stack);
+			}
+		});
+		
+		for (int i=2; i<9; i++)
 		{
-			final int optionNum = i - 1;
+			final int optionNum = i - 2;
 			
 			addItemToMenu(this, new MenuItem(menu, i, null) {
 				@Override
@@ -576,166 +726,9 @@ class MenuManager
 		return WorldGenerator.getGenerators(worldType).size() > 1;
 	}
 	
-	private Inventory createWorldsMenu()
-	{
-		Inventory menu = Bukkit.createInventory(null, 9, "World Configuration");
-		
-		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
-			@Override
-			public void runWhenClicked(Player player) {
-				show(player, GameMenu.SETUP);
-			}
-		});
-		
-		ItemStack worldSettings = new ItemStack(Material.COMMAND);
-		setNameAndLore(worldSettings, "World Settings", "Edit settings that apply to", "all worlds in this game");
-		addItemToMenu(this, new MenuItem(menu, 1, worldSettings) {
-			@Override
-			public void runWhenClicked(Player player) {
-				show(player, GameMenu.WORLD_SETTINGS);
-			}
-		});
-		
-		addItemToMenu(this, new MenuItem(menu, 2, null) {
-			@Override
-			public void runWhenClicked(Player player) {
-				worldGeneratorType = Environment.NORMAL;
-				repopulateMenu(GameMenu.WORLD_GEN);
-				show(player, GameMenu.WORLD_GEN);
-			}
-
-			@Override
-			public void recalculateStack() {
-				if (shouldShowWorldSelection(Environment.NORMAL))
-				{
-					ItemStack stack = new ItemStack(Material.GRASS);
-					WorldGenerator generator = game.getWorldGenerator(Environment.NORMAL);
-					setNameAndLore(stack, "Change World Generator", highlightStyle + "Current generator: " + (generator == null ? "<none>" : generator.getName()), "The world generator controls", "the terrain in the game's world(s)");
-					setStack(stack);
-				}
-				else
-					setStack(null);
-			}
-		});
-		
-		addItemToMenu(this, new MenuItem(menu, 3, null) {
-			@Override
-			public void runWhenClicked(Player player) {
-				worldGeneratorType = Environment.NORMAL;
-				show(player, GameMenu.WORLD_GEN_CONFIG);
-			}
-			
-			@Override
-			public void recalculateStack() {
-				WorldGenerator generator = game.getWorldGenerator(Environment.NORMAL);
-				Option[] options = generator == null ? null : generator.options; 
-				if (options == null || options.length == 0)
-				{
-					setStack(null);
-					return;
-				}
-				
-				ItemStack stack = new ItemStack(Material.IRON_PICKAXE);
-				setNameAndLore(stack, "Configure World Generator", highlightStyle + "Current generator: " + generator.getName(), "Change any settings specific to", "the current world generator.");
-				setStack(stack);
-			}
-		});
-
-		addItemToMenu(this, new MenuItem(menu, 4, null) {
-			@Override
-			public void runWhenClicked(Player player) {
-				worldGeneratorType = Environment.NETHER;
-				repopulateMenu(GameMenu.WORLD_GEN);
-				show(player, GameMenu.WORLD_GEN);
-			}
-
-			@Override
-			public void recalculateStack() {
-				if (shouldShowWorldSelection(Environment.NETHER))
-				{
-					ItemStack stack = new ItemStack(Material.NETHERRACK);
-					WorldGenerator generator = game.getWorldGenerator(Environment.NETHER);
-					setNameAndLore(stack, "Change Nether Generator", highlightStyle + "Current generator: " + (generator == null ? "<none>" : generator.getName()), "The nether generator controls", "the terrain in the game's world(s)");
-					setStack(stack);
-				}
-				else
-					setStack(null);
-			}
-		});
-		
-		addItemToMenu(this, new MenuItem(menu, 5, null) {
-			@Override
-			public void runWhenClicked(Player player) {
-				worldGeneratorType = Environment.NETHER;
-				show(player, GameMenu.WORLD_GEN_CONFIG);
-			}
-			
-			@Override
-			public void recalculateStack() {
-				WorldGenerator generator = game.getWorldGenerator(Environment.NETHER);
-				Option[] options = generator == null ? null : generator.options; 
-				if (options == null || options.length == 0)
-				{
-					setStack(null);
-					return;
-				}
-				
-				ItemStack stack = new ItemStack(Material.IRON_PICKAXE);
-				setNameAndLore(stack, "Configure Nether Generator", highlightStyle + "Current generator: " + generator.getName(), "Change any settings specific to", "the current nether generator.");
-				setStack(stack);
-			}
-		});
-
-		addItemToMenu(this, new MenuItem(menu, 6, null) {
-			@Override
-			public void runWhenClicked(Player player) {
-				worldGeneratorType = Environment.THE_END;
-				repopulateMenu(GameMenu.WORLD_GEN);
-				show(player, GameMenu.WORLD_GEN);
-			}
-
-			@Override
-			public void recalculateStack() {
-				if (shouldShowWorldSelection(Environment.THE_END))
-				{
-					ItemStack stack = new ItemStack(Material.ENDER_STONE);
-					WorldGenerator generator = game.getWorldGenerator(Environment.THE_END);
-					setNameAndLore(stack, "Change End Generator", highlightStyle + "Current generator: " + (generator == null ? "<none>" : generator.getName()), "The end generator controls", "the terrain in the game's world(s)");
-					setStack(stack);
-				}
-				else
-					setStack(null);
-			}
-		});
-		
-		addItemToMenu(this, new MenuItem(menu, 7, null) {
-			@Override
-			public void runWhenClicked(Player player) {
-				worldGeneratorType = Environment.THE_END;
-				show(player, GameMenu.WORLD_GEN_CONFIG);
-			}
-			
-			@Override
-			public void recalculateStack() {
-				WorldGenerator generator = game.getWorldGenerator(Environment.THE_END);
-				Option[] options = generator == null ? null : generator.options; 
-				if (options == null || options.length == 0)
-				{
-					setStack(null);
-					return;
-				}
-				
-				ItemStack stack = new ItemStack(Material.IRON_PICKAXE);
-				setNameAndLore(stack, "Configure End Generator", highlightStyle + "Current generator: " + generator.getName(), "Change any settings specific to", "the current end generator.");
-				setStack(stack);
-			}
-		});
-		
-		return menu;
-	}
-	
+	boolean moduleSetupComplete = false;
 	Environment worldGeneratorType = Environment.NORMAL;
-	private Inventory createWorldGenMenu()
+	private Inventory createWorldGenSelectionMenu()
 	{
 		int maxGenerators = Math.max(Math.max(WorldGenerator.getGenerators(Environment.NORMAL).size(), WorldGenerator.getGenerators(Environment.NETHER).size()), WorldGenerator.getGenerators(Environment.THE_END).size());
 		Inventory menu = Bukkit.createInventory(null, nearestNine(maxGenerators + 1), "World Generator selection");
@@ -743,7 +736,7 @@ class MenuManager
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.WORLDS);
+				show(player, getPrevSetupMenu(GameMenu.WORLD_GEN_SELECT));
 			}
 		});
 		
@@ -761,6 +754,7 @@ class MenuManager
 					game.setWorldGenerator(worldGeneratorType, worldGenerator);
 					settingsChanged(" set the world generator to " + worldGenerator.getDisplayName());
 					updateMenus();
+					show(player, getNextSetupMenu(GameMenu.WORLD_GEN_SELECT));
 				}
 				
 				@Override
@@ -797,18 +791,40 @@ class MenuManager
 	
 	private Inventory createWorldGenConfigMenu()
 	{
-		Inventory menu = Bukkit.createInventory(null, 9, "World Generator options");
+		Inventory menu = Bukkit.createInventory(null, 9, "World Generator configuration");
 
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.WORLDS);
+				show(player, GameMenu.SETUP);
 			}
 		});
 		
-		for (int i=1; i<9; i++)
+		addItemToMenu(this, new MenuItem(menu, 1, null) {
+			@Override
+			public void runWhenClicked(Player player) {
+				show(player, GameMenu.WORLD_GEN_SELECT);
+			}
+			
+			@Override
+			public void recalculateStack()
+			{
+				if (!shouldShowWorldSelection(worldGeneratorType))
+				{
+					setStack(null);
+					return;
+				}
+				
+				ItemStack stack = new ItemStack(game.getWorldGenerator(worldGeneratorType).getPlugin().getMenuIcon());
+				setNameAndLore(stack, "Change generator", highlightStyle + "Current generator: " + game.getGameMode().getName(), "Change to a different generator");
+				setStack(stack);
+			}
+		});
+		
+		
+		for (int i=2; i<9; i++)
 		{
-			final int optionNum = i - 1;
+			final int optionNum = i - 2;
 			
 			addItemToMenu(this, new MenuItem(menu, i, null) {
 				@Override
@@ -853,66 +869,6 @@ class MenuManager
 				}
 			});
 		}
-		return menu;
-	}
-	
-	private Inventory createWorldSettingsMenu()
-	{
-		Inventory menu = Bukkit.createInventory(null, 9, "General World settings");
-
-		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
-			@Override
-			public void runWhenClicked(Player player) {
-				
-				if (shouldShowWorldSelection(Environment.NORMAL) || shouldShowWorldSelection(Environment.NETHER) || shouldShowWorldSelection(Environment.THE_END))
-					show(player, GameMenu.WORLDS);
-				else
-					show(player, GameMenu.SETUP);
-			}
-		});
-		
-		ItemStack difficulty = new ItemStack(Material.BEACON);
-		setNameAndLore(difficulty, "Gameplay Difficulty", "Controls the minecraft difficulty level.", "Hard is recommended in most cases.");
-		addItemToMenu(this, new MenuItem(menu, 1, difficulty) {
-			@Override
-			public void runWhenClicked(Player player) {
-				repopulateMenu(GameMenu.DIFFICULTY);
-				show(player, GameMenu.DIFFICULTY);
-			}
-		});
-		
-		ItemStack monsters = new ItemStack(Material.SKULL_ITEM, 1, (short)4); // creeper head
-		setNameAndLore(monsters, "Monster Numbers", "Control the number of", "monsters that spawn");
-		addItemToMenu(this, new MenuItem(menu, 2, monsters) {
-			@Override
-			public void runWhenClicked(Player player) {
-				repopulateMenu(GameMenu.MONSTERS);
-				show(player, GameMenu.MONSTERS);
-			}
-		});
-		
-		ItemStack animals = new ItemStack(Material.EGG);
-		setNameAndLore(animals, "Animal Numbers", "Control the number of", "animals that spawn");
-		addItemToMenu(this, new MenuItem(menu, 3, animals) {
-			@Override
-			public void runWhenClicked(Player player) {
-				repopulateMenu(GameMenu.ANIMALS);
-				show(player, GameMenu.ANIMALS);
-			}
-		});
-		
-		if (Settings.worldBorderSizes.length > 1)
-		{
-			ItemStack worldBorders = new ItemStack(Material.GLASS);
-			setNameAndLore(worldBorders, "World Borders", "Limit the size of", "game worlds");
-			addItemToMenu(this, new MenuItem(menu, 4, worldBorders) {
-				@Override
-				public void runWhenClicked(Player player) {
-					show(player, GameMenu.WORLD_BORDERS);
-				}
-			});
-		}
-		
 		return menu;
 	}
 
@@ -1070,7 +1026,7 @@ class MenuManager
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.WORLD_SETTINGS);
+				show(player, GameMenu.SETUP);
 			}
 		});
 		
@@ -1095,70 +1051,6 @@ class MenuManager
 					meta.setDisplayName(difficultyNames[quantity]);
 					stack.setItemMeta(meta);
 					setStack(stack);
-				}
-			});
-		}
-		
-		return menu;
-	}
-	
-	private Inventory createMonstersMenu()
-	{
-		final Inventory menu = Bukkit.createInventory(null, 9, "Monster numbers");
-		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
-			@Override
-			public void runWhenClicked(Player player) {
-				show(player, GameMenu.WORLD_SETTINGS);
-			}
-		});
-			
-		for (int i=0; i<=Game.maxQuantityNum; i++)
-		{
-			final int quantity = i;
-			
-			addItemToMenu(this, new MenuItem(menu, i + 1, null) {
-				@Override
-				public void runWhenClicked(Player player) {
-					game.monsterNumbers = quantity;						
-					settingsChanged(" changed the monster numbers to '" + getQuantityText(quantity) + "'");
-					repopulateMenu(GameMenu.MONSTERS);
-				}
-				
-				@Override
-				public void recalculateStack() {
-					setStack(createQuantityItem(quantity, game.monsterNumbers == quantity, monsterDescriptions[quantity]));
-				}
-			});
-		}
-		
-		return menu;
-	}
-	
-	private Inventory createAnimalsMenu()
-	{
-		final Inventory menu = Bukkit.createInventory(null, 9, "Animal numbers");
-		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
-			@Override
-			public void runWhenClicked(Player player) {
-				show(player, GameMenu.WORLD_SETTINGS);
-			}
-		});
-				
-		for (int i=0; i<=Game.maxQuantityNum; i++)
-		{
-			final int quantity = i;
-			
-			addItemToMenu(this, new MenuItem(menu, i + 1, null) {
-				@Override
-				public void runWhenClicked(Player player) {
-					game.animalNumbers = quantity;
-					settingsChanged(" changed the animal numbers to '" + getQuantityText(quantity) + "'");
-					repopulateMenu(GameMenu.ANIMALS);
-				}
-				
-				@Override
-				public void recalculateStack() {
-					setStack(createQuantityItem(quantity, game.animalNumbers == quantity, animalDescriptions[quantity]));
 				}
 			});
 		}
@@ -1404,7 +1296,7 @@ class MenuManager
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override
 			public void runWhenClicked(Player player) {
-				show(player, GameMenu.WORLD_SETTINGS);
+				show(player);
 			}
 		});
 		
@@ -1810,10 +1702,9 @@ class MenuManager
 		repopulateMenu(GameMenu.LOBBY);
 		repopulateMenu(GameMenu.SPECTATOR_LOBBY);
 		repopulateMenu(GameMenu.SETUP);
-		repopulateMenu(GameMenu.GAME_MODE);
+		repopulateMenu(GameMenu.GAME_MODE_SELECT);
 		repopulateMenu(GameMenu.GAME_MODE_CONFIG);
-		repopulateMenu(GameMenu.WORLDS);
-		repopulateMenu(GameMenu.WORLD_GEN);
+		repopulateMenu(GameMenu.WORLD_GEN_SELECT);
 		repopulateMenu(GameMenu.WORLD_GEN_CONFIG);
 		repopulateMenu(GameMenu.PLAYERS);
 		repopulateMenu(GameMenu.TEAM_SELECTION);

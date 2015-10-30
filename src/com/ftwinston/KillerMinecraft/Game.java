@@ -290,6 +290,7 @@ public class Game
 		
 		monsterNumbers = defaultMonsterNumbers;
 		animalNumbers = defaultAnimalNumbers;
+		menuManager.moduleSetupComplete = false;
 		menuManager.repopulateMenu(GameMenu.PLAYERS);
 
 		if (wasEmpty)
