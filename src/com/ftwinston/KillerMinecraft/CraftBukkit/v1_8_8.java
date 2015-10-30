@@ -14,7 +14,6 @@ import net.minecraft.server.v1_8_R3.NBTTagCompound;
 import net.minecraft.server.v1_8_R3.NBTTagList;
 import net.minecraft.server.v1_8_R3.BlockPosition;
 import net.minecraft.server.v1_8_R3.Blocks;
-import net.minecraft.server.v1_8_R3.ChunkProviderGenerate;
 import net.minecraft.server.v1_8_R3.ChunkProviderHell;
 import net.minecraft.server.v1_8_R3.EntityEnderSignal;
 import net.minecraft.server.v1_8_R3.EntityHuman;
@@ -356,15 +355,12 @@ public class v1_8_8 extends CraftBukkitAccess
 	}
 
 	@Override
-	public void generateVillage(org.bukkit.World w, int minX, int maxX, int minZ, int maxZ)
+	public void generateVillage(org.bukkit.Location loc, Random random, int radius)
 	{
-		CraftWorld craftworld = (CraftWorld)w;
-		ChunkProviderGenerate chunkProvider = (ChunkProviderGenerate)craftworld.getHandle().worldProvider.getChunkProvider();
-		Random random = getField(ChunkProviderGenerate.class, chunkProvider, "k");
+		Chunk chunk = loc.getChunk();
+		CraftWorld craftworld = (CraftWorld)loc.getWorld();
 		
-		org.bukkit.block.Block center = w.getBlockAt((minX + maxX) / 2, 64, (minZ + maxZ) / 2);
-		
-		StructureStart start = new WorldGenVillageStart(craftworld.getHandle(), random, center.getChunk().getZ(), center.getChunk().getZ(), 0);
-		start.a(craftworld.getHandle(), random, new StructureBoundingBox(minX, minZ, maxX, maxZ));
+		StructureStart start = new WorldGenVillageStart(craftworld.getHandle(), random, chunk.getZ(), chunk.getZ(), 0);
+		start.a(craftworld.getHandle(), random, new StructureBoundingBox(loc.getBlockX() - radius, loc.getBlockZ() - radius, loc.getBlockX() + radius, loc.getBlockZ() + radius));
 	}
 }

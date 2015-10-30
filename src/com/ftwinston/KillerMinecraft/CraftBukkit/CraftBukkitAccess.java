@@ -2,6 +2,7 @@ package com.ftwinston.KillerMinecraft.CraftBukkit;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.Random;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -97,5 +98,5 @@ public abstract class CraftBukkitAccess
 
 	public abstract ItemStack setEnchantmentGlow(ItemStack item);
 	
-	public abstract void generateVillage(World w, int minX, int maxX, int minZ, int maxZ);
+	public abstract void generateVillage(Location loc, Random random, int radius);
 }
