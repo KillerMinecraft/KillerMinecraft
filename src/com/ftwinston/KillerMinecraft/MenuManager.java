@@ -431,7 +431,7 @@ class MenuManager
 				Option[] options = game.getGameMode().options;
 				String label = options == null || options.length == 0 ? "Change game mode" : "Configure game mode";
 				
-				ItemStack stack = new ItemStack(Material.CAKE);
+				ItemStack stack = new ItemStack(game.getGameMode().getPlugin().getMenuIcon());
 				setNameAndLore(stack, label, highlightStyle + "Current mode: " + game.getGameMode().getName(), "The game mode is the main set of rules,", "and controls every aspect of a game.");
 				setStack(stack);
 			}
@@ -461,7 +461,7 @@ class MenuManager
 				}
 				
 				String generatorName = generator == null ? "<none>" : generator.getName(); 
-				ItemStack stack = new ItemStack(Material.GRASS);
+				ItemStack stack = new ItemStack(generator.getPlugin().getMenuIcon());
 				setNameAndLore(stack, "Configure World Generator", highlightStyle + "Current generator: " + generatorName, "Change how the overworld is", "generated in your game");
 				setStack(stack);
 			}
@@ -819,7 +819,7 @@ class MenuManager
 				}
 				
 				ItemStack stack = new ItemStack(game.getWorldGenerator(worldGeneratorType).getPlugin().getMenuIcon());
-				setNameAndLore(stack, "Change generator", highlightStyle + "Current generator: " + game.getGameMode().getName(), "Change to a different generator");
+				setNameAndLore(stack, "Change generator", highlightStyle + "Current generator: " + game.getWorldGenerator(worldGeneratorType).getName(), "Change to a different generator");
 				setStack(stack);
 			}
 		});
