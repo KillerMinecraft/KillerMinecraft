@@ -238,6 +238,7 @@ public class v1_8_8 extends CraftBukkitAccess
             return null;
 
         worldServer.b(); // obfuscated - set villages object that will otherwise cause a crash
+        worldServer.a(worldSettings); // obfuscated - choose a sensible spawn point
         worldServer.worldMaps = console.worlds.get(0).worldMaps;
 
         worldServer.tracker = new EntityTracker(worldServer);
@@ -248,10 +249,6 @@ public class v1_8_8 extends CraftBukkitAccess
         console.worlds.add(worldServer);
 
         world = worldServer.getWorld();
-        
-        if (generator != null)
-        	world.getPopulators().addAll(generator.getDefaultPopulators(world));
-        
         return world;
     }
 
@@ -264,10 +261,6 @@ public class v1_8_8 extends CraftBukkitAccess
 		@SuppressWarnings("deprecation")
 		WorldSettings worldSettings = new WorldSettings(seed, WorldSettings.EnumGamemode.getById(server.getDefaultGameMode().getValue()), generateStructures, hardcore, worldType);
 		worldSettings.setGeneratorSettings(generatorSettings);
-		
-		CraftWorld cWorld = (CraftWorld)world;
-		WorldServer worldServer = cWorld.getHandle();
-		worldServer.a(worldSettings); // obfuscated - choose a sensible spawn point
 	}
 	
 	public boolean isChunkGenerated(Chunk chunk)

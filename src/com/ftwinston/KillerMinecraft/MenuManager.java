@@ -140,7 +140,7 @@ class MenuManager
 	
 	static void createRootMenu()
 	{
-		rootMenu = Bukkit.createInventory(null, 9, "Killer Minecraft: All games");
+		rootMenu = Bukkit.createInventory(null, 9, "Killer Minecraft: Join a Game");
 		
 		helpItem = new ItemStack(Material.BOOK, 1);
 		setNameAndLore(helpItem, "Help", "Click for a book that explains", "how Killer Minecraft works");
@@ -349,12 +349,18 @@ class MenuManager
 		switch (current)
 		{
 		case GAME_MODE_SELECT:
+			if (moduleSetupComplete)
+				return GameMenu.GAME_MODE_CONFIG;
+			
 			if (shouldShowWorldSelection(Environment.NORMAL))
 			{
 				worldGeneratorType = Environment.NORMAL;
 				return GameMenu.WORLD_GEN_SELECT;
 			}
 		case WORLD_GEN_SELECT:
+			if (moduleSetupComplete)
+				return GameMenu.WORLD_GEN_CONFIG;
+			
 			switch (worldGeneratorType)
 			{
 			case NORMAL:
@@ -590,7 +596,7 @@ class MenuManager
 
 	private Inventory createGameModeSelectionMenu()
 	{
-		Inventory menu = Bukkit.createInventory(null, nearestNine(GameMode.gameModes.size() + 1), "Game Mode selection");
+		Inventory menu = Bukkit.createInventory(null, nearestNine(GameMode.gameModes.size() + 1), "Choose a Game Mode");
 		
 		addItemToMenu(this, new MenuItem(menu, 0, null) {
 			@Override
@@ -734,7 +740,7 @@ class MenuManager
 	private Inventory createWorldGenSelectionMenu()
 	{
 		int maxGenerators = Math.max(Math.max(WorldGenerator.getGenerators(Environment.NORMAL).size(), WorldGenerator.getGenerators(Environment.NETHER).size()), WorldGenerator.getGenerators(Environment.THE_END).size());
-		Inventory menu = Bukkit.createInventory(null, nearestNine(maxGenerators + 1), "World Generator selection");
+		Inventory menu = Bukkit.createInventory(null, nearestNine(maxGenerators + 1), "Choose a World Generator");
 		
 		addItemToMenu(this, new MenuItem(menu, 0, backItem) {
 			@Override

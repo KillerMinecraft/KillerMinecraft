@@ -330,16 +330,15 @@ class WorldManager
         	world.getPopulators().add(populator);
 
         Server server = plugin.getServer();
-        		
+		plugin.gamesByWorld.put(world.getName(), config.getGame());
+		config.getGame().getWorlds().add(world);
+		
         server.getPluginManager().callEvent(new WorldInitEvent(world));
         System.out.print("Preparing start region for world: " + world.getName() + " (Seed: " + config.getSeed() + ")");
         
         if (config.loadingPersistentWorlds)
         {// don't run through all the chunks again, just "link up" to the existing folder
     		server.getPluginManager().callEvent(new WorldLoadEvent(world));
-    		config.getGame().getWorlds().add(world);
-    		plugin.gamesByWorld.put(world.getName(), config.getGame());
-    		
         	server.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone, 1L);        	
         	return world;
         }
@@ -416,13 +415,9 @@ class WorldManager
 
             	if ( stepNum >= numSteps )
             	{
-            		server.getPluginManager().callEvent(new WorldLoadEvent(world));
             		server.getScheduler().cancelTask(chunkBuilderTaskID);
             		chunkBuilderTaskID = -1;
             		server.getScheduler().scheduleSyncDelayedTask(plugin, runWhenDone);
-            		
-            		game.getWorlds().add(world);
-            		plugin.gamesByWorld.put(world.getName(), game);
             		
             		System.out.println("Finished generating world: " + world.getName());
             		return;
