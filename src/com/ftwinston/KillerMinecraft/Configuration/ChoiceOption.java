@@ -11,9 +11,10 @@ import com.ftwinston.KillerMinecraft.Option;
 
 public class ChoiceOption<T extends Enum<T>> extends Option
 {
-	public ChoiceOption(String name)
+	public ChoiceOption(String name, T defaultValue)
 	{
 		super(name);
+		setValue(defaultValue);
 	}
 	
 	private ArrayList<Choice> choices = new ArrayList<Choice>();
