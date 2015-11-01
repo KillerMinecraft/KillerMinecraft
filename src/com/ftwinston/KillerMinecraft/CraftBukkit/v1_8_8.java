@@ -353,7 +353,8 @@ public class v1_8_8 extends CraftBukkitAccess
 		Chunk chunk = loc.getChunk();
 		CraftWorld craftworld = (CraftWorld)loc.getWorld();
 		
-		StructureStart start = new WorldGenVillageStart(craftworld.getHandle(), random, chunk.getZ(), chunk.getZ(), 0);
-		start.a(craftworld.getHandle(), random, new StructureBoundingBox(loc.getBlockX() - radius, loc.getBlockZ() - radius, loc.getBlockX() + radius, loc.getBlockZ() + radius));
+		StructureStart start = new WorldGenVillageStart(craftworld.getHandle(), random, chunk.getX(), chunk.getZ(), 0);
+		StructureBoundingBox bounds = new StructureBoundingBox(loc.getBlockX() - radius, loc.getBlockZ() - radius, loc.getBlockX() + radius, loc.getBlockZ() + radius);
+		start.a(craftworld.getHandle(), random, bounds);
 	}
 }
