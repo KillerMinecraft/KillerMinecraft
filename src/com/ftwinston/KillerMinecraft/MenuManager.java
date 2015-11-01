@@ -1385,12 +1385,13 @@ class MenuManager
 				};
 
 				game.startVote(vote);
+				player.closeInventory();
 			}
 		});
 
 		if (Settings.allowLateJoiners)
 		{
-			addItemToMenu(this, new MenuItem(menu, 2, null) {
+			addItemToMenu(this, new MenuItem(menu, 1, null) {
 				@Override
 				protected void runWhenClicked(Player player) {
 					if (game.currentVote != null)
@@ -1413,6 +1414,7 @@ class MenuManager
 							protected void runOnDraw() {}
 						};
 					game.startVote(vote);
+					player.closeInventory();
 				};
 				
 				@Override
