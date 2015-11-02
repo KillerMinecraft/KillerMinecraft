@@ -347,7 +347,7 @@ class WorldManager
 		while ( config.initialOverallProgress > firstReportFraction )
 			firstReportFraction += ChunkBuilder.reportIntervalFraction;
 		
-        int worldNumber = config.getGame().getWorlds().size(), numberOfWorlds = config.getGame().getGameMode().getWorldsToGenerate().length;
+        int worldNumber = config.getGame().getWorlds().size() - 1, numberOfWorlds = config.getGame().getGameMode().getWorldsToGenerate().length;
         ChunkBuilder cb = new ChunkBuilder(config.getGame(), 12, server, world, worldNumber, numberOfWorlds, firstReportFraction, new Runnable() {
         	public void run()
         	{
