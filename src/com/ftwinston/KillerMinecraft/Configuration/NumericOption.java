@@ -13,6 +13,11 @@ public class NumericOption extends Option
 {
 	public NumericOption(String name, int min, int max, Material icon, int defaultVal, String... description)
 	{
+		this(name, min, max, icon, defaultVal, 1, description);
+	}
+	
+	public NumericOption(String name, int min, int max, Material icon, int defaultVal, int interval, String... description)
+	{
 		super(name);
 		
 		if ( max < min )
@@ -26,6 +31,8 @@ public class NumericOption extends Option
 			this.max = max;
 		}
 
+		this.interval = interval; 
+		
 		int val = Math.min(max, Math.max(min, defaultVal));
 		setSelectedIndex(val-min);
 			
@@ -36,19 +43,19 @@ public class NumericOption extends Option
 			this.description[i+1] = description[i];
 	}
 	
-	private int min, max, value;
+	private int min, max, value, interval;
 	private Material icon;
 	private String[] description;
 	
 	public void setValue(int newVal)
 	{
-		setSelectedIndex(value-min);
+		setSelectedIndex((value * interval) - min);
 	}
 	
 	@Override
 	protected void setSelectedIndex(int index)
 	{
-		value = index + min;
+		value = (index * interval) + min;
 		super.setSelectedIndex(index);
 	}
 	
@@ -91,13 +98,13 @@ public class NumericOption extends Option
     @Override
     public ItemStack[] optionClicked()
     {
-    	int numItems = Math.min(max - min + 1, maxNumItems);
+    	int numItems = Math.min((max - min)/interval + 1, maxNumItems);
     	ItemStack[] items = new ItemStack[numItems];
     	
     	for ( int i=0; i<numItems; i++ )
     	{
 			boolean selected = i == getSelectedIndex();
-			int num = i+min;
+			int num = (i * interval) + min;
     		ItemStack item = new ItemStack(selected ? Material.REDSTONE_BLOCK : Material.COAL_BLOCK, num > 1 && num <= 64 ? num : 1);
     		
     		ItemMeta meta = item.getItemMeta();
