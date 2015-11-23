@@ -15,7 +15,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
-import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 
 import com.ftwinston.KillerMinecraft.Game.GameState;
@@ -320,15 +319,12 @@ class WorldManager
 		}
 	}
 	
-	// this is a clone of CraftServer.createWorld, amended to accept extra block populators
-	// it also spreads chunk creation across multiple ticks, instead of locking up the server while it generates 
+	// this is a clone of CraftServer.createWorld, amended to spreads chunk creation across multiple ticks,
+	// instead of locking up the server while it generates 
     public World createWorld(final WorldConfig config, final Runnable runWhenDone)
     {
     	final World world = plugin.craftBukkit.createWorld(config.getWorldType(), config.getEnvironment(), config.getName(), config.getSeed(), config.getGenerator(), config.getGeneratorSettings(), config.getGenerateStructures());
     	
-        for ( BlockPopulator populator : config.getExtraPopulators() )
-        	world.getPopulators().add(populator);
-
         Server server = plugin.getServer();
 		plugin.gamesByWorld.put(world.getName(), config.getGame());
 		config.getGame().getWorlds().add(world);

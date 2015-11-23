@@ -1,12 +1,9 @@
 package com.ftwinston.KillerMinecraft;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import org.bukkit.World.Environment;
 import org.bukkit.WorldType;
-import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 
 // similar to WorldCreator, but has list of extra block populators, and no pesky createWorld method
@@ -20,7 +17,6 @@ public class WorldConfig
 		this.type = WorldType.NORMAL;
 		this.seed = seedGen.nextLong();
 		this.generator = null;
-		this.extraPopulators = new ArrayList<BlockPopulator>();
 		this.generateStructures = true;
 		this.generatorSettings = "";
 		this.initialOverallProgress = initialOverallProgress;
@@ -54,7 +50,6 @@ public class WorldConfig
 	private WorldType type;
 	private long seed;
 	private ChunkGenerator generator;
-	private List<BlockPopulator> extraPopulators;
 	private boolean generateStructures;
 	private String generatorSettings;
 	float initialOverallProgress;
@@ -100,13 +95,6 @@ public class WorldConfig
 		this.generator = generator;
 	}
 	
-	public List<BlockPopulator> getExtraPopulators() {
-		return extraPopulators;
-	}
-	public void setExtraPopulators(List<BlockPopulator> extraPopulators) {
-		this.extraPopulators = extraPopulators;
-	}
-
 	public boolean getGenerateStructures() {
 		return generateStructures;
 	}
