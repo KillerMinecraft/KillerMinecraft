@@ -263,10 +263,9 @@ class MenuManager
 		
 		if ( game.isLocked() )
 			output += " (game is locked)";
-		
-		// monster & animal numbers
-		output += "\nMonster numbers: " + getQuantityText(game.monsterNumbers) + "\nAnimal numbers: " + getQuantityText(game.animalNumbers);
-				
+
+		output += "\nDifficulty: " + difficultyNames[game.getDifficulty().ordinal()];
+
 		return output;
 	}
 	
@@ -1055,10 +1054,32 @@ class MenuManager
 				
 				@Override
 				public void recalculateStack() {
-					ItemStack stack = createQuantityItem(quantity, game.getDifficulty() == difficulty, difficultyDescriptions[quantity]);
+					boolean selected = game.getDifficulty() == difficulty;
+					
+					Material mat;
+					switch (quantity)
+					{
+					default:
+						mat = Material.STICK; break;
+					case 1:
+						mat = Material.WOOD_PICKAXE; break;
+					case 2:
+						mat = Material.IRON_PICKAXE; break;
+					case 3:
+						mat = Material.DIAMOND_PICKAXE; break;
+					}
+
+					ItemStack stack = new ItemStack(mat);
+					
+					setNameAndLore(stack, difficultyDescriptions[quantity], highlightStyle + "Current Setting");
+					
 					ItemMeta meta = stack.getItemMeta();
 					meta.setDisplayName(difficultyNames[quantity]);
 					stack.setItemMeta(meta);
+					
+					if (selected)
+						stack = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(stack);
+					
 					setStack(stack);
 				}
 			});
@@ -1478,56 +1499,6 @@ class MenuManager
 			menusByPlayer.put(player.getName(), inv);
 			player.openInventory(inv);
 		}
-	}
-	
-	public static String getQuantityText(int num)
-	{
-		switch ( num )
-		{
-		case 0:
-			return "None";
-		case 1:
-			return "Few";
-		case 2:
-			return "Some";
-		case 3:
-			return "Many";
-		case 4:
-			return "Too Many";
-		default:
-			return "???";
-		}
-	}
-	
-	private ItemStack createQuantityItem(int quantity, boolean selected, String lore)
-	{
-		Material mat;
-		
-		switch ( quantity )
-		{
-		default:
-			mat = Material.STICK; break;
-		case 1:
-			mat = Material.WOOD_PICKAXE; break;
-		case 2:
-			mat = Material.STONE_PICKAXE; break;
-		case 3:
-			mat = Material.IRON_PICKAXE; break;
-		case 4:
-			mat = Material.DIAMOND_PICKAXE; break;
-		}
-
-		ItemStack item = new ItemStack(mat);
-
-		if ( selected )
-		{
-			setNameAndLore(item, getQuantityText(quantity), highlightStyle + "Current Setting", lore);
-			item = KillerMinecraft.instance.craftBukkit.setEnchantmentGlow(item);
-		}
-		else
-			setNameAndLore(item, getQuantityText(quantity), lore);
-		
-		return item;
 	}
 	
 	private static void setNameAndLore(ItemStack item, String name, List<String> lore)
