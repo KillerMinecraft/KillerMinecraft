@@ -249,7 +249,8 @@ class WorldManager
 						border.setSize(game.getWorldBorderSize());
 						border.setDamageAmount(1);
 						border.setDamageBuffer(0);
-						border.setWarningDistance(8);
+						border.setWarningDistance(32);
+						border.setWarningTime(100);
 					}
 				}
 				
