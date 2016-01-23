@@ -219,6 +219,7 @@ class PlayerManager
 		player.setSaturation(20);
 		player.setExhaustion(0);
 		player.setFireTicks(0);
+		player.setSleepingIgnored(false);
 		
 		clearInventory(player);
 		
